@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ project_name }} — {{ tagline }}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <link rel="stylesheet" href="/static/css/style.css?v=2.8">
+</head>
+<body class="bg-slate-950 text-slate-100 antialiased min-h-screen flex overflow-x-hidden">
+
+  <!-- Mobile Drawer Overlay Backdrop -->
+  <div id="mobile-sidebar-overlay"></div>
+
+  <!-- ========================================== -->
+  <!-- LEFT SIDEBAR NAVIGATION (COLLAPSIBLE)      -->
+  <!-- ========================================== -->
+  <aside id="app-sidebar" class="fixed top-0 bottom-0 left-0 z-40 bg-slate-900 border-r border-slate-800 flex flex-col justify-between w-64 shadow-2xl overflow-y-auto overflow-x-hidden">
+    <!-- Top Branding & Navigation -->
+    <div class="p-4 space-y-6">
+      
+      <!-- Brand Logo & Shrink/Expand Toggle -->
+      <div class="flex items-center justify-between">
+        <div id="sidebar-brand-btn" class="flex items-center space-x-3 overflow-hidden cursor-pointer" title="Click to Expand when collapsed">
+          <div class="h-9 w-9 rounded-lg bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 font-bold shrink-0">
+            <i data-lucide="compass" class="w-5 h-5"></i>
+          </div>
+          <div class="sidebar-text truncate">
+            <div class="flex items-center space-x-1.5">
+              <span class="font-extrabold text-base tracking-tight text-white">{{ project_name }}</span>
+              <span class="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-800 text-slate-400 border border-slate-700 font-medium">v2.0</span>
+            </div>
+            <p class="text-[11px] text-slate-400 truncate -mt-0.5">{{ app_descriptor }}</p>
+          </div>
+        </div>
+        <div class="flex items-center space-x-1">
+          <button id="btn-toggle-sidebar" title="Collapse Sidebar" class="hidden md:flex sidebar-text p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 border border-transparent hover:border-slate-700 transition cursor-pointer">
+            <i data-lucide="panel-left-close" class="w-4 h-4"></i>
+          </button>
+          <button id="btn-close-sidebar-mobile" title="Close Menu" class="md:hidden p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs List (3 primary menu items) -->
+      <nav class="space-y-1.5">
+        <button id="tab-companies" class="tab-btn sidebar-nav-item active w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all">
+          <div class="flex items-center space-x-2.5 truncate">
+            <i data-lucide="building-2" class="w-4 h-4 text-sky-400 shrink-0"></i>
+            <span class="sidebar-text truncate">1. All Companies</span>
+          </div>
+          <span id="nav-companies-badge" class="sidebar-badge px-2 py-0.5 rounded-full bg-slate-800 text-indigo-400 border border-slate-700 text-[10px] font-mono">0</span>
+        </button>
+
+        <button id="tab-resume" class="tab-btn sidebar-nav-item w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all">
+          <div class="flex items-center space-x-2.5 truncate">
+            <i data-lucide="user-check" class="w-4 h-4 text-amber-400 shrink-0"></i>
+            <span class="sidebar-text truncate">2. Candidate Profile</span>
+          </div>
+        </button>
+
+        <button id="tab-outreach" class="tab-btn sidebar-nav-item w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all">
+          <div class="flex items-center space-x-2.5 truncate">
+            <i data-lucide="mail" class="w-4 h-4 text-rose-400 shrink-0"></i>
+            <span class="sidebar-text truncate">3. Outreach Hub</span>
+          </div>
+        </button>
+      </nav>
+    </div>
+
+    <!-- Bottom Sidebar Section (Auth, Dev Mode, Collapse Icon) -->
+    <div class="p-4 border-t border-slate-800/80 space-y-2.5 bg-slate-900/60">
+      {% if dev_mode %}
+      <div class="sidebar-text px-2.5 py-1.5 rounded-lg bg-amber-950/60 border border-amber-800 text-amber-300 text-[10px] font-medium flex items-center space-x-2">
+        <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse shrink-0"></span>
+        <span class="truncate">Dev Sandbox Active</span>
+      </div>
+      {% endif %}
+
+      <!-- Logged In State Box -->
+      <div id="auth-box-logged-in" class="{% if not is_logged_in %}hidden{% endif %} space-y-2">
+        <div id="sidebar-admin-badge" class="{% if not is_master_admin %}hidden{% endif %} flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-rose-950/80 border border-rose-700/80 text-rose-300 text-[10px] font-bold tracking-wide uppercase">
+          <i data-lucide="shield-check" class="w-3.5 h-3.5 text-rose-400 shrink-0"></i>
+          <span class="truncate">Master Admin Active</span>
+        </div>
+        <div class="flex items-center space-x-2 px-2.5 py-1.5 rounded-lg bg-emerald-950/60 border border-emerald-800 text-emerald-300 text-[11px]">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 shrink-0"></span>
+          <span id="user-display-email" class="truncate font-mono">{{ user.email if user else "Logged In" }}</span>
+        </div>
+        <button id="btn-logout" type="button" class="sidebar-text w-full py-1.5 px-2 rounded-lg bg-slate-800 hover:bg-rose-950/40 hover:text-rose-300 border border-slate-700 text-[11px] text-slate-400 transition cursor-pointer flex items-center justify-center space-x-1.5">
+          <i data-lucide="log-out" class="w-3 h-3"></i>
+          <span>Disconnect / Logout</span>
+        </button>
+      </div>
+
+      <!-- Logged Out State Box -->
+      <div id="auth-box-logged-out" class="{% if is_logged_in %}hidden{% endif %} space-y-2">
+        <a href="/auth/google/login" class="flex items-center justify-center space-x-2 w-full py-2 px-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-sm transition">
+          <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24"><path fill="#ffffff" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#ffffff" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#ffffff" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#ffffff" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
+          <span class="sidebar-text truncate">Sign in with Google</span>
+        </a>
+        {% if dev_mode %}
+        <div class="space-y-1.5 pt-1">
+          <button id="btn-sidebar-admin-login" type="button" class="sidebar-text flex items-center justify-center space-x-1.5 w-full py-1.5 px-2 rounded-lg bg-rose-950/60 hover:bg-rose-900/80 border border-rose-800 text-[11px] font-semibold text-rose-300 transition cursor-pointer" title="Sign in as Master Admin (vorarahul111@gmail.com)">
+            <i data-lucide="shield-check" class="w-3.5 h-3.5 text-rose-400"></i>
+            <span>Dev: Master Admin</span>
+          </button>
+          <button id="btn-sidebar-demo-login" type="button" class="sidebar-text flex items-center justify-center space-x-1.5 w-full py-1.5 px-2 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-[11px] font-medium text-slate-300 transition cursor-pointer" title="Sign in as Standard Demo User">
+            <i data-lucide="user" class="w-3 h-3 text-slate-400"></i>
+            <span>Dev: Standard User</span>
+          </button>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Quick Expand Button in Mini Mode -->
+      <button id="btn-expand-sidebar-mini" title="Expand Sidebar" class="sidebar-icon-only hidden w-full py-2 items-center justify-center rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer">
+        <i data-lucide="panel-left-open" class="w-4 h-4"></i>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ========================================== -->
+  <!-- MAIN CONTENT AREA                          -->
+  <!-- ========================================== -->
+  <div id="main-content-wrap" class="flex-1 ml-0 md:ml-64 min-h-screen flex flex-col bg-slate-950 w-full min-w-0 overflow-x-hidden">
+    
+    <!-- Top Utility Header -->
+    <header class="border-b border-slate-800/80 bg-slate-900/80 backdrop-blur sticky top-0 z-30 px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3 flex items-center justify-between gap-3 sm:gap-6 overflow-hidden">
+      <div class="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1 mr-2 overflow-hidden">
+        <!-- Mobile Drawer Hamburger Toggle Button -->
+        <button id="btn-mobile-sidebar" type="button" aria-label="Open Navigation Menu" class="md:hidden p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition cursor-pointer shrink-0">
+          <i data-lucide="menu" class="w-4 h-4"></i>
+        </button>
+        <div class="min-w-0 flex-1 overflow-hidden">
+          <h1 id="page-current-title" class="text-xs sm:text-sm font-bold text-white flex items-center space-x-1.5 sm:space-x-2 min-w-0">
+            <i data-lucide="building-2" class="w-4 h-4 text-sky-400 shrink-0"></i>
+            <span class="whitespace-nowrap">All Companies & Leads</span>
+          </h1>
+          <p id="page-current-subtitle" class="hidden lg:block text-[11px] text-slate-400">Complete database of verified leads. Filter, sort, view contact details, and prepare outreach.</p>
+        </div>
+      </div>
+
+      <div class="flex items-center space-x-1.5 sm:space-x-2.5 shrink-0">
+        <!-- Scout Leads Quick Button -->
+        <button id="btn-header-scout" type="button" class="p-1.5 sm:px-2.5 sm:py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold transition cursor-pointer flex items-center space-x-1.5 shadow-sm shrink-0" title="Find new business leads from Google Maps">
+          <i data-lucide="radar" class="w-3.5 h-3.5 shrink-0"></i>
+          <span class="hidden lg:inline">Find Leads</span>
+          <span class="hidden sm:inline lg:hidden">Search</span>
+        </button>
+
+        <div class="hidden xl:flex items-center space-x-2 px-3 py-1 bg-slate-900 border border-slate-800 rounded-lg text-xs shrink-0">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 shrink-0"></span>
+          <span class="text-slate-400 font-medium">Verified: <strong id="header-leads-counter" class="text-white">0</strong></span>
+        </div>
+        {% if dev_mode %}
+        <div id="header-admin-quick-switch" class="flex items-center space-x-1.5 shrink-0">
+          <button id="btn-header-admin-login" type="button" class="p-1.5 sm:px-2.5 sm:py-1.5 bg-rose-950/80 hover:bg-rose-900 border border-rose-800 text-[11px] font-semibold text-rose-300 rounded-lg transition cursor-pointer flex items-center space-x-1.5 shadow-sm shrink-0" title="Quick Switch: Master Admin (vorarahul111@gmail.com)">
+            <i data-lucide="shield-check" class="w-3.5 h-3.5 text-rose-400 shrink-0"></i>
+            <span class="hidden 2xl:inline">Dev: Master Admin</span>
+            <span class="hidden md:inline 2xl:hidden">Admin</span>
+          </button>
+        </div>
+        {% endif %}
+        <button id="btn-quick-refresh" type="button" class="p-1.5 sm:px-2.5 sm:py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-medium transition cursor-pointer flex items-center space-x-1.5 shrink-0" title="Refresh directory data">
+          <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-slate-300 shrink-0"></i>
+          <span class="hidden lg:inline">Refresh</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Screens Container -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-6 space-y-5 sm:space-y-6">
+
+      <!-- ========================================== -->
+      <!-- TAB: LEAD SCOUT (SEARCH & DISCOVERY)       -->
+      <!-- ========================================== -->
+      <section id="section-scout" class="tab-section hidden space-y-6">
+        
+        <!-- Search Control Card -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm space-y-4">
+          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+              <h2 class="text-base font-bold text-white flex items-center space-x-2">
+                <i data-lucide="radar" class="w-4 h-4 text-indigo-400"></i>
+                <span>Google Local Lead Scout</span>
+                <span class="text-xs font-normal text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800 flex items-center space-x-1">
+                  <i data-lucide="shield-check" class="w-3 h-3 inline"></i>
+                  <span>Genuine Domains Only</span>
+                </span>
+              </h2>
+              <p class="text-xs text-slate-400 mt-1">Discover verified companies with official websites. Unofficial/local dummy domains are automatically filtered out.</p>
+            </div>
+            
+            <div class="flex items-center space-x-2">
+              <button id="btn-switch-to-companies" type="button" class="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-semibold transition flex items-center space-x-1.5 cursor-pointer shadow-sm">
+                <i data-lucide="arrow-left" class="w-3.5 h-3.5 text-slate-400"></i>
+                <span>← Back to All Companies (<span class="badge-total-count">0</span>)</span>
+              </button>
+            </div>
+          </div>
+
+          <form id="scout-form" onsubmit="return false;" class="space-y-3 pt-2">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3">
+              <div class="sm:col-span-2 lg:col-span-4">
+                <label class="block text-xs font-medium text-slate-400 mb-1">Target Keyword / Industry</label>
+                <input type="text" id="input-keyword" placeholder="e.g. IT Companies, Software Agencies" value="IT Companies" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500">
+              </div>
+              <div class="sm:col-span-1 lg:col-span-3">
+                <label class="block text-xs font-medium text-slate-400 mb-1">City / Location</label>
+                <input type="text" id="input-city" placeholder="e.g. Surat, Austin, London" value="Surat" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500">
+              </div>
+              <div class="sm:col-span-1 lg:col-span-2">
+                <label class="block text-xs font-medium text-slate-400 mb-1">Pages to Scrape</label>
+                <select id="input-pages" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-indigo-500">
+                  <option value="1">1 Page (~20 leads)</option>
+                  <option value="2" selected>2 Pages (~40 leads)</option>
+                  <option value="3">3 Pages (~60 leads)</option>
+                  <option value="5">5 Pages (~100 leads)</option>
+                  <option value="10">10 Pages (~200 leads)</option>
+                  <option value="15">15 Pages (~300 leads)</option>
+                  <option value="20">20 Pages (~400 leads)</option>
+                  <option value="30">30 Pages (~600 leads)</option>
+                  <option value="0">⚡ All Available Pages (Auto-Detect Until End)</option>
+                </select>
+              </div>
+              <div class="sm:col-span-1 lg:col-span-1">
+                <label class="block text-xs font-medium text-slate-400 mb-1" title="Country code for Google results (gl)">Country</label>
+                <select id="input-gl" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-2 text-xs text-slate-100 focus:outline-none focus:border-indigo-500">
+                  <option value="in" selected>IN (India)</option>
+                  <option value="us">US (USA)</option>
+                  <option value="uk">UK</option>
+                  <option value="ca">CA (Canada)</option>
+                  <option value="ae">AE (UAE)</option>
+                  <option value="de">DE (Germany)</option>
+                  <option value="au">AU (Australia)</option>
+                </select>
+              </div>
+              <div class="sm:col-span-1 lg:col-span-2 flex items-end">
+                <button type="button" id="btn-start-scout" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-2 px-3 rounded-lg text-xs transition flex items-center justify-center space-x-1.5 shadow-sm cursor-pointer">
+                  <i data-lucide="search" class="w-3.5 h-3.5"></i>
+                  <span>Find Leads</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Advanced / Optional Fields Toggle -->
+            <div class="pt-1">
+              <details class="w-full group">
+                <summary class="cursor-pointer text-slate-500 hover:text-slate-300 transition text-[11px] select-none flex items-center space-x-1.5">
+                  <i data-lucide="sliders-horizontal" class="w-3 h-3"></i>
+                  <span>Advanced Options (Direct URL, Language)</span>
+                </summary>
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-3 mt-2 pt-2 border-t border-slate-800/60">
+                  <div class="md:col-span-9">
+                    <label class="block text-[11px] font-medium text-slate-400 mb-1">Direct Google Local Search URL (Overrides Keyword/City)</label>
+                    <input type="text" id="input-url" placeholder="https://www.google.com/search?q=...&udm=local" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500">
+                  </div>
+                  <div class="md:col-span-3">
+                    <label class="block text-[11px] font-medium text-slate-400 mb-1">Language Code (hl)</label>
+                    <input type="text" id="input-hl" value="en" placeholder="en" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500">
+                  </div>
+                </div>
+              </details>
+            </div>
+          </form>
+
+          <!-- Live Scraping Monitor (Collapsed by default, expands when active) -->
+          <div id="scout-monitor" class="hidden bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3">
+            <div class="flex items-center justify-between text-xs">
+              <div class="flex items-center space-x-2">
+                <span class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span id="monitor-status" class="font-medium text-slate-200">Searching Google Maps for businesses...</span>
+              </div>
+              <div class="flex items-center space-x-3">
+                <span id="monitor-count" class="font-mono text-indigo-400 font-bold bg-indigo-950/80 px-2 py-0.5 rounded border border-indigo-800 text-xs">0 Found</span>
+                <button id="btn-toggle-logs" type="button" class="text-[11px] text-slate-400 hover:text-slate-200 transition underline cursor-pointer">Hide Activity</button>
+              </div>
+            </div>
+            
+            <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+              <div id="monitor-progress-bar" class="bg-gradient-to-r from-indigo-500 to-sky-400 h-full transition-all duration-300 rounded-full" style="width: 0%"></div>
+            </div>
+
+            <!-- Real-time Terminal Log Console -->
+            <div id="scout-terminal-container" class="space-y-1 pt-1">
+              <div class="flex items-center justify-between text-[10px] text-slate-500 font-mono">
+                <span class="flex items-center space-x-1">
+                  <i data-lucide="activity" class="w-3 h-3 text-slate-400 inline"></i>
+                  <span>Live Search Activity</span>
+                </span>
+                <span>Automated Search Engine</span>
+              </div>
+              <div id="scout-terminal-logs" class="bg-black/80 border border-slate-800/90 rounded-lg p-2.5 font-mono text-[11px] text-emerald-400 space-y-1 max-h-36 overflow-y-auto leading-relaxed select-text shadow-inner">
+                <div class="text-slate-500 italic">Engine ready. Click 'Find Leads' to see real-time search progress...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ========================================== -->
+        <!-- LIVE SCOUTED LEADS (KEYWORD RESULTS)       -->
+        <!-- ========================================== -->
+        <div id="scout-results-section" class="space-y-4">
+          <!-- Section Header Bar -->
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-900 border border-slate-800 rounded-2xl px-5 py-4 shadow-sm">
+            <div class="space-y-0.5">
+              <div class="flex items-center space-x-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                <h3 class="text-sm font-bold text-white flex items-center space-x-2">
+                  <span>Discovered Leads</span>
+                  <span id="scout-leads-count" class="px-2 py-0.5 rounded-full bg-indigo-950 text-indigo-400 border border-indigo-800 text-[11px] font-mono font-semibold">0 Leads</span>
+                </h3>
+              </div>
+              <p class="text-xs text-slate-400">
+                Showing verified businesses matching: <strong id="scout-query-label" class="text-indigo-300 font-semibold">"IT Companies" in "Surat"</strong>
+              </p>
+            </div>
+
+            <div class="flex items-center space-x-2.5">
+              <!-- Grid / Table View Switcher for Scout Tab -->
+              <div class="flex items-center bg-slate-950 border border-slate-800 rounded-lg p-0.5">
+                <button id="btn-scout-view-grid" type="button" class="px-2.5 py-1 rounded bg-slate-800 text-white text-xs font-medium flex items-center space-x-1 cursor-pointer transition">
+                  <i data-lucide="layout-grid" class="w-3.5 h-3.5"></i>
+                  <span class="hidden sm:inline">Cards</span>
+                </button>
+                <button id="btn-scout-view-table" type="button" class="px-2.5 py-1 rounded text-slate-400 hover:text-white text-xs font-medium flex items-center space-x-1 cursor-pointer transition">
+                  <i data-lucide="table" class="w-3.5 h-3.5"></i>
+                  <span class="hidden sm:inline">Table</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Scout Live Cards Grid (Mobile 2-col, Laptop/Desktop 3-col) -->
+          <div id="scout-cards-container" class="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4.5">
+            <!-- Dynamically populated -->
+          </div>
+
+          <!-- Scout Live Table View (Hidden by default) -->
+          <div id="scout-table-container" class="hidden bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-sm">
+            <div class="overflow-x-auto">
+              <table class="w-full text-left border-collapse text-xs">
+                <thead>
+                  <tr class="bg-slate-950/80 border-b border-slate-800 text-slate-400 uppercase text-[10px] tracking-wider">
+                    <th class="py-3 px-4 font-semibold">Company Name</th>
+                    <th class="py-3 px-4 font-semibold">Official Website</th>
+                    <th class="py-3 px-4 font-semibold">Location / Address</th>
+                    <th class="py-3 px-4 font-semibold">Phone</th>
+                    <th class="py-3 px-4 font-semibold">Rating</th>
+                    <th class="py-3 px-4 font-semibold text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody id="scout-table-body" class="divide-y divide-slate-800/60 font-medium">
+                  <!-- Dynamically populated -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Scout Live Pagination Controls -->
+          <div id="scout-pagination" class="hidden bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm select-none">
+            <div class="flex items-center space-x-2 text-xs text-slate-400">
+              <span>Showing <strong id="scout-page-range" class="text-white font-semibold">0-0</strong> of <strong id="scout-page-total" class="text-white font-semibold">0</strong> leads</span>
+            </div>
+
+            <div class="flex items-center space-x-2 sm:space-x-3 flex-wrap justify-center">
+              <div class="flex items-center space-x-1.5 text-xs text-slate-400">
+                <span class="hidden sm:inline">Per page:</span>
+                <select id="scout-per-page" class="bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 cursor-pointer">
+                  <option value="12" selected>12</option>
+                  <option value="24">24</option>
+                  <option value="48">48</option>
+                  <option value="0">All</option>
+                </select>
+              </div>
+
+              <div id="scout-page-buttons" class="flex items-center space-x-1">
+                <!-- Populated dynamically by app.js -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================== -->
+      <!-- TAB 1: ALL COMPANIES DIRECTORY             -->
+      <!-- ========================================== -->
+      <section id="section-companies" class="tab-section space-y-6">
+        
+        <!-- Metrics / Stats Header -->
+        <div id="company-metrics-grid" class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
+          <!-- Card 1: Verified Leads -->
+          <div id="stat-card-all" class="bg-slate-900 border border-slate-800 hover:border-slate-600 rounded-xl p-3 sm:p-4 space-y-1 transition cursor-pointer select-none group relative min-w-0" title="Click to show All Verified Leads">
+            <div class="flex items-center justify-between gap-1">
+              <span class="text-[11px] sm:text-xs text-slate-300 font-medium group-hover:text-white transition whitespace-nowrap">Verified Leads</span>
+              <span class="stat-pill text-[9px] px-1.5 py-0.5 rounded font-mono text-slate-500 group-hover:text-slate-300 bg-slate-950/60 border border-slate-800 transition shrink-0">All</span>
+            </div>
+            <div class="flex items-baseline space-x-1.5 sm:space-x-2">
+              <span id="companies-total-count" class="text-xl sm:text-2xl font-bold text-white">0</span>
+              <span class="text-[9px] sm:text-[10px] text-emerald-400 font-medium flex items-center space-x-0.5 shrink-0">
+                <i data-lucide="shield-check" class="w-3 h-3 inline"></i>
+                <span>Active</span>
+              </span>
+            </div>
+          </div>
+
+          <!-- Card 2: AI Enriched -->
+          <div id="stat-card-enriched" class="bg-slate-900 border border-slate-800 hover:border-indigo-500/60 rounded-xl p-3 sm:p-4 space-y-1 transition cursor-pointer select-none group relative min-w-0" title="Click to filter AI Enriched Leads">
+            <div class="flex items-center justify-between gap-1">
+              <span class="text-[11px] sm:text-xs text-slate-300 font-medium group-hover:text-indigo-300 transition whitespace-nowrap">AI Enriched</span>
+              <span class="stat-pill text-[9px] px-1.5 py-0.5 rounded font-mono text-slate-500 group-hover:text-indigo-300 bg-slate-950/60 border border-slate-800 transition shrink-0">Filter</span>
+            </div>
+            <div class="flex items-baseline space-x-1.5 sm:space-x-2">
+              <span id="stat-enriched-count" class="text-xl sm:text-2xl font-bold text-indigo-400">0</span>
+              <span class="text-[9px] sm:text-[10px] text-slate-400 font-mono">Profiled</span>
+            </div>
+          </div>
+
+          <!-- Card 3: Discovered Emails -->
+          <div id="stat-card-emails" class="bg-slate-900 border border-slate-800 hover:border-emerald-500/60 rounded-xl p-3 sm:p-4 space-y-1 transition cursor-pointer select-none group relative min-w-0" title="Click to filter Leads with Verified Emails">
+            <div class="flex items-center justify-between gap-1">
+              <span class="text-[11px] sm:text-xs text-slate-300 font-medium group-hover:text-emerald-300 transition whitespace-nowrap">With Emails</span>
+              <span class="stat-pill text-[9px] px-1.5 py-0.5 rounded font-mono text-slate-500 group-hover:text-emerald-300 bg-slate-950/60 border border-slate-800 transition shrink-0">Filter</span>
+            </div>
+            <div class="flex items-baseline space-x-1.5 sm:space-x-2">
+              <span id="stat-emails-count" class="text-xl sm:text-2xl font-bold text-emerald-400">0</span>
+              <span class="text-[9px] sm:text-[10px] text-slate-400 font-mono">Contacts</span>
+            </div>
+          </div>
+
+          <!-- Card 4: Outreach Contacted -->
+          <div id="stat-card-contacted" class="bg-slate-900 border border-slate-800 hover:border-sky-500/60 rounded-xl p-3 sm:p-4 space-y-1 transition cursor-pointer select-none group relative min-w-0" title="Click to filter Contacted Leads">
+            <div class="flex items-center justify-between gap-1">
+              <span class="text-[11px] sm:text-xs text-slate-300 font-medium group-hover:text-sky-300 transition whitespace-nowrap">Emails Sent</span>
+              <span class="stat-pill text-[9px] px-1.5 py-0.5 rounded font-mono text-slate-500 group-hover:text-sky-300 bg-slate-950/60 border border-slate-800 transition shrink-0">Filter</span>
+            </div>
+            <div class="flex items-baseline space-x-1.5 sm:space-x-2">
+              <span id="stat-contacted-count" class="text-xl sm:text-2xl font-bold text-sky-400">0</span>
+              <span class="text-[9px] sm:text-[10px] text-slate-400 font-mono">Contacted</span>
+            </div>
+          </div>
+          <!-- Master Admin KPI Card: Invalid / Excluded Leads -->
+          <div id="stat-card-invalid" class="hidden col-span-2 md:col-span-1 bg-rose-950/20 border border-rose-500/30 hover:border-rose-500/70 transition cursor-pointer rounded-xl p-3 sm:p-4 space-y-1 group relative select-none min-w-0">
+            <div class="flex items-center justify-between gap-1">
+              <span class="text-[11px] sm:text-xs text-rose-400 font-semibold flex items-center space-x-1 whitespace-nowrap">
+                <i data-lucide="shield-alert" class="w-3.5 h-3.5 text-rose-400 shrink-0"></i>
+                <span>Excluded Leads</span>
+              </span>
+              <span class="text-[9px] bg-rose-900/60 text-rose-200 border border-rose-700/50 px-1.5 py-0.2 rounded font-bold uppercase tracking-wider shrink-0">Admin</span>
+            </div>
+            <div class="flex items-baseline space-x-1.5 sm:space-x-2">
+              <span id="stat-invalid-count" class="text-xl sm:text-2xl font-bold text-rose-400">0</span>
+              <span id="stat-invalid-hint" class="text-[9px] sm:text-[10px] text-slate-400 font-mono">Filter</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Master Admin Standard User Preview Active Notice -->
+        <div id="admin-preview-banner" class="hidden bg-amber-950/40 border border-amber-800/80 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-amber-300">
+          <div class="flex items-center space-x-2">
+            <i data-lucide="eye" class="w-4 h-4 text-amber-400 shrink-0"></i>
+            <span><strong>Standard User Preview Active:</strong> You are experiencing the application exactly as standard users see it. Invalid companies and admin delete/restore controls are hidden.</span>
+          </div>
+          <button id="btn-banner-exit-preview" type="button" class="shrink-0 px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-lg text-xs transition cursor-pointer flex items-center justify-center space-x-1 shadow-sm">
+            <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
+            <span>Back to Master Admin View</span>
+          </button>
+        </div>
+
+        <!-- Controls & Filter Toolbar -->
+        <div class="bg-slate-900 border border-slate-800 rounded-xl divide-y divide-slate-800/80 shadow-sm">
+          
+          <!-- Top Row: Primary Actions, Admin Controls & View Switcher -->
+          <div class="p-3 sm:p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3">
+            <!-- Action Buttons: Full width CTA on mobile, balanced secondary buttons -->
+            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
+              <!-- Find New Leads Button -->
+              <button type="button" id="btn-goto-scout" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg px-4 py-2 sm:py-1.5 text-xs font-semibold transition flex items-center justify-center space-x-1.5 cursor-pointer shadow-sm shadow-indigo-950/50" title="Search and extract verified company leads">
+                <i data-lucide="search" class="w-3.5 h-3.5 text-indigo-200"></i>
+                <span>Find New Leads</span>
+              </button>
+
+              <!-- Secondary Actions Row on Mobile: 50/50 Grid -->
+              <div class="grid grid-cols-2 sm:flex sm:items-center gap-2 w-full sm:w-auto">
+                <!-- Bulk Enrich Button (Login-Gated) -->
+                <button type="button" id="btn-bulk-enrich-top" class="flex-1 sm:flex-none justify-center bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700/80 rounded-lg px-3 py-1.5 text-xs font-semibold transition flex items-center space-x-1.5 cursor-pointer whitespace-nowrap" title="Crawl company websites and profile technologies with AI">
+                  <i data-lucide="zap" class="w-3.5 h-3.5 text-amber-300"></i>
+                  <span>Enrich All with AI</span>
+                </button>
+
+                <!-- Export CSV Button -->
+                <button type="button" id="btn-export-csv" class="flex-1 sm:flex-none justify-center bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg px-3 py-1.5 text-xs font-medium transition flex items-center space-x-1.5 cursor-pointer whitespace-nowrap" title="Export verified leads to CSV spreadsheet">
+                  <i data-lucide="download" class="w-3.5 h-3.5 text-slate-400"></i>
+                  <span>Export CSV</span>
+                </button>
+              </div>
+
+              <!-- Desktop-only secondary refresh -->
+              <button type="button" id="btn-load-companies" class="hidden sm:flex bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700/80 rounded-lg px-3 py-1.5 text-xs font-medium transition items-center space-x-1.5 cursor-pointer">
+                <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-slate-400"></i>
+                <span>Refresh</span>
+              </button>
+            </div>
+
+            <!-- Right: Admin View Switcher & Grid/Table Switcher (Side-by-side on mobile) -->
+            <div class="flex items-center gap-2 justify-between w-full sm:w-auto">
+              <!-- Master Admin Mode Switcher -->
+              <div id="admin-mode-toggle-group" class="hidden items-center bg-slate-950 p-1 rounded-lg border border-indigo-900/60 flex-1 sm:flex-none justify-center">
+                <button id="btn-mode-admin" type="button" class="flex-1 sm:flex-none justify-center px-2 sm:px-2.5 py-1 rounded text-xs font-semibold bg-indigo-600 text-white transition cursor-pointer flex items-center space-x-1 sm:space-x-1.5 shadow-sm" title="Master Admin Mode: See invalid leads & admin actions">
+                  <i data-lucide="shield-check" class="w-3.5 h-3.5 text-white"></i>
+                  <span class="hidden sm:inline">Admin View</span>
+                  <span class="sm:hidden text-[11px]">Admin</span>
+                </button>
+                <button id="btn-mode-preview" type="button" class="flex-1 sm:flex-none justify-center px-2 sm:px-2.5 py-1 rounded text-xs font-semibold text-slate-400 hover:text-white transition cursor-pointer flex items-center space-x-1 sm:space-x-1.5" title="Standard User Preview: Experience app as a regular user">
+                  <i data-lucide="eye" class="w-3.5 h-3.5 text-slate-400"></i>
+                  <span class="hidden sm:inline">User Preview</span>
+                  <span class="sm:hidden text-[11px]">Preview</span>
+                </button>
+              </div>
+
+              <!-- View Mode Switcher (Grid vs Table) -->
+              <div class="flex items-center bg-slate-950 p-1 rounded-lg border border-slate-800 flex-1 sm:flex-none justify-center">
+                <button id="btn-view-grid" type="button" class="flex-1 sm:flex-none justify-center px-2.5 py-1 rounded text-xs font-medium bg-slate-800 text-white transition cursor-pointer flex items-center space-x-1" title="Grid Card View">
+                  <i data-lucide="layout-grid" class="w-3.5 h-3.5"></i>
+                  <span>Cards</span>
+                </button>
+                <button id="btn-view-table" type="button" class="flex-1 sm:flex-none justify-center px-2.5 py-1 rounded text-xs font-medium text-slate-400 hover:text-white transition cursor-pointer flex items-center space-x-1" title="Data Table View">
+                  <i data-lucide="table" class="w-3.5 h-3.5"></i>
+                  <span>Table</span>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Row: Filters & Search Controls (Clean 2x2 grid on mobile) -->
+          <div class="p-3 bg-slate-950/40 flex flex-col lg:flex-row lg:items-center justify-between gap-2.5">
+            
+            <!-- Filters Grid on mobile, inline flex on tablet/desktop -->
+            <div class="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-2.5 w-full lg:w-auto">
+              <!-- Keyword Filter Select -->
+              <div class="flex items-center space-x-1 col-span-1">
+                <select id="filter-keyword-select" class="w-full bg-slate-900 border border-slate-700/80 rounded-lg px-2 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 cursor-pointer hover:border-slate-600 transition" title="Filter by Keyword / Industry">
+                  <option value="">All Keywords</option>
+                </select>
+              </div>
+
+              <!-- City Filter Select -->
+              <div class="flex items-center space-x-1 col-span-1">
+                <select id="filter-city-select" class="w-full bg-slate-900 border border-slate-700/80 rounded-lg px-2 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 cursor-pointer hover:border-slate-600 transition" title="Filter by City">
+                  <option value="">All Cities</option>
+                </select>
+              </div>
+
+              <!-- Sort By Select -->
+              <div class="flex items-center space-x-1 col-span-1">
+                <select id="sort-select" class="w-full bg-slate-900 border border-slate-700/80 rounded-lg px-2 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 cursor-pointer hover:border-slate-600 transition" title="Sort Leads">
+                  <option value="rating_desc" selected>Highest Rated</option>
+                  <option value="enriched_desc">Enriched First</option>
+                  <option value="reviews_desc">Most Reviewed</option>
+                  <option value="rating_asc">Lowest Rating</option>
+                  <option value="newest">Newest Added</option>
+                  <option value="name_asc">Company Name (A - Z)</option>
+                </select>
+              </div>
+
+              <!-- Filter: Discovered Emails Only Toggle Pill -->
+              <div class="col-span-1">
+                <button type="button" id="btn-filter-emails" class="w-full sm:w-auto justify-center px-2.5 py-1.5 rounded-lg text-xs font-medium transition flex items-center space-x-1.5 cursor-pointer bg-slate-900 text-slate-300 hover:text-white border border-slate-700/80 shrink-0" title="Toggle Leads with Direct Verified Emails">
+                  <i data-lucide="mail-check" class="w-3.5 h-3.5 text-emerald-400"></i>
+                  <span>Has Email</span>
+                  <span id="badge-emails-count" class="px-1.5 py-0.2 rounded-full bg-slate-800 text-[10px] text-emerald-400 font-mono">0</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Search Input (Full width on mobile, right aligned on desktop) -->
+            <div class="relative w-full lg:w-72 shrink-0">
+              <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+              <input type="text" id="filter-search" placeholder="Search name, domain, tech..." class="w-full bg-slate-900 border border-slate-700/80 rounded-lg pr-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition" style="padding-left: 2.25rem !important;">
+            </div>
+
+          </div>
+        </div>
+
+        <!-- View 1: Companies Grid Container (Mobile 2-col, Laptop/Desktop 3-col) -->
+        <div id="companies-container" class="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4.5">
+          <!-- Populated by app.js -->
+        </div>
+
+        <!-- View 2: Companies Table Container (Hidden by default) -->
+        <div id="companies-table-container" class="hidden bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-sm">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs">
+              <thead class="bg-slate-950 border-b border-slate-800 text-slate-400 uppercase font-semibold text-[10px] tracking-wider">
+                <tr>
+                  <th class="px-4 py-3">Company</th>
+                  <th class="px-4 py-3">Domain / Site</th>
+                  <th class="px-4 py-3">Rating & Reviews</th>
+                  <th class="px-4 py-3">Phone & Location</th>
+                  <th class="px-4 py-3">Enrichment Status</th>
+                  <th class="px-4 py-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="companies-table-body" class="divide-y divide-slate-800/80">
+                <!-- Populated by app.js -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Directory Pagination Controls -->
+        <div id="companies-pagination" class="hidden bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm select-none">
+          <div class="flex items-center space-x-2 text-xs text-slate-400">
+            <span>Showing <strong id="companies-page-range" class="text-white font-semibold">0-0</strong> of <strong id="companies-page-total" class="text-white font-semibold">0</strong> leads</span>
+          </div>
+
+          <div class="flex items-center space-x-2 sm:space-x-3 flex-wrap justify-center">
+            <div class="flex items-center space-x-1.5 text-xs text-slate-400">
+              <span class="hidden sm:inline">Per page:</span>
+              <select id="companies-per-page" class="bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 cursor-pointer">
+                <option value="12" selected>12</option>
+                <option value="24">24</option>
+                <option value="48">48</option>
+                <option value="96">96</option>
+                <option value="0">All</option>
+              </select>
+            </div>
+
+            <div id="companies-page-buttons" class="flex items-center space-x-1">
+              <!-- Populated dynamically by app.js -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 3: CANDIDATE PROFILE & RESUME INGESTION -->
+    <!-- ========================================== -->
+    <section id="section-resume" class="tab-section hidden space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Upload Card -->
+        <div class="lg:col-span-5 bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+          <div>
+            <h2 class="text-base font-bold text-white flex items-center space-x-2">
+              <i data-lucide="file-up" class="w-4 h-4 text-indigo-400"></i>
+              <span>Upload Candidate Resume</span>
+            </h2>
+            <p class="text-xs text-slate-400 mt-1">Instant AI skill extraction. Your uploaded file is automatically deleted after processing for privacy.</p>
+          </div>
+
+          <form id="resume-form" class="space-y-4">
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1">Target Job Role</label>
+              <input type="text" id="input-target-role" placeholder="e.g. Senior Full-Stack Engineer" value="Full-Stack Developer" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500">
+            </div>
+
+            <div>
+              <label class="block text-xs font-medium text-slate-400 mb-1">Resume File (PDF or Plain Text)</label>
+              <div class="border-2 border-dashed border-slate-800 hover:border-slate-700 rounded-xl p-6 text-center cursor-pointer bg-slate-950/50 transition" id="dropzone">
+                <input type="file" id="input-resume-file" accept=".pdf,.txt,.docx" class="hidden">
+                <div class="mb-2 flex items-center justify-center">
+                  <i data-lucide="cloud-upload" class="w-8 h-8 text-indigo-400"></i>
+                </div>
+                <p class="text-xs font-medium text-slate-300" id="file-label">Click to select or drag & drop resume file</p>
+                <p class="text-[11px] text-slate-500 mt-0.5">Supports PDF and TXT</p>
+              </div>
+            </div>
+
+            <button type="submit" id="btn-parse-resume" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-2.5 rounded-lg text-xs transition flex items-center justify-center space-x-1.5 cursor-pointer shadow-sm">
+              <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-300"></i>
+              <span>Analyze Resume with AI</span>
+            </button>
+          </form>
+        </div>
+
+        <!-- AI Parsed Profile Summary Card -->
+        <div class="lg:col-span-7 bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+          <div class="flex items-center justify-between">
+            <h2 class="text-base font-bold text-white flex items-center space-x-2">
+              <i data-lucide="cpu" class="w-4 h-4 text-indigo-400"></i>
+              <span>AI-Powered Candidate Profile</span>
+            </h2>
+            <span class="text-xs px-2 py-0.5 rounded bg-emerald-950/60 text-emerald-400 border border-emerald-800 flex items-center space-x-1">
+              <i data-lucide="check-circle-2" class="w-3 h-3"></i>
+              <span>Active Profile</span>
+            </span>
+          </div>
+
+          <div id="profile-display" class="space-y-4 text-xs">
+            <div class="bg-slate-950 border border-slate-800 rounded-xl p-4">
+              <span class="text-slate-400 font-medium block mb-1">Professional Summary:</span>
+              <p id="profile-pitch" class="text-slate-200 leading-relaxed">Upload your resume to extract career highlights, key strengths, and an introductory summary.</p>
+            </div>
+
+            <div>
+              <span class="text-slate-400 font-medium block mb-2">Extracted Core Skills:</span>
+              <div id="profile-skills" class="flex flex-wrap gap-1.5">
+                <span class="px-2.5 py-1 rounded bg-slate-800 text-slate-300 text-xs">Python</span>
+                <span class="px-2.5 py-1 rounded bg-slate-800 text-slate-300 text-xs">FastAPI</span>
+                <span class="px-2.5 py-1 rounded bg-slate-800 text-slate-300 text-xs">PostgreSQL</span>
+              </div>
+            </div>
+
+            <div>
+              <span class="text-slate-400 font-medium block mb-2">Career Achievements & Highlights:</span>
+              <ul id="profile-achievements" class="space-y-1.5 text-slate-300 list-disc list-inside">
+                <li>Demonstrated expertise in scalable software architecture and API development.</li>
+              </ul>
+            </div>
+
+            <div>
+              <span class="text-slate-400 font-medium block mb-1.5 flex items-center space-x-1">
+                <i data-lucide="file-text" class="w-3.5 h-3.5 text-indigo-400"></i>
+                <span>Comprehensive Candidate Evaluation Report:</span>
+              </span>
+              <div id="profile-detailed-analysis" class="text-slate-300 leading-relaxed max-h-60 overflow-y-auto whitespace-pre-wrap font-sans text-xs bg-slate-950 p-3.5 rounded-xl border border-slate-800">
+                Upload your resume above to generate a comprehensive career assessment, technical evaluation, and personalized introduction.
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- TAB 3: OUTREACH HUB & AUDIT COMMAND CENTER -->
+    <!-- ========================================== -->
+    <section id="section-outreach" class="tab-section hidden space-y-5 sm:space-y-6">
+      
+      <!-- Top Action Bar -->
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 shadow-sm">
+        <div class="min-w-0">
+          <h2 class="text-base font-bold text-white flex items-center space-x-2">
+            <i data-lucide="mail-check" class="w-4 h-4 text-rose-400 shrink-0"></i>
+            <span>Outreach Command Center</span>
+            <span class="text-[10px] bg-rose-950/70 text-rose-300 border border-rose-800/80 px-2 py-0.5 rounded font-mono shrink-0">1-on-1 Direct Outreach</span>
+          </h2>
+          <p class="text-xs text-slate-400 mt-1 leading-relaxed">Review personalized emails, launch 1-click Gmail messages, and track your sent outreach.</p>
+        </div>
+        <div class="flex items-center space-x-2 shrink-0">
+          <button id="btn-gen-all-pitches" class="w-full sm:w-auto px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold transition flex items-center justify-center space-x-1.5 cursor-pointer shadow-sm">
+            <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-300"></i>
+            <span>Prepare All Emails</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Metrics Strip for Outreach Pipeline -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div id="outreach-stat-all" class="bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-xl p-3 space-y-0.5 transition cursor-pointer select-none">
+          <span class="text-[11px] text-slate-300 font-medium block whitespace-nowrap">Total Leads</span>
+          <div class="flex items-baseline space-x-1.5">
+            <span id="outreach-count-total" class="text-lg sm:text-xl font-bold text-white">0</span>
+            <span class="text-[9px] text-slate-400 font-mono">Queue</span>
+          </div>
+        </div>
+
+        <div id="outreach-stat-emails" class="bg-slate-900 border border-slate-800 hover:border-emerald-600/60 rounded-xl p-3 space-y-0.5 transition cursor-pointer select-none">
+          <span class="text-[11px] text-slate-300 font-medium block whitespace-nowrap">Verified Emails</span>
+          <div class="flex items-baseline space-x-1.5">
+            <span id="outreach-count-emails" class="text-lg sm:text-xl font-bold text-emerald-400">0</span>
+            <span class="text-[9px] text-emerald-400/80 font-mono">Direct</span>
+          </div>
+        </div>
+
+        <div id="outreach-stat-ready" class="bg-slate-900 border border-slate-800 hover:border-indigo-600/60 rounded-xl p-3 space-y-0.5 transition cursor-pointer select-none">
+          <span class="text-[11px] text-slate-300 font-medium block whitespace-nowrap">Ready to Email</span>
+          <div class="flex items-baseline space-x-1.5">
+            <span id="outreach-count-ready" class="text-lg sm:text-xl font-bold text-indigo-400">0</span>
+            <span class="text-[9px] text-slate-400 font-mono">Pending</span>
+          </div>
+        </div>
+
+        <div id="outreach-stat-sent" class="bg-slate-900 border border-slate-800 hover:border-sky-600/60 rounded-xl p-3 space-y-0.5 transition cursor-pointer select-none">
+          <span class="text-[11px] text-slate-300 font-medium block whitespace-nowrap">Emails Sent</span>
+          <div class="flex items-baseline space-x-1.5">
+            <span id="outreach-count-sent" class="text-lg sm:text-xl font-bold text-sky-400">0</span>
+            <span class="text-[9px] text-slate-400 font-mono">Contacted</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Layout: Pipeline (Left 8 cols) + Audit History (Right 4 cols) -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 items-start">
+        
+        <!-- Left: Outreach Pipeline with Search, Filter Pills & Pagination -->
+        <div class="lg:col-span-8 space-y-3.5">
+          
+          <!-- Search & Filter Controls Card -->
+          <div class="bg-slate-900 border border-slate-800 rounded-xl p-3 space-y-2.5 shadow-sm">
+            <!-- Full-width Search Input -->
+            <div class="relative w-full">
+              <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
+              <input type="text" id="outreach-search-input" placeholder="Search by company name, email address, or website domain..." class="w-full bg-slate-950 border border-slate-800 rounded-lg pr-3 py-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition" style="padding-left: 2.25rem !important;">
+            </div>
+
+            <!-- Filter Pills (Dedicated row, perfectly single-line, equal heights) -->
+            <div class="flex items-center space-x-1.5 sm:space-x-2 overflow-x-auto no-scrollbar py-0.5 w-full">
+              <button type="button" id="outreach-filter-all" class="outreach-pill active px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white transition cursor-pointer whitespace-nowrap shrink-0 focus:outline-none shadow-sm">
+                All (<span class="outreach-badge-all">0</span>)
+              </button>
+              <button type="button" id="outreach-filter-emails" class="outreach-pill px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white bg-slate-950 border border-slate-800 transition cursor-pointer whitespace-nowrap shrink-0 focus:outline-none">
+                With Email (<span class="outreach-badge-emails">0</span>)
+              </button>
+              <button type="button" id="outreach-filter-ready" class="outreach-pill px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white bg-slate-950 border border-slate-800 transition cursor-pointer whitespace-nowrap shrink-0 focus:outline-none">
+                Not Contacted (<span class="outreach-badge-ready">0</span>)
+              </button>
+              <button type="button" id="outreach-filter-sent" class="outreach-pill px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white bg-slate-950 border border-slate-800 transition cursor-pointer whitespace-nowrap shrink-0 focus:outline-none">
+                Contacted (<span class="outreach-badge-sent">0</span>)
+              </button>
+            </div>
+          </div>
+
+          <!-- Pitch Cards List Container -->
+          <div id="pitches-container" class="space-y-2.5">
+            <!-- Rendered dynamically by app.js (sliced by page size) -->
+          </div>
+
+          <!-- Outreach Pipeline Pagination Controls -->
+          <div id="outreach-pagination" class="hidden bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm select-none">
+            <div class="flex items-center space-x-2 text-xs text-slate-400">
+              <span>Showing <strong id="outreach-page-range" class="text-white font-semibold">0-0</strong> of <strong id="outreach-page-total" class="text-white font-semibold">0</strong> targets</span>
+            </div>
+
+            <div class="flex items-center space-x-2 sm:space-x-3 flex-wrap justify-center">
+              <div class="flex items-center space-x-1.5 text-xs text-slate-400">
+                <span class="hidden sm:inline">Per page:</span>
+                <select id="outreach-per-page" class="bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 cursor-pointer">
+                  <option value="10" selected>10</option>
+                  <option value="25">25</option>
+                  <option value="50">50</option>
+                  <option value="0">All</option>
+                </select>
+              </div>
+
+              <div id="outreach-page-buttons" class="flex items-center space-x-1">
+                <!-- Populated dynamically by app.js -->
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Sticky Outreach Audit History -->
+        <div class="lg:col-span-4 bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3 lg:sticky lg:top-20 self-start shadow-sm">
+          <div class="flex items-center justify-between">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center space-x-1.5">
+              <i data-lucide="clock" class="w-3.5 h-3.5 text-indigo-400"></i>
+              <span>Recent Outreach Activity</span>
+            </h3>
+            <span class="text-[10px] text-emerald-400 font-mono bg-emerald-950/60 border border-emerald-800 px-1.5 py-0.2 rounded">Live</span>
+          </div>
+          <div id="audit-logs" class="space-y-2 text-xs max-h-[calc(100vh-14rem)] overflow-y-auto pr-1">
+            <p class="text-slate-500 italic">No emails sent yet today.</p>
+          </div>
+        </div>
+
+      </div>
+    </section>
+  </main>
+  </div> <!-- /main-content-wrap -->
+
+  <!-- COMPANY DETAILS MODAL -->
+  <div id="company-modal" class="fixed inset-0 z-[100] bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+    <div class="relative bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full shadow-2xl shadow-indigo-950/50 max-h-[90vh] sm:max-h-[84vh] flex flex-col my-auto overflow-hidden">
+      
+      <!-- Modal Header (Sticky Pin) -->
+      <div class="px-5 py-4 border-b border-slate-800/80 bg-slate-900/95 shrink-0 space-y-2.5">
+        <div class="flex items-start justify-between gap-3">
+          <div class="min-w-0 space-y-1">
+            <div class="flex items-center space-x-2 flex-wrap gap-y-1">
+              <h3 class="text-base sm:text-lg font-bold text-white break-words min-w-0" id="cmodal-name">Company Name</h3>
+              <span id="cmodal-badge"></span>
+            </div>
+            <div class="flex items-center space-x-3 text-xs text-slate-400 flex-wrap gap-y-1">
+              <a id="cmodal-website" href="#" target="_blank" rel="noopener noreferrer" class="font-mono text-indigo-400 hover:text-indigo-300 hover:underline flex items-center space-x-1 max-w-full break-all">
+                <i data-lucide="globe" class="w-3.5 h-3.5 shrink-0"></i>
+                <span id="cmodal-domain" class="break-all">domain.com</span>
+                <i data-lucide="external-link" class="w-2.5 h-2.5 shrink-0 opacity-70"></i>
+              </a>
+              <span id="cmodal-rating" class="text-amber-400 font-semibold flex items-center space-x-1 shrink-0">
+                <i data-lucide="star" class="w-3.5 h-3.5 text-amber-400 fill-amber-400"></i>
+                <span>4.8 (12 reviews)</span>
+              </span>
+            </div>
+          </div>
+          <button id="cmodal-close" type="button" aria-label="Close dialog" class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer shrink-0">
+            <i data-lucide="x" class="w-5 h-5"></i>
+          </button>
+        </div>
+
+        <!-- Segmented Tab Navigation inside Modal -->
+        <div class="flex items-center space-x-1 bg-slate-950 p-1 rounded-xl border border-slate-800/80 text-xs font-semibold select-none">
+          <button type="button" id="cmodal-tab-btn-overview" class="cmodal-tab-btn active flex-1 py-1.5 px-3 rounded-lg text-center transition flex items-center justify-center space-x-1.5 cursor-pointer bg-indigo-600 text-white shadow-sm">
+            <i data-lucide="building-2" class="w-3.5 h-3.5 shrink-0"></i>
+            <span>Overview & Contacts</span>
+          </button>
+          <button type="button" id="cmodal-tab-btn-ai" class="cmodal-tab-btn flex-1 py-1.5 px-3 rounded-lg text-center transition flex items-center justify-center space-x-1.5 cursor-pointer text-slate-400 hover:text-white hover:bg-slate-900">
+            <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-400 shrink-0"></i>
+            <span>AI Intel & Report</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Scrollable Modal Body -->
+      <div class="overflow-y-auto flex-1 p-5 space-y-4">
+        
+        <!-- PANEL 1: Overview & Contacts -->
+        <div id="cmodal-panel-overview" class="space-y-4">
+          <!-- Contact & Location Grid -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+            <div class="bg-slate-950/80 border border-slate-800/80 rounded-xl p-3 space-y-1">
+              <span class="text-slate-500 font-medium uppercase text-[10px] tracking-wider flex items-center space-x-1">
+                <i data-lucide="phone" class="w-3 h-3 text-slate-500"></i>
+                <span>Direct Phone</span>
+              </span>
+              <p id="cmodal-phone" class="text-slate-200 font-mono">N/A</p>
+            </div>
+            <div class="bg-slate-950/80 border border-slate-800/80 rounded-xl p-3 space-y-1 min-w-0">
+              <span class="text-slate-500 font-medium uppercase text-[10px] tracking-wider flex items-center space-x-1">
+                <i data-lucide="map-pin" class="w-3 h-3 text-slate-500"></i>
+                <span>Location (Google Maps)</span>
+              </span>
+              <div id="cmodal-location-container" class="break-words">
+                <a id="cmodal-location-link" href="#" target="_blank" rel="noopener noreferrer" class="text-indigo-400 hover:text-indigo-300 hover:underline flex items-start space-x-1 font-medium break-words" title="Open in Google Maps">
+                  <i data-lucide="external-link" class="w-3 h-3 shrink-0 text-indigo-400 mt-0.5"></i>
+                  <span id="cmodal-address" class="break-words">N/A</span>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <!-- Discovered Emails Section -->
+          <div class="space-y-2">
+            <div class="flex items-center justify-between">
+              <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center space-x-1.5">
+                <i data-lucide="mail" class="w-3.5 h-3.5 text-emerald-400"></i>
+                <span>Discovered Contact & HR Emails</span>
+              </h4>
+              <span id="cmodal-emails-count" class="text-[11px] text-slate-400 font-mono bg-slate-950 px-2 py-0.5 rounded border border-slate-800">0 emails</span>
+            </div>
+            <div id="cmodal-emails-container" class="bg-slate-950/80 border border-slate-800/80 rounded-xl p-3 flex flex-wrap gap-2 text-xs">
+              <span class="text-slate-500 italic">No emails found yet. Click "Enrich with AI" below to discover contacts.</span>
+            </div>
+          </div>
+
+          <!-- Executive Summary & Vibe -->
+          <div class="bg-slate-950/80 border border-slate-800/80 rounded-xl p-4 space-y-3 text-xs">
+            <div>
+              <span class="text-slate-400 font-semibold block mb-1">Company Executive Overview:</span>
+              <p id="cmodal-summary" class="text-slate-300 leading-relaxed">Not enriched yet. Click "Enrich with AI" below to analyze company details and tech stack.</p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 pt-2.5 border-t border-slate-900">
+              <div>
+                <span class="text-slate-500 text-[10px] uppercase font-semibold block">Industry</span>
+                <p id="cmodal-industry" class="text-slate-200 font-medium mt-0.5">Technology</p>
+              </div>
+              <div>
+                <span class="text-slate-500 text-[10px] uppercase font-semibold block">Tone / Vibe</span>
+                <p id="cmodal-tone" class="text-slate-200 font-medium mt-0.5">Professional</p>
+              </div>
+            </div>
+
+            <div class="pt-2.5 border-t border-slate-900">
+              <span class="text-slate-400 font-semibold block mb-1.5">Identified Tech Stack:</span>
+              <div id="cmodal-techstack" class="flex flex-wrap gap-1.5">
+                <span class="text-slate-500 italic text-[11px]">Analyze with AI to detect company technologies.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- PANEL 2: AI Intelligence & Deep Technical Report -->
+        <div id="cmodal-panel-ai" class="space-y-3 hidden">
+          <div class="bg-slate-950/80 border border-slate-800/80 rounded-xl p-4 space-y-3 text-xs">
+            <div class="flex items-center justify-between border-b border-slate-900 pb-2">
+              <div class="flex items-center space-x-1.5 text-slate-300 font-semibold">
+                <i data-lucide="file-text" class="w-3.5 h-3.5 text-indigo-400"></i>
+                <span>Technical Intelligence Report</span>
+                <span class="text-[10px] text-slate-500 font-mono">(500–700 words)</span>
+              </div>
+              <button type="button" id="cmodal-btn-copy-report" class="px-2 py-1 rounded bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800 text-[11px] font-medium transition flex items-center space-x-1 cursor-pointer">
+                <i data-lucide="copy" class="w-3 h-3"></i>
+                <span>Copy</span>
+              </button>
+            </div>
+            <div id="cmodal-detailed-analysis" class="text-slate-300 leading-relaxed max-h-72 overflow-y-auto whitespace-pre-wrap font-sans text-xs bg-slate-900/60 p-3 rounded-lg border border-slate-800/80">
+              Not enriched yet. Click "Enrich with AI" below to generate a detailed intelligence report.
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Modal Footer Actions (Sticky Pin) -->
+      <div class="px-5 py-3 border-t border-slate-800/80 bg-slate-900/95 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shrink-0">
+        <div class="flex items-center space-x-2 w-full sm:w-auto">
+          <button id="cmodal-btn-enrich" type="button" class="flex-1 sm:flex-initial px-3.5 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl text-xs font-semibold transition flex items-center justify-center space-x-1.5 cursor-pointer shadow-sm active:scale-95">
+            <i data-lucide="zap" class="w-3.5 h-3.5 text-amber-300"></i>
+            <span>Enrich with AI</span>
+          </button>
+          <button id="cmodal-btn-admin-action" type="button" class="hidden px-3 py-2 rounded-xl text-xs font-semibold transition flex items-center space-x-1.5 cursor-pointer">
+            <i data-lucide="shield-alert" class="w-3.5 h-3.5"></i>
+            <span id="cmodal-admin-action-text">Mark as Invalid</span>
+          </button>
+        </div>
+
+        <div class="flex items-center space-x-2 w-full sm:w-auto justify-end">
+          <button id="cmodal-btn-cancel" type="button" class="px-3.5 py-2 rounded-xl border border-slate-800 hover:bg-slate-800 text-slate-400 hover:text-white text-xs font-medium transition cursor-pointer">
+            Close
+          </button>
+          <button id="cmodal-btn-pitch" type="button" class="flex-1 sm:flex-initial px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold transition flex items-center justify-center space-x-1.5 shadow-md shadow-indigo-600/20 cursor-pointer active:scale-95">
+            <i data-lucide="send" class="w-3.5 h-3.5"></i>
+            <span>Write Outreach Email</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- PITCH PREVIEW & EDIT MODAL -->
+  <div id="pitch-modal" class="fixed inset-0 z-[100] w-screen h-screen bg-slate-950/85 backdrop-blur-md hidden flex items-center justify-center p-4 overflow-hidden">
+    <div class="relative bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full p-6 space-y-4 shadow-2xl my-auto">
+      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div>
+          <h3 class="text-base font-bold text-white" id="modal-company-name">Personalized Outreach Email</h3>
+          <p class="text-xs text-slate-400">Recipient: <span id="modal-target-email" class="font-mono text-emerald-400 font-semibold">hr@company.com</span></p>
+        </div>
+        <button id="modal-close" class="text-slate-400 hover:text-white p-1 transition cursor-pointer">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1">Subject Line</label>
+          <input type="text" id="modal-subject" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-indigo-500">
+        </div>
+        <div>
+          <label class="block text-xs font-medium text-slate-400 mb-1">Email Message</label>
+          <textarea id="modal-body" rows="7" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-xs text-slate-100 font-mono leading-relaxed focus:outline-none focus:border-indigo-500"></textarea>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between pt-2">
+        <button id="btn-copy-pitch" class="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-xs font-medium text-slate-300 transition flex items-center space-x-1.5 cursor-pointer">
+          <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+          <span>Copy Message</span>
+        </button>
+
+        <div class="flex items-center space-x-2">
+          <a id="btn-launch-gmail" href="#" target="_blank" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold transition flex items-center space-x-1.5 cursor-pointer shadow-sm">
+            <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+            <span>Open in Gmail</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- LOGIN REQUIRED MODAL -->
+  <div id="login-modal" class="fixed inset-0 z-[110] w-screen h-screen bg-slate-950/85 backdrop-blur-md hidden flex items-center justify-center p-4 overflow-hidden">
+    <div class="relative bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl my-auto text-center">
+      <div class="mx-auto w-12 h-12 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
+        <i data-lucide="lock" class="w-6 h-6"></i>
+      </div>
+      <div>
+        <h3 class="text-base font-bold text-white">Authentication Required</h3>
+        <p class="text-xs text-slate-400 mt-1.5 leading-relaxed">
+          Contact email extraction and AI technology profiling require an active account. Sign in to analyze leads and generate personalized outreach.
+        </p>
+      </div>
+
+      <div class="space-y-2.5 pt-2">
+        <a href="/auth/google/login" class="flex items-center justify-center space-x-2 w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-sm transition">
+          <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24"><path fill="#ffffff" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#ffffff" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#ffffff" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#ffffff" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
+          <span>Sign In with Google</span>
+        </a>
+
+        {% if dev_mode %}
+        <div class="space-y-1.5 pt-2 border-t border-slate-800/80">
+          <span class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider block">Dev Sandbox Quick Access</span>
+          <button id="btn-modal-admin-login" type="button" class="w-full py-2.5 px-3 rounded-xl bg-rose-950/70 hover:bg-rose-900/90 border border-rose-800 text-xs font-bold text-rose-200 transition cursor-pointer flex items-center justify-center space-x-2 shadow-sm" title="Sign In as Master Admin (vorarahul111@gmail.com)">
+            <i data-lucide="shield-check" class="w-4 h-4 text-rose-400"></i>
+            <span>Sign In as Master Admin (vorarahul111@gmail.com)</span>
+          </button>
+          <button id="btn-modal-demo-login" type="button" class="w-full py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-medium text-slate-300 transition cursor-pointer flex items-center justify-center space-x-2" title="Sign In as Standard User">
+            <i data-lucide="user" class="w-3.5 h-3.5 text-slate-400"></i>
+            <span>Sign In as Standard User</span>
+          </button>
+        </div>
+        {% endif %}
+
+        <button id="login-modal-close" type="button" class="w-full py-1.5 text-xs text-slate-500 hover:text-slate-300 transition cursor-pointer">
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/static/js/app.js?v=2.8"></script>
+</body>
+</html>

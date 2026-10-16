@@ -1,0 +1,10 @@
+[lint]
+select = ["E", "F", "W", "UP", "I"]
+ignore = [
+    "E501",  # Line length
+    "B008",  # FastAPI Depends in function defaults is idiomatic
+    "BLE001" # Safe fallback handlers in web scrapers
+]
+
+[lint.isort]
+combine-as-imports = true

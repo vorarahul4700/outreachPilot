@@ -1,0 +1,47 @@
+# Environment variables & secrets (CRITICAL: Do NOT remove)
+.env
+.env.local
+.env.*.local
+
+# Python cache & virtual environments
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+
+# Linter and formatting caches
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
+
+# Databases & local storage
+*.db
+*.sqlite
+*.sqlite3
+reachpilot_fallback.db
+
+# Driver & runtime temp folders
+downloaded_files/
+scratch/
+*.lock
+cookies.txt
+
+# Screenshots and test output
+*.png
+*.jpg
+*.jpeg
+*.webp
+*.log
+test_*.py
+verify_*.py
+
+# Operating system & IDE files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
