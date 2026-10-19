@@ -143,9 +143,11 @@ class OutreachLog(Base):
 
 
 # Database engine & Session factory
-clean_db_url = DATABASE_URL
+clean_db_url = (DATABASE_URL or "").strip().strip("\"'").strip()
 if clean_db_url.startswith("postgres://"):
-    clean_db_url = clean_db_url.replace("postgres://", "postgresql://", 1)
+    clean_db_url = clean_db_url.replace("postgres://", "postgresql+psycopg2://", 1)
+elif clean_db_url.startswith("postgresql://") and not clean_db_url.startswith("postgresql+"):
+    clean_db_url = clean_db_url.replace("postgresql://", "postgresql+psycopg2://", 1)
 
 try:
     engine = create_engine(
@@ -154,7 +156,9 @@ try:
         pool_size=10,
         max_overflow=20
     )
-except Exception:
+    print(f"[DB] Initialized database engine: {engine.name} ({engine.url.render_as_string(hide_password=True)})")
+except Exception as e:
+    print(f"[DB Error] Could not initialize engine with DATABASE_URL ({e}). Falling back to SQLite.")
     engine = create_engine("sqlite:///./reachpilot_fallback.db")
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
@@ -164,10 +168,10 @@ def init_db():
     """Create tables automatically on startup and ensure columns exist"""
     try:
         Base.metadata.create_all(bind=engine)
-        print("[DB] PostgreSQL Database schema initialized successfully.")
+        print(f"[DB] Schema initialized successfully on engine: {engine.name}")
 
         # Safe schema alteration for new columns (PostgreSQL only)
-        if "postgres" in str(engine.url).lower():
+        if engine.name == "postgresql":
             with engine.connect() as conn:
                 conn.execute(text("ALTER TABLE companies ADD COLUMN IF NOT EXISTS is_invalid BOOLEAN DEFAULT FALSE;"))
                 conn.execute(text("ALTER TABLE companies ADD COLUMN IF NOT EXISTS invalid_reason VARCHAR(255);"))
