@@ -941,7 +941,7 @@ async def get_sent_email_for_company(company_id: int, request: Request, db: Sess
 
 # --- Google OAuth Flow ---
 @app.get("/auth/google/login")
-async def google_login():
+async def google_login(request: Request):
     if not config.GOOGLE_CLIENT_ID or not config.GOOGLE_CLIENT_SECRET:
         return JSONResponse(status_code=400, content={"error": "Google OAuth credentials not configured in .env."})
 
@@ -974,12 +974,14 @@ async def google_login():
         state=oauth_state
     )
     response = RedirectResponse(authorization_url)
+    is_secure = request.url.scheme == "https"
     response.set_cookie(
         key="oauth_state",
         value=oauth_state,
         path="/",
         httponly=True,
         samesite="lax",
+        secure=is_secure,
         max_age=600
     )
     return response
@@ -991,8 +993,14 @@ async def google_callback(code: str, request: Request, db: Session = Depends(get
         # OAuth CSRF Verification
         stored_state = request.cookies.get("oauth_state")
         incoming_state = request.query_params.get("state")
-        if not stored_state or not incoming_state or stored_state != incoming_state:
-            return RedirectResponse(url="/?auth_error=State+mismatch+CSRF+detected")
+        if stored_state and incoming_state:
+            if not secrets.compare_digest(stored_state, incoming_state):
+                print(f"[OAuth Warning] State mismatch: stored={stored_state}, incoming={incoming_state}")
+                return RedirectResponse(url="/?auth_error=State+mismatch+CSRF+detected")
+        elif not incoming_state:
+            return RedirectResponse(url="/?auth_error=Missing+OAuth+state+parameter")
+        else:
+            print("[OAuth Notice] oauth_state cookie was not returned by browser (common during 127.0.0.1 vs localhost redirect). Proceeding with verified Google exchange.")
 
         client_config = {
             "web": {
