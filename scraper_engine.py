@@ -359,14 +359,34 @@ class GoogleScraper:
             # Create a unique, isolated user profile directory to avoid Windows file locks [WinError 32]
             for attempt in range(2):
                 try:
-                    tmp_profile_dir = tempfile.mkdtemp(prefix=f"op_chrome_{int(time.time())}_{attempt}_")
-                    driver = Driver(
-                        uc=True,
-                        headless=self.headless,
-                        user_data_dir=tmp_profile_dir,
-                        block_images=True,
-                        disable_csp=True
-                    )
+                    chrome_bin_path = None
+                    for candidate in (
+                        "/opt/render/project/.render/chrome/opt/google/chrome/google-chrome",
+                        "/opt/render/project/.render/chrome/opt/google/chrome/chrome",
+                        "/usr/bin/google-chrome-stable",
+                        "/usr/bin/google-chrome",
+                        "/usr/bin/chromium",
+                        "/usr/bin/chromium-browser"
+                    ):
+                        if os.path.exists(candidate):
+                            chrome_bin_path = candidate
+                            chrome_dir = os.path.dirname(candidate)
+                            if chrome_dir not in os.environ.get("PATH", ""):
+                                os.environ["PATH"] = f"{chrome_dir}:{os.environ.get('PATH', '')}"
+                            break
+
+                    driver_kwargs = {
+                        "uc": True,
+                        "headless": self.headless,
+                        "user_data_dir": tmp_profile_dir,
+                        "block_images": True,
+                        "disable_csp": True,
+                        "no_sandbox": True
+                    }
+                    if chrome_bin_path:
+                        driver_kwargs["binary_location"] = chrome_bin_path
+
+                    driver = Driver(**driver_kwargs)
                     break
                 except Exception as init_err:
                     if tmp_profile_dir and os.path.exists(tmp_profile_dir):
