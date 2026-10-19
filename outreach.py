@@ -60,11 +60,13 @@ async def send_via_google_oauth(
     subject: str,
     body: str,
     db: Session,
-    company_id: int | None = None
+    company_id: int | None = None,
+    resume_attachment_path: str | None = None
 ) -> dict[str, Any]:
     """
     Sends an email directly through user's authorized Google OAuth 2.0 credentials.
     Redirects to DEV_OVERRIDE_EMAIL if DEV_MODE is active.
+    Supports optional resume PDF attachment.
     """
     if not user.oauth_tokens:
         return {"success": False, "error": "Google OAuth account not connected."}
@@ -73,6 +75,7 @@ async def send_via_google_oauth(
     effective_subject = f"[TEST -> {to_email}] {subject}" if config.DEV_MODE else subject
 
     try:
+        import os
         token_data = config.decrypt_tokens(user.oauth_tokens) if isinstance(user.oauth_tokens, str) else user.oauth_tokens
         if not token_data or not isinstance(token_data, dict):
             return {"success": False, "error": "Invalid or unparseable OAuth tokens."}
@@ -88,10 +91,31 @@ async def send_via_google_oauth(
 
         service = build("gmail", "v1", credentials=creds)
 
-        message = MIMEText(body)
-        message["to"] = effective_to
-        message["from"] = user.email
-        message["subject"] = effective_subject
+        if resume_attachment_path and os.path.exists(resume_attachment_path):
+            from email import encoders
+            from email.mime.base import MIMEBase
+            from email.mime.multipart import MIMEMultipart
+
+            message = MIMEMultipart()
+            message["to"] = effective_to
+            message["from"] = user.email
+            message["subject"] = effective_subject
+            message.attach(MIMEText(body, "plain"))
+            try:
+                with open(resume_attachment_path, "rb") as f:
+                    part = MIMEBase("application", "pdf" if resume_attachment_path.lower().endswith(".pdf") else "octet-stream")
+                    part.set_payload(f.read())
+                encoders.encode_base64(part)
+                filename = os.path.basename(resume_attachment_path)
+                part.add_header("Content-Disposition", f"attachment; filename=\"{filename}\"")
+                message.attach(part)
+            except Exception as att_err:
+                print(f"[Attachment Warning] Could not attach resume: {att_err}")
+        else:
+            message = MIMEText(body)
+            message["to"] = effective_to
+            message["from"] = user.email
+            message["subject"] = effective_subject
 
         raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode("utf-8")
         send_result = service.users().messages().send(
@@ -106,6 +130,7 @@ async def send_via_google_oauth(
                 user_id=user.id,
                 recipient_email=effective_to,
                 subject=effective_subject,
+                email_body=body,
                 delivery_method="OAUTH_DIRECT",
                 status="SENT",
                 sent_at=datetime.utcnow()
@@ -150,13 +175,18 @@ async def dispatch_batch_outreach(
             })
             continue
 
+        import os
+        user_resume_path = os.path.join("uploads", "resumes", f"user_{user.id}_resume.pdf")
+        resume_att = user_resume_path if os.path.exists(user_resume_path) else None
+
         res = await send_via_google_oauth(
             user=user,
             to_email=pitch.target_email,
             subject=pitch.subject_line,
             body=pitch.email_body,
             db=db,
-            company_id=pitch.company_id
+            company_id=pitch.company_id,
+            resume_attachment_path=resume_att
         )
 
         if res.get("success"):

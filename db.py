@@ -35,6 +35,7 @@ class User(Base):
     oauth_tokens = Column(JsonType, nullable=True)
     target_role = Column(String(255), nullable=True)
     resume_summary = Column(JsonType, nullable=True)
+    resume_link = Column(String(500), nullable=True)
     daily_send_limit = Column(Integer, default=50)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -131,6 +132,7 @@ class OutreachLog(Base):
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=True, index=True)
     recipient_email = Column(String(255), nullable=False, index=True)
     subject = Column(String(255), nullable=False)
+    email_body = Column(Text, nullable=True)
     delivery_method = Column(String(50), nullable=False)
     status = Column(String(50), default="SENT")
     error_message = Column(Text, nullable=True)
@@ -160,12 +162,14 @@ def init_db():
         Base.metadata.create_all(bind=engine)
         print("[DB] PostgreSQL Database schema initialized successfully.")
 
-        # Safe schema alteration for new invalidation columns
+        # Safe schema alteration for new columns
         with engine.connect() as conn:
             conn.execute(text("ALTER TABLE companies ADD COLUMN IF NOT EXISTS is_invalid BOOLEAN DEFAULT FALSE;"))
             conn.execute(text("ALTER TABLE companies ADD COLUMN IF NOT EXISTS invalid_reason VARCHAR(255);"))
             conn.execute(text("ALTER TABLE companies ADD COLUMN IF NOT EXISTS invalid_at TIMESTAMP;"))
             conn.execute(text("ALTER TABLE companies ADD COLUMN IF NOT EXISTS location_url TEXT;"))
+            conn.execute(text("ALTER TABLE outreach_logs ADD COLUMN IF NOT EXISTS email_body TEXT;"))
+            conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS resume_link VARCHAR(500);"))
             conn.commit()
     except Exception as ex:
         print(f"[DB Warning] Could not auto-create/migrate tables: {ex}")

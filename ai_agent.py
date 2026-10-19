@@ -170,11 +170,14 @@ def generate_personalized_pitch(
     skills = ", ".join(candidate_profile.get("top_skills", []))
     achievements = "\n".join([f"- {a}" for a in candidate_profile.get("key_achievements", [])])
     candidate_deep_analysis = candidate_profile.get("detailed_profile_analysis", "")
+    resume_link = (candidate_profile.get("resume_link") or "").strip()
 
     company_summary = company_profile.get("summary", "")
     company_deep_analysis = company_profile.get("detailed_analysis", "")
     company_tech = ", ".join(company_profile.get("tech_stack", []))
     company_industry = company_profile.get("industry", "Tech")
+
+    resume_link_instruction = f"Candidate Resume/Portfolio Link: {resume_link}\nInclude this live link naturally in the call to action or closing of the email so the hiring team can review candidate's work directly." if resume_link else "Mention that candidate is ready to share complete resume and work samples upon reply."
 
     prompt = f"""You are an elite engineering talent strategist and cold email copywriter.
 You are helping an engineer ({candidate_name}) send a direct, high-impact cold application / talent inquiry email to an engineering leader, founder, or hiring manager at {company_name}.
@@ -197,6 +200,7 @@ Candidate In-Depth Profile:
 ---
 {candidate_deep_analysis[:3500]}
 ---
+{resume_link_instruction}
 
 Rules for the Cold Email (Job Opportunity Outreach):
 1. Subject line: 5-8 words. Direct, professional, and clear about the role and value (e.g. "{target_role} Application - {candidate_name} - {company_name}" or "{candidate_name} - {target_role} Inquiry for {company_name}").
@@ -204,7 +208,7 @@ Rules for the Cold Email (Job Opportunity Outreach):
 3. Structure:
    - Genuine Hook: Specifically reference a product, feature, or tech stack initiative {company_name} builds from the intelligence profile.
    - Value Bridge: Explicitly link candidate's core skills and quantified achievements to how candidate can solve engineering challenges, scale systems, or ship features for {company_name}.
-   - Clear Job Opportunity CTA: Inquire about current or upcoming engineering openings for {target_role}, or offer to share GitHub / full resume / portfolio, or ask if they'd be open to discussing how candidate could contribute to the engineering team.
+   - Clear Job Opportunity CTA: Inquire about current or upcoming engineering openings for {target_role}. If a resume link was provided, include it cleanly.
 4. Sign-off: Professional with candidate's name.
 
 Return ONLY a valid JSON object matching this schema:
@@ -217,9 +221,10 @@ Return ONLY a valid JSON object matching this schema:
 """
 
     if not client:
+        resume_mention = f"You can also view my complete resume and project portfolio here: {resume_link}\n\n" if resume_link else ""
         return {
             "subject_line": f"{target_role} Opportunity - {candidate_name} | {company_name}",
-            "email_body": f"Hi {contact_name},\n\nI’ve been following {company_name}'s work in {company_industry} and love how your team builds systems using {company_tech or 'modern engineering stacks'}.\n\nAs a {target_role} specializing in {skills}, I’ve recently delivered high-impact engineering projects, including architecting scalable services and high-throughput APIs.\n\nI'm writing to inquire about open {target_role} opportunities or upcoming engineering team expansion at {company_name}. I'd love to share my portfolio and resume to see how my background could support your product roadmap.\n\nAre you currently hiring, or could you point me to the right engineering lead?\n\nBest regards,\n{candidate_name}",
+            "email_body": f"Hi {contact_name},\n\nI’ve been following {company_name}'s work in {company_industry} and love how your team builds systems using {company_tech or 'modern engineering stacks'}.\n\nAs a {target_role} specializing in {skills}, I’ve recently delivered high-impact engineering projects, including architecting scalable services and high-throughput APIs.\n\n{resume_mention}I'm writing to inquire about open {target_role} opportunities or upcoming engineering team expansion at {company_name}. Would you be open to discussing how my background could support your product roadmap?\n\nBest regards,\n{candidate_name}",
             "cover_letter": f"Dear Hiring Team at {company_name},\n\nI am writing to express my strong enthusiasm for joining {company_name} as a {target_role}. With extensive hands-on experience across {skills}, I have built resilient systems and solved complex engineering problems that align directly with your technical goals.\n\nI would welcome the opportunity to discuss how my technical skills can drive impactful results for {company_name}.\n\nSincerely,\n{candidate_name}",
             "matched_skills": candidate_profile.get("top_skills", [])[:3]
         }

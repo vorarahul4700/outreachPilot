@@ -112,7 +112,7 @@ class InvalidateCompanyRequest(BaseModel):
 
 
 # --- Helper to get or create current user ---
-def get_current_user(db: Session, request: Request | None = None) -> User:
+def get_current_user(db: Session, request: Request | None = None) -> User | None:
     email = None
     if request:
         raw_cookie = request.cookies.get("pilot_user_email")
@@ -127,10 +127,15 @@ def get_current_user(db: Session, request: Request | None = None) -> User:
                     email = clean_raw
 
     if not email:
-        email = "demo_user@outreachpilot.ai"
+        if config.DEV_MODE:
+            email = "demo_user@outreachpilot.ai"
+        else:
+            return None
 
     user = db.query(User).filter(User.email == email).first()
     if not user:
+        if not config.DEV_MODE:
+            return None
         is_admin = config.is_master_admin(email)
         user = User(
             email=email,
@@ -324,7 +329,15 @@ async def get_companies(request: Request, db: Session = Depends(get_db)):
         query = base_query
 
     companies = query.order_by(Company.id.desc()).all()
-    sent_logs = {log.company_id: log.sent_at for log in db.query(OutreachLog).filter(OutreachLog.status == "SENT").all()}
+    if user and user.oauth_tokens:
+        sent_logs = {
+            log.company_id: log.sent_at
+            for log in db.query(OutreachLog)
+            .filter(OutreachLog.status == "SENT", OutreachLog.user_id == user.id)
+            .all()
+        }
+    else:
+        sent_logs = {}
 
     out = []
     for c in companies:
@@ -587,60 +600,105 @@ MAX_RESUME_SIZE = 5 * 1024 * 1024  # 5 MB
 MAX_PDF_PAGES = 15
 
 
+@app.get("/api/resume/profile")
+async def get_candidate_profile(request: Request, db: Session = Depends(get_db)):
+    user = get_current_user(db, request)
+    if not user:
+        return {"profile": None, "resume_link": "", "target_role": ""}
+    return {
+        "profile": user.resume_summary,
+        "resume_link": user.resume_link or "",
+        "target_role": user.target_role or ""
+    }
+
+
 @app.post("/api/resume/upload")
 async def upload_resume(
-    file: UploadFile = File(...),
+    file: UploadFile = File(None),
+    resume_link: str = Form(""),
     target_role: str = Form(""),
     request: Request = None,
     db: Session = Depends(get_db)
 ):
     user = get_current_user(db, request)
+    if not user:
+        raise HTTPException(
+            status_code=401,
+            detail="Authentication required. Please sign in to save your candidate profile."
+        )
+
     client_id = f"{user.id}_{request.client.host if request and request.client else 'unknown'}"
-    enforce_rate_limit(f"resume_upload_{client_id}", max_calls=10, window_seconds=60)
+    enforce_rate_limit(f"resume_upload_{client_id}", max_calls=15, window_seconds=60)
 
-    contents = await file.read()
-    if len(contents) > MAX_RESUME_SIZE:
-        raise HTTPException(
-            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-            detail="File too large. Maximum resume size is 5MB."
-        )
+    # Save portfolio/resume link if provided
+    if resume_link is not None:
+        user.resume_link = resume_link.strip()
 
-    filename_lower = (file.filename or "").lower()
-    allowed_exts = (".pdf", ".txt", ".md")
-    if not any(filename_lower.endswith(ext) for ext in allowed_exts):
-        raise HTTPException(
-            status_code=400,
-            detail="Unsupported file format. Please upload a PDF, TXT, or MD resume."
-        )
+    parsed_profile = user.resume_summary or {}
 
-    raw_text = ""
-    if filename_lower.endswith(".pdf"):
-        try:
-            reader = PdfReader(io.BytesIO(contents))
-            if len(reader.pages) > MAX_PDF_PAGES:
-                raise HTTPException(
-                    status_code=400,
-                    detail=f"PDF exceeds maximum page limit of {MAX_PDF_PAGES} pages."
-                )
-            for page in reader.pages:
-                raw_text += (page.extract_text() or "") + "\n"
-        except HTTPException:
-            raise
-        except Exception as e:
-            raise HTTPException(status_code=400, detail=f"Failed to parse PDF: {e!s}")
-    else:
-        raw_text = contents.decode("utf-8", errors="ignore")
+    # If file was attached, process and store local copy
+    if file and file.filename:
+        contents = await file.read()
+        if len(contents) > MAX_RESUME_SIZE:
+            raise HTTPException(
+                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+                detail="File too large. Maximum resume size is 5MB."
+            )
 
-    parsed_profile = parse_resume_text(resume_text=raw_text, target_role=target_role)
+        filename_lower = (file.filename or "").lower()
+        allowed_exts = (".pdf", ".txt", ".md")
+        if not any(filename_lower.endswith(ext) for ext in allowed_exts):
+            raise HTTPException(
+                status_code=400,
+                detail="Unsupported file format. Please upload a PDF, TXT, or MD resume."
+            )
 
-    user.target_role = parsed_profile.get("target_role", target_role)
+        raw_text = ""
+        if filename_lower.endswith(".pdf"):
+            try:
+                reader = PdfReader(io.BytesIO(contents))
+                if len(reader.pages) > MAX_PDF_PAGES:
+                    raise HTTPException(
+                        status_code=400,
+                        detail=f"PDF exceeds maximum page limit of {MAX_PDF_PAGES} pages."
+                    )
+                for page in reader.pages:
+                    raw_text += (page.extract_text() or "") + "\n"
+            except HTTPException:
+                raise
+            except Exception as e:
+                raise HTTPException(status_code=400, detail=f"Failed to parse PDF: {e!s}")
+
+            # Save local copy in uploads/resumes for direct OAuth attachment
+            import os
+            os.makedirs(os.path.join("uploads", "resumes"), exist_ok=True)
+            save_path = os.path.join("uploads", "resumes", f"user_{user.id}_resume.pdf")
+            try:
+                with open(save_path, "wb") as f_out:
+                    f_out.write(contents)
+            except Exception as save_err:
+                print(f"[Upload Warning] Could not save resume PDF: {save_err}")
+        else:
+            raw_text = contents.decode("utf-8", errors="ignore")
+
+        parsed_profile = parse_resume_text(resume_text=raw_text, target_role=target_role)
+
+    if target_role:
+        user.target_role = target_role
+    elif parsed_profile.get("target_role"):
+        user.target_role = parsed_profile.get("target_role")
+
+    if user.resume_link:
+        parsed_profile["resume_link"] = user.resume_link
+
     user.resume_summary = parsed_profile
     db.commit()
 
     return {
         "success": True,
-        "message": "Resume analyzed and profile saved. Raw file purged from memory.",
-        "profile": parsed_profile
+        "message": "Candidate profile updated successfully.",
+        "profile": parsed_profile,
+        "resume_link": user.resume_link
     }
 
 
@@ -656,6 +714,12 @@ async def generate_single_pitch(
         raise HTTPException(status_code=404, detail="Company not found")
 
     user = get_current_user(db, request)
+    if not user or not user.oauth_tokens:
+        raise HTTPException(
+            status_code=401,
+            detail="Authentication required. Please connect your Google account to generate personalized pitches."
+        )
+
     client_id = f"{user.id}_{request.client.host if request and request.client else 'unknown'}"
     enforce_rate_limit(f"pitch_gen_{client_id}", max_calls=30, window_seconds=60)
     cand_profile = req.candidate_profile or user.resume_summary or {
@@ -664,6 +728,8 @@ async def generate_single_pitch(
         "top_skills": ["Python", "FastAPI", "React", "PostgreSQL"],
         "key_achievements": ["Built scalable web services and automated data workflows"]
     }
+    if user.resume_link and not cand_profile.get("resume_link"):
+        cand_profile["resume_link"] = user.resume_link
 
     comp_profile_data = {
         "summary": company.profile.summary_short if company.profile else "",
@@ -775,6 +841,7 @@ async def log_sent_manual(
         user_id=pitch.user_id,
         recipient_email=pitch.target_email or "unknown",
         subject=pitch.subject_line,
+        email_body=pitch.email_body,
         delivery_method=method,
         status="SENT",
         sent_at=datetime.utcnow()
@@ -791,7 +858,7 @@ async def bulk_send_outreach(
     db: Session = Depends(get_db)
 ):
     user = get_current_user(db, request)
-    if not user.oauth_tokens:
+    if not user or not user.oauth_tokens:
         raise HTTPException(
             status_code=401,
             detail="Authentication required. Please connect your Google account to perform direct outreach."
@@ -810,6 +877,9 @@ async def bulk_send_outreach(
 @app.get("/api/outreach/logs")
 async def get_outreach_logs(request: Request = None, db: Session = Depends(get_db)):
     user = get_current_user(db, request)
+    if not user or not user.oauth_tokens:
+        return {"logs": []}
+
     query = db.query(OutreachLog)
 
     # Multi-tenant isolation: standard users view only their own logs
@@ -820,13 +890,52 @@ async def get_outreach_logs(request: Request = None, db: Session = Depends(get_d
     return {
         "logs": [{
             "id": log_item.id,
+            "company_id": log_item.company_id,
             "company_name": log_item.company.name if log_item.company else "Unknown",
             "recipient_email": log_item.recipient_email,
             "subject": log_item.subject,
+            "email_body": log_item.email_body or "",
             "delivery_method": log_item.delivery_method,
             "status": log_item.status,
             "sent_at": log_item.sent_at.strftime("%b %d, %Y %I:%M:%S %p") if log_item.sent_at else ""
         } for log_item in logs]
+    }
+
+
+@app.get("/api/outreach/sent/{company_id}")
+async def get_sent_email_for_company(company_id: int, request: Request, db: Session = Depends(get_db)):
+    user = get_current_user(db, request)
+    if not user or not user.oauth_tokens:
+        raise HTTPException(status_code=401, detail="Authentication required.")
+
+    query = db.query(OutreachLog).filter(OutreachLog.company_id == company_id, OutreachLog.status == "SENT")
+    if not config.is_master_admin(user.email):
+        query = query.filter(OutreachLog.user_id == user.id)
+
+    log = query.order_by(OutreachLog.sent_at.desc()).first()
+    if not log:
+        # Fallback to pitch if log not found
+        pitch = db.query(ColdPitch).filter(ColdPitch.company_id == company_id).first()
+        if pitch and (config.is_master_admin(user.email) or pitch.user_id == user.id):
+            return {
+                "found": True,
+                "company_name": pitch.company.name if pitch.company else "Unknown",
+                "recipient_email": pitch.target_email,
+                "subject": pitch.subject_line,
+                "email_body": pitch.email_body,
+                "delivery_method": pitch.delivery_method or "SENT",
+                "sent_at": pitch.sent_at.strftime("%b %d, %Y %I:%M:%S %p") if pitch.sent_at else ""
+            }
+        return {"found": False}
+
+    return {
+        "found": True,
+        "company_name": log.company.name if log.company else "Unknown",
+        "recipient_email": log.recipient_email,
+        "subject": log.subject,
+        "email_body": log.email_body or "",
+        "delivery_method": log.delivery_method,
+        "sent_at": log.sent_at.strftime("%b %d, %Y %I:%M:%S %p") if log.sent_at else ""
     }
 
 
@@ -861,6 +970,7 @@ async def google_login():
     authorization_url, _ = flow.authorization_url(
         access_type="offline",
         include_granted_scopes="true",
+        prompt="select_account",
         state=oauth_state
     )
     response = RedirectResponse(authorization_url)

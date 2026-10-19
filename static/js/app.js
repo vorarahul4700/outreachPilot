@@ -1215,7 +1215,7 @@ document.addEventListener("DOMContentLoaded", () => {
         } else {
           // Genuine Active Company Grid Card
           const badge = c.already_contacted 
-            ? `<span class="px-2 py-0.5 rounded bg-emerald-950/80 text-emerald-400 border border-emerald-800 text-[10px] font-semibold flex items-center space-x-1 shrink-0"><i data-lucide="check" class="w-3 h-3 text-emerald-400"></i><span>Contacted ${c.contacted_at || ''}</span></span>`
+            ? `<span onclick="event.stopPropagation(); window.viewSentEmailForCompany(${c.id})" class="px-2 py-0.5 rounded bg-sky-950/80 hover:bg-sky-900 text-sky-400 border border-sky-800 text-[10px] font-semibold flex items-center space-x-1 shrink-0 cursor-pointer transition shadow-sm" title="Click to view message sent"><i data-lucide="check" class="w-3 h-3 text-sky-400"></i><span>Contacted ${c.contacted_at || ''}</span></span>`
             : (c.is_enriched 
                 ? `<span class="px-2 py-0.5 rounded bg-indigo-950/80 text-indigo-400 border border-indigo-800 text-[10px] font-semibold flex items-center space-x-1 shrink-0"><i data-lucide="zap" class="w-3 h-3 text-indigo-400"></i><span>Enriched</span></span>`
                 : `<span class="px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700 text-[10px] shrink-0">Verified</span>`);
@@ -1395,7 +1395,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         } else {
           const badge = c.already_contacted 
-            ? `<span class="px-2 py-0.5 rounded bg-emerald-950/80 text-emerald-400 border border-emerald-800 text-[10px] font-semibold flex items-center space-x-1"><i data-lucide="check" class="w-3 h-3 text-emerald-400"></i><span>Contacted ${c.contacted_at || ''}</span></span>`
+            ? `<span onclick="event.stopPropagation(); window.viewSentEmailForCompany(${c.id})" class="px-2 py-0.5 rounded bg-sky-950/80 hover:bg-sky-900 text-sky-400 border border-sky-800 text-[10px] font-semibold flex items-center space-x-1 cursor-pointer transition shadow-sm" title="Click to view message sent"><i data-lucide="check" class="w-3 h-3 text-sky-400"></i><span>Contacted ${c.contacted_at || ''}</span></span>`
             : (c.is_enriched 
                 ? `<span class="px-2 py-0.5 rounded bg-indigo-950/80 text-indigo-400 border border-indigo-800 text-[10px] font-semibold flex items-center space-x-1"><i data-lucide="zap" class="w-3 h-3 text-indigo-400"></i><span>Enriched</span></span>`
                 : `<span class="px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700 text-[10px]">Scouted</span>`);
@@ -1649,12 +1649,16 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     // Status Badge
+    cmodalBadge.onclick = null;
+    cmodalBadge.removeAttribute("title");
     if (company.is_invalid) {
       cmodalBadge.className = "px-2 py-0.5 rounded bg-rose-950 text-rose-300 border border-rose-700 text-[10px] font-bold flex items-center space-x-1";
       cmodalBadge.innerHTML = `<i data-lucide="shield-alert" class="w-3 h-3 text-rose-400"></i><span>INVALID LEAD</span>`;
     } else if (company.already_contacted) {
-      cmodalBadge.className = "px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-800 text-[10px] font-semibold flex items-center space-x-1";
-      cmodalBadge.innerHTML = `<i data-lucide="check" class="w-3 h-3 text-emerald-400"></i><span>Contacted ${company.contacted_at || ''}</span>`;
+      cmodalBadge.className = "px-2 py-0.5 rounded bg-sky-950 hover:bg-sky-900 text-sky-400 border border-sky-800 text-[10px] font-semibold flex items-center space-x-1 cursor-pointer transition shadow-sm";
+      cmodalBadge.title = "Click to view message sent";
+      cmodalBadge.innerHTML = `<i data-lucide="check" class="w-3 h-3 text-sky-400"></i><span>Contacted ${company.contacted_at || ''}</span>`;
+      cmodalBadge.onclick = () => window.viewSentEmailForCompany(company.id);
     } else if (company.is_enriched) {
       cmodalBadge.className = "px-2 py-0.5 rounded bg-indigo-950 text-indigo-400 border border-indigo-800 text-[10px] font-semibold flex items-center space-x-1";
       cmodalBadge.innerHTML = `<i data-lucide="zap" class="w-3 h-3 text-indigo-400"></i><span>AI Enriched</span>`;
@@ -2170,16 +2174,65 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  async function loadCandidateProfile() {
+    try {
+      const res = await fetch("/api/resume/profile");
+      if (res.status === 401) return;
+      const data = await res.json();
+      if (data.resume_link) {
+        const linkEl = document.getElementById("input-resume-link");
+        if (linkEl) linkEl.value = data.resume_link;
+      }
+      if (data.target_role) {
+        const roleEl = document.getElementById("input-target-role");
+        if (roleEl) roleEl.value = data.target_role;
+      }
+      if (data.profile) {
+        const pitchEl = document.getElementById("profile-pitch");
+        if (pitchEl && data.profile.elevator_pitch) {
+          pitchEl.textContent = data.profile.elevator_pitch;
+        }
+
+        const skillsContainer = document.getElementById("profile-skills");
+        if (skillsContainer && data.profile.top_skills) {
+          skillsContainer.innerHTML = data.profile.top_skills.map(s => `
+            <span class="px-2.5 py-1 rounded bg-indigo-950/80 text-indigo-300 border border-indigo-800 text-xs font-medium">${escapeHTML(s)}</span>
+          `).join("");
+        }
+
+        const achContainer = document.getElementById("profile-achievements");
+        if (achContainer && data.profile.key_achievements) {
+          achContainer.innerHTML = data.profile.key_achievements.map(a => `
+            <li>${escapeHTML(a)}</li>
+          `).join("");
+        }
+
+        const detailedAnalysisEl = document.getElementById("profile-detailed-analysis");
+        if (detailedAnalysisEl && data.profile.detailed_profile_analysis) {
+          detailedAnalysisEl.textContent = data.profile.detailed_profile_analysis;
+        }
+      }
+    } catch (err) {
+      console.warn("Could not load candidate profile:", err);
+    }
+  }
+
   resumeForm.addEventListener("submit", async (e) => {
     e.preventDefault();
-    if (!fileInput.files || fileInput.files.length === 0) {
-      alert("Please select a resume file (PDF or TXT).");
+    const hasFile = fileInput.files && fileInput.files.length > 0;
+    const resumeLink = (document.getElementById("input-resume-link")?.value || "").trim();
+    const targetRole = document.getElementById("input-target-role").value.trim();
+
+    if (!hasFile && !resumeLink) {
+      alert("Please select a resume file (PDF or TXT) or enter a portfolio/resume link.");
       return;
     }
 
-    const targetRole = document.getElementById("input-target-role").value.trim();
     const formData = new FormData();
-    formData.append("file", fileInput.files[0]);
+    if (hasFile) {
+      formData.append("file", fileInput.files[0]);
+    }
+    formData.append("resume_link", resumeLink);
     formData.append("target_role", targetRole);
 
     btnParseResume.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i><span>Analyzing with AI...</span>`;
@@ -2191,6 +2244,10 @@ document.addEventListener("DOMContentLoaded", () => {
         method: "POST",
         body: formData
       });
+      if (res.status === 401) {
+        showLoginModal();
+        return;
+      }
       const data = await res.json();
       if (data.success && data.profile) {
         document.getElementById("profile-pitch").textContent = data.profile.elevator_pitch || "Candidate Profile Active";
@@ -2210,7 +2267,9 @@ document.addEventListener("DOMContentLoaded", () => {
           detailedAnalysisEl.textContent = data.profile.detailed_profile_analysis;
         }
 
-        alert("Resume successfully analyzed by AI! Profile summary and skills extracted.");
+        alert("Candidate Profile updated successfully! Linked to your personalized outreach emails.");
+      } else {
+        alert(data.detail || data.message || "Failed to update profile.");
       }
     } catch (err) {
       alert("Resume analysis failed: " + err.message);
@@ -2464,7 +2523,7 @@ document.addEventListener("DOMContentLoaded", () => {
         : `<span class="px-2 py-0.5 rounded bg-slate-950 text-slate-500 border border-slate-800 text-[10px] flex items-center space-x-1 shrink-0"><i data-lucide="globe" class="w-3 h-3 text-slate-500"></i><span>Company Domain</span></span>`;
 
       const statusBadge = c.already_contacted 
-        ? `<span class="px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-800 text-[10px] font-semibold flex items-center space-x-1 shrink-0"><i data-lucide="check" class="w-3 h-3 text-emerald-400"></i><span>Sent ${c.contacted_at ? escapeHTML(c.contacted_at) : ''}</span></span>`
+        ? `<button onclick="window.viewSentEmailForCompany(${c.id})" class="px-2 py-0.5 rounded bg-sky-950 hover:bg-sky-900 text-sky-400 border border-sky-800 text-[10px] font-semibold flex items-center space-x-1 shrink-0 cursor-pointer transition shadow-sm" title="Click to view message sent"><i data-lucide="check" class="w-3 h-3 text-sky-400"></i><span>Sent ${c.contacted_at ? escapeHTML(c.contacted_at) : ''}</span></button>`
         : `<span class="px-2 py-0.5 rounded bg-slate-800 text-slate-400 text-[10px] font-medium border border-slate-700 shrink-0">Not Contacted</span>`;
 
       card.innerHTML = `
@@ -2485,10 +2544,16 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>
           </div>
 
-          <div class="shrink-0 pt-1 sm:pt-0">
+          <div class="flex items-center space-x-2 shrink-0 pt-1 sm:pt-0">
+            ${c.already_contacted ? `
+              <button onclick="window.viewSentEmailForCompany(${c.id})" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-sky-400 rounded-lg text-xs font-semibold transition flex items-center justify-center space-x-1.5 cursor-pointer shadow-sm" title="View email sent to this company">
+                <i data-lucide="eye" class="w-3.5 h-3.5"></i>
+                <span>View Sent</span>
+              </button>
+            ` : ''}
             <button class="btn-gen-pitch-row w-full sm:w-auto px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold transition flex items-center justify-center space-x-1.5 cursor-pointer shadow-sm active:scale-95" data-id="${c.id}">
               <i data-lucide="send" class="w-3.5 h-3.5"></i>
-              <span>Review & Send Email</span>
+              <span>${c.already_contacted ? 'Send Follow-up' : 'Review & Send Email'}</span>
             </button>
           </div>
         </div>
@@ -2518,33 +2583,130 @@ document.addEventListener("DOMContentLoaded", () => {
     refreshIcons();
   }
 
+  // ==========================================
+  // SENT EMAIL DETAILS MODAL
+  // ==========================================
+  const sentEmailModal = document.getElementById("sent-email-modal");
+  const sentModalClose = document.getElementById("sent-modal-close");
+  const btnCloseSentEmail = document.getElementById("btn-close-sent-email");
+  const btnCopySentEmail = document.getElementById("btn-copy-sent-email");
+  const sentModalMethod = document.getElementById("sent-modal-method");
+  const sentModalCompanyName = document.getElementById("sent-modal-company-name");
+  const sentModalRecipient = document.getElementById("sent-modal-recipient");
+  const sentModalDate = document.getElementById("sent-modal-date");
+  const sentModalSubject = document.getElementById("sent-modal-subject");
+  const sentModalBody = document.getElementById("sent-modal-body");
+
+  function openSentEmailModal(data) {
+    if (!sentEmailModal) return;
+    if (sentModalMethod) sentModalMethod.textContent = (data.delivery_method || "SENT").toUpperCase();
+    if (sentModalCompanyName) sentModalCompanyName.textContent = data.company_name || "Company";
+    if (sentModalRecipient) sentModalRecipient.textContent = data.recipient_email || "N/A";
+    if (sentModalDate) sentModalDate.textContent = data.sent_at || "Recent";
+    if (sentModalSubject) sentModalSubject.textContent = data.subject || "No subject";
+    if (sentModalBody) sentModalBody.textContent = data.email_body || "(No message body logged for this outreach.)";
+    sentEmailModal.classList.remove("hidden");
+    refreshIcons();
+  }
+
+  function closeSentEmailModal() {
+    if (sentEmailModal) sentEmailModal.classList.add("hidden");
+  }
+
+  if (sentModalClose) sentModalClose.addEventListener("click", closeSentEmailModal);
+  if (btnCloseSentEmail) btnCloseSentEmail.addEventListener("click", closeSentEmailModal);
+  if (sentEmailModal) {
+    sentEmailModal.addEventListener("click", (e) => {
+      if (e.target === sentEmailModal) closeSentEmailModal();
+    });
+  }
+
+  if (btnCopySentEmail) {
+    btnCopySentEmail.addEventListener("click", () => {
+      const textToCopy = `Subject: ${sentModalSubject?.textContent || ''}\n\n${sentModalBody?.textContent || ''}`;
+      navigator.clipboard.writeText(textToCopy);
+      const originalHTML = btnCopySentEmail.innerHTML;
+      btnCopySentEmail.innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5 text-emerald-400"></i><span>Copied!</span>`;
+      refreshIcons();
+      setTimeout(() => {
+        btnCopySentEmail.innerHTML = originalHTML;
+        refreshIcons();
+      }, 2000);
+    });
+  }
+
+  async function viewSentEmailForCompany(companyId) {
+    try {
+      const res = await fetch(`/api/outreach/sent/${companyId}`);
+      if (res.status === 401) {
+        showLoginModal();
+        return;
+      }
+      const data = await res.json();
+      if (data.found) {
+        openSentEmailModal(data);
+      } else {
+        alert("No sent outreach record found for this company.");
+      }
+    } catch (err) {
+      alert("Failed to load sent email details: " + err.message);
+    }
+  }
+
+  window.viewSentEmailForCompany = viewSentEmailForCompany;
+
   async function fetchAuditLogs() {
     try {
       const res = await fetch("/api/outreach/logs");
+      if (res.status === 401) {
+        const logsContainer = document.getElementById("audit-logs");
+        if (logsContainer) {
+          logsContainer.innerHTML = `<p class="text-slate-500 italic">Sign in to view your sent outreach history.</p>`;
+        }
+        return;
+      }
       const data = await res.json();
       const logsContainer = document.getElementById("audit-logs");
+      if (!logsContainer) return;
       if (!data.logs || data.logs.length === 0) {
         logsContainer.innerHTML = `<p class="text-slate-500 italic">No emails sent yet today.</p>`;
         return;
       }
 
-      logsContainer.innerHTML = data.logs.map(l => `
-        <div class="bg-slate-950 border border-slate-800 rounded-lg p-2.5 space-y-1">
+      window._cachedAuditLogs = data.logs;
+
+      logsContainer.innerHTML = data.logs.map((l, idx) => `
+        <div onclick="window._openCachedLog(${idx})" class="bg-slate-950 border border-slate-800 hover:border-sky-500/60 rounded-lg p-2.5 space-y-1 transition cursor-pointer group shadow-sm select-none" title="Click to view message sent">
           <div class="flex items-center justify-between">
-            <span class="font-bold text-slate-200">${escapeHTML(l.company_name)}</span>
-            <span class="text-[10px] text-emerald-400 font-semibold uppercase">${escapeHTML(l.delivery_method)}</span>
+            <span class="font-bold text-slate-200 group-hover:text-sky-300 transition truncate">${escapeHTML(l.company_name)}</span>
+            <span class="text-[10px] text-sky-400 font-semibold uppercase bg-sky-950/60 border border-sky-800/80 px-1.5 py-0.2 rounded shrink-0">${escapeHTML(l.delivery_method)}</span>
           </div>
-          <p class="text-[11px] font-mono text-slate-400 break-all">To: ${escapeHTML(l.recipient_email)}</p>
-          <p class="text-[10px] text-slate-500">${escapeHTML(l.sent_at)}</p>
+          <p class="text-[11px] font-mono text-slate-400 truncate">To: ${escapeHTML(l.recipient_email)}</p>
+          <div class="flex items-center justify-between text-[10px] text-slate-500 pt-0.5">
+            <span>${escapeHTML(l.sent_at)}</span>
+            <span class="text-indigo-400 group-hover:text-indigo-300 font-medium flex items-center space-x-0.5">
+              <span>View message</span>
+              <i data-lucide="chevron-right" class="w-3 h-3"></i>
+            </span>
+          </div>
         </div>
       `).join("");
+      refreshIcons();
     } catch (err) {
       console.error("Failed to load audit logs:", err);
     }
   }
 
+  window._openCachedLog = function(idx) {
+    if (window._cachedAuditLogs && window._cachedAuditLogs[idx]) {
+      openSentEmailModal(window._cachedAuditLogs[idx]);
+    }
+  };
+
   // Initial Data Load & Render Lucide Icons
   refreshIcons();
   checkAuthStatus();
+  loadCandidateProfile();
   fetchCompanies();
+  fetchAuditLogs();
 });
