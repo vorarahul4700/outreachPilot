@@ -1926,6 +1926,15 @@ document.addEventListener("DOMContentLoaded", () => {
   const userDisplayEmail = document.getElementById("user-display-email");
 
   async function checkAuthStatus() {
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.has("auth_error")) {
+      const err = urlParams.get("auth_error");
+      alert("Google Sign-In Issue: " + err);
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (urlParams.has("auth_success")) {
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+
     try {
       const res = await fetch("/api/auth/status");
       const data = await res.json();

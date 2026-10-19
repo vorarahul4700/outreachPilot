@@ -1018,32 +1018,45 @@ async def google_callback(code: str, request: Request, db: Session = Depends(get
 
         user_email = None
         if hasattr(credentials, "id_token") and credentials.id_token:
-            import google.oauth2.id_token
-            from google.auth.transport import requests as google_requests
+            if isinstance(credentials.id_token, dict):
+                user_email = credentials.id_token.get("email")
+            else:
+                import google.oauth2.id_token
+                from google.auth.transport import requests as google_requests
+                try:
+                    id_info = google.oauth2.id_token.verify_oauth2_token(
+                        credentials.id_token, google_requests.Request(), config.GOOGLE_CLIENT_ID
+                    )
+                    user_email = id_info.get("email")
+                except Exception as id_err:
+                    print(f"[OAuth Warning] verify_oauth2_token failed: {id_err}")
+
+        # Fallback directly to Google Userinfo API via authorized credentials
+        if not user_email:
             try:
-                id_info = google.oauth2.id_token.verify_oauth2_token(
-                    credentials.id_token, google_requests.Request(), config.GOOGLE_CLIENT_ID
-                )
-                user_email = id_info.get("email")
-            except Exception:
-                pass
+                from googleapiclient.discovery import build
+                user_service = build("oauth2", "v2", credentials=credentials)
+                user_info = user_service.userinfo().get().execute()
+                user_email = user_info.get("email")
+            except Exception as user_err:
+                print(f"[OAuth Warning] Google userinfo API failed: {user_err}")
 
         if not user_email:
-            user = get_current_user(db, request)
-        else:
-            user_email_clean = user_email.strip().lower()
-            user = db.query(User).filter(User.email == user_email_clean).first()
-            if not user:
-                is_admin = config.is_master_admin(user_email_clean)
-                user = User(
-                    email=user_email_clean,
-                    name="Master Admin" if is_admin else "Pilot User",
-                    target_role="Full-Stack Engineer",
-                    daily_send_limit=100 if is_admin else 50
-                )
-                db.add(user)
-                db.commit()
-                db.refresh(user)
+            return RedirectResponse(url="/?auth_error=Could+not+retrieve+verified+email+from+Google")
+
+        user_email_clean = user_email.strip().lower()
+        user = db.query(User).filter(User.email == user_email_clean).first()
+        if not user:
+            is_admin = config.is_master_admin(user_email_clean)
+            user = User(
+                email=user_email_clean,
+                name="Master Admin (Rahul Vora)" if is_admin else "Pilot User",
+                target_role="Full-Stack Engineer",
+                daily_send_limit=100 if is_admin else 50
+            )
+            db.add(user)
+            db.commit()
+            db.refresh(user)
 
         # Encrypt OAuth credentials before persisting in PostgreSQL
         user.oauth_tokens = config.encrypt_tokens({
