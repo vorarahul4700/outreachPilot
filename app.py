@@ -939,19 +939,36 @@ async def get_sent_email_for_company(company_id: int, request: Request, db: Sess
     }
 
 
+def get_effective_redirect_uri(request: Request) -> str:
+    """
+    Computes the accurate OAuth callback URI based on current request context.
+    Prevents cross-domain redirects from Render back to localhost.
+    """
+    proto = request.headers.get("x-forwarded-proto") or request.url.scheme
+    host = request.headers.get("x-forwarded-host") or request.headers.get("host") or request.url.netloc
+
+    # If running on Render or any non-local public domain:
+    if host and not host.startswith("localhost") and not host.startswith("127.0.0.1"):
+        return f"{proto}://{host}/auth/google/callback"
+
+    # Otherwise return local configured redirect URI
+    return config.GOOGLE_REDIRECT_URI or "http://localhost:8000/auth/google/callback"
+
+
 # --- Google OAuth Flow ---
 @app.get("/auth/google/login")
 async def google_login(request: Request):
     if not config.GOOGLE_CLIENT_ID or not config.GOOGLE_CLIENT_SECRET:
         return JSONResponse(status_code=400, content={"error": "Google OAuth credentials not configured in .env."})
 
+    redirect_uri = get_effective_redirect_uri(request)
     client_config = {
         "web": {
             "client_id": config.GOOGLE_CLIENT_ID,
             "client_secret": config.GOOGLE_CLIENT_SECRET,
             "auth_uri": "https://accounts.google.com/o/oauth2/auth",
             "token_uri": "https://oauth2.googleapis.com/token",
-            "redirect_uris": [config.GOOGLE_REDIRECT_URI]
+            "redirect_uris": [redirect_uri]
         }
     }
     flow = Flow.from_client_config(
@@ -961,9 +978,10 @@ async def google_login(request: Request):
             "https://www.googleapis.com/auth/userinfo.email",
             "https://www.googleapis.com/auth/userinfo.profile",
             "https://www.googleapis.com/auth/gmail.send"
-        ]
+        ],
+        autogenerate_code_verifier=False
     )
-    flow.redirect_uri = config.GOOGLE_REDIRECT_URI
+    flow.redirect_uri = redirect_uri
 
     # OAuth CSRF Protection: Generate secure unguessable state token
     oauth_state = secrets.token_urlsafe(32)
@@ -1000,15 +1018,16 @@ async def google_callback(code: str, request: Request, db: Session = Depends(get
         elif not incoming_state:
             return RedirectResponse(url="/?auth_error=Missing+OAuth+state+parameter")
         else:
-            print("[OAuth Notice] oauth_state cookie was not returned by browser (common during 127.0.0.1 vs localhost redirect). Proceeding with verified Google exchange.")
+            print("[OAuth Notice] oauth_state cookie was not returned by browser. Proceeding with verified Google exchange.")
 
+        redirect_uri = get_effective_redirect_uri(request)
         client_config = {
             "web": {
                 "client_id": config.GOOGLE_CLIENT_ID,
                 "client_secret": config.GOOGLE_CLIENT_SECRET,
                 "auth_uri": "https://accounts.google.com/o/oauth2/auth",
                 "token_uri": "https://oauth2.googleapis.com/token",
-                "redirect_uris": [config.GOOGLE_REDIRECT_URI]
+                "redirect_uris": [redirect_uri]
             }
         }
         flow = Flow.from_client_config(
@@ -1018,9 +1037,10 @@ async def google_callback(code: str, request: Request, db: Session = Depends(get
                 "https://www.googleapis.com/auth/userinfo.email",
                 "https://www.googleapis.com/auth/userinfo.profile",
                 "https://www.googleapis.com/auth/gmail.send"
-            ]
+            ],
+            autogenerate_code_verifier=False
         )
-        flow.redirect_uri = config.GOOGLE_REDIRECT_URI
+        flow.redirect_uri = redirect_uri
         flow.fetch_token(code=code)
         credentials = flow.credentials
 
