@@ -166,15 +166,16 @@ def init_db():
         Base.metadata.create_all(bind=engine)
         print("[DB] PostgreSQL Database schema initialized successfully.")
 
-        # Safe schema alteration for new columns
-        with engine.connect() as conn:
-            conn.execute(text("ALTER TABLE companies ADD COLUMN IF NOT EXISTS is_invalid BOOLEAN DEFAULT FALSE;"))
-            conn.execute(text("ALTER TABLE companies ADD COLUMN IF NOT EXISTS invalid_reason VARCHAR(255);"))
-            conn.execute(text("ALTER TABLE companies ADD COLUMN IF NOT EXISTS invalid_at TIMESTAMP;"))
-            conn.execute(text("ALTER TABLE companies ADD COLUMN IF NOT EXISTS location_url TEXT;"))
-            conn.execute(text("ALTER TABLE outreach_logs ADD COLUMN IF NOT EXISTS email_body TEXT;"))
-            conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS resume_link VARCHAR(500);"))
-            conn.commit()
+        # Safe schema alteration for new columns (PostgreSQL only)
+        if "postgres" in str(engine.url).lower():
+            with engine.connect() as conn:
+                conn.execute(text("ALTER TABLE companies ADD COLUMN IF NOT EXISTS is_invalid BOOLEAN DEFAULT FALSE;"))
+                conn.execute(text("ALTER TABLE companies ADD COLUMN IF NOT EXISTS invalid_reason VARCHAR(255);"))
+                conn.execute(text("ALTER TABLE companies ADD COLUMN IF NOT EXISTS invalid_at TIMESTAMP;"))
+                conn.execute(text("ALTER TABLE companies ADD COLUMN IF NOT EXISTS location_url TEXT;"))
+                conn.execute(text("ALTER TABLE outreach_logs ADD COLUMN IF NOT EXISTS email_body TEXT;"))
+                conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS resume_link VARCHAR(500);"))
+                conn.commit()
     except Exception as ex:
         print(f"[DB Warning] Could not auto-create/migrate tables: {ex}")
 
