@@ -269,7 +269,9 @@ class GoogleScraper:
                 item.pop("_goto_url", None)
             return items
 
-        with ThreadPoolExecutor(max_workers=min(self.max_workers, len(goto_indices))) as executor:
+        # Lower worker count in containerized environments (Render) to avoid 0.1 vCPU starvation
+        worker_limit = 8 if os.environ.get("RENDER") else self.max_workers
+        with ThreadPoolExecutor(max_workers=min(worker_limit, len(goto_indices))) as executor:
             future_to_idx = {
                 executor.submit(self._resolve_single_website, url): idx
                 for idx, url in goto_indices
@@ -381,7 +383,10 @@ class GoogleScraper:
                         "user_data_dir": tmp_profile_dir,
                         "block_images": True,
                         "disable_csp": True,
-                        "no_sandbox": True
+                        "disable_gpu": True,
+                        "no_sandbox": True,
+                        "pls": "eager",
+                        "chromium_arg": "--disable-dev-shm-usage,--disable-software-rasterizer,--no-first-run",
                     }
                     if chrome_bin_path:
                         driver_kwargs["binary_location"] = chrome_bin_path

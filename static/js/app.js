@@ -1885,8 +1885,8 @@ document.addEventListener("DOMContentLoaded", () => {
           return;
         }
 
-        // Only complete when the scraper has actually started running and then stopped
-        const hasFinished = !data.is_running && (hasStartedRunning || polls > 4) && (data.progress >= 90 || (data.status_message && data.status_message.includes("Completed")));
+        // Complete when the scraper has finished or if stopped
+        const hasFinished = (!data.is_running && (hasStartedRunning || polls > 4)) || polls > 180;
         if (hasFinished) {
           clearInterval(pollInterval);
           btnStartScout.disabled = false;
@@ -1902,7 +1902,7 @@ document.addEventListener("DOMContentLoaded", () => {
       } catch (err) {
         console.error("Poll error:", err);
       }
-    }, 800);
+    }, 2000);
   }
 
   // ==========================================
@@ -1919,6 +1919,20 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnModalAdminLogin = document.getElementById("btn-modal-admin-login");
   const btnSidebarAdminLogin = document.getElementById("btn-sidebar-admin-login");
   const btnHeaderAdminLogin = document.getElementById("btn-header-admin-login");
+
+  function showLoginModal() {
+    loginModal?.classList.remove("hidden");
+    refreshIcons();
+  }
+  window.showLoginModal = showLoginModal;
+
+  function requireLogin(callback) {
+    if (currentUser.is_logged_in) {
+      callback();
+    } else {
+      showLoginModal();
+    }
+  }
   const sidebarAdminBadge = document.getElementById("sidebar-admin-badge");
   const btnLogout = document.getElementById("btn-logout");
   const authBoxLoggedIn = document.getElementById("auth-box-logged-in");
@@ -1974,8 +1988,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (currentUser.is_logged_in) {
       callback();
     } else {
-      loginModal?.classList.remove("hidden");
-      refreshIcons();
+      showLoginModal();
     }
   }
 
