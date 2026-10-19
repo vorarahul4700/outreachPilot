@@ -143,9 +143,13 @@ class OutreachLog(Base):
 
 
 # Database engine & Session factory
+clean_db_url = DATABASE_URL
+if clean_db_url.startswith("postgres://"):
+    clean_db_url = clean_db_url.replace("postgres://", "postgresql://", 1)
+
 try:
     engine = create_engine(
-        DATABASE_URL,
+        clean_db_url,
         pool_pre_ping=True,
         pool_size=10,
         max_overflow=20

@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: outreachpilot
+    runtime: python
+    buildCommand: pip install -r requirements.txt && sbase install chromedriver
+    startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT
+    plan: free
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.8
+      - key: DEV_MODE
+        value: "false"
+      - key: GROQ_MODEL
+        value: "llama-3.3-70b-versatile"
+      - key: MASTER_ADMIN_EMAILS
+        value: "vorarahul111@gmail.com"
