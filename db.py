@@ -94,11 +94,11 @@ class CompanyProfile(Base):
     company_id = Column(Integer, ForeignKey("companies.id", ondelete="CASCADE"), unique=True, nullable=False)
     summary_short = Column(Text, nullable=True)
     detailed_analysis = Column(Text, nullable=True)
-    industry = Column(String(150), nullable=True)
+    industry = Column(Text, nullable=True)
     tech_stack = Column(JsonType, nullable=True)
     services = Column(JsonType, nullable=True)
     hiring_signals = Column(Text, nullable=True)
-    tone = Column(String(100), default="Professional")
+    tone = Column(Text, default="Professional")
     analyzed_at = Column(DateTime, default=datetime.utcnow)
 
     company = relationship("Company", back_populates="profile")

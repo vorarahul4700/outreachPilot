@@ -138,29 +138,41 @@ def run_worker(job_id: int, keyword: str, city: str, max_pages: int):
                     enriched_count += 1
             except Exception as enrich_err:
                 print(f"[Enrich Warning] Failed to enrich {domain}: {enrich_err}")
+                try:
+                    db.rollback()
+                except Exception:
+                    pass
 
             # Prepare card representation for real-time frontend stream
-            db.refresh(company)
-            emails = db.query(CompanyEmail).filter(CompanyEmail.company_id == company.id).all()
-            profile = db.query(CompanyProfile).filter(CompanyProfile.company_id == company.id).first()
+            try:
+                db.rollback()  # ensure clean transaction state
+                company = db.query(Company).filter(Company.id == company.id).first()
+                emails = db.query(CompanyEmail).filter(CompanyEmail.company_id == company.id).all() if company else []
+                profile = db.query(CompanyProfile).filter(CompanyProfile.company_id == company.id).first() if company else None
 
-            card_data = {
-                "id": company.id,
-                "name": company.name,
-                "domain": company.domain,
-                "website_url": company.website_url,
-                "phone": company.phone,
-                "address": company.address,
-                "rating": company.rating,
-                "reviews_count": company.reviews_count,
-                "is_enriched": company.is_enriched,
-                "emails": [e.email_address for e in emails],
-                "primary_email": emails[0].email_address if emails else None,
-                "industry": profile.industry if profile else "Technology",
-                "tech_stack": profile.tech_stack if profile else []
-            }
+                card_data = {
+                    "id": company.id,
+                    "name": company.name,
+                    "domain": company.domain,
+                    "website_url": company.website_url,
+                    "phone": company.phone,
+                    "address": company.address,
+                    "rating": company.rating,
+                    "reviews_count": company.reviews_count,
+                    "is_enriched": company.is_enriched if company else False,
+                    "emails": [e.email_address for e in emails],
+                    "primary_email": emails[0].email_address if emails else None,
+                    "industry": profile.industry if profile else "Technology",
+                    "tech_stack": profile.tech_stack if profile else []
+                }
 
-            log_job(db, job_id, f"✓ Successfully enriched & verified: {name} ({len(emails)} emails found)", pct, live_card=card_data)
+                log_job(db, job_id, f"✓ Successfully enriched & verified: {name} ({len(emails)} emails found)", pct, live_card=card_data)
+            except Exception as card_err:
+                print(f"[Warning] Failed to generate card for {domain}: {card_err}")
+                try:
+                    db.rollback()
+                except Exception:
+                    pass
 
         # Mark job complete
         job = db.query(ScoutJob).filter(ScoutJob.id == job_id).first()
