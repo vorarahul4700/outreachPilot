@@ -41,6 +41,39 @@ document.addEventListener("DOMContentLoaded", () => {
       .replace(/'/g, "&#39;");
   }
 
+  function stripMarkdownForCopy(text) {
+    if (!text) return "";
+    return text
+      .replace(/^###\s*(.*$)/gm, "\n$1\n" + "-".repeat(30))
+      .replace(/^##\s*(.*$)/gm, "\n$1\n" + "=".repeat(30))
+      .replace(/^#\s*(.*$)/gm, "\n$1\n" + "=".repeat(40))
+      .replace(/\*\*(.*?)\*\*/g, "$1")
+      .replace(/\*(.*?)\*/g, "$1")
+      .replace(/^\s*[\-\*]\s+/gm, "• ")
+      .replace(/^\s*\-\-\s*/gm, "• ")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
+  }
+
+  function formatMarkdown(text) {
+    if (!text) return "";
+    if (typeof marked !== "undefined" && marked.parse) {
+      try {
+        return marked.parse(text, { breaks: true, gfm: true });
+      } catch (e) {
+        console.warn("marked.parse error:", e);
+      }
+    }
+    let html = escapeHTML(text);
+    html = html.replace(/^### (.*$)/gim, '<h4 class="text-indigo-300 font-bold text-xs mt-3 mb-1 uppercase tracking-wider">$1</h4>');
+    html = html.replace(/^## (.*$)/gim, '<h3 class="text-white font-bold text-sm mt-3 mb-1.5">$1</h3>');
+    html = html.replace(/\*\*(.*?)\*\*/gim, '<strong class="text-white font-semibold">$1</strong>');
+    html = html.replace(/^\- (.*$)/gim, '<div class="flex items-start space-x-1.5 my-1 ml-2"><span class="text-indigo-400 font-bold">•</span><span class="text-slate-200">$1</span></div>');
+    html = html.replace(/\n\n/gim, '<div class="h-2"></div>');
+    html = html.replace(/\n/gim, '<br>');
+    return html;
+  }
+
   function showToast(message, type = "info") {
     let container = document.getElementById("toast-container");
     if (!container) {
@@ -1601,9 +1634,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (cmodalBtnCopyReport) {
     cmodalBtnCopyReport.addEventListener("click", () => {
-      const text = cmodalDetailedAnalysis?.textContent || "";
-      if (!text) return;
-      navigator.clipboard.writeText(text).then(() => {
+      const rawText = cmodalDetailedAnalysis?.dataset?.rawText || cmodalDetailedAnalysis?.innerText || "";
+      if (!rawText || rawText.includes("Not enriched yet") || rawText.includes("Click 'Enrich")) return;
+      const cleanText = stripMarkdownForCopy(rawText);
+      navigator.clipboard.writeText(cleanText).then(() => {
         cmodalBtnCopyReport.innerHTML = `<i data-lucide="check" class="w-3 h-3 text-emerald-400"></i><span>Copied!</span>`;
         refreshIcons();
         setTimeout(() => {
@@ -1713,16 +1747,19 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       if (company.profile.detailed_analysis) {
-        cmodalDetailedAnalysis.textContent = company.profile.detailed_analysis;
+        cmodalDetailedAnalysis.dataset.rawText = company.profile.detailed_analysis;
+        cmodalDetailedAnalysis.innerHTML = formatMarkdown(company.profile.detailed_analysis);
       } else {
-        cmodalDetailedAnalysis.textContent = "Click 'Enrich with AI' below to generate the comprehensive intelligence report.";
+        cmodalDetailedAnalysis.dataset.rawText = "";
+        cmodalDetailedAnalysis.innerHTML = `<span class="text-slate-400 italic">Click 'Enrich with AI' below to generate comprehensive intelligence report.</span>`;
       }
     } else {
       cmodalSummary.textContent = "Not enriched yet. Click 'Enrich with AI' below to analyze company details and detect tech stack.";
       cmodalIndustry.textContent = "Pending Analysis";
       cmodalTone.textContent = "Pending Analysis";
       cmodalTechstack.innerHTML = `<span class="text-slate-500 italic text-[11px]">Run enrichment to identify tech stack.</span>`;
-      cmodalDetailedAnalysis.textContent = "Not enriched yet. Click 'Enrich with AI' below to generate comprehensive intelligence report.";
+      cmodalDetailedAnalysis.dataset.rawText = "";
+      cmodalDetailedAnalysis.innerHTML = `<span class="text-slate-400 italic">Not enriched yet. Click 'Enrich with AI' below to generate comprehensive intelligence report.</span>`;
     }
 
     cmodal.classList.remove("hidden");
@@ -2232,7 +2269,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const detailedAnalysisEl = document.getElementById("profile-detailed-analysis");
         if (detailedAnalysisEl && data.profile.detailed_profile_analysis) {
-          detailedAnalysisEl.textContent = data.profile.detailed_profile_analysis;
+          detailedAnalysisEl.dataset.rawText = data.profile.detailed_profile_analysis;
+          detailedAnalysisEl.innerHTML = formatMarkdown(data.profile.detailed_profile_analysis);
         }
       }
     } catch (err) {
@@ -2287,7 +2325,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const detailedAnalysisEl = document.getElementById("profile-detailed-analysis");
         if (detailedAnalysisEl && data.profile.detailed_profile_analysis) {
-          detailedAnalysisEl.textContent = data.profile.detailed_profile_analysis;
+          detailedAnalysisEl.dataset.rawText = data.profile.detailed_profile_analysis;
+          detailedAnalysisEl.innerHTML = formatMarkdown(data.profile.detailed_profile_analysis);
         }
 
         alert("Candidate Profile updated successfully! Linked to your personalized outreach emails.");
@@ -2307,12 +2346,13 @@ document.addEventListener("DOMContentLoaded", () => {
   if (btnCopyProfileAnalysis) {
     btnCopyProfileAnalysis.addEventListener("click", () => {
       const detailedAnalysisEl = document.getElementById("profile-detailed-analysis");
-      const text = (detailedAnalysisEl?.innerText || detailedAnalysisEl?.textContent || "").trim();
-      if (!text || text.includes("Upload your resume above")) {
+      const rawText = detailedAnalysisEl?.dataset?.rawText || detailedAnalysisEl?.innerText || "";
+      if (!rawText || rawText.includes("Upload your resume above")) {
         alert("Please upload and analyze a resume first to copy the dossier.");
         return;
       }
-      navigator.clipboard.writeText(text).then(() => {
+      const cleanText = stripMarkdownForCopy(rawText);
+      navigator.clipboard.writeText(cleanText).then(() => {
         btnCopyProfileAnalysis.innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5 text-emerald-400"></i><span class="text-emerald-400">Copied!</span>`;
         refreshIcons();
         setTimeout(() => {

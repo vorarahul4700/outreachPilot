@@ -9,6 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
   <link rel="stylesheet" href="/static/css/style.css?v=2.8">
 </head>
 <body class="bg-slate-950 text-slate-100 antialiased min-h-screen flex overflow-x-hidden">
@@ -732,7 +733,7 @@
                   <span id="copy-profile-analysis-text">Copy Analysis</span>
                 </button>
               </div>
-              <div id="profile-detailed-analysis" class="text-slate-300 leading-relaxed max-h-96 overflow-y-auto whitespace-pre-wrap font-sans text-xs bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner">
+              <div id="profile-detailed-analysis" class="text-slate-300 leading-relaxed max-h-96 overflow-y-auto font-sans text-xs bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner markdown-content">
                 Upload your resume above to generate a comprehensive career assessment, technical evaluation, and personalized introduction.
               </div>
             </div>
@@ -1004,7 +1005,7 @@
                 <span>Copy</span>
               </button>
             </div>
-            <div id="cmodal-detailed-analysis" class="text-slate-300 leading-relaxed max-h-72 overflow-y-auto whitespace-pre-wrap font-sans text-xs bg-slate-900/60 p-3 rounded-lg border border-slate-800/80">
+            <div id="cmodal-detailed-analysis" class="text-slate-300 leading-relaxed max-h-72 overflow-y-auto font-sans text-xs bg-slate-900/60 p-3.5 rounded-lg border border-slate-800/80 markdown-content">
               Not enriched yet. Click "Enrich with AI" below to generate a detailed intelligence report.
             </div>
           </div>
