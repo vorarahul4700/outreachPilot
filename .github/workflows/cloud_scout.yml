@@ -57,7 +57,7 @@ jobs:
           GROQ_MODEL: ${{ secrets.GROQ_MODEL || 'qwen/qwen3.8-27b' }}
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
         run: |
-          xvfb-run -a python cloud_worker.py \
+          xvfb-run -a --server-args="-screen 0 1920x1080x24" python cloud_worker.py \
             --job-id "${{ github.event.inputs.job_id }}" \
             --keyword "${{ github.event.inputs.keyword }}" \
             --city "${{ github.event.inputs.city }}" \

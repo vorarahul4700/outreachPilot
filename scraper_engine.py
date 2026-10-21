@@ -317,6 +317,24 @@ class GoogleScraper:
         except Exception:
             return ""
 
+def format_local_query(keyword: str = "", city: str = "") -> str:
+    """
+    Formats the search query to ensure Google triggers the local Places pack (udm=local).
+    Inserts 'in' preposition between keyword and city if not already present.
+    """
+    k = (keyword or "").strip()
+    c = (city or "").strip()
+    if not k and not c:
+        return "IT Companies"
+    if not c:
+        return k
+    if not k:
+        return f"Companies in {c}"
+    if re.search(r"\b(in|near|at|around)\b", k, re.I):
+        return f"{k} {c}".strip()
+    return f"{k} in {c}".strip()
+
+
     def build_initial_url(
         self,
         keyword: str = "",
@@ -338,7 +356,7 @@ class GoogleScraper:
             new_query = urllib.parse.urlencode(params, doseq=True)
             return f"https://www.google.com/search?{new_query}"
 
-        full_query = f"{keyword} {city}".strip() or "IT Companies"
+        full_query = format_local_query(keyword, city)
         encoded = urllib.parse.quote_plus(full_query)
         return f"https://www.google.com/search?q={encoded}&udm=local&gl={gl}&hl={hl}"
 
@@ -397,7 +415,7 @@ class GoogleScraper:
                         "disable_gpu": True,
                         "no_sandbox": True,
                         "pls": "eager",
-                        "chromium_arg": "--disable-dev-shm-usage,--disable-software-rasterizer,--no-first-run",
+                        "chromium_arg": "--disable-dev-shm-usage,--disable-software-rasterizer,--no-first-run,--window-size=1920,1080",
                     }
                     if chrome_bin_path:
                         driver_kwargs["binary_location"] = chrome_bin_path
@@ -552,7 +570,7 @@ class GoogleScraper:
                             params["hl"] = [hl]
                         next_url = f"https://www.google.com/search?{urllib.parse.urlencode(params, doseq=True)}"
                     else:
-                        full_query = f"{keyword} {city}".strip() or "IT Companies"
+                        full_query = format_local_query(keyword, city)
                         encoded = urllib.parse.quote_plus(full_query)
                         next_url = f"https://www.google.com/search?q={encoded}&udm=local&start={start_offset}&gl={gl}&hl={hl}"
 
