@@ -210,9 +210,10 @@ class GoogleScraper:
     and parallel /goto redirect resolution.
     """
 
-    def __init__(self, headless: bool = True, max_workers: int = 25):
+    def __init__(self, headless: bool = True, max_workers: int = 25, log_callback: Any = None):
         self.headless = headless
         self.max_workers = max_workers
+        self.log_callback = log_callback
         self.is_running = False
         self.progress = 0
         self.status_message = "Idle"
@@ -229,11 +230,17 @@ class GoogleScraper:
         })
 
     def _log(self, msg: str, progress: int | None = None):
-        """Internal logging helper"""
+        """Internal logging helper with immediate stdout flush and optional callback"""
+        print(f"[{time.strftime('%H:%M:%S')}] {msg}", flush=True)
         self.logs.append(msg)
         self.status_message = msg
         if progress is not None:
             self.progress = progress
+        if self.log_callback:
+            try:
+                self.log_callback(msg, progress)
+            except Exception:
+                pass
 
     def _resolve_single_website(self, goto_url: str) -> str:
         """Resolve Google /goto redirect URL to the destination website"""
@@ -403,6 +410,23 @@ class GoogleScraper:
             self._log("Navigating to Google Local results...", 20)
             driver.get(target_url)
 
+            # Check and auto-accept Google Consent dialog (standard on cloud / datacenter IPs)
+            time.sleep(1.5)
+            try:
+                curr_url = (driver.current_url or "").lower()
+                if "consent.google.com" in curr_url or "consent" in curr_url:
+                    self._log("Detected Google Consent prompt; auto-accepting terms...", 22)
+                    for accept_sel in ["button#L2AGLb", "button:contains('Accept all')", "button:contains('I agree')", "form[action*='consent'] button"]:
+                        try:
+                            if driver.is_element_visible(accept_sel):
+                                driver.click(accept_sel, timeout=2)
+                                time.sleep(1.5)
+                                break
+                        except Exception:
+                            pass
+            except Exception:
+                pass
+
             is_all_pages = (max_pages <= 0)
             effective_max = 50 if is_all_pages else max_pages
             page = 1
@@ -412,17 +436,31 @@ class GoogleScraper:
                 progress_pct = int(20 + ((page - 1) * 70 / effective_max))
                 self._log(f"Parsing results from {page_label}...", progress_pct)
 
-                # Fast polling for cards (0.15s interval, breaks immediately when loaded)
+                # Polling for cards (up to 12 seconds with 0.4s interval)
                 cards = []
                 soup = None
-                for _ in range(25):  # Max 3.5s wait
-                    soup = BeautifulSoup(driver.page_source, "html.parser")
-                    cards = soup.find_all("div", class_="VkpGBb")
-                    if not cards:
-                        cards = soup.find_all("div", {"jscontroller": "AtSb"})
+                for poll_i in range(30):
+                    page_source = driver.page_source
+                    soup = BeautifulSoup(page_source, "html.parser")
+
+                    # Check for inline consent button
+                    if poll_i < 3 and "consent" in page_source.lower() and "l2aglb" in page_source.lower():
+                        try:
+                            driver.click("button#L2AGLb", timeout=1)
+                        except Exception:
+                            pass
+
+                    # Multi-selector matching for Google Local business listing cards
+                    cards = (
+                        soup.find_all("div", class_="VkpGBb")
+                        or soup.find_all("div", {"jscontroller": "AtSb"})
+                        or soup.find_all("div", class_="cXedhc")
+                        or soup.find_all("div", class_="rllt__details")
+                        or soup.find_all("div", class_="C8fQm")
+                    )
                     if cards:
                         break
-                    time.sleep(0.15)
+                    time.sleep(0.4)
 
                 if not cards:
                     self._log(f"No listings found on {page_label}.", 90)
@@ -430,7 +468,12 @@ class GoogleScraper:
 
                 page_raw_items = []
                 for card in cards:
-                    name_el = card.find("span", class_="OSrXXb") or card.find("div", role="heading")
+                    name_el = (
+                        card.find("span", class_="OSrXXb")
+                        or card.find("div", role="heading")
+                        or card.find("div", class_="dbg0pd")
+                        or card.find("span", class_="LrzXr")
+                    )
                     name = name_el.get_text(strip=True) if name_el else None
                     if not name:
                         continue

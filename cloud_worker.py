@@ -76,8 +76,11 @@ def run_worker(job_id: int, keyword: str, city: str, max_pages: int):
     log_job(db, job_id, f"Cloud Runner initialized (7 GB RAM). Scouting Google for '{keyword}' in '{city}' (Pages: {max_pages})...", 10)
 
     try:
-        # Initialize Google Scraper Engine (Headless Chrome in Ubuntu container)
-        scraper = GoogleScraper(headless=True, max_workers=10)
+        def on_scraper_log(msg: str, progress: int = None):
+            log_job(db, job_id, msg, progress)
+
+        # Initialize Google Scraper Engine (Headless Chrome in Ubuntu container) with live log callback
+        scraper = GoogleScraper(headless=True, max_workers=10, log_callback=on_scraper_log)
         log_job(db, job_id, "Launching Headless Chromium browser engine...", 15)
 
         # Scrape Google Local listings
