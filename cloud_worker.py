@@ -12,6 +12,14 @@ import sys
 import time
 from datetime import datetime
 
+# Prevent Windows console UnicodeEncodeError ('charmap' codec) on checkmarks or emojis
+if hasattr(sys.stdout, "reconfigure"):
+    try:
+        sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+        sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+    except Exception:
+        pass
+
 from db import (
     Company,
     CompanyEmail,
@@ -26,7 +34,14 @@ from scraper_engine import GoogleScraper, is_genuine_company_domain
 
 def log_job(db, job_id: int, msg: str, progress: int = None, live_card: dict = None):
     """Updates job progress and logs in Neon database in real-time"""
-    print(f"[{datetime.utcnow().strftime('%H:%M:%S')}] {msg}")
+    t_str = datetime.utcnow().strftime("%H:%M:%S")
+    try:
+        print(f"[{t_str}] {msg}")
+    except Exception:
+        try:
+            print(f"[{t_str}] {msg.encode('ascii', 'replace').decode('ascii')}")
+        except Exception:
+            pass
     try:
         job = db.query(ScoutJob).filter(ScoutJob.id == job_id).first()
         if not job:
@@ -150,10 +165,10 @@ def run_worker(job_id: int, keyword: str, city: str, max_pages: int):
                 except Exception:
                     pass
 
-        # High-Speed Concurrent AI Enrichment (4 parallel workers)
+        # High-Speed Concurrent AI Enrichment (2 parallel workers to stay safely within TPM free tier)
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
-        sem = asyncio.Semaphore(4)
+        sem = asyncio.Semaphore(2)
         completed_count = 0
         lock = asyncio.Lock()
 
@@ -193,13 +208,16 @@ def run_worker(job_id: int, keyword: str, city: str, max_pages: int):
                         completed_count += 1
                         current_pct = int(50 + (completed_count / max(1, total_scraped) * 45))
 
-                    log_job(worker_db, job_id, f"✓ Successfully enriched & verified: {comp_name} ({len(emails)} emails found)", current_pct, live_card=card_data)
+                    log_job(worker_db, job_id, f"[OK] Successfully enriched & verified: {comp_name} ({len(emails)} emails found)", current_pct, live_card=card_data)
                     return True
                 except Exception as enrich_err:
                     print(f"[Enrich Warning] Failed for {comp_domain}: {enrich_err}")
                     return False
                 finally:
-                    worker_db.close()
+                    try:
+                        worker_db.close()
+                    except Exception:
+                        pass
 
         tasks = [
             enrich_worker_task(cid, cname, cdom, i)

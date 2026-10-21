@@ -7,14 +7,15 @@ from groq import Groq
 import config
 
 import itertools
+import time
 
 client = Groq(api_key=config.GROQ_API_KEY) if config.GROQ_API_KEY else None
 
-_ROTATING_MODELS = ["qwen/qwen3.8-27b", "openai/gpt-oss-120b", "openai/gpt-oss-20b"]
+_ROTATING_MODELS = ["qwen/qwen3.8-27b", "openai/gpt-oss-20b", "openai/gpt-oss-120b"]
 _model_counter = itertools.count()
 
 
-def call_groq_with_fallback(messages: list[dict], temperature: float = 0.3, max_tokens: int = 1500, response_format: dict = None):
+def call_groq_with_fallback(messages: list[dict], temperature: float = 0.3, max_tokens: int = 1200, response_format: dict = None):
     """
     Calls Groq with automatic model round-robin rotation and fallback cascade:
     Distributes parallel queries across proven active models to maximize throughput
@@ -43,6 +44,10 @@ def call_groq_with_fallback(messages: list[dict], temperature: float = 0.3, max_
                 return client.chat.completions.create(**kwargs)
             except Exception as e:
                 last_exc = e
+                err_str = str(e).lower()
+                if "429" in err_str or "rate limit" in err_str:
+                    time.sleep(0.6)
+                    break
                 continue
     raise last_exc
 
@@ -75,7 +80,7 @@ def analyze_company(company_name: str, domain: str, scraped_text: str) -> dict[s
             "tone": "Professional"
         }
 
-    clean_sample = scraped_text[:7000]
+    clean_sample = scraped_text[:3500]
 
     prompt = f"""You are an elite B2B technical research analyst and engineering talent strategist.
 Perform a thorough, comprehensive technical intelligence analysis (500 to 700 words) of the company "{company_name}" ({domain}) based on their scraped website content.
