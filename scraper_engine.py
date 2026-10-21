@@ -410,12 +410,8 @@ class GoogleScraper:
                         "uc": True,
                         "headless": not has_display and self.headless,
                         "user_data_dir": tmp_profile_dir,
-                        "block_images": True,
-                        "disable_csp": True,
                         "disable_gpu": True,
                         "no_sandbox": True,
-                        "pls": "eager",
-                        "chromium_arg": "--disable-dev-shm-usage,--disable-software-rasterizer,--no-first-run,--window-size=1920,1080",
                     }
                     if chrome_bin_path:
                         driver_kwargs["binary_location"] = chrome_bin_path
@@ -430,7 +426,20 @@ class GoogleScraper:
                     time.sleep(1.2)
 
             self._log(f"Navigating to Google Local: {target_url}", 20)
-            driver.get(target_url)
+            if hasattr(driver, "uc_open_with_reconnect"):
+                driver.uc_open_with_reconnect(target_url, reconnect_time=4.0)
+            else:
+                driver.get(target_url)
+
+            # Auto-solve Google verification / sorry challenge if triggered on cloud IP
+            if "sorry" in (driver.current_url or "").lower():
+                self._log("Detected Google verification challenge; executing automated UC bypass...", 21)
+                if hasattr(driver, "uc_gui_click_captcha"):
+                    try:
+                        driver.uc_gui_click_captcha()
+                        time.sleep(3.0)
+                    except Exception as ce:
+                        self._log(f"Captcha click attempt: {ce}")
 
             # Check and auto-accept Google Consent dialog (standard on cloud / datacenter IPs)
             time.sleep(1.5)
@@ -576,8 +585,11 @@ class GoogleScraper:
 
                     next_label = f"Page {page + 1} (All Pages Mode)" if is_all_pages else f"Page {page + 1}/{max_pages}"
                     self._log(f"Navigating to {next_label}...", page_progress)
-                    driver.get(next_url)
-                    time.sleep(1.8)
+                    if hasattr(driver, "uc_open_with_reconnect"):
+                        driver.uc_open_with_reconnect(next_url, reconnect_time=3.0)
+                    else:
+                        driver.get(next_url)
+                    time.sleep(1.2)
                     page += 1
                 else:
                     self._log(f"Reached requested limit of {max_pages} pages.", page_progress)
