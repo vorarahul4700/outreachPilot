@@ -175,6 +175,26 @@ async def index_page(request: Request, db: Session = Depends(get_db)):
     )
 
 
+@app.get("/privacy", response_class=HTMLResponse)
+async def privacy_page(request: Request):
+    """Public Privacy Policy required by Google OAuth API verification"""
+    return templates.TemplateResponse(
+        request=request,
+        name="privacy.html",
+        context={"project_name": config.PROJECT_NAME}
+    )
+
+
+@app.get("/terms", response_class=HTMLResponse)
+async def terms_page(request: Request):
+    """Public Terms of Service required by Google OAuth API verification"""
+    return templates.TemplateResponse(
+        request=request,
+        name="terms.html",
+        context={"project_name": config.PROJECT_NAME}
+    )
+
+
 # --- Stage 1: Google Local Lead Scout Endpoints ---
 def run_scraper_sync(keyword: str, city: str, direct_url: str, max_pages: int, gl: str, hl: str):
     global current_scraper
