@@ -14,7 +14,9 @@ APP_DESCRIPTOR = os.getenv("APP_DESCRIPTOR", "AI Outreach Automation")
 DEV_MODE = os.getenv("DEV_MODE", "true").lower() in ("true", "1", "yes")
 DEV_OVERRIDE_EMAIL = os.getenv("DEV_OVERRIDE_EMAIL", "rahulvora234@gmail.com")
 
-GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
+GROQ_API_KEYS_RAW = os.getenv("GROQ_API_KEYS", "") or os.getenv("GROQ_API_KEY", "")
+GROQ_API_KEYS = [k.strip() for k in GROQ_API_KEYS_RAW.split(",") if k.strip()]
+GROQ_API_KEY = GROQ_API_KEYS[0] if GROQ_API_KEYS else ""
 GROQ_MODEL = os.getenv("GROQ_MODEL", "qwen/qwen3.8-27b")
 
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")

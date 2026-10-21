@@ -165,10 +165,10 @@ def run_worker(job_id: int, keyword: str, city: str, max_pages: int):
                 except Exception:
                     pass
 
-        # High-Speed Concurrent AI Enrichment (2 parallel workers to stay safely within TPM free tier)
+        # High-Speed Concurrent AI Enrichment (6 parallel workers across 4 Groq accounts)
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
-        sem = asyncio.Semaphore(2)
+        sem = asyncio.Semaphore(6)
         completed_count = 0
         lock = asyncio.Lock()
 
