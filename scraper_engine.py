@@ -402,13 +402,11 @@ class GoogleScraper:
                                 os.environ["PATH"] = f"{chrome_dir}:{os.environ.get('PATH', '')}"
                             break
 
-                    # Under Xvfb (DISPLAY environment variable set by xvfb-run in GitHub Actions),
-                    # Chrome runs with headless=False in a virtual desktop, allowing full UC Mode
-                    # without 127.0.0.1:9222 socket errors and completely avoiding Google bot challenges.
-                    has_display = bool(os.environ.get("DISPLAY"))
+                    is_cloud = bool(os.environ.get("GITHUB_ACTIONS") or os.environ.get("RENDER") or attempt > 0)
                     driver_kwargs = {
-                        "uc": True,
-                        "headless": not has_display and self.headless,
+                        "uc": not is_cloud,
+                        "headless": self.headless and not is_cloud,
+                        "headless2": is_cloud,
                         "user_data_dir": tmp_profile_dir,
                         "disable_gpu": True,
                         "no_sandbox": True,
@@ -426,8 +424,8 @@ class GoogleScraper:
                     time.sleep(1.2)
 
             self._log(f"Navigating to Google Local: {target_url}", 20)
-            if hasattr(driver, "uc_open_with_reconnect"):
-                driver.uc_open_with_reconnect(target_url, reconnect_time=4.0)
+            if not is_cloud and hasattr(driver, "uc_open_with_reconnect"):
+                driver.uc_open_with_reconnect(target_url, reconnect_time=3.5)
             else:
                 driver.get(target_url)
 
@@ -585,7 +583,7 @@ class GoogleScraper:
 
                     next_label = f"Page {page + 1} (All Pages Mode)" if is_all_pages else f"Page {page + 1}/{max_pages}"
                     self._log(f"Navigating to {next_label}...", page_progress)
-                    if hasattr(driver, "uc_open_with_reconnect"):
+                    if not is_cloud and hasattr(driver, "uc_open_with_reconnect"):
                         driver.uc_open_with_reconnect(next_url, reconnect_time=3.0)
                     else:
                         driver.get(next_url)
