@@ -45,3 +45,5 @@ verify_*.py
 Thumbs.db
 .vscode/
 .idea/
+temp/
+

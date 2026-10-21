@@ -1826,7 +1826,7 @@ document.addEventListener("DOMContentLoaded", () => {
         showToast(data.message || "A scrape job is already active. Please wait for it to finish.", "error");
         return;
       }
-      startPolling();
+      startPolling(data.job_id);
     } catch (err) {
       showToast("Failed to start scout job: " + err.message, "error");
       btnStartScout.disabled = false;
@@ -1841,22 +1841,23 @@ document.addEventListener("DOMContentLoaded", () => {
     btnStartScout.addEventListener("click", handleScoutStart);
   }
 
-  function startPolling() {
+  function startPolling(jobId = null) {
     if (pollInterval) clearInterval(pollInterval);
     let polls = 0;
     let hasStartedRunning = false;
+    const pollUrl = jobId ? `/api/progress?job_id=${jobId}` : "/api/progress";
 
     pollInterval = setInterval(async () => {
       polls++;
       try {
-        const res = await fetch("/api/progress");
+        const res = await fetch(pollUrl);
         const data = await res.json();
 
         if (data.is_running) {
           hasStartedRunning = true;
         }
 
-        monitorStatus.textContent = data.status_message || "Scraping...";
+        monitorStatus.textContent = data.status_message || "Scraping & AI Enriching...";
         monitorCount.textContent = `${data.total_results || 0} Found`;
         monitorProgressBar.style.width = `${Math.min(100, Math.max(8, data.progress || 0))}%`;
 
@@ -1872,7 +1873,7 @@ document.addEventListener("DOMContentLoaded", () => {
           const activeKw = inputKeyword?.value?.trim() || "IT Companies";
           const activeCity = inputCity?.value?.trim() || "Surat";
           renderScoutResults(liveScrapedResults, data.is_running 
-            ? `Live Scouting: "${activeKw}" in "${activeCity}"`
+            ? `Live Cloud Scouting: "${activeKw}" in "${activeCity}"`
             : `Discovered Leads: "${activeKw}" in "${activeCity}"`);
         }
 
@@ -1886,7 +1887,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         // Complete when the scraper has finished or if stopped
-        const hasFinished = (!data.is_running && (hasStartedRunning || polls > 4)) || polls > 180;
+        const hasFinished = (!data.is_running && (hasStartedRunning || polls > 2)) || polls > 120;
         if (hasFinished) {
           clearInterval(pollInterval);
           btnStartScout.disabled = false;
@@ -1902,7 +1903,7 @@ document.addEventListener("DOMContentLoaded", () => {
       } catch (err) {
         console.error("Poll error:", err);
       }
-    }, 2000);
+    }, 5000); // Clean 5-second polling interval as requested
   }
 
   // ==========================================

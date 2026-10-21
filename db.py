@@ -142,6 +142,25 @@ class OutreachLog(Base):
     user = relationship("User", back_populates="outreach_logs")
 
 
+class ScoutJob(Base):
+    __tablename__ = "scout_jobs"
+
+    id = Column(Integer, primary_key=True, index=True)
+    keyword = Column(String(255), nullable=False)
+    city = Column(String(100), nullable=True)
+    max_pages = Column(Integer, default=2)
+    status = Column(String(50), default="QUEUED", index=True)  # QUEUED, RUNNING, COMPLETED, FAILED
+    progress = Column(Integer, default=0)
+    status_message = Column(String(255), default="Job Queued in Cloud")
+    total_found = Column(Integer, default=0)
+    total_enriched = Column(Integer, default=0)
+    logs = Column(JsonType, default=list)
+    results = Column(JsonType, default=list)
+    error = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
 # Database engine & Session factory
 clean_db_url = (DATABASE_URL or "").strip().strip("\"'").strip()
 if clean_db_url.startswith("postgres://"):

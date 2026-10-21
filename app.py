@@ -1,5 +1,6 @@
 import asyncio
 import io
+import os
 import secrets
 import time
 import urllib.parse
@@ -8,6 +9,7 @@ from contextlib import asynccontextmanager
 from datetime import datetime
 from typing import Any
 
+import requests
 import uvicorn
 from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, UploadFile, status
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
@@ -20,7 +22,7 @@ from sqlalchemy.orm import Session
 
 import config
 from ai_agent import generate_personalized_pitch, normalize_single_keyword, parse_resume_text
-from db import ColdPitch, Company, OutreachLog, SessionLocal, User, get_db, init_db
+from db import ColdPitch, Company, OutreachLog, ScoutJob, SessionLocal, User, get_db, init_db
 from enricher import deep_enrich_company, is_recruitment_email
 from outreach import (
     dispatch_batch_outreach,
@@ -260,33 +262,124 @@ def run_scraper_sync(keyword: str, city: str, direct_url: str, max_pages: int, g
 
 
 @app.post("/api/scrape")
-async def start_scrape(req: ScrapeRequest):
+async def start_scrape(req: ScrapeRequest, db: Session = Depends(get_db)):
     global active_task, current_scraper
-    if current_scraper and current_scraper.is_running:
-        return {"status": "error", "message": "A scrape job is already actively running."}
 
-    # Initialize immediately so /api/progress reflects the new run instantly
-    current_scraper = GoogleScraper(headless=True)
-    current_scraper.is_running = True
-    current_scraper.progress = 5
-    current_scraper.status_message = f"Initializing browser engine for {req.keyword} {req.city}..."
+    clean_keyword = req.keyword.strip() if req.keyword else "IT Companies"
+    clean_city = req.city.strip() if req.city else ""
 
-    loop = asyncio.get_event_loop()
-    active_task = loop.run_in_executor(
-        None,
-        run_scraper_sync,
-        req.keyword,
-        req.city,
-        req.direct_url,
-        req.max_pages,
-        req.gl,
-        req.hl
+    # Register ScoutJob in Neon DB
+    job = ScoutJob(
+        keyword=clean_keyword,
+        city=clean_city,
+        max_pages=req.max_pages,
+        status="QUEUED",
+        progress=5,
+        status_message=f"Dispatching Cloud Scout & AI Worker for '{clean_keyword}' in '{clean_city}'...",
+        logs=[f"[{datetime.utcnow().strftime('%H:%M:%S')}] Job registered in Neon DB. Dispatching GitHub Actions Cloud Runner (7 GB RAM)..."],
+        results=[]
     )
-    return {"status": "started", "message": "Scraper initialized in background."}
+    db.add(job)
+    db.commit()
+    db.refresh(job)
+
+    # Check if GitHub Actions Cloud Dispatch is configured
+    github_token = os.getenv("GITHUB_TOKEN") or os.getenv("GITHUB_PAT_TOKEN")
+    github_repo = os.getenv("GITHUB_REPOSITORY", "vorarahul4700/outreachPilot")
+    dispatched = False
+
+    if github_token:
+        try:
+            dispatch_url = f"https://api.github.com/repos/{github_repo}/actions/workflows/cloud_scout.yml/dispatches"
+            resp = requests.post(
+                dispatch_url,
+                headers={
+                    "Authorization": f"Bearer {github_token}",
+                    "Accept": "application/vnd.github.v3+json",
+                },
+                json={
+                    "ref": "main",
+                    "inputs": {
+                        "job_id": str(job.id),
+                        "keyword": clean_keyword,
+                        "city": clean_city,
+                        "max_pages": str(req.max_pages)
+                    }
+                },
+                timeout=6.0
+            )
+            if resp.status_code in (200, 204):
+                dispatched = True
+                print(f"[Cloud Dispatch] Successfully dispatched GitHub Actions workflow for Job #{job.id}")
+            else:
+                print(f"[Cloud Dispatch Notice] GitHub returned {resp.status_code}: {resp.text}")
+        except Exception as dispatch_err:
+            print(f"[Cloud Dispatch Error] {dispatch_err}")
+
+    # Fallback to local background thread if cloud runner wasn't dispatched
+    if not dispatched:
+        current_scraper = GoogleScraper(headless=True)
+        current_scraper.is_running = True
+        current_scraper.progress = 5
+        current_scraper.status_message = f"Running scraper locally for {clean_keyword} {clean_city}..."
+
+        loop = asyncio.get_event_loop()
+        active_task = loop.run_in_executor(
+            None,
+            run_scraper_sync,
+            clean_keyword,
+            clean_city,
+            req.direct_url,
+            req.max_pages,
+            req.gl,
+            req.hl
+        )
+
+    return {
+        "status": "started",
+        "job_id": job.id,
+        "mode": "cloud_github_actions" if dispatched else "local_thread",
+        "message": "Scouting and AI Enrichment dispatched!"
+    }
 
 
 @app.get("/api/progress")
-async def get_progress():
+async def get_progress(job_id: int = None, db: Session = Depends(get_db)):
+    # 1. Check for specific requested job_id in Neon DB
+    if job_id:
+        job = db.query(ScoutJob).filter(ScoutJob.id == job_id).first()
+        if job:
+            return {
+                "is_running": job.status in ("QUEUED", "RUNNING"),
+                "progress": job.progress,
+                "status_message": job.status_message,
+                "logs": (job.logs or [])[-15:],
+                "total_results": len(job.results or []),
+                "results": (job.results or [])[-50:],
+                "error": job.error,
+                "job_id": job.id
+            }
+
+    # 2. Check for any active cloud ScoutJob in Neon DB
+    recent_job = (
+        db.query(ScoutJob)
+        .filter(ScoutJob.status.in_(["QUEUED", "RUNNING"]))
+        .order_by(ScoutJob.id.desc())
+        .first()
+    )
+    if recent_job:
+        return {
+            "is_running": True,
+            "progress": recent_job.progress,
+            "status_message": recent_job.status_message,
+            "logs": (recent_job.logs or [])[-15:],
+            "total_results": len(recent_job.results or []),
+            "results": (recent_job.results or [])[-50:],
+            "error": recent_job.error,
+            "job_id": recent_job.id
+        }
+
+    # 3. Fallback to local in-memory scraper
     if not current_scraper:
         return {"is_running": False, "progress": 0, "logs": [], "total_results": 0, "results": []}
     return {

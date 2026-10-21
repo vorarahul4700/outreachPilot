@@ -1,0 +1,62 @@
+name: Cloud Scout & Automatic AI Enrichment Worker
+
+on:
+  workflow_dispatch:
+    inputs:
+      job_id:
+        description: "ScoutJob ID from Neon DB"
+        required: true
+      keyword:
+        description: "Search Keyword (e.g. IT Companies)"
+        required: true
+        default: "IT Companies"
+      city:
+        description: "City (e.g. Surat)"
+        required: false
+        default: "Surat"
+      max_pages:
+        description: "Max pages to scrape"
+        required: false
+        default: "2"
+
+jobs:
+  cloud_scout_job:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install Google Chrome Stable
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends wget curl gnupg
+          wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo gpg --dearmor -o /usr/share/keyrings/googlechrome-linux-keyring.gpg
+          echo "deb [arch=amd64 signed-by=/usr/share/keyrings/googlechrome-linux-keyring.gpg] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends google-chrome-stable
+          google-chrome --version
+
+      - name: Install Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Cloud Scout & AI Enrichment Worker
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+        run: |
+          python cloud_worker.py \
+            --job-id "${{ github.event.inputs.job_id }}" \
+            --keyword "${{ github.event.inputs.keyword }}" \
+            --city "${{ github.event.inputs.city }}" \
+            --max-pages "${{ github.event.inputs.max_pages }}"
