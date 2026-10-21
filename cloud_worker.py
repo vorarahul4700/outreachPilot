@@ -30,6 +30,7 @@ from db import (
 )
 from enricher import deep_enrich_company
 from scraper_engine import GoogleScraper, is_genuine_company_domain
+import config
 
 
 def log_job(db, job_id: int, msg: str, progress: int = None, live_card: dict = None):
@@ -165,10 +166,14 @@ def run_worker(job_id: int, keyword: str, city: str, max_pages: int):
                 except Exception:
                     pass
 
-        # High-Speed Concurrent AI Enrichment (6 parallel workers across 4 Groq accounts)
+        # High-Speed Concurrent AI Enrichment: dynamically scaled based on key count
+        concurrency = getattr(config, "GROQ_CONCURRENCY", 2)
+        mode_str = f"Multi-Account Pool ({len(getattr(config, 'GROQ_API_KEYS', []))} accounts, {concurrency} parallel workers)" if getattr(config, "IS_MULTI_GROQ", False) else f"Single Account ({concurrency} workers)"
+        log_job(db, job_id, f"Launching AI Enrichment via {mode_str}...", 50)
+
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
-        sem = asyncio.Semaphore(6)
+        sem = asyncio.Semaphore(concurrency)
         completed_count = 0
         lock = asyncio.Lock()
 

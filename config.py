@@ -14,9 +14,14 @@ APP_DESCRIPTOR = os.getenv("APP_DESCRIPTOR", "AI Outreach Automation")
 DEV_MODE = os.getenv("DEV_MODE", "true").lower() in ("true", "1", "yes")
 DEV_OVERRIDE_EMAIL = os.getenv("DEV_OVERRIDE_EMAIL", "rahulvora234@gmail.com")
 
-GROQ_API_KEYS_RAW = os.getenv("GROQ_API_KEYS", "") or os.getenv("GROQ_API_KEY", "")
-GROQ_API_KEYS = [k.strip() for k in GROQ_API_KEYS_RAW.split(",") if k.strip()]
+# Unified Groq API Key configuration
+# Automatically detects if GROQ_API_KEY contains comma-separated keys for multi-account pooling
+_raw_groq_key = os.getenv("GROQ_API_KEY", "") or os.getenv("GROQ_API_KEYS", "")
+GROQ_API_KEYS = [k.strip() for k in _raw_groq_key.split(",") if k.strip()]
 GROQ_API_KEY = GROQ_API_KEYS[0] if GROQ_API_KEYS else ""
+IS_MULTI_GROQ = len(GROQ_API_KEYS) > 1
+# Dynamically scale concurrency: 2 workers per account key (capped at 8)
+GROQ_CONCURRENCY = max(2, min(8, len(GROQ_API_KEYS) * 2)) if GROQ_API_KEYS else 2
 GROQ_MODEL = os.getenv("GROQ_MODEL", "qwen/qwen3.8-27b")
 
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
