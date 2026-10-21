@@ -424,20 +424,7 @@ class GoogleScraper:
                     time.sleep(1.2)
 
             self._log(f"Navigating to Google Local: {target_url}", 20)
-            if not is_cloud and hasattr(driver, "uc_open_with_reconnect"):
-                driver.uc_open_with_reconnect(target_url, reconnect_time=3.5)
-            else:
-                driver.get(target_url)
-
-            # Auto-solve Google verification / sorry challenge if triggered on cloud IP
-            if "sorry" in (driver.current_url or "").lower():
-                self._log("Detected Google verification challenge; executing automated UC bypass...", 21)
-                if hasattr(driver, "uc_gui_click_captcha"):
-                    try:
-                        driver.uc_gui_click_captcha()
-                        time.sleep(3.0)
-                    except Exception as ce:
-                        self._log(f"Captcha click attempt: {ce}")
+            driver.get(target_url)
 
             # Check and auto-accept Google Consent dialog (standard on cloud / datacenter IPs)
             time.sleep(1.5)
@@ -583,10 +570,7 @@ class GoogleScraper:
 
                     next_label = f"Page {page + 1} (All Pages Mode)" if is_all_pages else f"Page {page + 1}/{max_pages}"
                     self._log(f"Navigating to {next_label}...", page_progress)
-                    if not is_cloud and hasattr(driver, "uc_open_with_reconnect"):
-                        driver.uc_open_with_reconnect(next_url, reconnect_time=3.0)
-                    else:
-                        driver.get(next_url)
+                    driver.get(next_url)
                     time.sleep(1.2)
                     page += 1
                 else:

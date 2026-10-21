@@ -106,30 +106,48 @@ def run_worker(job_id: int, keyword: str, city: str, max_pages: int):
         total_scraped = len(valid_items)
         log_job(db, job_id, f"Google Scouting finished. Discovered {total_scraped} genuine company listings.", 50)
 
+        # Refresh database session after prolonged browser scraping to avoid Neon timeout
+        try:
+            db.close()
+        except Exception:
+            pass
+        db = SessionLocal()
+
         # Batch-register all companies in Neon DB first (fast & deadlock-free)
         company_records = []
         for item in valid_items:
             c_dom = item["domain"].strip().lower()
             c_name = item["name"].strip()
-            company = db.query(Company).filter(Company.domain == c_dom).first()
-            if not company:
-                company = Company(
-                    domain=c_dom,
-                    name=c_name,
-                    website_url=item.get("website_url") or "",
-                    phone=item.get("phone") or "",
-                    address=item.get("address") or "",
-                    location_url=item.get("location_url") or "",
-                    rating=item.get("rating") or 0.0,
-                    reviews_count=item.get("reviews_count") or 0,
-                    search_keyword=keyword,
-                    city=city,
-                    source_query=f"{keyword} {city}".strip()
-                )
-                db.add(company)
-                db.commit()
-                db.refresh(company)
-            company_records.append((company.id, c_name, c_dom))
+            try:
+                company = db.query(Company).filter(Company.domain == c_dom).first()
+                if not company:
+                    company = Company(
+                        domain=c_dom,
+                        name=c_name,
+                        website_url=item.get("website_url") or "",
+                        phone=item.get("phone") or "",
+                        address=item.get("address") or "",
+                        location_url=item.get("location_url") or "",
+                        rating=item.get("rating") or 0.0,
+                        reviews_count=item.get("reviews_count") or 0,
+                        search_keyword=keyword,
+                        city=city,
+                        source_query=f"{keyword} {city}".strip()
+                    )
+                    db.add(company)
+                    db.commit()
+                    db.refresh(company)
+                company_records.append((company.id, c_name, c_dom))
+            except Exception as reg_err:
+                try:
+                    db.rollback()
+                    db.close()
+                    db = SessionLocal()
+                    company = db.query(Company).filter(Company.domain == c_dom).first()
+                    if company:
+                        company_records.append((company.id, c_name, c_dom))
+                except Exception:
+                    pass
 
         # High-Speed Concurrent AI Enrichment (4 parallel workers)
         loop = asyncio.new_event_loop()
@@ -197,14 +215,23 @@ def run_worker(job_id: int, keyword: str, city: str, max_pages: int):
 
     except Exception as e:
         print(f"[Error] Cloud runner failure: {e}")
-        job = db.query(ScoutJob).filter(ScoutJob.id == job_id).first()
-        if job:
-            job.status = "FAILED"
-            job.error = str(e)
-            job.status_message = f"Failed: {e}"
-            job.updated_at = datetime.utcnow()
-            db.commit()
-        log_job(db, job_id, f"Fatal Error in Cloud Worker: {e}", 100)
+        try:
+            db.rollback()
+        except Exception:
+            pass
+        try:
+            db.close()
+            db = SessionLocal()
+            job = db.query(ScoutJob).filter(ScoutJob.id == job_id).first()
+            if job:
+                job.status = "FAILED"
+                job.error = str(e)
+                job.status_message = f"Failed: {e}"
+                job.updated_at = datetime.utcnow()
+                db.commit()
+            log_job(db, job_id, f"Fatal Error in Cloud Worker: {e}", 100)
+        except Exception:
+            pass
         sys.exit(1)
     finally:
         db.close()
