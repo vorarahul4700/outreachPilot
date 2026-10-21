@@ -58,6 +58,30 @@ DISALLOWED_AGGREGATOR_DOMAINS = {
     "ambitionbox.com",
 }
 
+DEFAULT_GOOGLE_COOKIE = os.environ.get(
+    "GOOGLE_COOKIE",
+    (
+        "__Secure-BUCKET=CMQC; "
+        "SID=g.a000DQmIT8_RO_bnf5DGAEoTTh_s44l8JtyWQCE_mqygUKUq9hFNGiDTG3VdWHqF0gbO5JdL4AACgYKAV8SARMSFQHGX2Mi5kbiJlq0rlinC1cBtDW0DBoVAUF8yKrmp1vqw0Ose1c6UZ6SY0OW0076; "
+        "__Secure-1PSID=g.a000DQmIT8_RO_bnf5DGAEoTTh_s44l8JtyWQCE_mqygUKUq9hFN_6jb-jhMX6uOSYNPkfF6bQACgYKAaYSARMSFQHGX2MiDOjK9t-P3bsqaUD7WFoWRRoVAUF8yKpMJ14OyAeKnVSflfeEkQrc0076; "
+        "__Secure-3PSID=g.a000DQmIT8_RO_bnf5DGAEoTTh_s44l8JtyWQCE_mqygUKUq9hFNPEwXsyVYyMMFFETSi3P-swACgYKAeASARMSFQHGX2MiWn_DFnRlBvQhK85YJfLcFBoVAUF8yKoB2_FGC-zZ_R64wrtJ7N3a0076; "
+        "HSID=A93ryFBPIornk6vPH; SSID=A1A3zcuFaIdJLunxh; APISID=sQZWANssEkrsKSfc/AEd4J7TqNnVjvmoQc; SAPISID=GeK0YAD8bNnP9I-b/ATJGw1R483rcmLoxO; "
+        "__Secure-1PAPISID=GeK0YAD8bNnP9I-b/ATJGw1R483rcmLoxO; __Secure-3PAPISID=GeK0YAD8bNnP9I-b/ATJGw1R483rcmLoxO; "
+        "AEC=Aaa9EJr5MWJbwHMfB4-zaQZ4dHzb8OgKqZu5gH8tVlKxD2IOxqop_hQiGUU; SEARCH_SAMESITE=CgQIi6IB; "
+        "__Secure-1PSIDTS=sidts-CjcBkldj_2bFfFquy3v8mLRbvUF_7J15hV9cOo-A979gEK23jlUEqei46khUghRBpPqIaBqXIVyyEAA; "
+        "__Secure-1PSIDRTS=sidts-CjcBkldj_2bFfFquy3v8mLRbvUF_7J15hV9cOo-A979gEK23jlUEqei46khUghRBpPqIaBqXIVyyEAA; "
+        "__Secure-3PSIDTS=sidts-CjcBkldj_2bFfFquy3v8mLRbvUF_7J15hV9cOo-A979gEK23jlUEqei46khUghRBpPqIaBqXIVyyEAA; "
+        "__Secure-3PSIDRTS=sidts-CjcBkldj_2bFfFquy3v8mLRbvUF_7J15hV9cOo-A979gEK23jlUEqei46khUghRBpPqIaBqXIVyyEAA; "
+        "DV=E8Y7g4L_e8Fh4NvUndzzyhltM6nkFZpmZJkM5iW6-AAAAFDlHC2AqIuOqwAAAPCSFA-qpoSSPgAAAKaqsXzyEc3TEAAAAB71NcqXBrlQBAAAAA; "
+        "NID=CqYECAES2AMBOxGDSIowy7otIxPYRn9_bifCfAJQAuZANBAzTWP0qNsVb-wehYz6HXIeR907-99eD9OZ0eNRSB5DCBR1i11yRfzeZkUthJlRd2MhzS5qam_-4ddSAYCt0eRKSNWROGrECSULKYZNuGwY7V1PtEICqLZOF7ANfTXDiA8QclnXooPrAMut1tn8Lr7nH2MfOf3kThqti05lc0Hz5KOWC1_rzz-6DDHzVeX_XiH51KrKMVKDyQixDuy83xzJuyfMbmXMlfwh9LeeYOlE_9DfX1TbFw0MjNv1ckmQOMdXIchXm57_2XrfuR17gYPrWBGG_f6Axh_upiNYVp4OkXyYVLM6FP8wvDEynUI3E6AP3r849F_0C_PnztmgRpPZvTzY7UyY1Hw9Pf90PtD6ooDwUTe0Mx3iKlyAaFMufeq99kjKapXwoPgDP8iMGfGiw2OmGiN3jKmn80EHSV5BJmnDVcw4THs7pRYKNdz_OWhmsA7yqeOBzRgZVIgizt8ebpmaCSxE_t5PJh8jsVbBHzCwd5p8Yg04ln3EACeBwcsOUuiBwsaDRdfBwGyFIMC3qovR8YIVrCHfTExWm7kcm9mJrkc681efkI4AYw_DGL7M-HWnsBiCQJFUKqsqKAEyRQHSrAfPr8k-TVPinSSC0KveQ7vupKKOph-XaH4ty95UNaUx5LRJH4Usf1-4gF28WisWDzK8tK2QpS-IvK4ZEi-tCJhfCQ; "
+        "SIDCC=AKEyXzVxqeGRadKG3s41KaW7uIw_pQe0wiouwPVWv1WbbNxuJituDPgjkuieMPwubxX02wXOOT26; "
+        "__Secure-1PSIDCC=AKEyXzWG0BV5LqBQzCqTiQCLmwwlvvag-gjpQ3Gy9wyLa7gRb7zYY95fCxSHh-N6EVFlTQFtV8g; "
+        "__Secure-3PSIDCC=AKEyXzWyAk9QYmEE9cKCNAyX4IFxAMV-3wV30dSByWMtqcWZWlJDRpCD84-a_23ycjVjmS258mI; "
+        "__Secure-STRP=ABNhA6iBo35mRIwXV7-MyJ1XMvjeJI8aK4u8JjziwhhMsErzckqhL-78xdl5IhxyPQF1pRyZBRJ2UosPtUxXtOzvKb5JbHC8Hn_G; "
+        "UULE=j+WzEsMTIsMTc5MjU4MzQwMzk4MzAwMCxudWxsLFsyMTIzNTIxODksNzI5MzkwODM4XSxudWxsLDk5MjAwLG51bGwsNl0="
+    )
+)
+
 
 def is_genuine_company_domain(domain: str) -> bool:
     """
@@ -360,6 +384,142 @@ class GoogleScraper:
         encoded = urllib.parse.quote_plus(full_query)
         return f"https://www.google.com/search?q={encoded}&udm=local&gl={gl}&hl={hl}"
 
+    def _scrape_http(
+        self,
+        keyword: str = "",
+        city: str = "",
+        direct_url: str = "",
+        max_pages: int = 2,
+        gl: str = "in",
+        hl: str = "en",
+        cookie: str = ""
+    ) -> list[dict[str, Any]]:
+        """
+        Fast-Path HTTP scraper using authenticated anti-abuse Google headers and cookies.
+        Bypasses Cloudflare / Google /sorry/index captcha blocks directly without Chromium overhead.
+        """
+        cookie_to_use = (cookie or os.environ.get("GOOGLE_COOKIE") or DEFAULT_GOOGLE_COOKIE).strip()
+        if not cookie_to_use:
+            return []
+
+        http_session = requests.Session()
+        http_session.headers.update({
+            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+            "cookie": cookie_to_use.replace("\n", " ").strip(),
+            "sec-ch-ua": '"Chromium";v="124", "Google Chrome";v="124", "Not-A.Brand";v="99"',
+            "sec-ch-ua-mobile": "?0",
+            "sec-ch-ua-platform": '"Windows"',
+            "sec-fetch-dest": "document",
+            "sec-fetch-mode": "navigate",
+            "sec-fetch-site": "same-origin",
+            "sec-fetch-user": "?1",
+            "upgrade-insecure-requests": "1",
+            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+            "accept-language": "en-US,en;q=0.8",
+        })
+
+        effective_max = 50 if max_pages <= 0 else max_pages
+        all_results = []
+
+        for page in range(1, effective_max + 1):
+            start_offset = (page - 1) * 20
+            page_label = f"Page {page}/{max_pages}" if max_pages > 0 else f"Page {page}"
+            pct = int(20 + ((page - 1) * 70 / effective_max))
+            self._log(f"[Fast-Path HTTP] Fetching listings from {page_label}...", pct)
+
+            if direct_url and "google.com/search" in direct_url:
+                parsed = urllib.parse.urlparse(direct_url)
+                params = urllib.parse.parse_qs(parsed.query)
+                params["udm"] = ["local"]
+                params["start"] = [str(start_offset)]
+                if gl and "gl" not in params:
+                    params["gl"] = [gl]
+                if hl and "hl" not in params:
+                    params["hl"] = [hl]
+                url = f"https://www.google.com/search?{urllib.parse.urlencode(params, doseq=True)}"
+            else:
+                full_query = format_local_query(keyword, city)
+                encoded = urllib.parse.quote_plus(full_query)
+                url = f"https://www.google.com/search?q={encoded}&udm=local&start={start_offset}&gl={gl}&hl={hl}"
+
+            try:
+                resp = http_session.get(url, timeout=8.0)
+                if resp.status_code != 200 or "sorry/index" in resp.url:
+                    self._log(f"[Fast-Path HTTP] Notice: Status {resp.status_code} or checkpoint on {page_label}.", pct)
+                    break
+
+                soup = BeautifulSoup(resp.text, "html.parser")
+                cards = (
+                    soup.find_all("div", class_="VkpGBb")
+                    or soup.find_all("div", class_="cXedhc")
+                    or soup.find_all("div", class_="rllt__details")
+                )
+
+                if not cards:
+                    self._log(f"[Fast-Path HTTP] No more listings on {page_label}.", pct)
+                    break
+
+                page_raw = []
+                for card in cards:
+                    name_el = (
+                        card.find("span", class_="OSrXXb")
+                        or card.find("div", role="heading")
+                        or card.find("div", class_="dbg0pd")
+                    )
+                    name = name_el.get_text(strip=True) if name_el else None
+                    if not name:
+                        continue
+
+                    goto_a = card.find("a", href=lambda h: h and "/goto?url=" in h)
+                    goto_url = goto_a["href"] if goto_a else ""
+
+                    rating_el = card.find("span", class_="yi40Hd")
+                    rating_str = rating_el.get_text(strip=True) if rating_el else "0.0"
+                    try:
+                        rating = float(rating_str)
+                    except ValueError:
+                        rating = 0.0
+
+                    reviews_el = card.find("span", class_="RDApEe")
+                    reviews_raw = reviews_el.get_text(strip=True).strip("()") if reviews_el else "0"
+                    try:
+                        reviews_count = int(re.sub(r"[^\d]", "", reviews_raw) or 0)
+                    except ValueError:
+                        reviews_count = 0
+
+                    address_part, phone = extract_address_and_phone(card, name)
+                    loc_url = build_google_maps_url(name, address_part, city)
+
+                    page_raw.append({
+                        "name": name,
+                        "domain": "",
+                        "website_url": "",
+                        "location_url": loc_url,
+                        "_goto_url": goto_url,
+                        "rating": rating,
+                        "reviews_count": reviews_count,
+                        "address": address_part,
+                        "phone": phone
+                    })
+
+                page_results = self._resolve_websites_parallel(page_raw)
+                genuine_page = []
+                for item in page_results:
+                    dom = item.get("domain") or self._extract_domain_from_url(item.get("website_url", ""))
+                    if is_genuine_company_domain(dom):
+                        item["domain"] = dom
+                        genuine_page.append(item)
+
+                all_results.extend(genuine_page)
+                page_pct = int(20 + (page * 70 / effective_max))
+                self._log(f"[Fast-Path HTTP] {page_label}: Extracted {len(genuine_page)} genuine companies (Total: {len(all_results)})", page_pct)
+                time.sleep(0.8)
+            except Exception as e:
+                self._log(f"[Fast-Path HTTP Error] on {page_label}: {e}", pct)
+                break
+
+        return all_results
+
     def scrape(
         self,
         keyword: str = "",
@@ -370,13 +530,53 @@ class GoogleScraper:
         hl: str = "en"
     ) -> list[dict[str, Any]]:
         """
-        Executes the scraping process synchronously with progress state updates.
+        Executes the scraping process.
+        Attempts authenticated Fast-Path HTTP first, automatically falling back to Chromium browser.
         """
         self.is_running = True
         self.error = None
         self.results = []
         self.progress = 5
-        self._log(f"Initializing browser engine for: {keyword} {city} (Pages: {max_pages}, Region: {gl})...", 10)
+
+        # 1. Attempt Fast-Path HTTP Scraping with Anti-Abuse Cookies
+        try:
+            http_res = self._scrape_http(
+                keyword=keyword,
+                city=city,
+                direct_url=direct_url,
+                max_pages=max_pages,
+                gl=gl,
+                hl=hl
+            )
+            if http_res and len(http_res) > 0:
+                self._log(f"Fast-path HTTP scraping completed! Extracted {len(http_res)} genuine companies.", 100)
+                self.results = http_res
+                return self.results
+            else:
+                self._log("Fast-path HTTP yielded 0 listings. Falling back to Chromium browser engine...", 15)
+        except Exception as http_err:
+            self._log(f"Fast-path HTTP notice ({http_err}). Falling back to Chromium browser engine...", 15)
+
+        # 2. Browser-based fallback via SeleniumBase
+        return self._scrape_browser(
+            keyword=keyword,
+            city=city,
+            direct_url=direct_url,
+            max_pages=max_pages,
+            gl=gl,
+            hl=hl
+        )
+
+    def _scrape_browser(
+        self,
+        keyword: str = "",
+        city: str = "",
+        direct_url: str = "",
+        max_pages: int = 2,
+        gl: str = "in",
+        hl: str = "en"
+    ) -> list[dict[str, Any]]:
+        self._log(f"Initializing Chromium engine for: {keyword} {city} (Pages: {max_pages}, Region: {gl})...", 10)
 
         target_url = self.build_initial_url(keyword, city, direct_url, gl=gl, hl=hl)
         driver = None
