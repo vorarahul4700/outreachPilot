@@ -2375,33 +2375,85 @@ document.addEventListener("DOMContentLoaded", () => {
   const modalSubject = document.getElementById("modal-subject");
   const modalBody = document.getElementById("modal-body");
   const btnLaunchGmail = document.getElementById("btn-launch-gmail");
+  const btnSendDirectOauth = document.getElementById("btn-send-direct-oauth");
+  const btnSendDirectText = document.getElementById("btn-send-direct-text");
   const btnCopyPitch = document.getElementById("btn-copy-pitch");
   let currentPitchId = null;
 
   modalClose.addEventListener("click", () => modal.classList.add("hidden"));
 
   async function handleGeneratePitch(companyId) {
+    const triggerBtn = document.querySelector(`.btn-gen-pitch-row[data-id="${companyId}"]`);
+    const origHtml = triggerBtn ? triggerBtn.innerHTML : "";
+    if (triggerBtn) {
+      triggerBtn.disabled = true;
+      triggerBtn.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i><span>Preparing...</span>`;
+      refreshIcons();
+    }
     try {
       const res = await fetch("/api/pitch/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ company_id: companyId })
       });
+      if (res.status === 401) {
+        showLoginModal();
+        return;
+      }
       const data = await res.json();
       if (data.success) {
         currentPitchId = data.pitch_id;
         modalCompanyName.textContent = `Personalized Outreach for ${data.company_name}`;
         modalTargetEmail.textContent = `To: ${data.target_email}`;
-        modalSubject.value = data.subject_line;
-        modalBody.value = data.email_body;
+        modalSubject.value = data.subject_line || "";
+        modalBody.value = data.email_body || "";
         btnLaunchGmail.href = data.gmail_web_url;
 
         modal.classList.remove("hidden");
         refreshIcons();
+      } else {
+        alert(data.detail || data.message || "Failed to generate outreach pitch.");
       }
     } catch (err) {
       alert("Pitch generation failed: " + err.message);
+    } finally {
+      if (triggerBtn) {
+        triggerBtn.disabled = false;
+        triggerBtn.innerHTML = origHtml;
+        refreshIcons();
+      }
     }
+  }
+
+  if (btnSendDirectOauth) {
+    btnSendDirectOauth.addEventListener("click", async () => {
+      if (!currentPitchId) return;
+
+      btnSendDirectOauth.disabled = true;
+      btnSendDirectOauth.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i><span>Sending via Gmail...</span>`;
+      refreshIcons();
+
+      try {
+        const res = await fetch(`/api/pitch/${currentPitchId}/send-direct`, {
+          method: "POST"
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast("Email sent directly through your authorized Gmail account!", "success");
+          modal.classList.add("hidden");
+          await fetchCompanies();
+          fetchAuditLogs();
+        } else {
+          alert(data.detail || data.error || "Failed to send email via Google OAuth.");
+        }
+      } catch (err) {
+        alert("Email sending failed: " + err.message);
+      } finally {
+        btnSendDirectOauth.disabled = false;
+        btnSendDirectOauth.innerHTML = `<i data-lucide="send" class="w-3.5 h-3.5"></i><span id="btn-send-direct-text">Send via Gmail</span>`;
+        refreshIcons();
+      }
+    });
   }
 
   btnLaunchGmail.addEventListener("click", async () => {

@@ -28,6 +28,7 @@ from outreach import (
     dispatch_batch_outreach,
     generate_gmail_web_link,
     generate_mailto_link,
+    send_via_google_oauth,
 )
 from scraper_engine import GoogleScraper, is_genuine_company_domain
 
@@ -846,6 +847,7 @@ async def generate_single_pitch(
 
     comp_profile_data = {
         "summary": company.profile.summary_short if company.profile else "",
+        "detailed_analysis": company.profile.detailed_analysis if company.profile else "",
         "industry": company.profile.industry if company.profile else "Tech",
         "tech_stack": company.profile.tech_stack if company.profile else [],
         "tone": company.profile.tone if company.profile else "Professional"
@@ -872,14 +874,24 @@ async def generate_single_pitch(
         company_profile=comp_profile_data
     )
 
+    subj = (pitch_data.get("subject_line") or "").strip()
+    body = (pitch_data.get("email_body") or "").strip()
+    c_name = cand_profile.get("full_name") or "Rahul Vora"
+    t_role = cand_profile.get("target_role") or "Backend Developer"
+    if not subj:
+        subj = f"{t_role} inquiry - {c_name}"
+    if not body:
+        skills_str = ", ".join(cand_profile.get("top_skills", [])[:4]) or "PHP, Python, SQL, REST APIs"
+        body = f"Hi {company.name} team,\n\nI’ve been following {company.name} and wanted to reach out directly. As a {t_role} specializing in {skills_str}, I build scalable backend architectures, high-throughput APIs, and optimized databases.\n\nI'm exploring new {t_role} roles and would love to know if {company.name} has open or upcoming engineering positions. Would you be open to a brief chat regarding how my experience could help your product roadmap?\n\nBest regards,\n{c_name}"
+
     existing_pitch = db.query(ColdPitch).filter(
         ColdPitch.company_id == company.id,
         ColdPitch.user_id == user.id
     ).first()
 
     if existing_pitch:
-        existing_pitch.subject_line = pitch_data.get("subject_line", "")
-        existing_pitch.email_body = pitch_data.get("email_body", "")
+        existing_pitch.subject_line = subj
+        existing_pitch.email_body = body
         existing_pitch.cover_letter = pitch_data.get("cover_letter", "")
         existing_pitch.matched_skills = pitch_data.get("matched_skills", [])
         existing_pitch.target_email = target_email
@@ -890,8 +902,8 @@ async def generate_single_pitch(
             company_id=company.id,
             user_id=user.id,
             target_email=target_email,
-            subject_line=pitch_data.get("subject_line", ""),
-            email_body=pitch_data.get("email_body", ""),
+            subject_line=subj,
+            email_body=body,
             cover_letter=pitch_data.get("cover_letter", ""),
             matched_skills=pitch_data.get("matched_skills", []),
             status="DRAFT"
@@ -925,7 +937,46 @@ async def generate_single_pitch(
     }
 
 
-# --- Stage 5: Multi-Tier Outreach & Tracking ---
+# --- Stage 5: Direct & Multi-Tier Outreach Sending ---
+@app.post("/api/pitch/{pitch_id}/send-direct")
+async def send_single_pitch_direct(
+    pitch_id: int,
+    request: Request = None,
+    db: Session = Depends(get_db)
+):
+    user = get_current_user(db, request)
+    if not user or not user.oauth_tokens:
+        raise HTTPException(
+            status_code=401,
+            detail="Authentication required. Please connect your Google account to send direct emails."
+        )
+    pitch = db.query(ColdPitch).filter(ColdPitch.id == pitch_id).first()
+    if not pitch:
+        raise HTTPException(status_code=404, detail="Pitch not found")
+
+    if not config.is_master_admin(user.email) and pitch.user_id != user.id:
+        raise HTTPException(status_code=403, detail="Forbidden: You do not own this pitch record.")
+
+    target = pitch.target_email or f"contact@{pitch.company.domain if pitch.company else 'example.com'}"
+    result = await send_via_google_oauth(
+        user=user,
+        to_email=target,
+        subject=pitch.subject_line,
+        body=pitch.email_body,
+        db=db,
+        company_id=pitch.company_id
+    )
+
+    if result.get("success"):
+        pitch.status = "SENT"
+        pitch.sent_at = datetime.utcnow()
+        pitch.delivery_method = "OAUTH_DIRECT"
+        db.commit()
+        return {"success": True, "message_id": result.get("message_id")}
+    else:
+        return {"success": False, "error": result.get("error", "Failed to dispatch email via Google OAuth.")}
+
+
 @app.post("/api/pitch/{pitch_id}/log-sent")
 async def log_sent_manual(
     pitch_id: int,

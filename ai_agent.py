@@ -66,14 +66,21 @@ def call_groq_with_fallback(messages: list[dict], temperature: float = 0.3, max_
 
 def clean_json_response(raw_text: str) -> dict[str, Any]:
     """Extract and parse JSON safely even if wrapped in markdown codeblocks"""
-    text = raw_text.strip()
+    text = (raw_text or "").strip()
     match = re.search(r"```(?:json)?\s*([\s\S]*?)\s*```", text)
     if match:
         text = match.group(1).strip()
     try:
         return json.loads(text)
     except Exception:
-        return {"summary": text[:400], "detailed_analysis": text, "industry": "Technology", "tech_stack": []}
+        start = text.find("{")
+        end = text.rfind("}")
+        if start != -1 and end != -1 and end > start:
+            try:
+                return json.loads(text[start:end+1])
+            except Exception:
+                pass
+        return {}
 
 
 def analyze_company(company_name: str, domain: str, scraped_text: str) -> dict[str, Any]:
@@ -241,15 +248,16 @@ def generate_personalized_pitch(
     candidate_profile: dict[str, Any],
     company_name: str,
     company_profile: dict[str, Any],
-    contact_name: str = "Hiring Team"
+    contact_name: str = ""
 ) -> dict[str, Any]:
     """
-    Synthesizes the 500-700 word company intelligence report with the 500-700 word
-    candidate technical assessment to create a laser-targeted 1-to-1 cold email and cover letter.
+    Synthesizes company intelligence with candidate technical assessment
+    to create a laser-targeted 1-to-1 cold application email.
+    Guarantees zero robotic bracket placeholders and authentic engineering tone.
     """
-    candidate_name = candidate_profile.get("full_name", "Candidate")
-    target_role = candidate_profile.get("target_role", "Software Engineer")
-    skills = ", ".join(candidate_profile.get("top_skills", []))
+    candidate_name = candidate_profile.get("full_name", "Rahul Vora")
+    target_role = candidate_profile.get("target_role", "Backend Developer")
+    skills = ", ".join(candidate_profile.get("top_skills", []) or ["PHP", "Python", "MySQL", "PostgreSQL", "REST APIs"])
     achievements = "\n".join([f"- {a}" for a in candidate_profile.get("key_achievements", [])])
     candidate_deep_analysis = candidate_profile.get("detailed_profile_analysis", "")
     resume_link = (candidate_profile.get("resume_link") or "").strip()
@@ -257,17 +265,17 @@ def generate_personalized_pitch(
     company_summary = company_profile.get("summary", "")
     company_deep_analysis = company_profile.get("detailed_analysis", "")
     company_tech = ", ".join(company_profile.get("tech_stack", []))
-    company_industry = company_profile.get("industry", "Tech")
+    company_industry = company_profile.get("industry", "Technology")
 
-    resume_link_instruction = f"Candidate Resume/Portfolio Link: {resume_link}\nInclude this live link naturally in the call to action or closing of the email so the hiring team can review candidate's work directly." if resume_link else "Mention that candidate is ready to share complete resume and work samples upon reply."
+    resume_link_instruction = f"Candidate Resume/Portfolio Link: {resume_link}\nInclude this live link naturally in the email closing/CTA so the hiring team can review candidate's work directly." if resume_link else "Mention that candidate is ready to share complete resume and code samples upon reply."
 
-    prompt = f"""You are an elite engineering talent strategist and cold email copywriter.
-You are helping an engineer ({candidate_name}) send a direct, high-impact cold application / talent inquiry email to an engineering leader, founder, or hiring manager at {company_name}.
-This email is strictly a JOB OPPORTUNITY / TALENT APPLICATION outreach, NOT a sales pitch or service inquiry.
+    prompt = f"""You are an expert engineering talent strategist and cold email copywriter.
+You are helping an engineer ({candidate_name}) send a direct, high-impact cold application / talent inquiry email to {company_name}.
+This email is strictly a JOB OPPORTUNITY / TALENT APPLICATION outreach, NOT a sales pitch or agency inquiry.
 
 Target Company: {company_name}
 Industry: {company_industry}
-Active Tech Stack: {company_tech}
+Active Tech Stack: {company_tech or 'Modern Web & Backend Architecture'}
 Company Overview: {company_summary}
 In-Depth Company Intelligence:
 ---
@@ -284,52 +292,73 @@ Candidate In-Depth Profile:
 ---
 {resume_link_instruction}
 
-Rules for the Cold Email (Job Opportunity Outreach):
-1. Subject line: 5-8 words. Direct, professional, and clear about the role and value (e.g. "{target_role} Application - {candidate_name} - {company_name}" or "{candidate_name} - {target_role} Inquiry for {company_name}").
-2. Word count: 120-160 words. Authentic, engineering-focused, zero corporate sales fluff.
-3. Structure:
-   - Genuine Hook: Specifically reference a product, feature, or tech stack initiative {company_name} builds from the intelligence profile.
-   - Value Bridge: Explicitly link candidate's core skills and quantified achievements to how candidate can solve engineering challenges, scale systems, or ship features for {company_name}.
-   - Clear Job Opportunity CTA: Inquire about current or upcoming engineering openings for {target_role}. If a resume link was provided, include it cleanly.
-4. Sign-off: Professional with candidate's name.
+STRICT WRITING RULES:
+1. GREETING: NEVER use bracketed placeholders like "[Hiring Manager Name]", "[Name]", "[Founder]", or "[Recipient]". These destroy response rates.
+   Greet naturally as: "Hi {company_name} team," or "Hi there,".
+2. SUBJECT LINE: 4 to 7 words. Natural, direct, professional. Zero marketing buzzwords.
+   Examples: "{target_role} inquiry - {candidate_name}" or "Quick question regarding {target_role} at {company_name}".
+3. BODY: 110-150 words. Authentic, concise, engineering-focused.
+   - Genuine Hook: Specifically reference what {company_name} builds.
+   - Value Bridge: Connect candidate's hands-on experience and metrics to how candidate can help {company_name} scale or ship.
+   - Clear CTA: Inquire about current or upcoming {target_role} opportunities.
+4. SIGN-OFF: Professional with candidate's name ({candidate_name}).
 
 Return ONLY a valid JSON object matching this schema:
 {{
   "subject_line": "Direct job inquiry subject line",
   "email_body": "Full body of cold email (with natural line breaks)",
-  "cover_letter": "A 250-300 word tailored cover letter aligning candidate experience with company mission and engineering stack",
+  "cover_letter": "A 200-250 word tailored cover letter aligning candidate experience with company mission",
   "matched_skills": ["Skill 1", "Skill 2", "Skill 3"]
 }}
 """
 
-    if not client:
-        resume_mention = f"You can also view my complete resume and project portfolio here: {resume_link}\n\n" if resume_link else ""
+    def make_fallback():
+        resume_mention = f"\n\nYou can also view my complete resume and projects here: {resume_link}" if resume_link else ""
+        greeting = f"Hi {company_name} team,"
         return {
-            "subject_line": f"{target_role} Opportunity - {candidate_name} | {company_name}",
-            "email_body": f"Hi {contact_name},\n\nI’ve been following {company_name}'s work in {company_industry} and love how your team builds systems using {company_tech or 'modern engineering stacks'}.\n\nAs a {target_role} specializing in {skills}, I’ve recently delivered high-impact engineering projects, including architecting scalable services and high-throughput APIs.\n\n{resume_mention}I'm writing to inquire about open {target_role} opportunities or upcoming engineering team expansion at {company_name}. Would you be open to discussing how my background could support your product roadmap?\n\nBest regards,\n{candidate_name}",
-            "cover_letter": f"Dear Hiring Team at {company_name},\n\nI am writing to express my strong enthusiasm for joining {company_name} as a {target_role}. With extensive hands-on experience across {skills}, I have built resilient systems and solved complex engineering problems that align directly with your technical goals.\n\nI would welcome the opportunity to discuss how my technical skills can drive impactful results for {company_name}.\n\nSincerely,\n{candidate_name}",
-            "matched_skills": candidate_profile.get("top_skills", [])[:3]
+            "subject_line": f"{target_role} inquiry - {candidate_name}",
+            "email_body": f"{greeting}\n\nI’ve been following {company_name} and wanted to reach out directly. As a {target_role} specializing in {skills}, I have hands-on experience building performant backend systems, automating data pipelines, and optimizing high-load databases.\n\nI'm exploring new {target_role} opportunities and would love to know if {company_name} has any current or upcoming openings on the engineering team.{resume_mention}\n\nWould you be open to a brief chat to see if my background might be a good fit for your product roadmap?\n\nBest regards,\n{candidate_name}",
+            "cover_letter": f"Dear Hiring Team at {company_name},\n\nI am writing to express my strong enthusiasm for {target_role} opportunities at {company_name}. With deep technical experience in {skills}, I specialize in delivering robust software architectures, tuning database performance, and building resilient automated services.\n\nI would welcome the opportunity to discuss how my technical foundations can support {company_name}'s goals.\n\nSincerely,\n{candidate_name}",
+            "matched_skills": candidate_profile.get("top_skills", [])[:3] or ["Backend Engineering", "APIs", "Databases"]
         }
+
+    if not client:
+        return make_fallback()
 
     try:
         response = call_groq_with_fallback(
             messages=[
-                {"role": "system", "content": "You are an elite technical talent copywriter crafting direct job opportunity cold emails. Output pure JSON."},
+                {"role": "system", "content": "You are an elite technical talent copywriter crafting direct job opportunity cold emails. Never use bracket placeholders. Output pure JSON."},
                 {"role": "user", "content": prompt}
             ],
             temperature=0.3,
             max_tokens=800,
             response_format={"type": "json_object"}
         )
-        return clean_json_response(response.choices[0].message.content)
+        parsed = clean_json_response(response.choices[0].message.content)
+        
+        subject = (parsed.get("subject_line") or "").strip()
+        body = (parsed.get("email_body") or "").strip()
+
+        # Sanitize any accidental bracketed tokens
+        body = re.sub(r"\[(?:Hiring Manager Name|Hiring Manager|Founder Name|Founder|Name|Recipient)\]", f"{company_name} team", body, flags=re.IGNORECASE)
+        body = re.sub(r"\[.*?\]", "", body).strip()
+        subject = re.sub(r"\[.*?\]", "", subject).strip()
+
+        if not subject or not body:
+            return make_fallback()
+
+        parsed["subject_line"] = subject
+        parsed["email_body"] = body
+        if not parsed.get("cover_letter"):
+            parsed["cover_letter"] = make_fallback()["cover_letter"]
+        if not parsed.get("matched_skills"):
+            parsed["matched_skills"] = candidate_profile.get("top_skills", [])[:3]
+
+        return parsed
     except Exception as e:
         print(f"[AI Agent Error] generate_personalized_pitch failed: {e}")
-        return {
-            "subject_line": f"{target_role} Inquiry - {candidate_name} for {company_name}",
-            "email_body": f"Hi {contact_name},\n\nI’ve been following {company_name} and really admire what your engineering team is shipping. As a {target_role} experienced in {skills}, I specialize in building robust, performant software.\n\nI'm actively exploring {target_role} opportunities and would love to know if {company_name} is currently looking for talented engineers to join the team. I'd be glad to share my resume and work samples.\n\nWould you be open to pointing me toward the appropriate engineering hiring manager?\n\nBest regards,\n{candidate_name}",
-            "cover_letter": f"Dear Hiring Team at {company_name},\n\nI am writing to apply for {target_role} opportunities at {company_name}...",
-            "matched_skills": candidate_profile.get("top_skills", [])[:2]
-        }
+        return make_fallback()
 
 
 # In-memory query normalization cache

@@ -166,6 +166,7 @@ class ScoutJob(Base):
 
 # Database engine & Session factory
 clean_db_url = (DATABASE_URL or "").strip().strip("\"'").strip()
+clean_db_url = clean_db_url.replace("&channel_binding=require", "").replace("?channel_binding=require&", "?").replace("?channel_binding=require", "")
 if clean_db_url.startswith("postgres://"):
     clean_db_url = clean_db_url.replace("postgres://", "postgresql+psycopg2://", 1)
 elif clean_db_url.startswith("postgresql://") and not clean_db_url.startswith("postgresql+"):
@@ -175,9 +176,10 @@ try:
     engine = create_engine(
         clean_db_url,
         pool_pre_ping=True,
-        pool_recycle=120,
+        pool_recycle=60,
         pool_size=10,
-        max_overflow=20
+        max_overflow=20,
+        connect_args={"connect_timeout": 15} if "postgresql" in clean_db_url else {}
     )
     print(f"[DB] Initialized database engine: {engine.name} ({engine.url.render_as_string(hide_password=True)})")
 except Exception as e:

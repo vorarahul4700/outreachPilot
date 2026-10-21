@@ -12,7 +12,7 @@ TAGLINE = os.getenv("TAGLINE", "Find Leads. Personalize. Reach Out.")
 APP_DESCRIPTOR = os.getenv("APP_DESCRIPTOR", "AI Outreach Automation")
 
 DEV_MODE = os.getenv("DEV_MODE", "true").lower() in ("true", "1", "yes")
-DEV_OVERRIDE_EMAIL = os.getenv("DEV_OVERRIDE_EMAIL", "rahulvora234@gmail.com")
+DEV_OVERRIDE_EMAIL = os.getenv("DEV_OVERRIDE_EMAIL", "vorarahul111@gmail.com")
 
 # Unified Groq API Key configuration
 # Automatically detects if GROQ_API_KEY contains comma-separated keys for multi-account pooling
