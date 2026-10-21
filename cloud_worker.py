@@ -112,6 +112,7 @@ def run_worker(job_id: int, keyword: str, city: str, max_pages: int):
         except Exception:
             pass
         db = SessionLocal()
+        job = db.query(ScoutJob).filter(ScoutJob.id == job_id).first()
 
         # Batch-register all companies in Neon DB first (fast & deadlock-free)
         company_records = []
@@ -206,10 +207,13 @@ def run_worker(job_id: int, keyword: str, city: str, max_pages: int):
         ]
         results = loop.run_until_complete(asyncio.gather(*tasks, return_exceptions=True))
         enriched_count = sum(1 for r in results if r is True)
-        job.total_enriched = enriched_count
-        job.status_message = f"Scouting & AI Enrichment Completed! {len(job.results or [])} verified companies ready."
-        job.updated_at = datetime.utcnow()
-        db.commit()
+        
+        job = db.query(ScoutJob).filter(ScoutJob.id == job_id).first()
+        if job:
+            job.total_enriched = enriched_count
+            job.status_message = f"Scouting & AI Enrichment Completed! {len(job.results or [])} verified companies ready."
+            job.updated_at = datetime.utcnow()
+            db.commit()
 
         log_job(db, job_id, f"All tasks completed successfully! Total {len(job.results or [])} companies saved to database.", 100)
 
