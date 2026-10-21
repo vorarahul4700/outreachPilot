@@ -6,21 +6,26 @@ from groq import Groq
 
 import config
 
+import itertools
+
 client = Groq(api_key=config.GROQ_API_KEY) if config.GROQ_API_KEY else None
+
+_ROTATING_MODELS = ["qwen/qwen3.8-27b", "openai/gpt-oss-120b", "openai/gpt-oss-20b"]
+_model_counter = itertools.count()
 
 
 def call_groq_with_fallback(messages: list[dict], temperature: float = 0.3, max_tokens: int = 1500, response_format: dict = None):
     """
-    Calls Groq with automatic model fallback and schema resilience:
-    Primary: config.GROQ_MODEL (default: qwen/qwen3.8-27b)
-    Fallbacks: openai/gpt-oss-120b, openai/gpt-oss-20b
+    Calls Groq with automatic model round-robin rotation and fallback cascade:
+    Distributes parallel queries across proven active models to maximize throughput
+    and prevent rate-limit throttling.
     """
-    candidate_models = []
-    if config.GROQ_MODEL:
-        candidate_models.append(config.GROQ_MODEL)
-    for m in ["qwen/qwen3.8-27b", "openai/gpt-oss-120b", "openai/gpt-oss-20b"]:
-        if m not in candidate_models:
-            candidate_models.append(m)
+    # Pick next primary model in rotation
+    next_idx = next(_model_counter)
+    primary = _ROTATING_MODELS[next_idx % len(_ROTATING_MODELS)]
+
+    # Candidate cascade starting with primary, followed by the rest
+    candidate_models = [primary] + [m for m in _ROTATING_MODELS if m != primary]
 
     last_exc = None
     for model_name in candidate_models:
@@ -38,7 +43,6 @@ def call_groq_with_fallback(messages: list[dict], temperature: float = 0.3, max_
                 return client.chat.completions.create(**kwargs)
             except Exception as e:
                 last_exc = e
-                # If error is invalid model or json_validate_failed, try next
                 continue
     raise last_exc
 

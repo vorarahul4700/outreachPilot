@@ -208,10 +208,11 @@ async def deep_enrich_company(
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
         }
 
-        candidate_urls = [target_url] + [f"{base_clean}{sub}" for sub in ["/contact", "/contact-us", "/about", "/careers", "/career", "/jobs", "/join"]]
+        candidate_urls = [target_url] + [f"{base_clean}{sub}" for sub in ["/contact", "/about", "/careers"]]
         urls_to_crawl = [u for u in candidate_urls if is_safe_public_url(u)]
 
-        async with httpx.AsyncClient(headers=headers, timeout=4.0, follow_redirects=True, verify=True) as client:
+        client_timeout = httpx.Timeout(connect=2.5, read=3.5, write=2.5, pool=2.5)
+        async with httpx.AsyncClient(headers=headers, timeout=client_timeout, follow_redirects=True, verify=True) as client:
             async def fetch_page(url: str):
                 try:
                     res = await client.get(url)

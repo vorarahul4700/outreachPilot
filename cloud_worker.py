@@ -95,29 +95,28 @@ def run_worker(job_id: int, keyword: str, city: str, max_pages: int):
         total_scraped = len(scraped_raw)
         log_job(db, job_id, f"Google Scouting finished. Discovered {total_scraped} potential company listings.", 50)
 
-        enriched_count = 0
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
+        # Filter genuine company listings
+        valid_items = []
+        for item in scraped_raw:
+            c_name = (item.get("name") or "").strip()
+            c_dom = (item.get("domain") or "").strip().lower()
+            if c_name and c_dom and is_genuine_company_domain(c_dom):
+                valid_items.append(item)
 
-        for idx, item in enumerate(scraped_raw, 1):
-            name = (item.get("name") or "").strip()
-            domain = (item.get("domain") or "").strip().lower()
-            website_url = item.get("website_url") or ""
+        total_scraped = len(valid_items)
+        log_job(db, job_id, f"Google Scouting finished. Discovered {total_scraped} genuine company listings.", 50)
 
-            if not name or not domain or not is_genuine_company_domain(domain):
-                continue
-
-            # Calculate progress percentage between 50% and 95%
-            pct = int(50 + (idx / max(1, total_scraped) * 45))
-            log_job(db, job_id, f"[{idx}/{total_scraped}] Deep AI Enriching: {name} ({domain})...", pct)
-
-            # Insert or fetch company in Neon DB
-            company = db.query(Company).filter(Company.domain == domain).first()
+        # Batch-register all companies in Neon DB first (fast & deadlock-free)
+        company_records = []
+        for item in valid_items:
+            c_dom = item["domain"].strip().lower()
+            c_name = item["name"].strip()
+            company = db.query(Company).filter(Company.domain == c_dom).first()
             if not company:
                 company = Company(
-                    domain=domain,
-                    name=name,
-                    website_url=website_url,
+                    domain=c_dom,
+                    name=c_name,
+                    website_url=item.get("website_url") or "",
                     phone=item.get("phone") or "",
                     address=item.get("address") or "",
                     location_url=item.get("location_url") or "",
@@ -130,54 +129,65 @@ def run_worker(job_id: int, keyword: str, city: str, max_pages: int):
                 db.add(company)
                 db.commit()
                 db.refresh(company)
+            company_records.append((company.id, c_name, c_dom))
 
-            # Perform Deep AI Enrichment (Website crawl + Groq LLM analysis)
-            try:
-                enrich_res = loop.run_until_complete(deep_enrich_company(company.id, db, force_refresh=False))
-                if enrich_res.get("success"):
-                    enriched_count += 1
-            except Exception as enrich_err:
-                print(f"[Enrich Warning] Failed to enrich {domain}: {enrich_err}")
+        # High-Speed Concurrent AI Enrichment (4 parallel workers)
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        sem = asyncio.Semaphore(4)
+        completed_count = 0
+        lock = asyncio.Lock()
+
+        async def enrich_worker_task(comp_id: int, comp_name: str, comp_domain: str, index: int):
+            nonlocal completed_count
+            async with sem:
+                worker_db = SessionLocal()
                 try:
-                    db.rollback()
-                except Exception:
-                    pass
+                    pct = int(50 + (index / max(1, total_scraped) * 45))
+                    log_job(worker_db, job_id, f"[{index}/{total_scraped}] Deep AI Enriching: {comp_name} ({comp_domain})...", pct)
+                    
+                    # Crawl website + Groq LLM analysis
+                    enrich_res = await deep_enrich_company(comp_id, worker_db, force_refresh=False)
+                    
+                    # Read verified contact data
+                    company = worker_db.query(Company).filter(Company.id == comp_id).first()
+                    emails = worker_db.query(CompanyEmail).filter(CompanyEmail.company_id == comp_id).all() if company else []
+                    profile = worker_db.query(CompanyProfile).filter(CompanyProfile.company_id == comp_id).first() if company else None
 
-            # Prepare card representation for real-time frontend stream
-            try:
-                db.rollback()  # ensure clean transaction state
-                company = db.query(Company).filter(Company.id == company.id).first()
-                emails = db.query(CompanyEmail).filter(CompanyEmail.company_id == company.id).all() if company else []
-                profile = db.query(CompanyProfile).filter(CompanyProfile.company_id == company.id).first() if company else None
+                    card_data = {
+                        "id": comp_id,
+                        "name": comp_name,
+                        "domain": comp_domain,
+                        "website_url": company.website_url if company else "",
+                        "phone": company.phone if company else "",
+                        "address": company.address if company else "",
+                        "rating": company.rating if company else 0.0,
+                        "reviews_count": company.reviews_count if company else 0,
+                        "is_enriched": company.is_enriched if company else False,
+                        "emails": [e.email_address for e in emails],
+                        "primary_email": emails[0].email_address if emails else None,
+                        "industry": profile.industry if profile else "Technology",
+                        "tech_stack": profile.tech_stack if profile else []
+                    }
 
-                card_data = {
-                    "id": company.id,
-                    "name": company.name,
-                    "domain": company.domain,
-                    "website_url": company.website_url,
-                    "phone": company.phone,
-                    "address": company.address,
-                    "rating": company.rating,
-                    "reviews_count": company.reviews_count,
-                    "is_enriched": company.is_enriched if company else False,
-                    "emails": [e.email_address for e in emails],
-                    "primary_email": emails[0].email_address if emails else None,
-                    "industry": profile.industry if profile else "Technology",
-                    "tech_stack": profile.tech_stack if profile else []
-                }
+                    async with lock:
+                        completed_count += 1
+                        current_pct = int(50 + (completed_count / max(1, total_scraped) * 45))
 
-                log_job(db, job_id, f"✓ Successfully enriched & verified: {name} ({len(emails)} emails found)", pct, live_card=card_data)
-            except Exception as card_err:
-                print(f"[Warning] Failed to generate card for {domain}: {card_err}")
-                try:
-                    db.rollback()
-                except Exception:
-                    pass
+                    log_job(worker_db, job_id, f"✓ Successfully enriched & verified: {comp_name} ({len(emails)} emails found)", current_pct, live_card=card_data)
+                    return True
+                except Exception as enrich_err:
+                    print(f"[Enrich Warning] Failed for {comp_domain}: {enrich_err}")
+                    return False
+                finally:
+                    worker_db.close()
 
-        # Mark job complete
-        job = db.query(ScoutJob).filter(ScoutJob.id == job_id).first()
-        job.status = "COMPLETED"
-        job.progress = 100
+        tasks = [
+            enrich_worker_task(cid, cname, cdom, i)
+            for i, (cid, cname, cdom) in enumerate(company_records, 1)
+        ]
+        results = loop.run_until_complete(asyncio.gather(*tasks, return_exceptions=True))
+        enriched_count = sum(1 for r in results if r is True)
         job.total_enriched = enriched_count
         job.status_message = f"Scouting & AI Enrichment Completed! {len(job.results or [])} verified companies ready."
         job.updated_at = datetime.utcnow()

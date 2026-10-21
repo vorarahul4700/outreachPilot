@@ -537,17 +537,27 @@ class GoogleScraper:
 
                 # Next Page navigation if more pages requested or in All Pages mode
                 if page < effective_max:
-                    next_btn = soup.find("a", id="pnnext") if soup else None
-                    if next_btn and next_btn.get("href"):
-                        next_url = "https://www.google.com" + next_btn["href"]
-                        next_label = f"Page {page + 1} (All Pages Mode)" if is_all_pages else f"Page {page + 1}/{max_pages}"
-                        self._log(f"Navigating to {next_label}...", page_progress)
-                        driver.get(next_url)
-                        time.sleep(1.2)
-                        page += 1
+                    start_offset = page * 20
+                    if direct_url and "google.com/search" in direct_url:
+                        parsed = urllib.parse.urlparse(direct_url)
+                        params = urllib.parse.parse_qs(parsed.query)
+                        params["udm"] = ["local"]
+                        params["start"] = [str(start_offset)]
+                        if gl and "gl" not in params:
+                            params["gl"] = [gl]
+                        if hl and "hl" not in params:
+                            params["hl"] = [hl]
+                        next_url = f"https://www.google.com/search?{urllib.parse.urlencode(params, doseq=True)}"
                     else:
-                        self._log(f"Reached final page of listings at page {page} (No more pages found).", page_progress)
-                        break
+                        full_query = f"{keyword} {city}".strip() or "IT Companies"
+                        encoded = urllib.parse.quote_plus(full_query)
+                        next_url = f"https://www.google.com/search?q={encoded}&udm=local&start={start_offset}&gl={gl}&hl={hl}"
+
+                    next_label = f"Page {page + 1} (All Pages Mode)" if is_all_pages else f"Page {page + 1}/{max_pages}"
+                    self._log(f"Navigating to {next_label}...", page_progress)
+                    driver.get(next_url)
+                    time.sleep(1.8)
+                    page += 1
                 else:
                     self._log(f"Reached requested limit of {max_pages} pages.", page_progress)
                     break
