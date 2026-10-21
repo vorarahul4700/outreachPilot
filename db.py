@@ -61,6 +61,9 @@ class Company(Base):
     city = Column(String(100), nullable=True, index=True)
     normalized_keyword = Column(String(255), nullable=True, index=True)
     is_enriched = Column(Boolean, default=False)
+    enrichment_status = Column(String(50), default="PENDING", nullable=False, index=True)
+    enrichment_attempts = Column(Integer, default=0, nullable=False)
+    last_enriched_at = Column(DateTime, nullable=True)
     is_invalid = Column(Boolean, default=False, nullable=False, index=True)
     invalid_reason = Column(String(255), nullable=True)
     invalid_at = Column(DateTime, nullable=True)
@@ -197,6 +200,13 @@ def init_db():
                 conn.execute(text("ALTER TABLE companies ADD COLUMN IF NOT EXISTS invalid_reason VARCHAR(255);"))
                 conn.execute(text("ALTER TABLE companies ADD COLUMN IF NOT EXISTS invalid_at TIMESTAMP;"))
                 conn.execute(text("ALTER TABLE companies ADD COLUMN IF NOT EXISTS location_url TEXT;"))
+                conn.execute(text("ALTER TABLE companies ADD COLUMN IF NOT EXISTS enrichment_status VARCHAR(50) DEFAULT 'PENDING';"))
+                conn.execute(text("ALTER TABLE companies ADD COLUMN IF NOT EXISTS enrichment_attempts INTEGER DEFAULT 0;"))
+                conn.execute(text("ALTER TABLE companies ADD COLUMN IF NOT EXISTS last_enriched_at TIMESTAMP;"))
+                # Backfill already enriched companies
+                conn.execute(text("UPDATE companies SET enrichment_status = 'COMPLETED' WHERE is_enriched = TRUE AND (enrichment_status IS NULL OR enrichment_status = 'PENDING');"))
+                # Backfill un-enriched companies
+                conn.execute(text("UPDATE companies SET enrichment_status = 'PENDING' WHERE is_enriched = FALSE AND (enrichment_status IS NULL);"))
                 conn.execute(text("ALTER TABLE outreach_logs ADD COLUMN IF NOT EXISTS email_body TEXT;"))
                 conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS resume_link VARCHAR(500);"))
                 conn.execute(text("ALTER TABLE scout_jobs ALTER COLUMN status_message TYPE TEXT;"))

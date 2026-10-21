@@ -722,11 +722,17 @@
             </div>
 
             <div>
-              <span class="text-slate-400 font-medium block mb-1.5 flex items-center space-x-1">
-                <i data-lucide="file-text" class="w-3.5 h-3.5 text-indigo-400"></i>
-                <span>Comprehensive Candidate Evaluation Report:</span>
-              </span>
-              <div id="profile-detailed-analysis" class="text-slate-300 leading-relaxed max-h-60 overflow-y-auto whitespace-pre-wrap font-sans text-xs bg-slate-950 p-3.5 rounded-xl border border-slate-800">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-slate-300 font-medium flex items-center space-x-1.5 text-xs">
+                  <i data-lucide="file-text" class="w-3.5 h-3.5 text-indigo-400"></i>
+                  <span>Comprehensive Candidate Evaluation Dossier:</span>
+                </span>
+                <button id="btn-copy-profile-analysis" type="button" class="inline-flex items-center space-x-1 px-2.5 py-1 text-[11px] font-medium bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white rounded-lg border border-slate-700/80 transition cursor-pointer shadow-sm active:scale-95" title="Copy analyzed dossier">
+                  <i data-lucide="copy" class="w-3.5 h-3.5 text-indigo-400"></i>
+                  <span id="copy-profile-analysis-text">Copy Analysis</span>
+                </button>
+              </div>
+              <div id="profile-detailed-analysis" class="text-slate-300 leading-relaxed max-h-96 overflow-y-auto whitespace-pre-wrap font-sans text-xs bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner">
                 Upload your resume above to generate a comprehensive career assessment, technical evaluation, and personalized introduction.
               </div>
             </div>

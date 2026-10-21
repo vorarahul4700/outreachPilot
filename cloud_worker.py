@@ -130,8 +130,8 @@ def run_worker(job_id: int, keyword: str, city: str, max_pages: int):
         db = SessionLocal()
         job = db.query(ScoutJob).filter(ScoutJob.id == job_id).first()
 
-        # Batch-register all companies in Neon DB first (fast & deadlock-free)
-        company_records = []
+        # Batch-register all companies in Neon DB with PENDING status
+        registered_cards = []
         for item in valid_items:
             c_dom = item["domain"].strip().lower()
             c_name = item["name"].strip()
@@ -149,96 +149,72 @@ def run_worker(job_id: int, keyword: str, city: str, max_pages: int):
                         reviews_count=item.get("reviews_count") or 0,
                         search_keyword=keyword,
                         city=city,
-                        source_query=f"{keyword} {city}".strip()
+                        source_query=f"{keyword} {city}".strip(),
+                        enrichment_status="PENDING",
+                        enrichment_attempts=0
                     )
                     db.add(company)
                     db.commit()
                     db.refresh(company)
-                company_records.append((company.id, c_name, c_dom))
+
+                card_data = {
+                    "id": company.id,
+                    "name": company.name,
+                    "domain": company.domain,
+                    "website_url": company.website_url or "",
+                    "phone": company.phone or "",
+                    "address": company.address or "",
+                    "rating": company.rating or 0.0,
+                    "reviews_count": company.reviews_count or 0,
+                    "is_enriched": company.is_enriched or False,
+                    "enrichment_status": company.enrichment_status or "PENDING",
+                    "emails": [],
+                    "primary_email": None,
+                    "industry": "Pending AI Enrichment",
+                    "tech_stack": []
+                }
+                registered_cards.append(card_data)
             except Exception as reg_err:
                 try:
                     db.rollback()
                     db.close()
                     db = SessionLocal()
-                    company = db.query(Company).filter(Company.domain == c_dom).first()
-                    if company:
-                        company_records.append((company.id, c_name, c_dom))
                 except Exception:
                     pass
 
-        # High-Speed Concurrent AI Enrichment: dynamically scaled based on key count
-        concurrency = getattr(config, "GROQ_CONCURRENCY", 2)
-        mode_str = f"Multi-Account Pool ({len(getattr(config, 'GROQ_API_KEYS', []))} accounts, {concurrency} parallel workers)" if getattr(config, "IS_MULTI_GROQ", False) else f"Single Account ({concurrency} workers)"
-        log_job(db, job_id, f"Launching AI Enrichment via {mode_str}...", 50)
-
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        sem = asyncio.Semaphore(concurrency)
-        completed_count = 0
-        lock = asyncio.Lock()
-
-        async def enrich_worker_task(comp_id: int, comp_name: str, comp_domain: str, index: int):
-            nonlocal completed_count
-            async with sem:
-                worker_db = SessionLocal()
-                try:
-                    pct = int(50 + (index / max(1, total_scraped) * 45))
-                    log_job(worker_db, job_id, f"[{index}/{total_scraped}] Deep AI Enriching: {comp_name} ({comp_domain})...", pct)
-                    
-                    # Crawl website + Groq LLM analysis
-                    enrich_res = await deep_enrich_company(comp_id, worker_db, force_refresh=False)
-                    
-                    # Read verified contact data
-                    company = worker_db.query(Company).filter(Company.id == comp_id).first()
-                    emails = worker_db.query(CompanyEmail).filter(CompanyEmail.company_id == comp_id).all() if company else []
-                    profile = worker_db.query(CompanyProfile).filter(CompanyProfile.company_id == comp_id).first() if company else None
-
-                    card_data = {
-                        "id": comp_id,
-                        "name": comp_name,
-                        "domain": comp_domain,
-                        "website_url": company.website_url if company else "",
-                        "phone": company.phone if company else "",
-                        "address": company.address if company else "",
-                        "rating": company.rating if company else 0.0,
-                        "reviews_count": company.reviews_count if company else 0,
-                        "is_enriched": company.is_enriched if company else False,
-                        "emails": [e.email_address for e in emails],
-                        "primary_email": emails[0].email_address if emails else None,
-                        "industry": profile.industry if profile else "Technology",
-                        "tech_stack": profile.tech_stack if profile else []
-                    }
-
-                    async with lock:
-                        completed_count += 1
-                        current_pct = int(50 + (completed_count / max(1, total_scraped) * 45))
-
-                    log_job(worker_db, job_id, f"[OK] Successfully enriched & verified: {comp_name} ({len(emails)} emails found)", current_pct, live_card=card_data)
-                    return True
-                except Exception as enrich_err:
-                    print(f"[Enrich Warning] Failed for {comp_domain}: {enrich_err}")
-                    return False
-                finally:
-                    try:
-                        worker_db.close()
-                    except Exception:
-                        pass
-
-        tasks = [
-            enrich_worker_task(cid, cname, cdom, i)
-            for i, (cid, cname, cdom) in enumerate(company_records, 1)
-        ]
-        results = loop.run_until_complete(asyncio.gather(*tasks, return_exceptions=True))
-        enriched_count = sum(1 for r in results if r is True)
-        
+        # Update ScoutJob in Neon DB
         job = db.query(ScoutJob).filter(ScoutJob.id == job_id).first()
         if job:
-            job.total_enriched = enriched_count
-            job.status_message = f"Scouting & AI Enrichment Completed! {len(job.results or [])} verified companies ready."
+            job.status = "COMPLETED"
+            job.progress = 100
+            job.total_found = len(registered_cards)
+            job.results = registered_cards
+            job.status_message = f"Scouting completed! Discovered {len(registered_cards)} genuine companies. Background AI Enrichment active."
             job.updated_at = datetime.utcnow()
             db.commit()
 
-        log_job(db, job_id, f"All tasks completed successfully! Total {len(job.results or [])} companies saved to database.", 100)
+        log_job(db, job_id, f"Google Scouting finished! {len(registered_cards)} companies registered into Neon DB.", 100)
+
+        # Trigger decoupled cloud_enrich.yml workflow via GitHub Actions API
+        gh_token = os.environ.get("GITHUB_TOKEN")
+        gh_repo = os.environ.get("GITHUB_REPOSITORY", "vorarahul4700/outreachPilot")
+        if gh_token:
+            try:
+                import httpx
+                dispatch_url = f"https://api.github.com/repos/{gh_repo}/actions/workflows/cloud_enrich.yml/dispatches"
+                headers = {
+                    "Authorization": f"Bearer {gh_token}",
+                    "Accept": "application/vnd.github.v3+json"
+                }
+                resp = httpx.post(dispatch_url, json={"ref": "main"}, headers=headers, timeout=10)
+                if resp.status_code in (200, 204):
+                    log_job(db, job_id, "Successfully triggered Cloud AI Enrichment workflow (cloud_enrich.yml) via GitHub API!")
+                else:
+                    log_job(db, job_id, f"Dispatched cloud_enrich trigger (Status {resp.status_code}).")
+            except Exception as trig_err:
+                log_job(db, job_id, f"Note: cloud_enrich will trigger via workflow_run/cron ({trig_err}).")
+        else:
+            log_job(db, job_id, "Scout finished! cloud_enrich will run automatically on workflow_run completion and 30-min cron.")
 
     except Exception as e:
         print(f"[Error] Cloud runner failure: {e}")

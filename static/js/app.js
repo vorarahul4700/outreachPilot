@@ -2303,6 +2303,28 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  const btnCopyProfileAnalysis = document.getElementById("btn-copy-profile-analysis");
+  if (btnCopyProfileAnalysis) {
+    btnCopyProfileAnalysis.addEventListener("click", () => {
+      const detailedAnalysisEl = document.getElementById("profile-detailed-analysis");
+      const text = (detailedAnalysisEl?.innerText || detailedAnalysisEl?.textContent || "").trim();
+      if (!text || text.includes("Upload your resume above")) {
+        alert("Please upload and analyze a resume first to copy the dossier.");
+        return;
+      }
+      navigator.clipboard.writeText(text).then(() => {
+        btnCopyProfileAnalysis.innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5 text-emerald-400"></i><span class="text-emerald-400">Copied!</span>`;
+        refreshIcons();
+        setTimeout(() => {
+          btnCopyProfileAnalysis.innerHTML = `<i data-lucide="copy" class="w-3.5 h-3.5 text-indigo-400"></i><span>Copy Analysis</span>`;
+          refreshIcons();
+        }, 2000);
+      }).catch(err => {
+        console.error("Clipboard copy failed:", err);
+      });
+    });
+  }
+
   // ==========================================
   // STAGE 4: PITCH GENERATOR & OUTREACH HUB
   // ==========================================

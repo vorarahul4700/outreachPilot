@@ -24,6 +24,10 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 25
 
+    permissions:
+      contents: read
+      actions: write
+
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
@@ -49,7 +53,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run Cloud Scout & AI Enrichment Worker
+      - name: Run Cloud Scout Worker
         env:
           PYTHONUNBUFFERED: "1"
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
@@ -57,6 +61,8 @@ jobs:
           GROQ_MODEL: ${{ secrets.GROQ_MODEL || 'qwen/qwen3.8-27b' }}
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
           GOOGLE_COOKIE: ${{ secrets.GOOGLE_COOKIE }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
         run: |
           xvfb-run -a python cloud_worker.py \
             --job-id "${{ github.event.inputs.job_id }}" \

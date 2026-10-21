@@ -1,0 +1,51 @@
+name: Cloud AI Enrichment & Auto-Healing Worker
+
+on:
+  workflow_dispatch:
+    inputs:
+      batch_size:
+        description: "Max companies to enrich per batch"
+        required: false
+        default: "60"
+      max_attempts:
+        description: "Max attempts before marking INCOMPLETE"
+        required: false
+        default: "3"
+  workflow_run:
+    workflows: ["Cloud Scout & Automatic AI Enrichment Worker"]
+    types:
+      - completed
+  schedule:
+    - cron: "*/30 * * * *"
+
+jobs:
+  enrich_job:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Install Python Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run Cloud AI Enrichment Worker
+        env:
+          PYTHONUNBUFFERED: "1"
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          GROQ_MODEL: ${{ secrets.GROQ_MODEL || 'qwen/qwen3.8-27b' }}
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+        run: |
+          python cloud_enrich.py \
+            --batch-size "${{ github.event.inputs.batch_size || '60' }}" \
+            --max-attempts "${{ github.event.inputs.max_attempts || '3' }}"

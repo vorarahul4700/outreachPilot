@@ -1,4 +1,5 @@
 import asyncio
+from datetime import datetime
 import re
 from typing import Any
 
@@ -269,6 +270,8 @@ async def deep_enrich_company(
     db.add(c_profile)
 
     company.is_enriched = True
+    company.enrichment_status = "COMPLETED"
+    company.last_enriched_at = datetime.utcnow()
     db.commit()
 
     return {

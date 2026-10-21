@@ -158,10 +158,13 @@ def parse_resume_text(resume_text: str, target_role: str = "") -> dict[str, Any]
             ]
         }
 
-    sample_resume = resume_text[:8000]
+    sample_resume = resume_text[:12000]
 
-    prompt = f"""You are an executive talent evaluator and senior engineering leader.
-Perform a concise, comprehensive technical analysis (200-300 words) of this candidate's resume for the target role: "{target_role or 'Software Engineer'}".
+    prompt = f"""You are a Principal Engineering Evaluator, Staff Systems Architect, and Executive Technical Recruiter.
+Analyze this candidate's resume in exhaustive technical depth for the target role: "{target_role or 'Software Engineer'}".
+
+Do NOT output a brief or shallow summary. Provide an in-depth, high-context, 600–800 word Technical Candidate Dossier.
+Extract all concrete architectural details, specific database optimizations, query profiling, anti-bot mechanisms, concurrency patterns, e-commerce repricing algorithms, mobile/edge data parsing, and measurable performance metrics.
 
 Candidate Resume Content:
 ---
@@ -172,14 +175,36 @@ Your response MUST be a valid JSON object matching this schema:
 {{
   "full_name": "Candidate Full Name (or 'Candidate' if not explicitly stated)",
   "target_role": "{target_role if target_role else 'Software Engineer'}",
-  "elevator_pitch": "1-2 punchy sentences summarizing candidate's unique technical superpower and key strengths",
-  "detailed_profile_analysis": "Structured candidate technical evaluation with Markdown sections: ### 1. Engineering Archetype\\nAnalysis of candidate's technical identity and maturity.\\n\\n### 2. Core Technical Strengths\\nCategorized skills across languages, frameworks, and databases.\\n\\n### 3. Key Accomplishments & Scale\\nKey achievements with metrics and business impact.\\n\\n### 4. Strategic Job Fit\\nPositioning narrative for this target role.",
-  "top_skills": ["Skill1", "Skill2", "Skill3", "Skill4", "Skill5", "Skill6"],
-  "experience_years": "Estimated total years of technical experience (e.g. 3+ years, 5+ years)",
+  "elevator_pitch": "1-2 punchy, metric-driven sentences highlighting the candidate's core technical superpower, signature architectures, and scale impact.",
+  "detailed_profile_analysis": "Comprehensive Technical Candidate Dossier in Markdown format with the following structured sections:
+
+### 1. Executive Engineering Archetype & Technical Identity
+Thorough analysis of the candidate's engineering persona (e.g. backend optimization specialist, distributed data pipeline engineer, systems builder). Discuss their depth in low-level database tuning, e-commerce production backends, anti-bot data extraction, and hybrid mobile/edge systems.
+
+### 2. Comprehensive Architectural & Technical Stack Breakdown
+- **Core Languages & Runtimes:** Deep dive into language proficiencies (e.g. PHP, Python, JavaScript, Dart, SQL) and their real-world application.
+- **Databases, Indexing & Query Tuning:** Specific databases (MySQL, PostgreSQL), profiling techniques, slow query refactoring, schema indexing, and bulk upsert strategies with zero-duplicate guarantees.
+- **Scraping, Anti-Bot & Pipeline Engineering:** Anti-bot bypass frameworks (curl_cffi browser fingerprinting/TLS, FlareSolverr, undetected-chromedriver, Playwright, Selenium, Scrapy), Cloudflare/reCAPTCHA mitigation, distributed runner matrices (GitHub Actions), and cron job automation.
+- **Mobile, Systems & Offline Edge Data:** On-device application engineering (Flutter, Riverpod, Isar database), background PDF extraction, localized regex for complex/Unicode statement parsing, and zero-cloud privacy architecture.
+
+### 3. Signature Accomplishments, Concrete Scale & Measured Impact
+Analyze each major project and role in detail with actual quantitative outcomes:
+- **E-Commerce & High-Impact Backend:** Quantify execution speedups (e.g. cutting 25-minute cron workflows to 15 minutes by eliminating redundant queries and applying database indexes), dynamic repricing engines using margin maps and competitor price intelligence.
+- **Distributed Scraping & ETL Infrastructure:** Serverless multi-worker pipelines scraping 10k+ SKUs across major US retail platforms on GitHub Actions, deduplication, and Railway Flask dashboards.
+- **Client-Side Data Intelligence:** On-device financial parsing engines handling transactional bank SMS across national banks, Unicode font edge-cases, background PDF parsing, and smart entity brand normalization.
+
+### 4. Problem-Solving Rigor & Optimization Philosophy
+Discuss how the candidate approaches difficult engineering trade-offs: handling anti-scraping defenses without dedicated servers, optimizing legacy codebases (e.g. Magento 1) alongside modern stacks, ensuring transactional consistency, and building resilient automated pipelines.
+
+### 5. Strategic Job Fit & Positioning Narrative
+A compelling, hiring-manager-facing narrative articulating exactly why this candidate is an immediate multiplier for this target role and what problems they can solve on Day 1.",
+  "top_skills": ["Skill1", "Skill2", "Skill3", "Skill4", "Skill5", "Skill6", "Skill7", "Skill8"],
+  "experience_years": "Estimated total years of technical experience (e.g. 2+ years, 3+ years)",
   "key_achievements": [
-    "High-impact achievement 1 with technical metrics",
-    "High-impact achievement 2 with technologies used",
-    "High-impact achievement 3 with system scale and results"
+    "Quantified achievement 1 with exact metrics, technologies, and speedup/scale",
+    "Quantified achievement 2 with exact pipeline architecture and database deduplication",
+    "Quantified achievement 3 with edge-device or mobile parsing complexity and system design",
+    "Quantified achievement 4 with legacy optimization or e-commerce repricing margin logic"
   ]
 }}
 """
@@ -187,11 +212,11 @@ Your response MUST be a valid JSON object matching this schema:
     try:
         response = call_groq_with_fallback(
             messages=[
-                {"role": "system", "content": "You are an executive technical talent matcher. Always respond with detailed, structured, valid JSON. Be concise, punchy, and high-impact."},
+                {"role": "system", "content": "You are a Principal Systems Architect and Executive Technical Recruiter. Provide thorough, high-context, in-depth technical analysis in valid JSON."},
                 {"role": "user", "content": prompt}
             ],
-            temperature=0.3,
-            max_tokens=800,
+            temperature=0.2,
+            max_tokens=2200,
             response_format={"type": "json_object"}
         )
         return clean_json_response(response.choices[0].message.content)
@@ -200,11 +225,15 @@ Your response MUST be a valid JSON object matching this schema:
         return {
             "full_name": "Candidate",
             "target_role": target_role or "Software Engineer",
-            "elevator_pitch": "Engineered scalable applications and automated workflows.",
-            "detailed_profile_analysis": "Technical Assessment:\n\nCandidate demonstrates proficiency in full-stack engineering and software delivery.",
-            "top_skills": ["Python", "FastAPI", "React", "PostgreSQL"],
+            "elevator_pitch": "Performance-focused backend engineer experienced in SQL optimization, distributed data pipelines, and full-stack development.",
+            "detailed_profile_analysis": "Technical Assessment:\n\nCandidate demonstrates proficiency in backend architecture, database indexing, and distributed scraping pipelines.",
+            "top_skills": ["Python", "PHP", "MySQL", "PostgreSQL", "Playwright", "Flask"],
             "experience_years": "2+ years",
-            "key_achievements": ["Developed scalable web applications and data pipelines"]
+            "key_achievements": [
+                "Optimized database cron execution time by 40% via query restructuring and indexing",
+                "Engineered multi-site parallel scraping pipelines with automated PostgreSQL deduplication",
+                "Built offline mobile data parsers handling complex Unicode banking statements"
+            ]
         }
 
 
