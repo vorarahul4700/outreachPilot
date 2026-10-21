@@ -15,7 +15,7 @@ DEV_MODE = os.getenv("DEV_MODE", "true").lower() in ("true", "1", "yes")
 DEV_OVERRIDE_EMAIL = os.getenv("DEV_OVERRIDE_EMAIL", "rahulvora234@gmail.com")
 
 GROQ_API_KEY = os.getenv("GROQ_API_KEY", "")
-GROQ_MODEL = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
+GROQ_MODEL = os.getenv("GROQ_MODEL", "qwen/qwen3.8-27b")
 
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "")

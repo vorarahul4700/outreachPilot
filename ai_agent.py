@@ -9,6 +9,40 @@ import config
 client = Groq(api_key=config.GROQ_API_KEY) if config.GROQ_API_KEY else None
 
 
+def call_groq_with_fallback(messages: list[dict], temperature: float = 0.3, max_tokens: int = 1500, response_format: dict = None):
+    """
+    Calls Groq with automatic model fallback and schema resilience:
+    Primary: config.GROQ_MODEL (default: qwen/qwen3.8-27b)
+    Fallbacks: openai/gpt-oss-120b, openai/gpt-oss-20b
+    """
+    candidate_models = []
+    if config.GROQ_MODEL:
+        candidate_models.append(config.GROQ_MODEL)
+    for m in ["qwen/qwen3.8-27b", "openai/gpt-oss-120b", "openai/gpt-oss-20b"]:
+        if m not in candidate_models:
+            candidate_models.append(m)
+
+    last_exc = None
+    for model_name in candidate_models:
+        for rf in [response_format, None]:  # Try with json_object format first, fallback to raw text parsing
+            try:
+                kwargs = {
+                    "model": model_name,
+                    "messages": messages,
+                    "temperature": temperature,
+                }
+                if max_tokens:
+                    kwargs["max_tokens"] = max_tokens
+                if rf:
+                    kwargs["response_format"] = rf
+                return client.chat.completions.create(**kwargs)
+            except Exception as e:
+                last_exc = e
+                # If error is invalid model or json_validate_failed, try next
+                continue
+    raise last_exc
+
+
 def clean_json_response(raw_text: str) -> dict[str, Any]:
     """Extract and parse JSON safely even if wrapped in markdown codeblocks"""
     text = raw_text.strip()
@@ -60,14 +94,13 @@ Your response MUST be a valid JSON object containing:
 """
 
     try:
-        response = client.chat.completions.create(
-            model=config.GROQ_MODEL,
+        response = call_groq_with_fallback(
             messages=[
                 {"role": "system", "content": "You are an elite technical profiler. Always respond with detailed, structured, valid JSON. Be thorough, concrete, and concise."},
                 {"role": "user", "content": prompt}
             ],
             temperature=0.3,
-            max_tokens=850,
+            max_tokens=1800,
             response_format={"type": "json_object"}
         )
         return clean_json_response(response.choices[0].message.content)
@@ -131,8 +164,7 @@ Your response MUST be a valid JSON object matching this schema:
 """
 
     try:
-        response = client.chat.completions.create(
-            model=config.GROQ_MODEL,
+        response = call_groq_with_fallback(
             messages=[
                 {"role": "system", "content": "You are an executive technical talent matcher. Always respond with detailed, structured, valid JSON. Be concise, punchy, and high-impact."},
                 {"role": "user", "content": prompt}
@@ -230,8 +262,7 @@ Return ONLY a valid JSON object matching this schema:
         }
 
     try:
-        response = client.chat.completions.create(
-            model=config.GROQ_MODEL,
+        response = call_groq_with_fallback(
             messages=[
                 {"role": "system", "content": "You are an elite technical talent copywriter crafting direct job opportunity cold emails. Output pure JSON."},
                 {"role": "user", "content": prompt}
@@ -376,8 +407,7 @@ Return ONLY a valid JSON object:
   }}
 }}"""
         try:
-            response = client.chat.completions.create(
-                model=config.GROQ_MODEL,
+            response = call_groq_with_fallback(
                 messages=[
                     {"role": "system", "content": "You are a specialized search taxonomy engineer. Output pure JSON."},
                     {"role": "user", "content": prompt}
