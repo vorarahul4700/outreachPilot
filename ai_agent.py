@@ -99,36 +99,42 @@ def analyze_company(company_name: str, domain: str, scraped_text: str) -> dict[s
             "tone": "Professional"
         }
 
-    clean_sample = scraped_text[:3500]
+    clean_sample = scraped_text[:4000]
 
-    prompt = f"""You are an elite B2B technical research analyst and engineering talent strategist.
-Perform a thorough, comprehensive technical intelligence analysis (500 to 700 words) of the company "{company_name}" ({domain}) based on their scraped website content.
+    prompt = f"""You are a pragmatic, senior technical analyst and B2B researcher.
+Perform an accurate, factual technical intelligence report (250 to 350 words) for "{company_name}" ({domain}) based strictly on their scraped website content.
 
 Scraped Website Content:
 ---
 {clean_sample}
 ---
 
-Your response MUST be a valid JSON object containing:
+CRITICAL GROUNDING RULES:
+1. NO WILD GUESSWORK: Only report technologies, frameworks, and services directly mentioned or clearly evident from their website.
+2. DO NOT HALLUCINATE: Never invent complex enterprise tech (e.g. Kafka, Kubernetes, Snowflake, Kubeflow, BigQuery, Ruby on Rails) for small/mid agencies or local businesses unless explicitly stated on their site.
+3. REALISTIC OUTREACH: Provide practical, realistic collaboration hooks (e.g., API automation, web speed/Core Web Vitals, database performance, custom e-commerce/Shopify integrations).
+4. COMPLETION: Ensure every sentence and section is fully completed. Never cut off mid-sentence.
+
+Your response MUST be a valid JSON object matching this schema:
 {{
-  "summary": "Concise 2-sentence executive overview of what they build and their target audience",
-  "detailed_analysis": "A thorough, in-depth 500 to 700 word technical intelligence report formatted with clean Markdown sections:\\n\\n### 1. Executive Business Overview & Value Proposition\\nDetailed explanation of what problems they solve, their products/services, and customer market.\\n\\n### 2. Architecture & Technical Infrastructure\\nDeep breakdown of their engineering stack, frameworks, programming languages, databases, and development methodologies evident from their site.\\n\\n### 3. Core Products & Solutions\\nDetailed breakdown of their flagship solutions, client projects, or software products.\\n\\n### 4. Engineering Needs & Growth Challenges\\nAnalysis of their potential technical scaling pain points, performance challenges, or areas where an ambitious engineer can add immense value.\\n\\n### 5. High-Impact Cold Outreach Angles\\nSpecific technical hooks and strategic angles a job seeker can leverage to immediately catch the hiring team's attention.",
-  "industry": "Specific industry (e.g. Enterprise SaaS, FinTech, Custom Software Agency, E-commerce Tech)",
-  "tech_stack": ["Comprehensive", "list", "of", "all", "detected", "technologies", "libraries", "tools"],
-  "services": ["Primary service/product 1", "Primary service/product 2", "Primary service/product 3", "Primary service/product 4"],
-  "hiring_signals": "Clear signals on hiring needs, technology focus, or team growth",
-  "tone": "Company engineering culture vibe (e.g. Fast-Paced Startup, Enterprise Engineering, Client-Focused Agency)"
+  "summary": "Clear, accurate 2-sentence overview of what they actually offer and who their clients are",
+  "detailed_analysis": "A concise, factual 250 to 350 word report in Markdown format with sections:\\n\\n### 1. Business Overview & Offerings\\nFactual summary of their core services, client types, and business focus.\\n\\n### 2. Evident Technical Stack\\nOnly the technologies, CMS, frameworks, and platforms evident from their site (e.g. Shopify, WordPress, PHP, JavaScript, Google/Meta Ads).\\n\\n### 3. Practical Engineering Needs\\nRealistic technical areas where an engineer can help (e.g. site performance, backend integrations, automated lead capture, data pipelines).\\n\\n### 4. High-Impact Outreach Angles\\n2-3 concrete, realistic conversation starters for a technical inquiry.",
+  "industry": "Accurate industry (e.g. Digital Marketing & E-Commerce, Custom Software, IT Services)",
+  "tech_stack": ["Only", "evident", "technologies", "like", "Shopify", "WordPress", "PHP", "JavaScript"],
+  "services": ["Service 1", "Service 2", "Service 3"],
+  "hiring_signals": "Evident hiring signals or business growth focus",
+  "tone": "Professional"
 }}
 """
 
     try:
         response = call_groq_with_fallback(
             messages=[
-                {"role": "system", "content": "You are an elite technical profiler. Always respond with detailed, structured, valid JSON. Be thorough, concrete, and concise."},
+                {"role": "system", "content": "You are a grounded B2B technical analyst. Base all analysis strictly on provided website facts without guessing or exaggerating. Always complete your thoughts in valid JSON."},
                 {"role": "user", "content": prompt}
             ],
-            temperature=0.3,
-            max_tokens=1800,
+            temperature=0.2,
+            max_tokens=1400,
             response_format={"type": "json_object"}
         )
         return clean_json_response(response.choices[0].message.content)
