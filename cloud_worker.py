@@ -38,7 +38,7 @@ def log_job(db, job_id: int, msg: str, progress: int = None, live_card: dict = N
         if len(current_logs) > 100:
             current_logs = current_logs[-100:]
         job.logs = current_logs
-        job.status_message = msg
+        job.status_message = str(msg)[:500]
 
         if progress is not None:
             job.progress = min(100, max(0, progress))

@@ -34,10 +34,10 @@ jobs:
           python-version: "3.11"
           cache: "pip"
 
-      - name: Install Google Chrome Stable
+      - name: Install Google Chrome Stable & Xvfb
         run: |
           sudo apt-get update -qq
-          sudo apt-get install -y --no-install-recommends wget curl gnupg
+          sudo apt-get install -y --no-install-recommends wget curl gnupg xvfb
           wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | sudo gpg --dearmor -o /usr/share/keyrings/googlechrome-linux-keyring.gpg
           echo "deb [arch=amd64 signed-by=/usr/share/keyrings/googlechrome-linux-keyring.gpg] http://dl.google.com/linux/chrome/deb/ stable main" | sudo tee /etc/apt/sources.list.d/google-chrome.list
           sudo apt-get update -qq
@@ -56,7 +56,7 @@ jobs:
           GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
         run: |
-          python cloud_worker.py \
+          xvfb-run -a python cloud_worker.py \
             --job-id "${{ github.event.inputs.job_id }}" \
             --keyword "${{ github.event.inputs.keyword }}" \
             --city "${{ github.event.inputs.city }}" \

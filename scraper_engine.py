@@ -384,9 +384,13 @@ class GoogleScraper:
                                 os.environ["PATH"] = f"{chrome_dir}:{os.environ.get('PATH', '')}"
                             break
 
+                    # In cloud / Linux environments (GitHub Actions, Render), uc=True causes 
+                    # a 240s 127.0.0.1:9222 socket timeout. Use headless2=True with standard WebDriver.
+                    is_cloud = bool(os.environ.get("GITHUB_ACTIONS") or os.environ.get("RENDER") or attempt > 0)
                     driver_kwargs = {
-                        "uc": True,
+                        "uc": not is_cloud,
                         "headless": self.headless,
+                        "headless2": is_cloud,
                         "user_data_dir": tmp_profile_dir,
                         "block_images": True,
                         "disable_csp": True,

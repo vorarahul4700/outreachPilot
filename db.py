@@ -151,7 +151,7 @@ class ScoutJob(Base):
     max_pages = Column(Integer, default=2)
     status = Column(String(50), default="QUEUED", index=True)  # QUEUED, RUNNING, COMPLETED, FAILED
     progress = Column(Integer, default=0)
-    status_message = Column(String(255), default="Job Queued in Cloud")
+    status_message = Column(Text, default="Job Queued in Cloud")
     total_found = Column(Integer, default=0)
     total_enriched = Column(Integer, default=0)
     logs = Column(JsonType, default=list)
@@ -198,6 +198,7 @@ def init_db():
                 conn.execute(text("ALTER TABLE companies ADD COLUMN IF NOT EXISTS location_url TEXT;"))
                 conn.execute(text("ALTER TABLE outreach_logs ADD COLUMN IF NOT EXISTS email_body TEXT;"))
                 conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS resume_link VARCHAR(500);"))
+                conn.execute(text("ALTER TABLE scout_jobs ALTER COLUMN status_message TYPE TEXT;"))
                 conn.commit()
     except Exception as ex:
         print(f"[DB Warning] Could not auto-create/migrate tables: {ex}")
