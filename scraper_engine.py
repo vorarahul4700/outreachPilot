@@ -204,6 +204,24 @@ def build_google_maps_url(name: str, address: str = "", city: str = "") -> str:
     return f"https://www.google.com/maps/search/?api=1&query={urllib.parse.quote_plus(query)}"
 
 
+def format_local_query(keyword: str = "", city: str = "") -> str:
+    """
+    Formats the search query to ensure Google triggers the local Places pack (udm=local).
+    Inserts 'in' preposition between keyword and city if not already present.
+    """
+    k = (keyword or "").strip()
+    c = (city or "").strip()
+    if not k and not c:
+        return "IT Companies"
+    if not c:
+        return k
+    if not k:
+        return f"Companies in {c}"
+    if re.search(r"\b(in|near|at|around)\b", k, re.I):
+        return f"{k} {c}".strip()
+    return f"{k} in {c}".strip()
+
+
 class GoogleScraper:
     """
     High-performance Google Local Scraper engine with explicit DOM synchronization
@@ -316,24 +334,6 @@ class GoogleScraper:
             return domain.lower().replace("www.", "").split(":")[0].split("/")[0]
         except Exception:
             return ""
-
-def format_local_query(keyword: str = "", city: str = "") -> str:
-    """
-    Formats the search query to ensure Google triggers the local Places pack (udm=local).
-    Inserts 'in' preposition between keyword and city if not already present.
-    """
-    k = (keyword or "").strip()
-    c = (city or "").strip()
-    if not k and not c:
-        return "IT Companies"
-    if not c:
-        return k
-    if not k:
-        return f"Companies in {c}"
-    if re.search(r"\b(in|near|at|around)\b", k, re.I):
-        return f"{k} {c}".strip()
-    return f"{k} in {c}".strip()
-
 
     def build_initial_url(
         self,
