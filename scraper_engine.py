@@ -243,6 +243,51 @@ def format_local_query(keyword: str = "", city: str = "") -> str:
     return f"{k} in {c}".strip()
 
 
+def extract_card_website_and_goto(card: Any) -> tuple[str, str]:
+    """
+    Extract website URL or /goto redirect URL from a Google Local card.
+    Handles both direct links (typical in HTTP HTML) and /goto redirects (typical in desktop JS).
+    Returns (direct_website_url, goto_url).
+    """
+    direct_url = ""
+    goto_url = ""
+
+    # 1. Check for explicit /goto link
+    goto_a = card.find("a", href=lambda h: h and "/goto?url=" in h)
+    if goto_a:
+        goto_url = goto_a["href"].strip()
+
+    # 2. Iterate all <a> tags looking for company website link
+    for a in card.find_all("a", href=True):
+        href = a["href"].strip()
+        text = a.get_text(separator=" ", strip=True).lower()
+        aria = (a.get("aria-label") or "").lower()
+        pcu = (a.get("data-pcu") or "").strip()
+
+        # If it's a /goto link and we haven't captured one
+        if "/goto?url=" in href and not goto_url:
+            goto_url = href
+            continue
+
+        # If data-pcu is present and is external URL
+        if pcu.startswith("http") and not any(x in pcu for x in ["google.com", "google.co", "gstatic.com"]):
+            direct_url = pcu
+            break
+
+        # Check explicit "website" text or aria-label
+        if ("website" in text or "website" in aria) and href.startswith("http"):
+            if not any(x in href for x in ["google.com", "google.co", "gstatic.com", "schema.org"]):
+                direct_url = href
+                break
+
+        # Fallback external link (not google, not directions/maps)
+        if href.startswith("http") and not direct_url:
+            if not any(x in href for x in ["google.com", "google.co", "gstatic.com", "schema.org", "waze.com", "/maps/"]):
+                direct_url = href
+
+    return direct_url, goto_url
+
+
 class GoogleScraper:
     """
     High-performance Google Local Scraper engine with explicit DOM synchronization
@@ -305,42 +350,40 @@ class GoogleScraper:
         goto_indices = [
             (idx, item["_goto_url"])
             for idx, item in enumerate(items)
-            if item.get("_goto_url")
+            if item.get("_goto_url") and not item.get("website_url")
         ]
 
-        if not goto_indices:
-            for item in items:
-                if "website_url" not in item or not item["website_url"]:
-                    item["website_url"] = ""
-                item.pop("_goto_url", None)
-            return items
-
-        # Lower worker count in containerized environments (Render) to avoid 0.1 vCPU starvation
-        worker_limit = 8 if os.environ.get("RENDER") else self.max_workers
-        with ThreadPoolExecutor(max_workers=min(worker_limit, len(goto_indices))) as executor:
-            future_to_idx = {
-                executor.submit(self._resolve_single_website, url): idx
-                for idx, url in goto_indices
-            }
-            for future in as_completed(future_to_idx):
-                idx = future_to_idx[future]
-                try:
-                    resolved = future.result()
-                    # Extract clean domain
-                    parsed = urllib.parse.urlparse(resolved)
-                    domain = parsed.netloc or parsed.path
-                    domain = domain.lower().replace("www.", "").split(":")[0].split("/")[0]
-                    if is_genuine_company_domain(domain) and is_safe_public_url(resolved):
-                        items[idx]["website_url"] = resolved
-                        items[idx]["domain"] = domain
-                    else:
+        if goto_indices:
+            # Lower worker count in containerized environments (Render) to avoid 0.1 vCPU starvation
+            worker_limit = 8 if os.environ.get("RENDER") else self.max_workers
+            with ThreadPoolExecutor(max_workers=min(worker_limit, len(goto_indices))) as executor:
+                future_to_idx = {
+                    executor.submit(self._resolve_single_website, url): idx
+                    for idx, url in goto_indices
+                }
+                for future in as_completed(future_to_idx):
+                    idx = future_to_idx[future]
+                    try:
+                        resolved = future.result()
+                        # Extract clean domain
+                        parsed = urllib.parse.urlparse(resolved)
+                        domain = parsed.netloc or parsed.path
+                        domain = domain.lower().replace("www.", "").split(":")[0].split("/")[0]
+                        if is_genuine_company_domain(domain) and is_safe_public_url(resolved):
+                            items[idx]["website_url"] = resolved
+                            items[idx]["domain"] = domain
+                        else:
+                            items[idx]["website_url"] = ""
+                            items[idx]["domain"] = ""
+                    except Exception:
                         items[idx]["website_url"] = ""
                         items[idx]["domain"] = ""
-                except Exception:
-                    items[idx]["website_url"] = ""
-                    items[idx]["domain"] = ""
 
         for item in items:
+            if item.get("website_url") and not item.get("domain"):
+                item["domain"] = self._extract_domain_from_url(item["website_url"])
+            if "website_url" not in item:
+                item["website_url"] = ""
             item.pop("_goto_url", None)
 
         return items
@@ -401,18 +444,34 @@ class GoogleScraper:
 
         http_session = requests.Session()
         http_session.headers.update({
-            "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
-            "cookie": cookie_to_use.replace("\n", " ").strip(),
-            "sec-ch-ua": '"Chromium";v="124", "Google Chrome";v="124", "Not-A.Brand";v="99"',
-            "sec-ch-ua-mobile": "?0",
-            "sec-ch-ua-platform": '"Windows"',
-            "sec-fetch-dest": "document",
-            "sec-fetch-mode": "navigate",
-            "sec-fetch-site": "same-origin",
-            "sec-fetch-user": "?1",
-            "upgrade-insecure-requests": "1",
-            "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
-            "accept-language": "en-US,en;q=0.8",
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/124.0.0.0 Safari/537.36"
+            ),
+            "Cookie": cookie_to_use.replace("\n", " ").strip(),
+            "Accept": (
+                "text/html,application/xhtml+xml,application/xml;q=0.9,"
+                "image/avif,image/webp,image/apng,*/*;q=0.8,"
+                "application/signed-exchange;v=b3;q=0.7"
+            ),
+            "Accept-Language": "en-US,en;q=0.9,hi;q=0.8",
+            "Sec-Ch-Ua": '"Chromium";v="124", "Google Chrome";v="124", "Not-A.Brand";v="99"',
+            "Sec-Ch-Ua-Arch": '"x86"',
+            "Sec-Ch-Ua-Bitness": '"64"',
+            "Sec-Ch-Ua-Full-Version": '"124.0.6367.92"',
+            "Sec-Ch-Ua-Full-Version-List": '"Chromium";v="124.0.6367.92", "Google Chrome";v="124.0.6367.92", "Not-A.Brand";v="99.0.0.0"',
+            "Sec-Ch-Ua-Mobile": "?0",
+            "Sec-Ch-Ua-Model": '""',
+            "Sec-Ch-Ua-Platform": '"Windows"',
+            "Sec-Ch-Ua-Platform-Version": '"15.0.0"',
+            "Sec-Ch-Ua-Wow64": "?0",
+            "Sec-Fetch-Dest": "document",
+            "Sec-Fetch-Mode": "navigate",
+            "Sec-Fetch-Site": "same-origin",
+            "Sec-Fetch-User": "?1",
+            "Upgrade-Insecure-Requests": "1",
+            "Priority": "u=0, i",
         })
 
         effective_max = 50 if max_pages <= 0 else max_pages
@@ -467,8 +526,8 @@ class GoogleScraper:
                     if not name:
                         continue
 
-                    goto_a = card.find("a", href=lambda h: h and "/goto?url=" in h)
-                    goto_url = goto_a["href"] if goto_a else ""
+                    direct_web, goto_url = extract_card_website_and_goto(card)
+                    dom = self._extract_domain_from_url(direct_web) if direct_web else ""
 
                     rating_el = card.find("span", class_="yi40Hd")
                     rating_str = rating_el.get_text(strip=True) if rating_el else "0.0"
@@ -489,8 +548,8 @@ class GoogleScraper:
 
                     page_raw.append({
                         "name": name,
-                        "domain": "",
-                        "website_url": "",
+                        "domain": dom,
+                        "website_url": direct_web,
                         "location_url": loc_url,
                         "_goto_url": goto_url,
                         "rating": rating,
@@ -694,9 +753,8 @@ class GoogleScraper:
                     if not name:
                         continue
 
-                    # Website goto link
-                    goto_a = card.find("a", href=lambda h: h and "/goto?url=" in h)
-                    goto_url = goto_a["href"] if goto_a else ""
+                    direct_web, goto_url = extract_card_website_and_goto(card)
+                    dom = self._extract_domain_from_url(direct_web) if direct_web else ""
 
                     # Rating and reviews
                     rating_el = card.find("span", class_="yi40Hd")
@@ -719,8 +777,8 @@ class GoogleScraper:
 
                     page_raw_items.append({
                         "name": name,
-                        "domain": "",
-                        "website_url": "",
+                        "domain": dom,
+                        "website_url": direct_web,
                         "location_url": loc_url,
                         "_goto_url": goto_url,
                         "rating": rating,
