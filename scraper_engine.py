@@ -384,13 +384,13 @@ class GoogleScraper:
                                 os.environ["PATH"] = f"{chrome_dir}:{os.environ.get('PATH', '')}"
                             break
 
-                    # In cloud / Linux environments (GitHub Actions, Render), uc=True causes 
-                    # a 240s 127.0.0.1:9222 socket timeout. Use headless2=True with standard WebDriver.
-                    is_cloud = bool(os.environ.get("GITHUB_ACTIONS") or os.environ.get("RENDER") or attempt > 0)
+                    # Under Xvfb (DISPLAY environment variable set by xvfb-run in GitHub Actions),
+                    # Chrome runs with headless=False in a virtual desktop, allowing full UC Mode
+                    # without 127.0.0.1:9222 socket errors and completely avoiding Google bot challenges.
+                    has_display = bool(os.environ.get("DISPLAY"))
                     driver_kwargs = {
-                        "uc": not is_cloud,
-                        "headless": self.headless,
-                        "headless2": is_cloud,
+                        "uc": True,
+                        "headless": not has_display and self.headless,
                         "user_data_dir": tmp_profile_dir,
                         "block_images": True,
                         "disable_csp": True,
