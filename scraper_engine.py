@@ -411,7 +411,7 @@ class GoogleScraper:
                         raise init_err
                     time.sleep(1.2)
 
-            self._log("Navigating to Google Local results...", 20)
+            self._log(f"Navigating to Google Local: {target_url}", 20)
             driver.get(target_url)
 
             # Check and auto-accept Google Consent dialog (standard on cloud / datacenter IPs)
@@ -467,7 +467,10 @@ class GoogleScraper:
                     time.sleep(0.4)
 
                 if not cards:
-                    self._log(f"No listings found on {page_label}.", 90)
+                    page_title = driver.title or "No Title"
+                    curr_url = driver.current_url or "No URL"
+                    src_preview = (driver.page_source or "")[:250].replace("\n", " ")
+                    self._log(f"No listings found on {page_label}. URL: {curr_url} | Title: {page_title} | HTML snippet: {src_preview}", 90)
                     break
 
                 page_raw_items = []
