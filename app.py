@@ -1174,13 +1174,13 @@ async def get_outreach_logs(request: Request = None, db: Session = Depends(get_d
     if not user or not user.oauth_tokens:
         return {"logs": []}
 
-    query = db.query(OutreachLog)
-
-    # Multi-tenant isolation: standard users view only their own logs
-    if not config.is_master_admin(user.email):
-        query = query.filter(OutreachLog.user_id == user.id)
-
-    logs = query.order_by(OutreachLog.sent_at.desc()).limit(100).all()
+    logs = (
+        db.query(OutreachLog)
+        .filter(OutreachLog.user_id == user.id)
+        .order_by(OutreachLog.sent_at.desc())
+        .limit(100)
+        .all()
+    )
     return {
         "logs": [{
             "id": log_item.id,
@@ -1202,15 +1202,20 @@ async def get_sent_email_for_company(company_id: int, request: Request, db: Sess
     if not user or not user.oauth_tokens:
         raise HTTPException(status_code=401, detail="Authentication required.")
 
-    query = db.query(OutreachLog).filter(OutreachLog.company_id == company_id, OutreachLog.status == "SENT")
-    if not config.is_master_admin(user.email):
-        query = query.filter(OutreachLog.user_id == user.id)
+    query = db.query(OutreachLog).filter(
+        OutreachLog.company_id == company_id,
+        OutreachLog.status == "SENT",
+        OutreachLog.user_id == user.id
+    )
 
     log = query.order_by(OutreachLog.sent_at.desc()).first()
     if not log:
         # Fallback to pitch if log not found
-        pitch = db.query(ColdPitch).filter(ColdPitch.company_id == company_id).first()
-        if pitch and (config.is_master_admin(user.email) or pitch.user_id == user.id):
+        pitch = db.query(ColdPitch).filter(
+            ColdPitch.company_id == company_id,
+            ColdPitch.user_id == user.id
+        ).first()
+        if pitch:
             return {
                 "found": True,
                 "company_name": pitch.company.name if pitch.company else "Unknown",
