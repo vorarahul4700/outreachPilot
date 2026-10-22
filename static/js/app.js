@@ -5,7 +5,6 @@ document.addEventListener("DOMContentLoaded", () => {
   let companies = [];
   let pollInterval = null;
   let activeTab = "companies";
-  let currentViewMode = "grid";
   let isMasterAdmin = false;
   let adminViewMode = "admin"; // "admin" or "preview"
   let filterInvalidOnly = false;
@@ -680,10 +679,9 @@ document.addEventListener("DOMContentLoaded", () => {
     if (scoutQueryLabel) scoutQueryLabel.textContent = queryLabel || '"IT Companies" in "Surat"';
 
     if (scoutCardsContainer) scoutCardsContainer.innerHTML = "";
-    if (scoutTableBody) scoutTableBody.innerHTML = "";
+    if (scoutPagination) scoutPagination.classList.add("hidden");
 
     if (!list || list.length === 0) {
-      if (scoutPagination) scoutPagination.classList.add("hidden");
       if (scoutCardsContainer) {
         scoutCardsContainer.innerHTML = `
           <div class="col-span-full py-12 px-4 text-center bg-slate-900/60 border border-slate-800 rounded-2xl space-y-3">
@@ -697,20 +695,6 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
         `;
       }
-      if (scoutTableBody) {
-        scoutTableBody.innerHTML = `
-          <tr>
-            <td colspan="6" class="py-10 text-center text-slate-400 text-xs">
-              <div class="flex flex-col items-center justify-center space-y-1.5">
-                <i data-lucide="radar" class="w-5 h-5 text-indigo-400"></i>
-                <span class="font-medium text-slate-300">Ready to Discover Leads</span>
-                <span class="text-[11px] text-slate-500">Click "Find Leads" above to start real-time lead discovery</span>
-              </div>
-            </td>
-          </tr>
-        `;
-      }
-      setScoutViewMode(scoutViewMode);
       refreshIcons();
       return;
     }
@@ -830,7 +814,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
-    setScoutViewMode(scoutViewMode);
     refreshIcons();
   }
 
@@ -1307,7 +1290,6 @@ document.addEventListener("DOMContentLoaded", () => {
     currentFilteredCompanies = list || [];
 
     if (companiesContainer) companiesContainer.innerHTML = "";
-    if (companiesTableBody) companiesTableBody.innerHTML = "";
 
     if (!list || list.length === 0) {
       if (companiesPagination) companiesPagination.classList.add("hidden");

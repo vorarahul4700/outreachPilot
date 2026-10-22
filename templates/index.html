@@ -469,8 +469,8 @@
               </button>
             </div>
 
-            <!-- Right: Admin View Switcher & Grid/Table Switcher (Side-by-side on mobile) -->
-            <div class="flex items-center gap-2 justify-between w-full sm:w-auto">
+            <!-- Right: Admin View Switcher & Multi-Select Checkbox -->
+            <div class="flex items-center gap-2 justify-between sm:justify-end w-full sm:w-auto">
               <!-- Master Admin Mode Switcher -->
               <div id="admin-mode-toggle-group" class="hidden items-center bg-slate-950 p-1 rounded-lg border border-indigo-900/60 flex-1 sm:flex-none justify-center">
                 <button id="btn-mode-admin" type="button" class="flex-1 sm:flex-none justify-center px-2 sm:px-2.5 py-1 rounded text-xs font-semibold bg-indigo-600 text-white transition cursor-pointer flex items-center space-x-1 sm:space-x-1.5 shadow-sm" title="Master Admin Mode: See invalid leads & admin actions">
@@ -485,10 +485,8 @@
                 </button>
               </div>
 
-              <!-- View Mode Switcher (Grid vs Table) -->
-              <div class="flex items-center bg-slate-950 p-1 rounded-lg border border-slate-800 flex-1 sm:flex-none justify-center">
               <!-- Multi-Select Checkbox Control -->
-              <label id="container-select-all" class="flex items-center space-x-2 bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800 hover:border-slate-700 cursor-pointer select-none transition" title="Select or deselect all leads on current page">
+              <label id="container-select-all" class="flex items-center space-x-2 bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800 hover:border-slate-700 cursor-pointer select-none transition shrink-0" title="Select or deselect all leads on current page">
                 <input type="checkbox" id="checkbox-select-all" class="w-3.5 h-3.5 rounded bg-slate-900 border-slate-700 text-indigo-600 focus:ring-indigo-500 cursor-pointer">
                 <span id="label-select-all" class="text-xs font-medium text-slate-300 whitespace-nowrap">Select All</span>
               </label>
@@ -1143,6 +1141,6 @@
       is_master_admin: {{ 'true' if is_master_admin else 'false' }}
     };
   </script>
-  <script src="/static/js/app.js?v=2.9"></script>
+  <script src="/static/js/app.js?v=3.0"></script>
 </body>
 </html>
