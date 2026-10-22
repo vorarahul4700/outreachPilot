@@ -1109,14 +1109,15 @@ def get_effective_redirect_uri(request: Request) -> str:
     Prevents cross-domain redirects from Render back to localhost.
     """
     proto = request.headers.get("x-forwarded-proto") or request.url.scheme
-    host = request.headers.get("x-forwarded-host") or request.headers.get("host") or request.url.netloc
+    raw_host = request.headers.get("x-forwarded-host") or request.headers.get("host") or request.url.netloc
+    host = raw_host.strip().rstrip("/") if raw_host else ""
 
     # If running on Render or any non-local public domain:
     if host and not host.startswith("localhost") and not host.startswith("127.0.0.1"):
         return f"{proto}://{host}/auth/google/callback"
 
     # Otherwise return local configured redirect URI
-    return config.GOOGLE_REDIRECT_URI or "http://localhost:8000/auth/google/callback"
+    return (config.GOOGLE_REDIRECT_URI or "http://localhost:8000/auth/google/callback").strip().rstrip("/")
 
 
 # --- Google OAuth Flow ---
