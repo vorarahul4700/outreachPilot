@@ -735,10 +735,10 @@ async def upload_resume(
     db: Session = Depends(get_db)
 ):
     user = get_current_user(db, request)
-    if not user:
+    if not user or not user.oauth_tokens:
         raise HTTPException(
             status_code=401,
-            detail="Authentication required. Please sign in to save your candidate profile."
+            detail="Authentication required. Please sign in with Google to analyze your resume."
         )
 
     client_id = f"{user.id}_{request.client.host if request and request.client else 'unknown'}"

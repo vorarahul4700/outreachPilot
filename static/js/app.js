@@ -2329,66 +2329,70 @@ document.addEventListener("DOMContentLoaded", () => {
 
   resumeForm.addEventListener("submit", async (e) => {
     e.preventDefault();
-    const hasFile = fileInput.files && fileInput.files.length > 0;
-    const resumeLink = (document.getElementById("input-resume-link")?.value || "").trim();
-    const targetRole = document.getElementById("input-target-role").value.trim();
+    requireLogin(async () => {
+      const hasFile = fileInput.files && fileInput.files.length > 0;
+      const resumeLink = (document.getElementById("input-resume-link")?.value || "").trim();
+      const targetRole = document.getElementById("input-target-role").value.trim();
 
-    if (!hasFile && !resumeLink) {
-      showToast("Please select a resume file (PDF or TXT) or enter a portfolio/resume link.", "warning");
-      return;
-    }
-
-    const formData = new FormData();
-    if (hasFile) {
-      formData.append("file", fileInput.files[0]);
-    }
-    formData.append("resume_link", resumeLink);
-    formData.append("target_role", targetRole);
-
-    btnParseResume.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i><span>Analyzing with AI...</span>`;
-    btnParseResume.disabled = true;
-    refreshIcons();
-
-    try {
-      const res = await fetch("/api/resume/upload", {
-        method: "POST",
-        body: formData
-      });
-      if (res.status === 401) {
-        showLoginModal();
+      if (!hasFile && !resumeLink) {
+        showToast("Please select a resume file (PDF or TXT) or enter a portfolio/resume link.", "warning");
         return;
       }
-      const data = await res.json();
-      if (data.success && data.profile) {
-        document.getElementById("profile-pitch").textContent = data.profile.elevator_pitch || "Candidate Profile Active";
-        
-        const skillsContainer = document.getElementById("profile-skills");
-        skillsContainer.innerHTML = (data.profile.top_skills || []).map(s => `
-          <span class="px-2.5 py-1 rounded bg-indigo-950/80 text-indigo-300 border border-indigo-800 text-xs font-medium">${escapeHTML(s)}</span>
-        `).join("");
 
-        const achContainer = document.getElementById("profile-achievements");
-        achContainer.innerHTML = (data.profile.key_achievements || []).map(a => `
-          <li>${escapeHTML(a)}</li>
-        `).join("");
-
-        const detailedAnalysisEl = document.getElementById("profile-detailed-analysis");
-        if (detailedAnalysisEl && data.profile.detailed_profile_analysis) {
-          detailedAnalysisEl.dataset.rawText = data.profile.detailed_profile_analysis;
-          detailedAnalysisEl.innerHTML = formatMarkdown(data.profile.detailed_profile_analysis);
-        }
-
-        showToast("Candidate Profile updated successfully!", "success");
-      } else {
-        showToast(data.detail || data.message || "Failed to update profile.", "error");
+      const formData = new FormData();
+      if (hasFile) {
+        formData.append("file", fileInput.files[0]);
       }
-    } catch (err) {
-      showToast("Resume analysis failed: " + err.message, "error");
-    } finally {
-      btnParseResume.innerHTML = `<i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-300"></i><span>Analyze Resume with AI</span>`;
-      btnParseResume.disabled = false;
+      formData.append("resume_link", resumeLink);
+      formData.append("target_role", targetRole);
+
+      btnParseResume.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i><span>Analyzing with AI...</span>`;
+      btnParseResume.disabled = true;
       refreshIcons();
-    }
+
+      try {
+        const res = await fetch("/api/resume/upload", {
+          method: "POST",
+          body: formData
+        });
+        if (res.status === 401) {
+          currentUser.is_logged_in = false;
+          showToast("Please login to use this", "warning");
+          showLoginModal("Please sign in with Google to analyze your resume with AI.");
+          return;
+        }
+        const data = await res.json();
+        if (data.success && data.profile) {
+          document.getElementById("profile-pitch").textContent = data.profile.elevator_pitch || "Candidate Profile Active";
+          
+          const skillsContainer = document.getElementById("profile-skills");
+          skillsContainer.innerHTML = (data.profile.top_skills || []).map(s => `
+            <span class="px-2.5 py-1 rounded bg-indigo-950/80 text-indigo-300 border border-indigo-800 text-xs font-medium">${escapeHTML(s)}</span>
+          `).join("");
+
+          const achContainer = document.getElementById("profile-achievements");
+          achContainer.innerHTML = (data.profile.key_achievements || []).map(a => `
+            <li>${escapeHTML(a)}</li>
+          `).join("");
+
+          const detailedAnalysisEl = document.getElementById("profile-detailed-analysis");
+          if (detailedAnalysisEl && data.profile.detailed_profile_analysis) {
+            detailedAnalysisEl.dataset.rawText = data.profile.detailed_profile_analysis;
+            detailedAnalysisEl.innerHTML = formatMarkdown(data.profile.detailed_profile_analysis);
+          }
+
+          showToast("Candidate Profile updated successfully!", "success");
+        } else {
+          showToast(data.detail || data.message || "Failed to update profile.", "error");
+        }
+      } catch (err) {
+        showToast("Resume analysis failed: " + err.message, "error");
+      } finally {
+        btnParseResume.innerHTML = `<i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-300"></i><span>Analyze Resume with AI</span>`;
+        btnParseResume.disabled = false;
+        refreshIcons();
+      }
+    }, "analyze your resume with AI");
   });
 
   const btnCopyProfileAnalysis = document.getElementById("btn-copy-profile-analysis");
