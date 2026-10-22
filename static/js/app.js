@@ -94,8 +94,10 @@ document.addEventListener("DOMContentLoaded", () => {
       badge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40 uppercase tracking-wider shrink-0">Error</span>`;
     } else if (type === "warning") {
       bgClass = "bg-amber-950/95 border-amber-500 text-amber-100 shadow-[0_14px_45px_rgba(245,158,11,0.45)] ring-1 ring-amber-500/50";
-      icon = "alert-triangle";
-      badge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 uppercase tracking-wider shrink-0">Notice</span>`;
+      const isAuthPrompt = message.toLowerCase().includes("sign in") || message.toLowerCase().includes("login") || message.toLowerCase().includes("auth");
+      icon = isAuthPrompt ? "lock" : "alert-triangle";
+      const badgeText = isAuthPrompt ? "Sign In Required" : "Attention";
+      badge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 uppercase tracking-wider shrink-0">${badgeText}</span>`;
     } else if (type === "success") {
       bgClass = "bg-emerald-950/95 border-emerald-500 text-emerald-100 shadow-[0_14px_45px_rgba(16,185,129,0.4)] ring-1 ring-emerald-500/50";
       icon = "check-circle-2";
@@ -1819,7 +1821,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const res = await fetch(`/api/companies/${activeModalCompany.id}/enrich?force_refresh=true`, { method: "POST" });
         if (res.status === 401) {
           currentUser.is_logged_in = false;
-          showToast("Please login to use this", "warning");
+          showToast("Please sign in with Google to use AI Deep Enrichment.", "warning");
           showLoginModal("Please sign in with Google to use AI Deep Enrichment.");
           return;
         }
@@ -1834,7 +1836,7 @@ document.addEventListener("DOMContentLoaded", () => {
         cmodalBtnEnrich.disabled = false;
         refreshIcons();
       }
-    }, "use AI Deep Enrichment");
+    }, "Please sign in with Google to use AI Deep Enrichment.");
   });
 
   cmodalBtnPitch.addEventListener("click", () => {
@@ -2013,12 +2015,13 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   window.showLoginModal = showLoginModal;
 
-  function requireLogin(callback, actionName = "use AI Deep Enrichment") {
+  function requireLogin(callback, actionPrompt = "Please sign in with Google to use AI Deep Enrichment.") {
     if (currentUser && currentUser.is_logged_in) {
       callback();
     } else {
-      showToast("Please login to use this", "warning");
-      showLoginModal(`Please sign in with Google to ${actionName}.`);
+      const message = actionPrompt.startsWith("Please") ? actionPrompt : `Please sign in with Google to ${actionPrompt}.`;
+      showToast(message, "warning");
+      showLoginModal(message);
     }
   }
   const sidebarAdminBadge = document.getElementById("sidebar-admin-badge");
@@ -2145,7 +2148,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const res = await fetch(`/api/companies/${companyId}/enrich`, { method: "POST" });
         if (res.status === 401) {
           currentUser.is_logged_in = false;
-          showToast("Please login to use this", "warning");
+          showToast("Please sign in with Google to use AI Deep Enrichment.", "warning");
           showLoginModal("Please sign in with Google to use AI Deep Enrichment.");
           return;
         }
@@ -2158,7 +2161,7 @@ document.addEventListener("DOMContentLoaded", () => {
         btn.disabled = false;
         refreshIcons();
       }
-    }, "use AI Deep Enrichment");
+    }, "Please sign in with Google to use AI Deep Enrichment.");
   }
 
   // Bulk Enrichment Handlers
@@ -2194,8 +2197,8 @@ document.addEventListener("DOMContentLoaded", () => {
             if (res.status === 401) {
               unauthorizedOccurred = true;
               currentUser.is_logged_in = false;
-              showToast("Please login to use this", "warning");
-              showLoginModal("Please sign in with Google to use AI Deep Enrichment.");
+              showToast("Please sign in with Google to run bulk AI enrichment.", "warning");
+              showLoginModal("Please sign in with Google to run bulk AI enrichment.");
               break;
             }
           } catch (err) {
@@ -2226,7 +2229,7 @@ document.addEventListener("DOMContentLoaded", () => {
         btn.disabled = false;
         refreshIcons();
       }, 2500);
-    }, "run bulk AI enrichment");
+    }, "Please sign in with Google to run bulk AI enrichment.");
   }
 
   if (btnBulkEnrichTop) {
@@ -2357,7 +2360,7 @@ document.addEventListener("DOMContentLoaded", () => {
         });
         if (res.status === 401) {
           currentUser.is_logged_in = false;
-          showToast("Please login to use this", "warning");
+          showToast("Please sign in with Google to analyze your resume with AI.", "warning");
           showLoginModal("Please sign in with Google to analyze your resume with AI.");
           return;
         }
@@ -2392,7 +2395,7 @@ document.addEventListener("DOMContentLoaded", () => {
         btnParseResume.disabled = false;
         refreshIcons();
       }
-    }, "analyze your resume with AI");
+    }, "Please sign in with Google to analyze your resume with AI.");
   });
 
   const btnCopyProfileAnalysis = document.getElementById("btn-copy-profile-analysis");
@@ -2451,7 +2454,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
       if (res.status === 401) {
         currentUser.is_logged_in = false;
-        showToast("Please login to use this", "warning");
+        showToast("Please sign in with Google to generate personalized outreach pitches.", "warning");
         showLoginModal("Please sign in with Google to generate personalized outreach pitches.");
         return;
       }
