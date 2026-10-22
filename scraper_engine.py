@@ -658,14 +658,17 @@ class GoogleScraper:
                                 os.environ["PATH"] = f"{chrome_dir}:{os.environ.get('PATH', '')}"
                             break
 
-                    is_cloud = bool(os.environ.get("GITHUB_ACTIONS") or os.environ.get("RENDER") or attempt > 0)
+                    has_display = bool(os.environ.get("DISPLAY"))
+                    # When running under Xvfb (xvfb-run on GitHub Actions or Linux display),
+                    # run with headless=False in the virtual desktop with UC mode enabled.
+                    # This completely avoids navigator.webdriver=true and Google bot challenges.
                     driver_kwargs = {
-                        "uc": not is_cloud,
-                        "headless": self.headless and not is_cloud,
-                        "headless2": is_cloud,
+                        "uc": True,
+                        "headless": False if has_display else self.headless,
                         "user_data_dir": tmp_profile_dir,
                         "disable_gpu": True,
                         "no_sandbox": True,
+                        "chromium_arg": "--disable-dev-shm-usage,--disable-software-rasterizer,--no-first-run,--start-maximized,--disable-blink-features=AutomationControlled",
                     }
                     if chrome_bin_path:
                         driver_kwargs["binary_location"] = chrome_bin_path
@@ -680,7 +683,14 @@ class GoogleScraper:
                     time.sleep(1.2)
 
             self._log(f"Navigating to Google Local: {target_url}", 20)
-            driver.get(target_url)
+            if hasattr(driver, "uc_open_with_reconnect"):
+                try:
+                    driver.uc_open_with_reconnect(target_url, reconnect_time=4.0)
+                except Exception as ne:
+                    self._log(f"UC reconnect notice: {ne}; using standard navigation", 21)
+                    driver.get(target_url)
+            else:
+                driver.get(target_url)
 
             # Check and auto-accept Google Consent dialog (standard on cloud / datacenter IPs)
             time.sleep(1.5)
@@ -696,6 +706,27 @@ class GoogleScraper:
                                 break
                         except Exception:
                             pass
+            except Exception:
+                pass
+
+            # Auto-solve Google verification / sorry challenge if triggered on datacenter IP
+            try:
+                curr_url = (driver.current_url or "").lower()
+                page_src = (driver.page_source or "").lower()
+                if "sorry" in curr_url or "sorry/index" in curr_url or "recaptcha" in page_src:
+                    self._log("Detected Google verification challenge; executing automated UC bypass...", 22)
+                    for solver_method in ["uc_gui_handle_rc", "uc_gui_click_rc", "uc_gui_click_captcha", "uc_gui_handle_captcha"]:
+                        if hasattr(driver, solver_method):
+                            try:
+                                self._log(f"Attempting {solver_method}()...", 23)
+                                getattr(driver, solver_method)()
+                                time.sleep(3.5)
+                                curr_url = (driver.current_url or "").lower()
+                                if "sorry" not in curr_url:
+                                    self._log("Automated UC bypass successful!", 25)
+                                    break
+                            except Exception as ce:
+                                self._log(f"{solver_method} notice: {ce}", 23)
             except Exception:
                 pass
 
@@ -733,6 +764,35 @@ class GoogleScraper:
                     if cards:
                         break
                     time.sleep(0.4)
+
+                # Fallback on Page 1: If udm=local yields 0 cards, search via Google Places Web pack
+                if not cards and page == 1:
+                    fallback_query = format_local_query(keyword, city)
+                    fallback_url = f"https://www.google.com/search?q={urllib.parse.quote_plus(fallback_query)}&gl={gl}&hl={hl}"
+                    self._log(f"No cards on udm=local; falling back to Google Places Search: {fallback_url}", 26)
+                    if hasattr(driver, "uc_open_with_reconnect"):
+                        try:
+                            driver.uc_open_with_reconnect(fallback_url, reconnect_time=3.5)
+                        except Exception:
+                            driver.get(fallback_url)
+                    else:
+                        driver.get(fallback_url)
+                    time.sleep(2.5)
+
+                    for poll_i in range(15):
+                        page_source = driver.page_source
+                        soup = BeautifulSoup(page_source, "html.parser")
+                        cards = (
+                            soup.find_all("div", class_="VkpGBb")
+                            or soup.find_all("div", {"jscontroller": "AtSb"})
+                            or soup.find_all("div", class_="cXedhc")
+                            or soup.find_all("div", class_="rllt__details")
+                            or soup.find_all("div", class_="C8fQm")
+                        )
+                        if cards:
+                            self._log(f"Found {len(cards)} listings via Google Places fallback!", 28)
+                            break
+                        time.sleep(0.4)
 
                 if not cards:
                     page_title = driver.title or "No Title"
@@ -825,8 +885,14 @@ class GoogleScraper:
 
                     next_label = f"Page {page + 1} (All Pages Mode)" if is_all_pages else f"Page {page + 1}/{max_pages}"
                     self._log(f"Navigating to {next_label}...", page_progress)
-                    driver.get(next_url)
-                    time.sleep(1.2)
+                    if hasattr(driver, "uc_open_with_reconnect"):
+                        try:
+                            driver.uc_open_with_reconnect(next_url, reconnect_time=3.0)
+                        except Exception:
+                            driver.get(next_url)
+                    else:
+                        driver.get(next_url)
+                    time.sleep(1.5)
                     page += 1
                 else:
                     self._log(f"Reached requested limit of {max_pages} pages.", page_progress)
