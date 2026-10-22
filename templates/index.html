@@ -10,7 +10,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-  <link rel="stylesheet" href="/static/css/style.css?v=2.8">
+  <link rel="stylesheet" href="/static/css/style.css?v=3.0">
 </head>
 <body class="bg-slate-950 text-slate-100 antialiased min-h-screen flex overflow-x-hidden">
 
@@ -766,10 +766,11 @@
 
           <div class="h-6 w-px bg-slate-800 hidden sm:block"></div>
 
-          <!-- Attach in Email Toggle -->
-          <label class="flex items-center space-x-2 cursor-pointer select-none bg-slate-950/80 px-2.5 py-1.5 rounded-lg border border-slate-800 hover:border-slate-700">
-            <input type="checkbox" id="toggle-attach-resume" class="w-4 h-4 rounded bg-slate-900 border-slate-700 text-indigo-600 focus:ring-indigo-500 cursor-pointer">
-            <span class="text-xs font-medium text-slate-300 whitespace-nowrap">Attach resume in email</span>
+          <!-- Attach in Email Slider Toggle -->
+          <label class="toggle-switch flex items-center space-x-2.5 bg-slate-950/80 px-3 py-1.5 rounded-lg border border-slate-800 hover:border-slate-700 transition" title="Toggle resume attachment in outgoing email">
+            <input type="checkbox" id="toggle-attach-resume">
+            <span class="toggle-slider"></span>
+            <span class="text-xs font-semibold text-slate-200 whitespace-nowrap">Attach resume in email</span>
           </label>
         </div>
       </div>
@@ -1089,9 +1090,11 @@
           <button type="button" id="btn-pitch-modal-choose-resume" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-slate-700 text-xs font-medium transition cursor-pointer">
             Pick File
           </button>
-          <label class="flex items-center space-x-1.5 cursor-pointer select-none bg-slate-900 px-2.5 py-1.5 rounded-lg border border-slate-800 hover:border-slate-700">
-            <input type="checkbox" id="pitch-modal-attach-toggle" class="w-3.5 h-3.5 rounded bg-slate-950 border-slate-700 text-indigo-600 focus:ring-indigo-500 cursor-pointer">
-            <span class="text-xs font-medium text-slate-200 whitespace-nowrap">Attach resume in email</span>
+          <!-- Attach in Email Slider Toggle -->
+          <label class="toggle-switch flex items-center space-x-2 bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-800 hover:border-slate-700 transition" title="Toggle resume attachment in outgoing email">
+            <input type="checkbox" id="pitch-modal-attach-toggle">
+            <span class="toggle-slider"></span>
+            <span class="text-xs font-semibold text-slate-200 whitespace-nowrap">Attach resume in email</span>
           </label>
         </div>
       </div>
