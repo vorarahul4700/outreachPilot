@@ -979,7 +979,13 @@ document.addEventListener("DOMContentLoaded", () => {
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        await fetchCompanies();
+        // Optimistically update in-memory model
+        const target = companies.find(c => c.id === id);
+        if (target) {
+          target.is_invalid = true;
+          target.invalid_reason = "Excluded by Master Admin";
+        }
+        await fetchCompanies(true);
         if (activeModalCompany && activeModalCompany.id === id) {
           cmodal?.classList.add("hidden");
         }
@@ -999,7 +1005,13 @@ document.addEventListener("DOMContentLoaded", () => {
       });
       const data = await res.json();
       if (res.ok && data.success) {
-        await fetchCompanies();
+        // Optimistically update in-memory model
+        const target = companies.find(c => c.id === id);
+        if (target) {
+          target.is_invalid = false;
+          target.invalid_reason = null;
+        }
+        await fetchCompanies(true);
         if (activeModalCompany && activeModalCompany.id === id) {
           cmodal?.classList.add("hidden");
         }
@@ -1063,7 +1075,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  function applyCompanyFiltersAndRender(resetPage = true) {
+  function applyCompanyFiltersAndRender(resetPage = false) {
     if (resetPage) {
       companiesCurrentPage = 1;
     }
@@ -1126,11 +1138,11 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   if (filterKeywordSelect) {
-    filterKeywordSelect.addEventListener("change", applyCompanyFiltersAndRender);
+    filterKeywordSelect.addEventListener("change", () => applyCompanyFiltersAndRender(true));
   }
 
   if (filterCitySelect) {
-    filterCitySelect.addEventListener("change", applyCompanyFiltersAndRender);
+    filterCitySelect.addEventListener("change", () => applyCompanyFiltersAndRender(true));
   }
 
   if (btnFilterEmails) {
@@ -1139,7 +1151,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  async function fetchCompanies() {
+  async function fetchCompanies(preservePage = true) {
     try {
       const res = await fetch("/api/companies");
       const data = await res.json();
@@ -1173,7 +1185,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       updateCompanyMetrics(companies);
       updateMetricCardStyles();
-      applyCompanyFiltersAndRender();
+      applyCompanyFiltersAndRender(!preservePage);
       updateScoutViewFromInputs();
       if (activeTab === "outreach") {
         renderPitchesList();
