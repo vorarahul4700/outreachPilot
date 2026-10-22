@@ -61,12 +61,14 @@ async def send_via_google_oauth(
     body: str,
     db: Session,
     company_id: int | None = None,
-    resume_attachment_path: str | None = None
+    resume_attachment_path: str | None = None,
+    resume_attachment_bytes: bytes | None = None,
+    resume_attachment_name: str | None = None
 ) -> dict[str, Any]:
     """
     Sends an email directly through user's authorized Google OAuth 2.0 credentials.
     Redirects to DEV_OVERRIDE_EMAIL if DEV_MODE is active.
-    Supports optional resume PDF attachment.
+    Supports optional resume PDF attachment via file path or direct in-memory bytes.
     """
     if not user.oauth_tokens:
         return {"success": False, "error": "Google OAuth account not connected."}
@@ -91,7 +93,24 @@ async def send_via_google_oauth(
 
         service = build("gmail", "v1", credentials=creds)
 
-        if resume_attachment_path and os.path.exists(resume_attachment_path):
+        has_attachment = False
+        att_bytes = None
+        att_filename = "Resume.pdf"
+
+        if resume_attachment_bytes:
+            has_attachment = True
+            att_bytes = resume_attachment_bytes
+            att_filename = resume_attachment_name or "Resume.pdf"
+        elif resume_attachment_path and os.path.exists(resume_attachment_path):
+            try:
+                with open(resume_attachment_path, "rb") as f:
+                    att_bytes = f.read()
+                has_attachment = True
+                att_filename = os.path.basename(resume_attachment_path)
+            except Exception as read_err:
+                print(f"[Attachment Warning] Could not read file {resume_attachment_path}: {read_err}")
+
+        if has_attachment and att_bytes:
             from email import encoders
             from email.mime.base import MIMEBase
             from email.mime.multipart import MIMEMultipart
@@ -102,15 +121,14 @@ async def send_via_google_oauth(
             message["subject"] = effective_subject
             message.attach(MIMEText(body, "plain"))
             try:
-                with open(resume_attachment_path, "rb") as f:
-                    part = MIMEBase("application", "pdf" if resume_attachment_path.lower().endswith(".pdf") else "octet-stream")
-                    part.set_payload(f.read())
+                subtype = "pdf" if att_filename.lower().endswith(".pdf") else "octet-stream"
+                part = MIMEBase("application", subtype)
+                part.set_payload(att_bytes)
                 encoders.encode_base64(part)
-                filename = os.path.basename(resume_attachment_path)
-                part.add_header("Content-Disposition", f"attachment; filename=\"{filename}\"")
+                part.add_header("Content-Disposition", f'attachment; filename="{att_filename}"')
                 message.attach(part)
             except Exception as att_err:
-                print(f"[Attachment Warning] Could not attach resume: {att_err}")
+                print(f"[Attachment Warning] Could not attach resume bytes: {att_err}")
         else:
             message = MIMEText(body)
             message["to"] = effective_to

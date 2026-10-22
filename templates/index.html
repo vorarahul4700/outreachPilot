@@ -732,6 +732,48 @@
         </div>
       </div>
 
+      <!-- Session Resume & Email Attachment Card -->
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-3.5 sm:p-4 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-sm">
+        <div class="flex items-center space-x-3 min-w-0">
+          <div class="w-9 h-9 rounded-lg bg-indigo-950/80 border border-indigo-800/60 flex items-center justify-center text-indigo-400 shrink-0">
+            <i data-lucide="paperclip" class="w-4 h-4"></i>
+          </div>
+          <div class="min-w-0">
+            <div class="flex items-center space-x-2">
+              <span class="text-xs font-semibold text-white">Session Resume File</span>
+              <span class="text-[10px] bg-amber-950/70 text-amber-300 border border-amber-800/60 px-1.5 py-0.2 rounded font-mono">Temp / Session</span>
+            </div>
+            <p id="outreach-resume-status" class="text-[11px] text-slate-400 truncate mt-0.5">
+              No resume selected for this session. Choose a PDF file to attach when sending cold emails.
+            </p>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-2.5 shrink-0 flex-wrap">
+          <!-- Hidden File Input -->
+          <input type="file" id="outreach-resume-file" accept=".pdf,.doc,.docx" class="hidden">
+
+          <!-- Choose File Button -->
+          <button type="button" id="btn-choose-outreach-resume" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-medium transition flex items-center space-x-1.5 cursor-pointer">
+            <i data-lucide="file-up" class="w-3.5 h-3.5 text-indigo-400"></i>
+            <span id="btn-choose-resume-text">Choose Resume File</span>
+          </button>
+
+          <!-- Remove File Button (hidden by default) -->
+          <button type="button" id="btn-remove-outreach-resume" class="hidden p-1.5 rounded-lg bg-rose-950/40 hover:bg-rose-900/60 text-rose-400 border border-rose-800/60 transition cursor-pointer" title="Remove selected session resume">
+            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+          </button>
+
+          <div class="h-6 w-px bg-slate-800 hidden sm:block"></div>
+
+          <!-- Attach in Email Toggle -->
+          <label class="flex items-center space-x-2 cursor-pointer select-none bg-slate-950/80 px-2.5 py-1.5 rounded-lg border border-slate-800 hover:border-slate-700">
+            <input type="checkbox" id="toggle-attach-resume" class="w-4 h-4 rounded bg-slate-900 border-slate-700 text-indigo-600 focus:ring-indigo-500 cursor-pointer">
+            <span class="text-xs font-medium text-slate-300 whitespace-nowrap">Attach resume in email</span>
+          </label>
+        </div>
+      </div>
+
       <!-- Quick Metrics Strip for Outreach Pipeline -->
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div id="outreach-stat-all" class="bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-xl p-3 space-y-0.5 transition cursor-pointer select-none">
@@ -1030,6 +1072,30 @@
         </div>
       </div>
 
+      <!-- Resume Attachment Option in Pitch Modal -->
+      <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs">
+        <div class="flex items-center space-x-2.5 min-w-0">
+          <i data-lucide="paperclip" class="w-4 h-4 text-indigo-400 shrink-0"></i>
+          <div class="min-w-0">
+            <div class="flex items-center space-x-1.5 flex-wrap">
+              <span class="font-semibold text-slate-200">Attachment:</span>
+              <span id="pitch-modal-resume-name" class="font-mono text-emerald-400 truncate max-w-[200px] sm:max-w-[280px]">No file selected</span>
+            </div>
+            <p class="text-[11px] text-slate-400">Attached directly to the email sent via your authorized Gmail account.</p>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-2.5 shrink-0">
+          <button type="button" id="btn-pitch-modal-choose-resume" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-slate-700 text-xs font-medium transition cursor-pointer">
+            Pick File
+          </button>
+          <label class="flex items-center space-x-1.5 cursor-pointer select-none bg-slate-900 px-2.5 py-1.5 rounded-lg border border-slate-800 hover:border-slate-700">
+            <input type="checkbox" id="pitch-modal-attach-toggle" class="w-3.5 h-3.5 rounded bg-slate-950 border-slate-700 text-indigo-600 focus:ring-indigo-500 cursor-pointer">
+            <span class="text-xs font-medium text-slate-200 whitespace-nowrap">Attach resume in email</span>
+          </label>
+        </div>
+      </div>
+
       <div class="flex items-center justify-between pt-2">
         <button id="btn-copy-pitch" class="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-xs font-medium text-slate-300 transition flex items-center space-x-1.5 cursor-pointer">
           <i data-lucide="copy" class="w-3.5 h-3.5"></i>
@@ -1048,6 +1114,7 @@
         </div>
       </div>
     </div>
+  </div>
   <!-- SENT EMAIL DETAILS MODAL -->
   <div id="sent-email-modal" class="fixed inset-0 z-[105] w-screen h-screen bg-slate-950/85 backdrop-blur-md hidden flex items-center justify-center p-4 overflow-hidden">
     <div class="relative bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full p-6 space-y-4 shadow-2xl my-auto">
@@ -1141,6 +1208,6 @@
       is_master_admin: {{ 'true' if is_master_admin else 'false' }}
     };
   </script>
-  <script src="/static/js/app.js?v=3.0"></script>
+  <script src="/static/js/app.js?v=3.1"></script>
 </body>
 </html>

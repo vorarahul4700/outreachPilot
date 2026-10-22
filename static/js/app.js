@@ -2434,6 +2434,120 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnCopyPitch = document.getElementById("btn-copy-pitch");
   let currentPitchId = null;
 
+  // Temporary session resume attachment state (cleared upon tab/session close)
+  let sessionResumeFile = null;
+  let attachResumeInEmail = false;
+
+  const outreachResumeFile = document.getElementById("outreach-resume-file");
+  const btnChooseOutreachResume = document.getElementById("btn-choose-outreach-resume");
+  const btnChooseResumeText = document.getElementById("btn-choose-resume-text");
+  const btnRemoveOutreachResume = document.getElementById("btn-remove-outreach-resume");
+  const outreachResumeStatus = document.getElementById("outreach-resume-status");
+  const toggleAttachResume = document.getElementById("toggle-attach-resume");
+
+  const pitchModalResumeName = document.getElementById("pitch-modal-resume-name");
+  const btnPitchModalChooseResume = document.getElementById("btn-pitch-modal-choose-resume");
+  const pitchModalAttachToggle = document.getElementById("pitch-modal-attach-toggle");
+
+  function updateResumeAttachmentUI() {
+    if (sessionResumeFile) {
+      const sizeKb = Math.round(sessionResumeFile.size / 1024);
+      const fileLabel = `${sessionResumeFile.name} (${sizeKb} KB)`;
+      
+      if (outreachResumeStatus) {
+        outreachResumeStatus.innerHTML = `<span class="text-emerald-400 font-medium">Selected:</span> <span class="font-mono text-slate-200">${escapeHTML(fileLabel)}</span>`;
+      }
+      if (btnChooseResumeText) btnChooseResumeText.textContent = "Change File";
+      if (btnRemoveOutreachResume) btnRemoveOutreachResume.classList.remove("hidden");
+      if (toggleAttachResume) toggleAttachResume.checked = attachResumeInEmail;
+
+      if (pitchModalResumeName) {
+        pitchModalResumeName.textContent = fileLabel;
+        pitchModalResumeName.className = "font-mono text-emerald-400 truncate max-w-[200px] sm:max-w-[280px]";
+      }
+      if (pitchModalAttachToggle) pitchModalAttachToggle.checked = attachResumeInEmail;
+
+      if (btnSendDirectText) {
+        btnSendDirectText.textContent = attachResumeInEmail ? "Send with Resume" : "Send via Gmail";
+      }
+    } else {
+      if (outreachResumeStatus) {
+        outreachResumeStatus.textContent = "No resume selected for this session. Choose a PDF file to attach when sending cold emails.";
+      }
+      if (btnChooseResumeText) btnChooseResumeText.textContent = "Choose Resume File";
+      if (btnRemoveOutreachResume) btnRemoveOutreachResume.classList.add("hidden");
+      if (toggleAttachResume) toggleAttachResume.checked = false;
+
+      if (pitchModalResumeName) {
+        pitchModalResumeName.textContent = "No file selected";
+        pitchModalResumeName.className = "font-mono text-slate-500 truncate max-w-[200px] sm:max-w-[280px]";
+      }
+      if (pitchModalAttachToggle) pitchModalAttachToggle.checked = false;
+
+      if (btnSendDirectText) {
+        btnSendDirectText.textContent = "Send via Gmail";
+      }
+    }
+    refreshIcons();
+  }
+
+  function handleFileSelected(file) {
+    if (!file) return;
+    sessionResumeFile = file;
+    attachResumeInEmail = true;
+    updateResumeAttachmentUI();
+    showToast(`Resume attached for this session: ${file.name}`, "info");
+  }
+
+  if (btnChooseOutreachResume && outreachResumeFile) {
+    btnChooseOutreachResume.addEventListener("click", () => outreachResumeFile.click());
+  }
+
+  if (btnPitchModalChooseResume && outreachResumeFile) {
+    btnPitchModalChooseResume.addEventListener("click", () => outreachResumeFile.click());
+  }
+
+  if (outreachResumeFile) {
+    outreachResumeFile.addEventListener("change", (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (file) {
+        handleFileSelected(file);
+      }
+    });
+  }
+
+  if (btnRemoveOutreachResume) {
+    btnRemoveOutreachResume.addEventListener("click", () => {
+      sessionResumeFile = null;
+      attachResumeInEmail = false;
+      if (outreachResumeFile) outreachResumeFile.value = "";
+      updateResumeAttachmentUI();
+      showToast("Session resume attachment removed.", "info");
+    });
+  }
+
+  if (toggleAttachResume) {
+    toggleAttachResume.addEventListener("change", (e) => {
+      if (e.target.checked && !sessionResumeFile) {
+        if (outreachResumeFile) outreachResumeFile.click();
+      } else {
+        attachResumeInEmail = e.target.checked;
+        updateResumeAttachmentUI();
+      }
+    });
+  }
+
+  if (pitchModalAttachToggle) {
+    pitchModalAttachToggle.addEventListener("change", (e) => {
+      if (e.target.checked && !sessionResumeFile) {
+        if (outreachResumeFile) outreachResumeFile.click();
+      } else {
+        attachResumeInEmail = e.target.checked;
+        updateResumeAttachmentUI();
+      }
+    });
+  }
+
   modalClose.addEventListener("click", () => modal.classList.add("hidden"));
 
   async function handleGeneratePitch(companyId) {
@@ -2465,6 +2579,7 @@ document.addEventListener("DOMContentLoaded", () => {
         modalBody.value = data.email_body || "";
         btnLaunchGmail.href = data.gmail_web_url;
 
+        updateResumeAttachmentUI();
         modal.classList.remove("hidden");
         refreshIcons();
       } else {
@@ -2489,13 +2604,25 @@ document.addEventListener("DOMContentLoaded", () => {
       btnSendDirectOauth.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i><span>Sending via Gmail...</span>`;
       refreshIcons();
 
+      const formData = new FormData();
+      formData.append("subject", modalSubject.value || "");
+      formData.append("body", modalBody.value || "");
+      formData.append("attach_resume", attachResumeInEmail ? "true" : "false");
+      if (attachResumeInEmail && sessionResumeFile) {
+        formData.append("resume_file", sessionResumeFile);
+      }
+
       try {
         const res = await fetch(`/api/pitch/${currentPitchId}/send-direct`, {
-          method: "POST"
+          method: "POST",
+          body: formData
         });
         const data = await res.json();
         if (data.success) {
-          showToast("Email sent directly through your authorized Gmail account!", "success");
+          const successMsg = (attachResumeInEmail && sessionResumeFile)
+            ? `Email and resume attachment dispatched directly via Gmail!`
+            : "Email sent directly through your authorized Gmail account!";
+          showToast(successMsg, "success");
           modal.classList.add("hidden");
           await fetchCompanies();
           fetchAuditLogs();
@@ -2506,7 +2633,7 @@ document.addEventListener("DOMContentLoaded", () => {
         showToast("Email sending failed: " + err.message, "error");
       } finally {
         btnSendDirectOauth.disabled = false;
-        btnSendDirectOauth.innerHTML = `<i data-lucide="send" class="w-3.5 h-3.5"></i><span id="btn-send-direct-text">Send via Gmail</span>`;
+        btnSendDirectOauth.innerHTML = `<i data-lucide="send" class="w-3.5 h-3.5"></i><span id="btn-send-direct-text">${attachResumeInEmail ? 'Send with Resume' : 'Send via Gmail'}</span>`;
         refreshIcons();
       }
     });

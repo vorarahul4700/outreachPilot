@@ -1044,17 +1044,60 @@ async def send_single_pitch_direct(
     if not config.is_master_admin(user.email) and pitch.user_id != user.id:
         raise HTTPException(status_code=403, detail="Forbidden: You do not own this pitch record.")
 
+    content_type = request.headers.get("content-type", "") if request else ""
+    attach_resume = False
+    custom_subject = None
+    custom_body = None
+    resume_bytes = None
+    resume_filename = None
+
+    if "multipart/form-data" in content_type:
+        form = await request.form()
+        attach_resume = form.get("attach_resume") in ("true", "True", "1", True)
+        custom_subject = form.get("subject")
+        custom_body = form.get("body")
+        uploaded_file = form.get("resume_file")
+        if uploaded_file and hasattr(uploaded_file, "read"):
+            resume_bytes = await uploaded_file.read()
+            resume_filename = getattr(uploaded_file, "filename", "Resume.pdf")
+    elif "application/json" in content_type:
+        try:
+            json_data = await request.json()
+            attach_resume = bool(json_data.get("attach_resume"))
+            custom_subject = json_data.get("subject")
+            custom_body = json_data.get("body")
+        except Exception:
+            pass
+
     target = pitch.target_email or f"contact@{pitch.company.domain if pitch.company else 'example.com'}"
+    effective_subject = custom_subject.strip() if custom_subject and custom_subject.strip() else pitch.subject_line
+    effective_body = custom_body.strip() if custom_body and custom_body.strip() else pitch.email_body
+
+    # Fallback to saved resume if attachment requested but no temp file was passed in request
+    if attach_resume and not resume_bytes:
+        user_resume_path = os.path.join("uploads", "resumes", f"user_{user.id}_resume.pdf")
+        if os.path.exists(user_resume_path):
+            try:
+                with open(user_resume_path, "rb") as rf:
+                    resume_bytes = rf.read()
+                    resume_filename = "Resume.pdf"
+            except Exception as read_err:
+                print(f"[Send Warning] Could not read user resume: {read_err}")
+
     result = await send_via_google_oauth(
         user=user,
         to_email=target,
-        subject=pitch.subject_line,
-        body=pitch.email_body,
+        subject=effective_subject,
+        body=effective_body,
         db=db,
-        company_id=pitch.company_id
+        company_id=pitch.company_id,
+        resume_attachment_bytes=resume_bytes if attach_resume else None,
+        resume_attachment_name=resume_filename if attach_resume else None
     )
 
     if result.get("success"):
+        pitch.subject_line = effective_subject
+        pitch.email_body = effective_body
         pitch.status = "SENT"
         pitch.sent_at = datetime.utcnow()
         pitch.delivery_method = "OAUTH_DIRECT"
