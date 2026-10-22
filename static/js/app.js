@@ -261,34 +261,210 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnQuickRefresh = document.getElementById("btn-quick-refresh");
   if (btnQuickRefresh) btnQuickRefresh.addEventListener("click", () => fetchCompanies());
 
-  // View Switcher (Grid vs Table)
-  const btnViewGrid = document.getElementById("btn-view-grid");
-  const btnViewTable = document.getElementById("btn-view-table");
+  // Multi-Selection State for Bulk Lead Actions
+  const selectedCompanyIds = new Set();
+  const checkboxSelectAll = document.getElementById("checkbox-select-all");
+  const labelSelectAll = document.getElementById("label-select-all");
+  const bulkActionBar = document.getElementById("bulk-action-bar");
+  const bulkSelectedCount = document.getElementById("bulk-selected-count");
+  const btnBulkExclude = document.getElementById("btn-bulk-exclude");
+  const btnBulkRestore = document.getElementById("btn-bulk-restore");
+  const btnBulkClear = document.getElementById("btn-bulk-clear");
   const companiesContainer = document.getElementById("companies-container");
-  const companiesTableContainer = document.getElementById("companies-table-container");
-  const companiesTableBody = document.getElementById("companies-table-body");
 
-  function setViewMode(mode) {
-    currentViewMode = mode;
-    if (mode === "grid") {
-      companiesContainer?.classList.remove("hidden");
-      companiesTableContainer?.classList.add("hidden");
-      btnViewGrid?.classList.add("bg-slate-800", "text-white");
-      btnViewGrid?.classList.remove("text-slate-400");
-      btnViewTable?.classList.remove("bg-slate-800", "text-white");
-      btnViewTable?.classList.add("text-slate-400");
+  function updateBulkActionBar() {
+    const count = selectedCompanyIds.size;
+    if (!bulkActionBar) return;
+
+    if (count === 0) {
+      bulkActionBar.classList.add("hidden");
+      bulkActionBar.classList.remove("flex");
+      if (checkboxSelectAll) {
+        checkboxSelectAll.checked = false;
+        checkboxSelectAll.indeterminate = false;
+        if (labelSelectAll) labelSelectAll.textContent = "Select All";
+      }
+      return;
+    }
+
+    bulkActionBar.classList.remove("hidden");
+    bulkActionBar.classList.add("flex");
+
+    if (bulkSelectedCount) bulkSelectedCount.textContent = count;
+    document.querySelectorAll(".bulk-count-num").forEach(el => {
+      el.textContent = count;
+    });
+
+    if (activeMetricFilter === "invalid") {
+      btnBulkRestore?.classList.remove("hidden");
+      btnBulkExclude?.classList.add("hidden");
     } else {
-      companiesContainer?.classList.add("hidden");
-      companiesTableContainer?.classList.remove("hidden");
-      btnViewTable?.classList.add("bg-slate-800", "text-white");
-      btnViewTable?.classList.remove("text-slate-400");
-      btnViewGrid?.classList.remove("bg-slate-800", "text-white");
-      btnViewGrid?.classList.add("text-slate-400");
+      btnBulkExclude?.classList.remove("hidden");
+      btnBulkRestore?.classList.add("hidden");
+    }
+    refreshIcons();
+  }
+
+  function updateSelectAllCheckboxState(pageItems) {
+    if (!checkboxSelectAll || !pageItems || pageItems.length === 0) {
+      if (checkboxSelectAll) {
+        checkboxSelectAll.checked = false;
+        checkboxSelectAll.indeterminate = false;
+        if (labelSelectAll) labelSelectAll.textContent = "Select All";
+      }
+      return;
+    }
+    const pageIds = pageItems.map(c => c.id);
+    const selectedOnPage = pageIds.filter(id => selectedCompanyIds.has(id)).length;
+
+    if (selectedOnPage === 0) {
+      checkboxSelectAll.checked = false;
+      checkboxSelectAll.indeterminate = false;
+      if (labelSelectAll) labelSelectAll.textContent = "Select All";
+    } else if (selectedOnPage === pageIds.length) {
+      checkboxSelectAll.checked = true;
+      checkboxSelectAll.indeterminate = false;
+      if (labelSelectAll) labelSelectAll.textContent = `All (${pageIds.length}) Selected`;
+    } else {
+      checkboxSelectAll.checked = false;
+      checkboxSelectAll.indeterminate = true;
+      if (labelSelectAll) labelSelectAll.textContent = `${selectedOnPage}/${pageIds.length} Selected`;
     }
   }
 
-  if (btnViewGrid) btnViewGrid.addEventListener("click", () => setViewMode("grid"));
-  if (btnViewTable) btnViewTable.addEventListener("click", () => setViewMode("table"));
+  if (checkboxSelectAll) {
+    checkboxSelectAll.addEventListener("change", () => {
+      const pageCards = companiesContainer ? Array.from(companiesContainer.querySelectorAll(".company-checkbox")) : [];
+      if (checkboxSelectAll.checked) {
+        pageCards.forEach(chk => {
+          const id = parseInt(chk.dataset.id, 10);
+          if (id) {
+            selectedCompanyIds.add(id);
+            chk.checked = true;
+            const parentCard = chk.closest(".company-card, .company-card-invalid");
+            if (parentCard) parentCard.classList.add("ring-2", "ring-indigo-500/80", "bg-slate-800/80");
+          }
+        });
+      } else {
+        pageCards.forEach(chk => {
+          const id = parseInt(chk.dataset.id, 10);
+          if (id) {
+            selectedCompanyIds.delete(id);
+            chk.checked = false;
+            const parentCard = chk.closest(".company-card, .company-card-invalid");
+            if (parentCard) parentCard.classList.remove("ring-2", "ring-indigo-500/80", "bg-slate-800/80", "ring-rose-500/80");
+          }
+        });
+      }
+      updateBulkActionBar();
+      if (labelSelectAll) {
+        labelSelectAll.textContent = checkboxSelectAll.checked ? `All (${pageCards.length}) Selected` : "Select All";
+      }
+    });
+  }
+
+  if (btnBulkClear) {
+    btnBulkClear.addEventListener("click", () => {
+      selectedCompanyIds.clear();
+      document.querySelectorAll(".company-checkbox").forEach(chk => {
+        chk.checked = false;
+        const parentCard = chk.closest(".company-card, .company-card-invalid");
+        if (parentCard) parentCard.classList.remove("ring-2", "ring-indigo-500/80", "bg-slate-800/80", "ring-rose-500/80");
+      });
+      if (checkboxSelectAll) {
+        checkboxSelectAll.checked = false;
+        checkboxSelectAll.indeterminate = false;
+      }
+      if (labelSelectAll) labelSelectAll.textContent = "Select All";
+      updateBulkActionBar();
+    });
+  }
+
+  if (btnBulkExclude) {
+    btnBulkExclude.addEventListener("click", async () => {
+      const ids = Array.from(selectedCompanyIds);
+      if (ids.length === 0) return;
+
+      const oldHtml = btnBulkExclude.innerHTML;
+      btnBulkExclude.disabled = true;
+      btnBulkExclude.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i><span>Excluding ${ids.length} Leads...</span>`;
+      refreshIcons();
+
+      try {
+        const res = await fetch("/api/companies/bulk-invalidate", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ company_ids: ids, reason: "Excluded by Master Admin" })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          // Optimistically update in-memory
+          ids.forEach(id => {
+            const found = companies.find(c => c.id === id);
+            if (found) {
+              found.is_invalid = true;
+              found.invalid_reason = "Excluded by Master Admin";
+            }
+          });
+          selectedCompanyIds.clear();
+          updateBulkActionBar();
+          await fetchCompanies(true);
+          showToast(`Successfully marked ${ids.length} leads as excluded.`, "error");
+        } else {
+          showToast("Bulk exclude failed: " + (data.detail || data.message || "Unauthorized"), "error");
+        }
+      } catch (err) {
+        showToast("Bulk exclude error: " + err.message, "error");
+      } finally {
+        btnBulkExclude.disabled = false;
+        btnBulkExclude.innerHTML = oldHtml;
+        refreshIcons();
+      }
+    });
+  }
+
+  if (btnBulkRestore) {
+    btnBulkRestore.addEventListener("click", async () => {
+      const ids = Array.from(selectedCompanyIds);
+      if (ids.length === 0) return;
+
+      const oldHtml = btnBulkRestore.innerHTML;
+      btnBulkRestore.disabled = true;
+      btnBulkRestore.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i><span>Restoring ${ids.length} Leads...</span>`;
+      refreshIcons();
+
+      try {
+        const res = await fetch("/api/companies/bulk-restore", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ company_ids: ids })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          // Optimistically update in-memory
+          ids.forEach(id => {
+            const found = companies.find(c => c.id === id);
+            if (found) {
+              found.is_invalid = false;
+              found.invalid_reason = null;
+            }
+          });
+          selectedCompanyIds.clear();
+          updateBulkActionBar();
+          await fetchCompanies(true);
+          showToast(`Successfully restored ${ids.length} leads to active directory.`, "success");
+        } else {
+          showToast("Bulk restore failed: " + (data.detail || data.message || "Unauthorized"), "error");
+        }
+      } catch (err) {
+        showToast("Bulk restore error: " + err.message, "error");
+      } finally {
+        btnBulkRestore.disabled = false;
+        btnBulkRestore.innerHTML = oldHtml;
+        refreshIcons();
+      }
+    });
+  }
 
   // ==========================================
   // STAGE 1: LEAD SCOUT CONTROLS & REAL-TIME RESULTS
@@ -306,15 +482,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Scout Results Elements
   const scoutCardsContainer = document.getElementById("scout-cards-container");
-  const scoutTableContainer = document.getElementById("scout-table-container");
-  const scoutTableBody = document.getElementById("scout-table-body");
   const scoutLeadsCount = document.getElementById("scout-leads-count");
   const scoutQueryLabel = document.getElementById("scout-query-label");
-  const btnScoutViewGrid = document.getElementById("btn-scout-view-grid");
-  const btnScoutViewTable = document.getElementById("btn-scout-view-table");
   const inputKeyword = document.getElementById("input-keyword");
   const inputCity = document.getElementById("input-city");
-  let scoutViewMode = "grid";
 
   const filterInput = document.getElementById("filter-search");
   const filterKeywordSelect = document.getElementById("filter-keyword-select");
@@ -491,28 +662,6 @@ document.addEventListener("DOMContentLoaded", () => {
     return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query || name || 'Google Maps')}`;
   }
 
-  function setScoutViewMode(mode) {
-    scoutViewMode = mode;
-    if (mode === "grid") {
-      scoutCardsContainer?.classList.remove("hidden");
-      scoutTableContainer?.classList.add("hidden");
-      btnScoutViewGrid?.classList.add("bg-slate-800", "text-white");
-      btnScoutViewGrid?.classList.remove("text-slate-400");
-      btnScoutViewTable?.classList.remove("bg-slate-800", "text-white");
-      btnScoutViewTable?.classList.add("text-slate-400");
-    } else {
-      scoutCardsContainer?.classList.add("hidden");
-      scoutTableContainer?.classList.remove("hidden");
-      btnScoutViewTable?.classList.add("bg-slate-800", "text-white");
-      btnScoutViewTable?.classList.remove("text-slate-400");
-      btnScoutViewGrid?.classList.remove("bg-slate-800", "text-white");
-      btnScoutViewGrid?.classList.add("text-slate-400");
-    }
-    refreshIcons();
-  }
-
-  if (btnScoutViewGrid) btnScoutViewGrid.addEventListener("click", () => setScoutViewMode("grid"));
-  if (btnScoutViewTable) btnScoutViewTable.addEventListener("click", () => setScoutViewMode("table"));
 
   if (btnToggleLogs) {
     btnToggleLogs.addEventListener("click", () => {
@@ -661,47 +810,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         scoutCardsContainer.appendChild(card);
-      }
-
-      // 2. Scout Table Row
-      if (scoutTableBody) {
-        const tr = document.createElement("tr");
-        tr.className = "hover:bg-slate-800/40 transition cursor-pointer";
-        tr.innerHTML = `
-          <td class="py-3 px-4">
-            <div class="font-semibold text-white truncate max-w-[180px]">${escapeHTML(c.name)}</div>
-            <div class="text-[10px] text-slate-500">${c.city ? escapeHTML(c.city) : 'Scouted'}</div>
-          </td>
-          <td class="py-3 px-4">
-            <a href="${siteUrl}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center space-x-1 text-indigo-400 hover:text-indigo-300 font-mono text-[11px]" onclick="event.stopPropagation();">
-              <span class="truncate max-w-[140px]">${escapeHTML(c.domain || 'Visit Site')}</span>
-              <i data-lucide="external-link" class="w-3 h-3"></i>
-            </a>
-          </td>
-          <td class="py-3 px-4 text-slate-400 text-[11px] truncate max-w-[200px]">
-            <a href="${mapsUrl}" target="_blank" rel="noopener noreferrer" class="hover:text-indigo-400" onclick="event.stopPropagation();">
-              ${escapeHTML(cleanAddr || c.city || '-')}
-            </a>
-          </td>
-          <td class="py-3 px-4 text-slate-400 font-mono text-[11px]">${escapeHTML(c.phone || '-')}</td>
-          <td class="py-3 px-4">${ratingDisplay}</td>
-          <td class="py-3 px-4 text-right">
-            <button type="button" class="btn-scout-row-enrich px-2.5 py-1 rounded bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition" onclick="event.stopPropagation();">
-              View & Enrich
-            </button>
-          </td>
-        `;
-
-        tr.addEventListener("click", () => openCompanyDetailsModal(c));
-        const btnRow = tr.querySelector(".btn-scout-row-enrich");
-        if (btnRow) {
-          btnRow.addEventListener("click", (e) => {
-            e.stopPropagation();
-            openCompanyDetailsModal(c);
-          });
-        }
-
-        scoutTableBody.appendChild(tr);
       }
     });
 
@@ -1227,13 +1335,8 @@ document.addEventListener("DOMContentLoaded", () => {
           </div>
         `;
       }
-      if (companiesTableBody) {
-        companiesTableBody.innerHTML = `
-          <tr>
-            <td colspan="6" class="py-8 text-center text-slate-500">${emptyMsg}</td>
-          </tr>
-        `;
-      }
+      updateBulkActionBar();
+      updateSelectAllCheckboxState([]);
       return;
     }
 
@@ -1250,16 +1353,20 @@ document.addEventListener("DOMContentLoaded", () => {
       // 1. Grid Card
       if (companiesContainer) {
         const card = document.createElement("div");
+        const isSelected = selectedCompanyIds.has(c.id);
 
         if (c.is_invalid) {
           // Invalid Lead Grid Card Styling
-          card.className = "company-card-invalid bg-slate-900 border border-rose-900/60 hover:border-rose-600 rounded-xl p-3 sm:p-4 flex flex-col justify-between transition group shadow-sm cursor-pointer relative min-w-0";
+          card.className = `company-card-invalid bg-slate-900 border ${isSelected ? 'border-rose-500 ring-2 ring-rose-500/80 bg-rose-950/20' : 'border-rose-900/60 hover:border-rose-600'} rounded-xl p-3 sm:p-4 flex flex-col justify-between transition group shadow-sm cursor-pointer relative min-w-0`;
           card.innerHTML = `
             <div class="space-y-2 pointer-events-none">
-              <div class="flex items-start justify-between gap-1.5">
-                <h4 class="font-bold text-xs sm:text-sm text-white group-hover:text-rose-400 transition flex items-center space-x-1.5 break-words flex-1">
-                  <span>${escapeHTML(c.name)}</span>
-                </h4>
+              <div class="flex items-start justify-between gap-1.5 pointer-events-auto">
+                <div class="flex items-center space-x-2 flex-1 min-w-0">
+                  <input type="checkbox" class="company-checkbox w-4 h-4 rounded bg-slate-950 border-rose-800 text-rose-600 focus:ring-rose-500 cursor-pointer shrink-0 transition" data-id="${c.id}" ${isSelected ? 'checked' : ''} title="Select lead">
+                  <h4 class="font-bold text-xs sm:text-sm text-white group-hover:text-rose-400 transition flex items-center space-x-1.5 break-words flex-1">
+                    <span>${escapeHTML(c.name)}</span>
+                  </h4>
+                </div>
                 <span class="px-1.5 sm:px-2 py-0.5 rounded bg-rose-950 text-rose-300 border border-rose-700 text-[9px] sm:text-[10px] font-bold flex items-center space-x-1 shrink-0">
                   <i data-lucide="shield-alert" class="w-2.5 h-2.5 sm:w-3 sm:h-3 text-rose-400"></i>
                   <span>INVALID</span>
@@ -1317,18 +1424,19 @@ document.addEventListener("DOMContentLoaded", () => {
           const cardCleanAddr = cleanAddressText(c.address);
           const cardMapsUrl = c.location_url || buildMapsUrl(c.name, cardCleanAddr, c.city || "");
 
-          card.className = "company-card bg-slate-900 border border-slate-800 hover:border-slate-600 rounded-xl p-2.5 sm:p-4 flex flex-col justify-between transition group shadow-sm cursor-pointer relative min-w-0";
+          card.className = `company-card bg-slate-900 border ${isSelected ? 'border-indigo-500 ring-2 ring-indigo-500/80 bg-slate-800/90' : 'border-slate-800 hover:border-slate-600'} rounded-xl p-2.5 sm:p-4 flex flex-col justify-between transition group shadow-sm cursor-pointer relative min-w-0`;
           card.innerHTML = `
             <div class="space-y-1.5 pointer-events-none">
-              <!-- Top micro row: Badge & Admin Action -->
+              <!-- Top micro row: Checkbox, Badge & Admin Action -->
               <div class="flex items-center justify-between gap-1 pointer-events-auto">
-                <div class="flex items-center space-x-1 overflow-hidden min-w-0">
+                <div class="flex items-center space-x-2 overflow-hidden min-w-0">
+                  <input type="checkbox" class="company-checkbox w-4 h-4 rounded bg-slate-950 border-slate-700 text-indigo-600 focus:ring-indigo-500 cursor-pointer shrink-0 transition" data-id="${c.id}" ${isSelected ? 'checked' : ''} title="Select lead">
                   ${badge}
                 </div>
                 ${adminDeleteBtn}
               </div>
 
-              <!-- Company Name: Full width, wraps up to 2 lines so it is NEVER truncated to 2 letters! -->
+              <!-- Company Name: Full width, wraps up to 2 lines -->
               <h4 class="font-bold text-xs sm:text-sm text-white group-hover:text-indigo-400 transition leading-tight break-words pt-0.5" title="${escapeHTML(c.name)}">
                 ${escapeHTML(c.name)}
               </h4>
@@ -1424,146 +1532,42 @@ document.addEventListener("DOMContentLoaded", () => {
           }
         }
 
+        // Checkbox change listener
+        const chk = card.querySelector(".company-checkbox");
+        if (chk) {
+          chk.addEventListener("click", (e) => e.stopPropagation());
+          chk.addEventListener("change", (e) => {
+            e.stopPropagation();
+            if (chk.checked) {
+              selectedCompanyIds.add(c.id);
+              if (c.is_invalid) {
+                card.classList.add("ring-2", "ring-rose-500/80", "border-rose-500", "bg-rose-950/20");
+              } else {
+                card.classList.add("ring-2", "ring-indigo-500/80", "border-indigo-500", "bg-slate-800/90");
+              }
+            } else {
+              selectedCompanyIds.delete(c.id);
+              if (c.is_invalid) {
+                card.classList.remove("ring-2", "ring-rose-500/80", "border-rose-500", "bg-rose-950/20");
+              } else {
+                card.classList.remove("ring-2", "ring-indigo-500/80", "border-indigo-500", "bg-slate-800/90");
+              }
+            }
+            updateBulkActionBar();
+            updateSelectAllCheckboxState(pagedList);
+          });
+        }
+
         card.addEventListener("click", (e) => {
-          if (e.target.closest("button") || e.target.closest("a")) return;
+          if (e.target.closest("button") || e.target.closest("a") || e.target.closest("input")) return;
           openCompanyDetailsModal(c);
         });
         companiesContainer.appendChild(card);
       }
-
-      // 2. Table Row
-      if (companiesTableBody) {
-        const tr = document.createElement("tr");
-
-        if (c.is_invalid) {
-          tr.className = "company-row-invalid hover:bg-rose-950/20 transition cursor-pointer";
-          tr.innerHTML = `
-            <td class="px-4 py-3 font-semibold text-rose-300">
-              <div class="flex items-center space-x-2">
-                <span class="line-through opacity-70">${escapeHTML(c.name)}</span>
-              </div>
-            </td>
-            <td class="px-4 py-3 font-mono text-slate-400">
-              <a href="${c.website_url || 'https://' + c.domain}" target="_blank" class="hover:underline flex items-center space-x-1" onclick="event.stopPropagation()">
-                <i data-lucide="globe" class="w-3.5 h-3.5 text-slate-400 shrink-0"></i>
-                <span>${escapeHTML(c.domain)}</span>
-              </a>
-            </td>
-            <td class="px-4 py-3 text-rose-400 text-[11px]">
-              ${escapeHTML(c.invalid_reason || 'Excluded by Master Admin')}
-            </td>
-            <td class="px-4 py-3 text-emerald-400 font-mono text-[11px]">
-              ${c.emails && c.emails.length > 0 ? c.emails.map(e => escapeHTML(e)).join(", ") : '<span class="text-slate-600">No emails</span>'}
-            </td>
-            <td class="px-4 py-3">
-              <span class="px-2 py-0.5 rounded bg-rose-950 text-rose-300 border border-rose-700 text-[10px] font-bold">INVALID</span>
-            </td>
-            <td class="px-4 py-3 text-right">
-              <div class="flex items-center justify-end space-x-1.5" onclick="event.stopPropagation()">
-                <button class="btn-row-restore px-3 py-1 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-[11px] transition flex items-center space-x-1 cursor-pointer" data-id="${c.id}">
-                  <i data-lucide="rotate-ccw" class="w-3 h-3"></i>
-                  <span>Restore</span>
-                </button>
-              </div>
-            </td>
-          `;
-
-          const btnRowRestore = tr.querySelector(".btn-row-restore");
-          if (btnRowRestore) {
-            btnRowRestore.addEventListener("click", (e) => {
-              e.stopPropagation();
-              handleRestoreCompany(c.id, c.name);
-            });
-          }
-
-        } else {
-          const badge = c.already_contacted 
-            ? `<span onclick="event.stopPropagation(); window.viewSentEmailForCompany(${c.id})" class="px-2 py-0.5 rounded bg-sky-950/80 hover:bg-sky-900 text-sky-400 border border-sky-800 text-[10px] font-semibold flex items-center space-x-1 cursor-pointer transition shadow-sm" title="Click to view message sent"><i data-lucide="check" class="w-3 h-3 text-sky-400"></i><span>Contacted ${c.contacted_at || ''}</span></span>`
-            : (c.is_enriched 
-                ? `<span class="px-2 py-0.5 rounded bg-indigo-950/80 text-indigo-400 border border-indigo-800 text-[10px] font-semibold flex items-center space-x-1"><i data-lucide="zap" class="w-3 h-3 text-indigo-400"></i><span>Enriched</span></span>`
-                : `<span class="px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700 text-[10px]">Scouted</span>`);
-
-          const adminTableRowAction = (isMasterAdmin && adminViewMode === "admin")
-            ? `<button class="btn-row-invalidate p-1 text-slate-500 hover:text-rose-400 hover:bg-rose-950/40 rounded transition cursor-pointer" data-id="${c.id}" title="Mark as Invalid Lead (Admin)"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>`
-            : '';
-
-          const rowCleanAddr = cleanAddressText(c.address);
-          const rowMapsUrl = c.location_url || buildMapsUrl(c.name, rowCleanAddr, c.city);
-
-          tr.className = "hover:bg-slate-800/40 transition cursor-pointer";
-          tr.innerHTML = `
-            <td class="px-4 py-3 font-semibold text-white">
-              <div class="flex items-center space-x-2">
-                <span>${escapeHTML(c.name)}</span>
-              </div>
-              <div class="flex items-center gap-1 mt-1 flex-wrap font-normal">
-                ${c.normalized_keyword ? `<span class="inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-medium bg-indigo-950/70 text-indigo-300 border border-indigo-800/60">${escapeHTML(c.normalized_keyword)}</span>` : ''}
-                ${c.city ? `<span class="inline-flex items-center px-1.5 py-0.2 rounded text-[9px] font-medium bg-slate-800 text-slate-300 border border-slate-700/60"><i data-lucide="map-pin" class="w-2 h-2 mr-0.5 text-slate-400"></i>${escapeHTML(c.city)}</span>` : ''}
-              </div>
-            </td>
-            <td class="px-4 py-3 font-mono text-indigo-400">
-              <a href="${c.website_url || 'https://' + c.domain}" target="_blank" class="hover:underline flex items-center space-x-1" onclick="event.stopPropagation()">
-                <i data-lucide="globe" class="w-3.5 h-3.5 text-indigo-400 shrink-0"></i>
-                <span>${escapeHTML(c.domain)}</span>
-              </a>
-            </td>
-            <td class="px-4 py-3">
-              ${c.rating > 0 ? `<span class="text-amber-400 font-semibold flex items-center space-x-1"><i data-lucide="star" class="w-3 h-3 text-amber-400 fill-amber-400"></i><span>${Number(c.rating).toFixed(1)}</span> <span class="text-slate-500 text-[10px]">(${c.reviews_count || 0})</span></span>` : '<span class="text-slate-500">N/A</span>'}
-            </td>
-            <td class="px-4 py-3 text-slate-300">
-              <div>${c.phone ? escapeHTML(c.phone) : '<span class="text-slate-600">No phone</span>'}</div>
-              ${rowMapsUrl ? `
-                <div class="text-[11px] break-words flex items-center space-x-1 mt-0.5" onclick="event.stopPropagation()">
-                  <i data-lucide="map-pin" class="w-3 h-3 text-slate-500 shrink-0"></i>
-                  <a href="${rowMapsUrl}" target="_blank" class="text-slate-400 hover:text-indigo-400 hover:underline break-words" title="Open in Google Maps">
-                    ${escapeHTML(rowCleanAddr || 'Google Maps Location')}
-                  </a>
-                </div>
-              ` : ''}
-            </td>
-            <td class="px-4 py-3">${badge}</td>
-            <td class="px-4 py-3 text-right">
-              <div class="flex items-center justify-end space-x-1.5" onclick="event.stopPropagation()">
-                <button class="btn-row-enrich px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-[11px] transition flex items-center space-x-1 cursor-pointer" data-id="${c.id}" title="Enrich Profile">
-                  <i data-lucide="${c.is_enriched ? 'refresh-cw' : 'zap'}" class="w-3 h-3"></i>
-                  <span>${c.is_enriched ? 'Re-Enrich' : 'Enrich'}</span>
-                </button>
-                <button class="btn-row-pitch px-2.5 py-1 rounded bg-indigo-600 hover:bg-indigo-500 text-white font-medium text-[11px] transition flex items-center space-x-1 cursor-pointer shadow-sm" data-id="${c.id}">
-                  <i data-lucide="send" class="w-3 h-3"></i>
-                  <span>Pitch</span>
-                </button>
-                ${adminTableRowAction}
-              </div>
-            </td>
-          `;
-
-          const btnRowEnrich = tr.querySelector(".btn-row-enrich");
-          const btnRowPitch = tr.querySelector(".btn-row-pitch");
-          const btnRowInvalidate = tr.querySelector(".btn-row-invalidate");
-          if (btnRowEnrich) {
-            btnRowEnrich.addEventListener("click", (e) => {
-              e.stopPropagation();
-              handleSingleEnrich(btnRowEnrich, c.id);
-            });
-          }
-          if (btnRowPitch) {
-            btnRowPitch.addEventListener("click", (e) => {
-              e.stopPropagation();
-              handleGeneratePitch(c.id);
-            });
-          }
-          if (btnRowInvalidate) {
-            btnRowInvalidate.addEventListener("click", (e) => {
-              e.stopPropagation();
-              handleInvalidateCompany(c.id, c.name);
-            });
-          }
-        }
-
-        tr.addEventListener("click", () => openCompanyDetailsModal(c));
-        companiesTableBody.appendChild(tr);
-      }
     });
+
+    updateBulkActionBar();
+    updateSelectAllCheckboxState(pagedList);
 
     renderPaginationControls({
       paginationEl: companiesPagination,

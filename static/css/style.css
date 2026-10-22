@@ -268,9 +268,7 @@ body {
 }
 
 #scout-cards-container.hidden,
-#companies-container.hidden,
-#scout-table-container.hidden,
-#companies-table-container.hidden {
+#companies-container.hidden {
   display: none !important;
 }
 

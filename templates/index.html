@@ -323,45 +323,11 @@
               </p>
             </div>
 
-            <div class="flex items-center space-x-2.5">
-              <!-- Grid / Table View Switcher for Scout Tab -->
-              <div class="flex items-center bg-slate-950 border border-slate-800 rounded-lg p-0.5">
-                <button id="btn-scout-view-grid" type="button" class="px-2.5 py-1 rounded bg-slate-800 text-white text-xs font-medium flex items-center space-x-1 cursor-pointer transition">
-                  <i data-lucide="layout-grid" class="w-3.5 h-3.5"></i>
-                  <span class="hidden sm:inline">Cards</span>
-                </button>
-                <button id="btn-scout-view-table" type="button" class="px-2.5 py-1 rounded text-slate-400 hover:text-white text-xs font-medium flex items-center space-x-1 cursor-pointer transition">
-                  <i data-lucide="table" class="w-3.5 h-3.5"></i>
-                  <span class="hidden sm:inline">Table</span>
-                </button>
-              </div>
-            </div>
           </div>
 
           <!-- Scout Live Cards Grid (Mobile 2-col, Laptop/Desktop 3-col) -->
           <div id="scout-cards-container" class="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4.5">
             <!-- Dynamically populated -->
-          </div>
-
-          <!-- Scout Live Table View (Hidden by default) -->
-          <div id="scout-table-container" class="hidden bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-sm">
-            <div class="overflow-x-auto">
-              <table class="w-full text-left border-collapse text-xs">
-                <thead>
-                  <tr class="bg-slate-950/80 border-b border-slate-800 text-slate-400 uppercase text-[10px] tracking-wider">
-                    <th class="py-3 px-4 font-semibold">Company Name</th>
-                    <th class="py-3 px-4 font-semibold">Official Website</th>
-                    <th class="py-3 px-4 font-semibold">Location / Address</th>
-                    <th class="py-3 px-4 font-semibold">Phone</th>
-                    <th class="py-3 px-4 font-semibold">Rating</th>
-                    <th class="py-3 px-4 font-semibold text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody id="scout-table-body" class="divide-y divide-slate-800/60 font-medium">
-                  <!-- Dynamically populated -->
-                </tbody>
-              </table>
-            </div>
           </div>
 
           <!-- Scout Live Pagination Controls -->
@@ -521,15 +487,11 @@
 
               <!-- View Mode Switcher (Grid vs Table) -->
               <div class="flex items-center bg-slate-950 p-1 rounded-lg border border-slate-800 flex-1 sm:flex-none justify-center">
-                <button id="btn-view-grid" type="button" class="flex-1 sm:flex-none justify-center px-2.5 py-1 rounded text-xs font-medium bg-slate-800 text-white transition cursor-pointer flex items-center space-x-1" title="Grid Card View">
-                  <i data-lucide="layout-grid" class="w-3.5 h-3.5"></i>
-                  <span>Cards</span>
-                </button>
-                <button id="btn-view-table" type="button" class="flex-1 sm:flex-none justify-center px-2.5 py-1 rounded text-xs font-medium text-slate-400 hover:text-white transition cursor-pointer flex items-center space-x-1" title="Data Table View">
-                  <i data-lucide="table" class="w-3.5 h-3.5"></i>
-                  <span>Table</span>
-                </button>
-              </div>
+              <!-- Multi-Select Checkbox Control -->
+              <label id="container-select-all" class="flex items-center space-x-2 bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800 hover:border-slate-700 cursor-pointer select-none transition" title="Select or deselect all leads on current page">
+                <input type="checkbox" id="checkbox-select-all" class="w-3.5 h-3.5 rounded bg-slate-900 border-slate-700 text-indigo-600 focus:ring-indigo-500 cursor-pointer">
+                <span id="label-select-all" class="text-xs font-medium text-slate-300 whitespace-nowrap">Select All</span>
+              </label>
             </div>
           </div>
 
@@ -583,30 +545,36 @@
           </div>
         </div>
 
-        <!-- View 1: Companies Grid Container (Mobile 2-col, Laptop/Desktop 3-col) -->
+        <!-- Companies Card Grid Container (Mobile 2-col, Laptop/Desktop 3-col) -->
         <div id="companies-container" class="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4.5">
           <!-- Populated by app.js -->
         </div>
 
-        <!-- View 2: Companies Table Container (Hidden by default) -->
-        <div id="companies-table-container" class="hidden bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-sm">
-          <div class="overflow-x-auto">
-            <table class="w-full text-left text-xs">
-              <thead class="bg-slate-950 border-b border-slate-800 text-slate-400 uppercase font-semibold text-[10px] tracking-wider">
-                <tr>
-                  <th class="px-4 py-3">Company</th>
-                  <th class="px-4 py-3">Domain / Site</th>
-                  <th class="px-4 py-3">Rating & Reviews</th>
-                  <th class="px-4 py-3">Phone & Location</th>
-                  <th class="px-4 py-3">Enrichment Status</th>
-                  <th class="px-4 py-3 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody id="companies-table-body" class="divide-y divide-slate-800/80">
-                <!-- Populated by app.js -->
-              </tbody>
-            </table>
+        <!-- Floating Bulk Action Bar (Visible when 1+ companies selected) -->
+        <div id="bulk-action-bar" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-900/95 backdrop-blur-md border border-slate-700/90 shadow-2xl shadow-black/80 rounded-2xl px-4 sm:px-6 py-3 flex items-center gap-3 sm:gap-4 text-xs animate-in fade-in slide-in-from-bottom-4 duration-200">
+          <div class="flex items-center space-x-2 text-white font-semibold">
+            <span id="bulk-selected-count" class="px-2 py-0.5 rounded-full bg-indigo-600 text-white font-mono text-[11px] font-bold">0</span>
+            <span class="whitespace-nowrap">Selected</span>
           </div>
+
+          <div class="h-4 w-px bg-slate-700"></div>
+
+          <!-- Bulk Exclude Button -->
+          <button id="btn-bulk-exclude" type="button" class="px-3.5 sm:px-4 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-semibold transition flex items-center space-x-1.5 shadow-sm cursor-pointer whitespace-nowrap">
+            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+            <span>Exclude Selected (<span class="bulk-count-num">0</span>)</span>
+          </button>
+
+          <!-- Bulk Restore Button (For Invalid Leads View) -->
+          <button id="btn-bulk-restore" type="button" class="hidden px-3.5 sm:px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition flex items-center space-x-1.5 shadow-sm cursor-pointer whitespace-nowrap">
+            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
+            <span>Restore Selected (<span class="bulk-count-num">0</span>)</span>
+          </button>
+
+          <!-- Clear Selection Button -->
+          <button id="btn-bulk-clear" type="button" class="px-2.5 py-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition cursor-pointer whitespace-nowrap">
+            Clear
+          </button>
         </div>
 
         <!-- Directory Pagination Controls -->

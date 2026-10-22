@@ -114,6 +114,15 @@ class InvalidateCompanyRequest(BaseModel):
     reason: str | None = "Excluded by Master Admin"
 
 
+class BulkInvalidateCompaniesRequest(BaseModel):
+    company_ids: list[int]
+    reason: str | None = "Excluded by Master Admin"
+
+
+class BulkRestoreCompaniesRequest(BaseModel):
+    company_ids: list[int]
+
+
 # --- Helper to get or create current user ---
 def get_current_user(db: Session, request: Request | None = None) -> User | None:
     email = None
@@ -600,7 +609,7 @@ async def invalidate_company(
     db: Session = Depends(get_db)
 ):
     user = get_current_user(db, request)
-    if not (user and user.oauth_tokens and config.is_master_admin(user.email)):
+    if not (user and config.is_master_admin(user.email)):
         raise HTTPException(
             status_code=403,
             detail="Forbidden: Only Master Admin can invalidate/delete companies."
@@ -630,7 +639,7 @@ async def restore_company(
     db: Session = Depends(get_db)
 ):
     user = get_current_user(db, request)
-    if not (user and user.oauth_tokens and config.is_master_admin(user.email)):
+    if not (user and config.is_master_admin(user.email)):
         raise HTTPException(
             status_code=403,
             detail="Forbidden: Only Master Admin can restore companies."
@@ -651,6 +660,84 @@ async def restore_company(
         "company_id": company.id,
         "is_invalid": False
     }
+
+
+@app.post("/api/companies/bulk-invalidate")
+async def bulk_invalidate_companies(
+    req_body: BulkInvalidateCompaniesRequest,
+    request: Request = None,
+    db: Session = Depends(get_db)
+):
+    user = get_current_user(db, request)
+    if not (user and config.is_master_admin(user.email)):
+        raise HTTPException(
+            status_code=403,
+            detail="Forbidden: Only Master Admin can invalidate/delete companies."
+        )
+
+    if not req_body.company_ids:
+        return {"success": True, "count": 0, "message": "No companies selected."}
+
+    now = datetime.utcnow()
+    reason = req_body.reason or "Excluded by Master Admin"
+
+    updated = (
+        db.query(Company)
+        .filter(Company.id.in_(req_body.company_ids))
+        .update(
+            {
+                Company.is_invalid: True,
+                Company.invalid_at: now,
+                Company.invalid_reason: reason,
+            },
+            synchronize_session=False,
+        )
+    )
+    db.commit()
+
+    return {
+        "success": True,
+        "count": updated,
+        "message": f"Successfully marked {updated} companies as invalid and excluded from user views.",
+    }
+
+
+@app.post("/api/companies/bulk-restore")
+async def bulk_restore_companies(
+    req_body: BulkRestoreCompaniesRequest,
+    request: Request = None,
+    db: Session = Depends(get_db)
+):
+    user = get_current_user(db, request)
+    if not (user and config.is_master_admin(user.email)):
+        raise HTTPException(
+            status_code=403,
+            detail="Forbidden: Only Master Admin can restore companies."
+        )
+
+    if not req_body.company_ids:
+        return {"success": True, "count": 0, "message": "No companies selected."}
+
+    updated = (
+        db.query(Company)
+        .filter(Company.id.in_(req_body.company_ids))
+        .update(
+            {
+                Company.is_invalid: False,
+                Company.invalid_at: None,
+                Company.invalid_reason: None,
+            },
+            synchronize_session=False,
+        )
+    )
+    db.commit()
+
+    return {
+        "success": True,
+        "count": updated,
+        "message": f"Successfully restored {updated} companies to active genuine leads.",
+    }
+
 
 
 @app.post("/api/companies/{company_id}/enrich")
