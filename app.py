@@ -661,7 +661,7 @@ async def enrich_single_company(
     db: Session = Depends(get_db)
 ):
     user = get_current_user(db, request)
-    if not user.oauth_tokens:
+    if not user or not user.oauth_tokens:
         raise HTTPException(
             status_code=401,
             detail="Authentication required. Please connect your Google account or log in to run Deep Enrichment."
@@ -681,7 +681,7 @@ async def enrich_bulk_companies(
     db: Session = Depends(get_db)
 ):
     user = get_current_user(db, request)
-    if not user.oauth_tokens:
+    if not user or not user.oauth_tokens:
         raise HTTPException(
             status_code=401,
             detail="Authentication required. Please connect your Google account or log in to run Deep Enrichment."

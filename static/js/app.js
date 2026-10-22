@@ -1782,8 +1782,9 @@ document.addEventListener("DOMContentLoaded", () => {
       try {
         const res = await fetch(`/api/companies/${activeModalCompany.id}/enrich?force_refresh=true`, { method: "POST" });
         if (res.status === 401) {
-          loginModal?.classList.remove("hidden");
-          refreshIcons();
+          currentUser.is_logged_in = false;
+          showToast("Please login to use this", "warning");
+          showLoginModal("Please sign in with Google to use AI Deep Enrichment.");
           return;
         }
         await res.json();
@@ -1797,13 +1798,15 @@ document.addEventListener("DOMContentLoaded", () => {
         cmodalBtnEnrich.disabled = false;
         refreshIcons();
       }
-    });
+    }, "use AI Deep Enrichment");
   });
 
   cmodalBtnPitch.addEventListener("click", () => {
     if (!activeModalCompany) return;
-    cmodal.classList.add("hidden");
-    handleGeneratePitch(activeModalCompany.id);
+    requireLogin(() => {
+      cmodal.classList.add("hidden");
+      handleGeneratePitch(activeModalCompany.id);
+    }, "generate outreach pitches");
   });
 
   if (filterInput) {
@@ -1949,7 +1952,9 @@ document.addEventListener("DOMContentLoaded", () => {
   // ==========================================
   // AUTHENTICATION & LOGIN GATE CONTROLLER
   // ==========================================
-  let currentUser = { is_logged_in: false, email: null };
+  let currentUser = (window.__INITIAL_AUTH__ && typeof window.__INITIAL_AUTH__.is_logged_in === "boolean")
+    ? window.__INITIAL_AUTH__
+    : { is_logged_in: false, email: null };
   const loginModal = document.getElementById("login-modal");
   const loginModalClose = document.getElementById("login-modal-close");
   const btnModalDemoLogin = document.getElementById("btn-modal-demo-login");
@@ -1958,17 +1963,26 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnSidebarAdminLogin = document.getElementById("btn-sidebar-admin-login");
   const btnHeaderAdminLogin = document.getElementById("btn-header-admin-login");
 
-  function showLoginModal() {
+  function showLoginModal(customMessage = null) {
+    const modalDesc = document.getElementById("login-modal-desc");
+    if (modalDesc) {
+      if (customMessage) {
+        modalDesc.textContent = customMessage;
+      } else {
+        modalDesc.textContent = "Please log in to use this feature. Sign in with Google to analyze leads, detect tech stacks, and generate personalized outreach.";
+      }
+    }
     loginModal?.classList.remove("hidden");
     refreshIcons();
   }
   window.showLoginModal = showLoginModal;
 
-  function requireLogin(callback) {
-    if (currentUser.is_logged_in) {
+  function requireLogin(callback, actionName = "use AI Deep Enrichment") {
+    if (currentUser && currentUser.is_logged_in) {
       callback();
     } else {
-      showLoginModal();
+      showToast("Please login to use this", "warning");
+      showLoginModal(`Please sign in with Google to ${actionName}.`);
     }
   }
   const sidebarAdminBadge = document.getElementById("sidebar-admin-badge");
@@ -2019,14 +2033,6 @@ document.addEventListener("DOMContentLoaded", () => {
       refreshIcons();
     } catch (err) {
       console.warn("Auth status fetch error:", err);
-    }
-  }
-
-  function requireLogin(callback) {
-    if (currentUser.is_logged_in) {
-      callback();
-    } else {
-      showLoginModal();
     }
   }
 
@@ -2102,8 +2108,9 @@ document.addEventListener("DOMContentLoaded", () => {
       try {
         const res = await fetch(`/api/companies/${companyId}/enrich`, { method: "POST" });
         if (res.status === 401) {
-          loginModal?.classList.remove("hidden");
-          refreshIcons();
+          currentUser.is_logged_in = false;
+          showToast("Please login to use this", "warning");
+          showLoginModal("Please sign in with Google to use AI Deep Enrichment.");
           return;
         }
         await res.json();
@@ -2115,7 +2122,7 @@ document.addEventListener("DOMContentLoaded", () => {
         btn.disabled = false;
         refreshIcons();
       }
-    });
+    }, "use AI Deep Enrichment");
   }
 
   // Bulk Enrichment Handlers
@@ -2141,14 +2148,18 @@ document.addEventListener("DOMContentLoaded", () => {
       refreshIcons();
 
       let index = 0;
+      let unauthorizedOccurred = false;
       async function worker() {
         while (index < targetList.length) {
+          if (unauthorizedOccurred) break;
           const comp = targetList[index++];
           try {
             const res = await fetch(`/api/companies/${comp.id}/enrich`, { method: "POST" });
             if (res.status === 401) {
-              loginModal?.classList.remove("hidden");
-              refreshIcons();
+              unauthorizedOccurred = true;
+              currentUser.is_logged_in = false;
+              showToast("Please login to use this", "warning");
+              showLoginModal("Please sign in with Google to use AI Deep Enrichment.");
               break;
             }
           } catch (err) {
@@ -2169,15 +2180,17 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       await Promise.all(workerPromises);
 
-      btn.innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5 text-emerald-400"></i><span>Completed (${total} Enriched)</span>`;
-      refreshIcons();
-      await fetchCompanies();
+      if (!unauthorizedOccurred) {
+        btn.innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5 text-emerald-400"></i><span>Completed (${total} Enriched)</span>`;
+        refreshIcons();
+        await fetchCompanies();
+      }
       setTimeout(() => {
         btn.innerHTML = oldText;
         btn.disabled = false;
         refreshIcons();
       }, 2500);
-    });
+    }, "run bulk AI enrichment");
   }
 
   if (btnBulkEnrichTop) {
@@ -2397,7 +2410,9 @@ document.addEventListener("DOMContentLoaded", () => {
         body: JSON.stringify({ company_id: companyId })
       });
       if (res.status === 401) {
-        showLoginModal();
+        currentUser.is_logged_in = false;
+        showToast("Please login to use this", "warning");
+        showLoginModal("Please sign in with Google to generate personalized outreach pitches.");
         return;
       }
       const data = await res.json();
