@@ -157,7 +157,7 @@ def extract_emails_and_text_from_html(html: str, base_url: str) -> dict[str, Any
 
     return {
         "emails": list(found_emails),
-        "clean_text": text[:5000]
+        "clean_text": text[:6000]
     }
 
 
@@ -209,7 +209,16 @@ async def deep_enrich_company(
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"
         }
 
-        candidate_urls = [target_url] + [f"{base_clean}{sub}" for sub in ["/contact", "/about", "/careers"]]
+        sub_paths = ["/about-us", "/about", "/services", "/our-services", "/portfolio", "/projects", "/contact-us", "/contact", "/careers"]
+        seen_targets = {target_url}
+        candidate_urls = [target_url]
+        for sub in sub_paths:
+            full_sub = f"{base_clean}{sub}"
+            if full_sub not in seen_targets and is_safe_public_url(full_sub):
+                seen_targets.add(full_sub)
+                candidate_urls.append(full_sub)
+                if len(candidate_urls) >= 7:
+                    break
         urls_to_crawl = [u for u in candidate_urls if is_safe_public_url(u)]
 
         client_timeout = httpx.Timeout(connect=2.5, read=3.5, write=2.5, pool=2.5)

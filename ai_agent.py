@@ -86,12 +86,12 @@ def clean_json_response(raw_text: str) -> dict[str, Any]:
 def analyze_company(company_name: str, domain: str, scraped_text: str) -> dict[str, Any]:
     """
     Analyzes scraped text from company's website using AI Agent.
-    Generates an in-depth 500-700 word technical intelligence report for precision outreach.
+    Generates a comprehensive 6-part business and technical intelligence dossier.
     """
     if not client:
         return {
             "summary": f"{company_name} is a technology company operating on {domain}.",
-            "detailed_analysis": f"Comprehensive Technical Profile for {company_name} ({domain}):\n\n1. Business Model & Core Offerings:\n{company_name} specializes in software and digital technology solutions.\n\n2. Technical Infrastructure:\nUtilizes modern web development frameworks, databases, and cloud services.\n\n3. Potential Pain Points & Opportunities:\nScaling web applications, optimizing database performance, and expanding feature sets.\n\n4. Recommended Outreach Hook:\nHighlight strong full-stack foundations, microservices, and rapid feature execution.",
+            "detailed_analysis": f"### 1. Company Overview & Identity\n- **Name:** {company_name}\n- **Domain:** {domain}\n- **Core Focus:** Digital technology and software development solutions.\n\n### 2. Services & Expertise\n- Web & Mobile Application Development\n- Custom Enterprise Solutions\n\n### 3. Technology Stack & Languages\n- **Languages & Frameworks:** Modern web and mobile engineering technologies.\n\n### 4. Industries & Client Portfolio\n- Cross-industry software consulting.\n\n### 5. Development Process & Engagement Model\n- Agile discovery, iterative development, and ongoing support.\n\n### 6. Additional Insights\n- Client-first engineering and continuous maintenance.",
             "industry": "Software & Services",
             "tech_stack": ["Web Technologies", "APIs"],
             "services": ["Software Development", "IT Services"],
@@ -99,30 +99,59 @@ def analyze_company(company_name: str, domain: str, scraped_text: str) -> dict[s
             "tone": "Professional"
         }
 
-    clean_sample = scraped_text[:4000]
+    clean_sample = scraped_text[:12000]
 
-    prompt = f"""You are a pragmatic, senior technical analyst and B2B researcher.
-Perform an accurate, factual technical intelligence report (250 to 350 words) for "{company_name}" ({domain}) based strictly on their scraped website content.
+    prompt = f"""Act as a senior business research analyst. You are compiling a comprehensive, fact-grounded company profile for "{company_name}" ({domain}) based on their website content (including Home, About Us, Services, Portfolio, and Contact pages).
 
 Scraped Website Content:
 ---
 {clean_sample}
 ---
 
+Extract and structure the following information into a detailed report with clear headings and bullet points:
+
+1. Company Overview & Identity:
+- Official name, founding year, and headquarters / delivery locations.
+- Their stated mission or core value proposition (e.g., "AI-powered product design", "Turning ideas into scalable software").
+- Key company stats (e.g., years in business, number of team members/employees, projects delivered, client count).
+
+2. Services & Expertise:
+- A complete list of the services they offer (e.g., Mobile App Development, Web Development, UI/UX, AI/ML, Cloud Solutions, QA).
+- Any specialized products, proprietary platforms, or SaaS tools they have built.
+
+3. Technology Stack & Languages:
+- Programming Languages: (e.g., Python, JavaScript/TypeScript, PHP, Kotlin, Swift, Dart, Go, C#).
+- Frontend Frameworks/Libraries: (e.g., React, Next.js, Angular, Vue.js, Flutter).
+- Backend Frameworks/Platforms: (e.g., Node.js, Laravel, Django, FastAPI, Express).
+- Databases & Cloud Infrastructure: (e.g., AWS, GCP, Azure, PostgreSQL, MySQL, MongoDB, Firebase).
+- Design & Other Tools: (e.g., Figma, Adobe XD, Docker, CI/CD).
+*NOTE: Only list technologies directly mentioned or clearly evident in their services/portfolio.*
+
+4. Industries & Client Portfolio:
+- Which industries do they explicitly state they serve? (e.g., Healthcare, FinTech, E-Commerce, Retail, Logistics, Education).
+- Can you identify any named clients, case studies, or portfolio projects from their website?
+
+5. Development Process & Engagement Model:
+- Outline the steps in their project lifecycle (e.g., Discovery & Strategy, UI/UX Design, Agile Development, Testing & QA, Deployment).
+- How do they collaborate with clients? (e.g., dedicated support, sprint cycles, transparent communication channels).
+
+6. Additional Insights:
+- Key differentiators or "Why choose us" points (e.g., 24/7 support, enterprise-grade security, rapid turnaround).
+- Any contact information (email, phone) or global delivery locations mentioned.
+
 CRITICAL GROUNDING RULES:
 1. NO WILD GUESSWORK: Only report technologies, frameworks, and services directly mentioned or clearly evident from their website.
-2. DO NOT HALLUCINATE: Never invent complex enterprise tech (e.g. Kafka, Kubernetes, Snowflake, Kubeflow, BigQuery, Ruby on Rails) for small/mid agencies or local businesses unless explicitly stated on their site.
-3. REALISTIC OUTREACH: Provide practical, realistic collaboration hooks (e.g., API automation, web speed/Core Web Vitals, database performance, custom e-commerce/Shopify integrations).
-4. COMPLETION: Ensure every sentence and section is fully completed. Never cut off mid-sentence.
+2. DO NOT HALLUCINATE: If a specific data point (like exact founding year or employee count) is not explicitly disclosed on their site, state "Not explicitly disclosed on website" rather than making numbers up.
+3. COMPLETION: Ensure every section and bullet point is fully written and completed. Never cut off mid-thought.
 
 Your response MUST be a valid JSON object matching this schema:
 {{
-  "summary": "Clear, accurate 2-sentence overview of what they actually offer and who their clients are",
-  "detailed_analysis": "A concise, factual 250 to 350 word report in Markdown format with sections:\\n\\n### 1. Business Overview & Offerings\\nFactual summary of their core services, client types, and business focus.\\n\\n### 2. Evident Technical Stack\\nOnly the technologies, CMS, frameworks, and platforms evident from their site (e.g. Shopify, WordPress, PHP, JavaScript, Google/Meta Ads).\\n\\n### 3. Practical Engineering Needs\\nRealistic technical areas where an engineer can help (e.g. site performance, backend integrations, automated lead capture, data pipelines).\\n\\n### 4. High-Impact Outreach Angles\\n2-3 concrete, realistic conversation starters for a technical inquiry.",
-  "industry": "Accurate industry (e.g. Digital Marketing & E-Commerce, Custom Software, IT Services)",
-  "tech_stack": ["Only", "evident", "technologies", "like", "Shopify", "WordPress", "PHP", "JavaScript"],
-  "services": ["Service 1", "Service 2", "Service 3"],
-  "hiring_signals": "Evident hiring signals or business growth focus",
+  "summary": "Crisp 2-3 sentence executive summary of the company, their value proposition, and primary offerings.",
+  "detailed_analysis": "The complete 6-section report in Markdown format with clear ### headings and bullet points (e.g. ### 1. Company Overview & Identity\\n- **Official Name:** ...).",
+  "industry": "Primary industry classification (e.g. Custom Software & Mobile App Development)",
+  "tech_stack": ["Array", "of", "all", "identified", "technologies", "frameworks", "languages", "and", "tools"],
+  "services": ["Array", "of", "core", "services", "offered"],
+  "hiring_signals": "Evident hiring signals, growth focus, or engineering scaling needs",
   "tone": "Professional"
 }}
 """
@@ -130,11 +159,11 @@ Your response MUST be a valid JSON object matching this schema:
     try:
         response = call_groq_with_fallback(
             messages=[
-                {"role": "system", "content": "You are a grounded B2B technical analyst. Base all analysis strictly on provided website facts without guessing or exaggerating. Always complete your thoughts in valid JSON."},
+                {"role": "system", "content": "You are a senior business research analyst. Base all analysis strictly on provided website facts with clear headings and bullet points. Always complete your thoughts in valid JSON."},
                 {"role": "user", "content": prompt}
             ],
             temperature=0.2,
-            max_tokens=1400,
+            max_tokens=2200,
             response_format={"type": "json_object"}
         )
         return clean_json_response(response.choices[0].message.content)
@@ -142,7 +171,7 @@ Your response MUST be a valid JSON object matching this schema:
         print(f"[AI Agent Error] analyze_company failed: {e}")
         return {
             "summary": f"{company_name} is an active technology provider on {domain}.",
-            "detailed_analysis": f"Detailed Technical Profile for {company_name}:\n\nOperates in digital software engineering with active web solutions. Focuses on client solutions and web services.",
+            "detailed_analysis": f"### 1. Company Overview & Identity\n- **Official Name:** {company_name}\n- **Domain:** {domain}\n\n### 2. Services & Expertise\n- Software Engineering & Digital Services\n\n### 3. Technology Stack & Languages\n- Web & Cloud Technologies\n\n### 4. Industries & Client Portfolio\n- Commercial & Enterprise Clients\n\n### 5. Development Process & Engagement Model\n- Consultative Agile Delivery\n\n### 6. Additional Insights\n- Client-oriented technology partner.",
             "industry": "Information Technology",
             "tech_stack": ["PHP", "JavaScript", "MySQL"],
             "services": ["Custom Software Development"],
