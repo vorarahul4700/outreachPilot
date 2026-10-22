@@ -80,16 +80,45 @@ async def send_via_google_oauth(
         import os
         token_data = config.decrypt_tokens(user.oauth_tokens) if isinstance(user.oauth_tokens, str) else user.oauth_tokens
         if not token_data or not isinstance(token_data, dict):
-            return {"success": False, "error": "Invalid or unparseable OAuth tokens."}
+            return {"success": False, "error": "Invalid or unparseable OAuth tokens. Please reconnect Google."}
+
+        client_id = token_data.get("client_id") or config.GOOGLE_CLIENT_ID
+        client_secret = token_data.get("client_secret") or config.GOOGLE_CLIENT_SECRET
+        refresh_token = token_data.get("refresh_token")
+        token_uri = token_data.get("token_uri") or "https://oauth2.googleapis.com/token"
 
         creds = Credentials(
             token=token_data.get("token"),
-            refresh_token=token_data.get("refresh_token"),
-            token_uri=token_data.get("token_uri", "https://oauth2.googleapis.com/token"),
-            client_id=token_data.get("client_id"),
-            client_secret=token_data.get("client_secret"),
+            refresh_token=refresh_token,
+            token_uri=token_uri,
+            client_id=client_id,
+            client_secret=client_secret,
             scopes=["https://www.googleapis.com/auth/gmail.send"]
         )
+
+        # Proactively refresh token if expired
+        try:
+            from google.auth.transport.requests import Request as GoogleAuthRequest
+            auth_request = GoogleAuthRequest()
+            if creds.expired or not creds.valid:
+                if creds.refresh_token:
+                    creds.refresh(auth_request)
+                    token_data["token"] = creds.token
+                    user.oauth_tokens = config.encrypt_tokens(token_data)
+                    db.commit()
+                else:
+                    return {
+                        "success": False,
+                        "error": "Google session expired. Please sign in with Google again to grant email sending permissions."
+                    }
+        except Exception as refresh_err:
+            err_str = str(refresh_err)
+            print(f"[OAuth Refresh Warning]: {err_str}")
+            if "invalid_grant" in err_str.lower() or "refresh the access token" in err_str.lower():
+                return {
+                    "success": False,
+                    "error": "Google session expired. Please sign in with Google again to refresh email sending permissions."
+                }
 
         service = build("gmail", "v1", credentials=creds)
 

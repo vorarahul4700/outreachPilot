@@ -1283,7 +1283,7 @@ async def google_login(request: Request):
     authorization_url, _ = flow.authorization_url(
         access_type="offline",
         include_granted_scopes="true",
-        prompt="select_account",
+        prompt="consent select_account",
         state=oauth_state
     )
     response = RedirectResponse(authorization_url)
@@ -1382,12 +1382,21 @@ async def google_callback(code: str, request: Request, db: Session = Depends(get
             db.refresh(user)
 
         # Encrypt OAuth credentials before persisting in PostgreSQL
+        existing_tokens = {}
+        if user.oauth_tokens:
+            try:
+                decrypted = config.decrypt_tokens(user.oauth_tokens)
+                if isinstance(decrypted, dict):
+                    existing_tokens = decrypted
+            except Exception:
+                pass
+
         user.oauth_tokens = config.encrypt_tokens({
             "token": credentials.token,
-            "refresh_token": credentials.refresh_token,
-            "token_uri": credentials.token_uri,
-            "client_id": credentials.client_id,
-            "client_secret": credentials.client_secret
+            "refresh_token": credentials.refresh_token or existing_tokens.get("refresh_token"),
+            "token_uri": credentials.token_uri or "https://oauth2.googleapis.com/token",
+            "client_id": credentials.client_id or config.GOOGLE_CLIENT_ID,
+            "client_secret": credentials.client_secret or config.GOOGLE_CLIENT_SECRET
         })
         db.commit()
 

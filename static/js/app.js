@@ -2627,7 +2627,11 @@ document.addEventListener("DOMContentLoaded", () => {
           await fetchCompanies();
           fetchAuditLogs();
         } else {
-          showToast(data.detail || data.error || "Failed to send email via Google OAuth.", "error");
+          const errMsg = data.detail || data.error || "Failed to send email via Google OAuth.";
+          showToast(errMsg, "error");
+          if (errMsg.toLowerCase().includes("session expired") || errMsg.toLowerCase().includes("reconnect") || errMsg.toLowerCase().includes("sign in with google")) {
+            showLoginModal(errMsg);
+          }
         }
       } catch (err) {
         showToast("Email sending failed: " + err.message, "error");
