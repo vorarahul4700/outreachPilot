@@ -79,28 +79,64 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!container) {
       container = document.createElement("div");
       container.id = "toast-container";
-      container.className = "fixed bottom-5 right-5 z-[999] flex flex-col space-y-2 pointer-events-none";
+      container.className = "fixed top-6 left-1/2 -translate-x-1/2 z-[9999] flex flex-col items-center space-y-2.5 pointer-events-none w-[92vw] max-w-lg";
       document.body.appendChild(container);
     }
     const toast = document.createElement("div");
-    const bgClass = type === "error" ? "bg-rose-950 border-rose-700 text-rose-200" :
-                    type === "success" ? "bg-emerald-950 border-emerald-700 text-emerald-200" :
-                    "bg-slate-900 border-indigo-700 text-indigo-200";
-    const icon = type === "error" ? "alert-circle" : type === "success" ? "check-circle" : "info";
+    
+    let bgClass = "bg-slate-900/95 border-indigo-500/80 text-indigo-100 shadow-[0_12px_40px_rgba(99,102,241,0.35)]";
+    let icon = "info";
+    let badge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 uppercase tracking-wider shrink-0">Info</span>`;
 
-    toast.className = `${bgClass} border rounded-xl px-4 py-2.5 shadow-2xl flex items-center space-x-2.5 text-xs font-medium pointer-events-auto transition-all duration-300 transform translate-y-2 opacity-0`;
-    toast.innerHTML = `<i data-lucide="${icon}" class="w-4 h-4 shrink-0"></i><span>${message}</span>`;
+    if (type === "error") {
+      bgClass = "bg-rose-950/95 border-rose-500 text-rose-100 shadow-[0_14px_45px_rgba(244,63,94,0.45)] ring-1 ring-rose-500/50";
+      icon = "alert-octagon";
+      badge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40 uppercase tracking-wider shrink-0">Error</span>`;
+    } else if (type === "warning") {
+      bgClass = "bg-amber-950/95 border-amber-500 text-amber-100 shadow-[0_14px_45px_rgba(245,158,11,0.45)] ring-1 ring-amber-500/50";
+      icon = "alert-triangle";
+      badge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 uppercase tracking-wider shrink-0">Notice</span>`;
+    } else if (type === "success") {
+      bgClass = "bg-emerald-950/95 border-emerald-500 text-emerald-100 shadow-[0_14px_45px_rgba(16,185,129,0.4)] ring-1 ring-emerald-500/50";
+      icon = "check-circle-2";
+      badge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 uppercase tracking-wider shrink-0">Success</span>`;
+    }
+
+    toast.className = `${bgClass} border rounded-2xl px-4 py-3 flex items-center justify-between space-x-3 text-xs font-medium pointer-events-auto backdrop-blur-md transition-all duration-300 transform -translate-y-4 opacity-0 scale-95 w-full`;
+    toast.innerHTML = `
+      <div class="flex items-center space-x-2.5 min-w-0">
+        <i data-lucide="${icon}" class="w-5 h-5 shrink-0"></i>
+        ${badge}
+        <span class="break-words leading-snug">${message}</span>
+      </div>
+      <button type="button" class="toast-close p-1 hover:bg-white/10 rounded-lg text-slate-400 hover:text-white transition shrink-0 cursor-pointer" title="Dismiss">
+        <i data-lucide="x" class="w-3.5 h-3.5"></i>
+      </button>
+    `;
+
+    const closeBtn = toast.querySelector(".toast-close");
+    if (closeBtn) {
+      closeBtn.addEventListener("click", () => {
+        toast.classList.add("opacity-0", "-translate-y-4", "scale-95");
+        setTimeout(() => toast.remove(), 250);
+      });
+    }
+
     container.appendChild(toast);
     refreshIcons();
 
     requestAnimationFrame(() => {
-      toast.classList.remove("translate-y-2", "opacity-0");
+      toast.classList.remove("-translate-y-4", "opacity-0", "scale-95");
+      toast.classList.add("translate-y-0", "opacity-100", "scale-100");
     });
 
+    const displayDuration = type === "error" ? 5500 : (type === "warning" ? 4500 : 3500);
     setTimeout(() => {
-      toast.classList.add("opacity-0", "translate-y-2");
-      setTimeout(() => toast.remove(), 300);
-    }, 3500);
+      if (toast.isConnected) {
+        toast.classList.add("opacity-0", "-translate-y-4", "scale-95");
+        setTimeout(() => toast.remove(), 250);
+      }
+    }, displayDuration);
   }
 
   function switchTab(tabId) {
@@ -1548,7 +1584,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (btnExportCsv) {
     btnExportCsv.addEventListener("click", () => {
       if (!companies || companies.length === 0) {
-        alert("No companies found to export.");
+        showToast("No companies found to export.", "warning");
         return;
       }
       const headers = ["ID", "Company Name", "Domain", "Website URL", "Phone", "Address", "Rating", "Reviews Count", "Enriched", "Discovered Emails", "Tech Stack", "Summary"];
@@ -1792,7 +1828,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const updated = companies.find(c => c.id === activeModalCompany.id);
         if (updated) openCompanyDetailsModal(updated);
       } catch (err) {
-        alert("Enrichment failed: " + err.message);
+        showToast("Enrichment failed: " + err.message, "error");
       } finally {
         cmodalBtnEnrich.innerHTML = oldHtml;
         cmodalBtnEnrich.disabled = false;
@@ -1995,7 +2031,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.has("auth_error")) {
       const err = urlParams.get("auth_error");
-      alert("Google Sign-In Issue: " + err);
+      showToast("Google Sign-In Issue: " + err, "error");
       window.history.replaceState({}, document.title, window.location.pathname);
     } else if (urlParams.has("auth_success")) {
       window.history.replaceState({}, document.title, window.location.pathname);
@@ -2116,7 +2152,7 @@ document.addEventListener("DOMContentLoaded", () => {
         await res.json();
         await fetchCompanies();
       } catch (err) {
-        alert("Enrichment failed: " + err.message);
+        showToast("Enrichment failed: " + err.message, "error");
       } finally {
         btn.innerHTML = oldHtml;
         btn.disabled = false;
@@ -2131,7 +2167,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function handleBulkEnrich(btn) {
     if (!companies || companies.length === 0) {
-      alert("No companies found to enrich. Scout companies in Step 1 first!");
+      showToast("No companies found to enrich. Scout companies in Step 1 first!", "warning");
       return;
     }
     requireLogin(async () => {
@@ -2200,7 +2236,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (btnGenAllPitches) {
     btnGenAllPitches.addEventListener("click", async () => {
       if (!companies || companies.length === 0) {
-        alert("No companies found to generate pitches for.");
+        showToast("No companies found to generate pitches for.", "warning");
         return;
       }
       const oldText = btnGenAllPitches.innerHTML;
@@ -2298,7 +2334,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const targetRole = document.getElementById("input-target-role").value.trim();
 
     if (!hasFile && !resumeLink) {
-      alert("Please select a resume file (PDF or TXT) or enter a portfolio/resume link.");
+      showToast("Please select a resume file (PDF or TXT) or enter a portfolio/resume link.", "warning");
       return;
     }
 
@@ -2342,12 +2378,12 @@ document.addEventListener("DOMContentLoaded", () => {
           detailedAnalysisEl.innerHTML = formatMarkdown(data.profile.detailed_profile_analysis);
         }
 
-        alert("Candidate Profile updated successfully! Linked to your personalized outreach emails.");
+        showToast("Candidate Profile updated successfully!", "success");
       } else {
-        alert(data.detail || data.message || "Failed to update profile.");
+        showToast(data.detail || data.message || "Failed to update profile.", "error");
       }
     } catch (err) {
-      alert("Resume analysis failed: " + err.message);
+      showToast("Resume analysis failed: " + err.message, "error");
     } finally {
       btnParseResume.innerHTML = `<i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-300"></i><span>Analyze Resume with AI</span>`;
       btnParseResume.disabled = false;
@@ -2361,7 +2397,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const detailedAnalysisEl = document.getElementById("profile-detailed-analysis");
       const rawText = detailedAnalysisEl?.dataset?.rawText || detailedAnalysisEl?.innerText || "";
       if (!rawText || rawText.includes("Upload your resume above")) {
-        alert("Please upload and analyze a resume first to copy the dossier.");
+        showToast("Please upload and analyze a resume first to copy the dossier.", "warning");
         return;
       }
       const cleanText = stripMarkdownForCopy(rawText);
@@ -2427,10 +2463,10 @@ document.addEventListener("DOMContentLoaded", () => {
         modal.classList.remove("hidden");
         refreshIcons();
       } else {
-        alert(data.detail || data.message || "Failed to generate outreach pitch.");
+        showToast(data.detail || data.message || "Failed to generate outreach pitch.", "error");
       }
     } catch (err) {
-      alert("Pitch generation failed: " + err.message);
+      showToast("Pitch generation failed: " + err.message, "error");
     } finally {
       if (triggerBtn) {
         triggerBtn.disabled = false;
@@ -2459,10 +2495,10 @@ document.addEventListener("DOMContentLoaded", () => {
           await fetchCompanies();
           fetchAuditLogs();
         } else {
-          alert(data.detail || data.error || "Failed to send email via Google OAuth.");
+          showToast(data.detail || data.error || "Failed to send email via Google OAuth.", "error");
         }
       } catch (err) {
-        alert("Email sending failed: " + err.message);
+        showToast("Email sending failed: " + err.message, "error");
       } finally {
         btnSendDirectOauth.disabled = false;
         btnSendDirectOauth.innerHTML = `<i data-lucide="send" class="w-3.5 h-3.5"></i><span id="btn-send-direct-text">Send via Gmail</span>`;
@@ -2798,10 +2834,10 @@ document.addEventListener("DOMContentLoaded", () => {
       if (data.found) {
         openSentEmailModal(data);
       } else {
-        alert("No sent outreach record found for this company.");
+        showToast("No sent outreach record found for this company.", "warning");
       }
     } catch (err) {
-      alert("Failed to load sent email details: " + err.message);
+      showToast("Failed to load sent email details: " + err.message, "error");
     }
   }
 
