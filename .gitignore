@@ -1,49 +1,114 @@
-# Environment variables & secrets (CRITICAL: Do NOT remove)
+# ==============================================================================
+# OutreachPilot .gitignore
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# 1. Environment Variables & Secrets (CRITICAL)
+# ------------------------------------------------------------------------------
 .env
 .env.local
 .env.*.local
+*.pem
+*.key
+*.cert
+credentials.json
+client_secret*.json
+token.json
+token.pickle
 
-# Python cache & virtual environments
+# ------------------------------------------------------------------------------
+# 2. Python & Bytecode
+# ------------------------------------------------------------------------------
 __pycache__/
 *.py[cod]
 *$py.class
 *.so
 .Python
-env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# ------------------------------------------------------------------------------
+# 3. Virtual Environments
+# ------------------------------------------------------------------------------
 venv/
 .venv/
+env/
 ENV/
+env.bak/
+venv.bak/
 
-# Linter and formatting caches
-.ruff_cache/
-.mypy_cache/
-.pytest_cache/
-
-# Databases & local storage
+# ------------------------------------------------------------------------------
+# 4. Databases & Storage Fallbacks
+# ------------------------------------------------------------------------------
 *.db
 *.sqlite
 *.sqlite3
+*.db-journal
+*.db-wal
 reachpilot_fallback.db
 
-# Driver & runtime temp folders
+# ------------------------------------------------------------------------------
+# 5. Node & Frontend Dependencies
+# ------------------------------------------------------------------------------
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-store/
+
+# ------------------------------------------------------------------------------
+# 6. Browser Testing, Playwright & Temp Captures
+# ------------------------------------------------------------------------------
+.playwright-cli/
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
 downloaded_files/
 scratch/
-*.lock
+temp/
+tmp/
 cookies.txt
+*.log
 
-# Screenshots and test output
+# Test & verification artifacts (preserves static/img assets)
 *.png
 *.jpg
 *.jpeg
 *.webp
-*.log
+!static/img/**
 test_*.py
 verify_*.py
 
-# Operating system & IDE files
+# ------------------------------------------------------------------------------
+# 7. IDE, Editor & OS Artifacts
+# ------------------------------------------------------------------------------
 .DS_Store
 Thumbs.db
 .vscode/
 .idea/
-temp/
+*.swp
+*.swo
+.ruff_cache/
+.mypy_cache/
+.pytest_cache/
+
+# ------------------------------------------------------------------------------
+# 8. AI Agent Workspaces & Customizations
+# ------------------------------------------------------------------------------
+.agents/
+.gemini/
 
