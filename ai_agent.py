@@ -1,13 +1,12 @@
+import itertools
 import json
 import re
+import time
 from typing import Any
 
 from groq import Groq
 
 import config
-
-import itertools
-import time
 
 _CLIENT_POOL = [
     Groq(api_key=k) for k in config.GROQ_API_KEYS
@@ -371,7 +370,7 @@ Return ONLY a valid JSON object matching this schema:
             response_format={"type": "json_object"}
         )
         parsed = clean_json_response(response.choices[0].message.content)
-        
+
         subject = (parsed.get("subject_line") or "").strip()
         body = (parsed.get("email_body") or "").strip()
 
@@ -492,7 +491,7 @@ def normalize_queries_batch(queries: list[str]) -> dict[str, Any]:
 
     # Check which queries need AI processing
     needed = [q for q in clean_queries if q not in _QUERY_NORM_CACHE]
-    
+
     if needed and client:
         prompt = f"""You are an elite search taxonomy engineer.
 We have Google search queries used to find tech leads:
@@ -564,7 +563,7 @@ def normalize_single_keyword(keyword: str, city: str = "") -> str:
     combined = f"{keyword} {city}".strip()
     if combined in _QUERY_NORM_CACHE:
         return _QUERY_NORM_CACHE[combined]["normalized_keyword"]
-    
+
     res = normalize_queries_batch([combined])
     mapping = res.get("mappings", {}).get(combined)
     if mapping:

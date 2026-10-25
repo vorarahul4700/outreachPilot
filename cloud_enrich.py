@@ -10,9 +10,7 @@ and auto-heals failed records up to 3 attempts (marking unresolvable URLs as INC
 
 import argparse
 import asyncio
-import os
 import sys
-import time
 from datetime import datetime
 
 # Prevent Windows console UnicodeEncodeError on emojis/checkmarks
@@ -23,9 +21,9 @@ if hasattr(sys.stdout, "reconfigure"):
     except Exception:
         pass
 
-from db import Company, CompanyEmail, CompanyProfile, SessionLocal, init_db
-from enricher import deep_enrich_company
 import config
+from db import Company, SessionLocal, init_db
+from enricher import deep_enrich_company
 
 
 def log(msg: str):
@@ -46,7 +44,7 @@ def run_enrichment_pipeline(batch_size: int = 60, max_attempts: int = 3, target_
 
     try:
         query = db.query(Company).filter(
-            Company.is_invalid == False
+            Company.is_invalid.is_(False)
         )
 
         if target_domain:
@@ -107,10 +105,13 @@ def run_enrichment_pipeline(batch_size: int = 60, max_attempts: int = 3, target_
                     log(f"[{idx}/{total_items}] Enriching (Attempt {attempts}/{max_attempts}): {c_name} ({c_domain})...")
                     res = await deep_enrich_company(c_id, worker_db, force_refresh=True)
 
+                    has_intel = bool(isinstance(res, dict) and res.get("profile") and (
+                        res["profile"].get("detailed_analysis") or res["profile"].get("summary")
+                    ))
                     c_obj = worker_db.query(Company).filter(Company.id == c_id).first()
                     if c_obj:
-                        c_obj.is_enriched = True
-                        c_obj.enrichment_status = "COMPLETED"
+                        c_obj.is_enriched = has_intel
+                        c_obj.enrichment_status = "COMPLETED" if has_intel else "INCOMPLETE"
                         c_obj.last_enriched_at = datetime.utcnow()
                         worker_db.commit()
 
@@ -148,7 +149,7 @@ def run_enrichment_pipeline(batch_size: int = 60, max_attempts: int = 3, target_
         loop.run_until_complete(asyncio.gather(*tasks, return_exceptions=True))
 
         log("=" * 60)
-        log(f"Enrichment Pipeline Completed:")
+        log("Enrichment Pipeline Completed:")
         log(f"  Total Processed: {total_items}")
         log(f"  Successfully Enriched: {success_count}")
         log(f"  Failed (Will Retry on Next Cron): {failed_count}")

@@ -1,3 +1,5 @@
+import socket
+import urllib.parse
 from datetime import datetime
 
 from sqlalchemy import (
@@ -172,6 +174,16 @@ if clean_db_url.startswith("postgres://"):
 elif clean_db_url.startswith("postgresql://") and not clean_db_url.startswith("postgresql+"):
     clean_db_url = clean_db_url.replace("postgresql://", "postgresql+psycopg2://", 1)
 
+connect_args = {"connect_timeout": 15}
+if "postgresql" in clean_db_url:
+    try:
+        parsed_url = urllib.parse.urlparse(clean_db_url)
+        if parsed_url.hostname and not parsed_url.hostname.replace(".", "").isdigit():
+            ipv4_addr = socket.gethostbyname(parsed_url.hostname)
+            connect_args["hostaddr"] = ipv4_addr
+    except Exception as dns_err:
+        print(f"[DB Warning] Could not pre-resolve IPv4 hostaddr: {dns_err}")
+
 try:
     engine = create_engine(
         clean_db_url,
@@ -179,7 +191,7 @@ try:
         pool_recycle=60,
         pool_size=10,
         max_overflow=20,
-        connect_args={"connect_timeout": 15} if "postgresql" in clean_db_url else {}
+        connect_args=connect_args
     )
     print(f"[DB] Initialized database engine: {engine.name} ({engine.url.render_as_string(hide_password=True)})")
 except Exception as e:

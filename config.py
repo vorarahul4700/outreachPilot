@@ -1,7 +1,15 @@
+import base64
+import hashlib
+import ipaddress
+import json
 import os
+import socket
 from pathlib import Path
+from urllib.parse import urlparse
 
+from cryptography.fernet import Fernet
 from dotenv import load_dotenv
+from itsdangerous import BadSignature, SignatureExpired, URLSafeTimedSerializer
 
 # Load .env from project root
 env_path = Path(__file__).parent / ".env"
@@ -12,7 +20,39 @@ TAGLINE = os.getenv("TAGLINE", "Find Leads. Personalize. Reach Out.")
 APP_DESCRIPTOR = os.getenv("APP_DESCRIPTOR", "AI Outreach Automation")
 
 DEV_MODE = os.getenv("DEV_MODE", "true").lower() in ("true", "1", "yes")
-DEV_OVERRIDE_EMAIL = os.getenv("DEV_OVERRIDE_EMAIL", "vorarahul111@gmail.com")
+DEV_OVERRIDE_EMAIL = os.getenv("DEV_OVERRIDE_EMAIL", "")
+
+
+def is_maintenance_mode() -> bool:
+    """Checks dynamically if maintenance mode is enabled via environment variables or .env file."""
+    val = (
+        os.getenv("MAINTENANCE_MODE")
+        or os.getenv("maintance_mode")
+        or os.getenv("maintenance_mode")
+        or os.getenv("MAINTANCE_MODE")
+    )
+    if val is not None:
+        return str(val).strip().lower() in ("true", "1", "yes")
+
+    # Read .env file directly so editing .env applies dynamically
+    if env_path.exists():
+        try:
+            with open(env_path, "r", encoding="utf-8") as f:
+                for line in f:
+                    line = line.strip()
+                    if line.startswith("#") or "=" not in line:
+                        continue
+                    k, v = line.split("=", 1)
+                    k = k.strip().lower()
+                    if k in ("maintenance_mode", "maintance_mode"):
+                        v = v.strip().strip("'\"").lower()
+                        return v in ("true", "1", "yes")
+        except Exception:
+            pass
+    return False
+
+
+MAINTENANCE_MODE = is_maintenance_mode()
 
 # Unified Groq API Key configuration
 # Automatically detects if GROQ_API_KEY contains comma-separated keys for multi-account pooling
@@ -30,8 +70,8 @@ GOOGLE_REDIRECT_URI = os.getenv("GOOGLE_REDIRECT_URI", "http://localhost:8000/au
 
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/outreachpilot")
 
-# Master Admin Email configuration (supports multiple comma-separated emails)
-MASTER_ADMIN_EMAILS_RAW = os.getenv("MASTER_ADMIN_EMAILS", "vorarahul111@gmail.com")
+# Master Admin Email configuration (loaded strictly from environment variable)
+MASTER_ADMIN_EMAILS_RAW = os.getenv("MASTER_ADMIN_EMAILS", "")
 MASTER_ADMIN_EMAILS = [
     email.strip().lower() for email in MASTER_ADMIN_EMAILS_RAW.split(",") if email.strip()
 ]
@@ -39,15 +79,13 @@ MASTER_ADMIN_EMAILS = [
 # Security Secrets & Cryptography
 SECRET_KEY = os.getenv("SECRET_KEY", "outreachpilot_super_secret_production_key_9837498172")
 
-import base64
-import hashlib
-import json
-from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
-from cryptography.fernet import Fernet
-
 _signer = URLSafeTimedSerializer(SECRET_KEY, salt="pilot-auth-cookie")
 _fernet_key = base64.urlsafe_b64encode(hashlib.sha256(SECRET_KEY.encode()).digest())
 _cipher = Fernet(_fernet_key)
+
+
+# Session and Auth Cookie Lifetime (24 Hours = 86,400 seconds)
+SESSION_COOKIE_MAX_AGE = 86400
 
 
 def sign_user_email(email: str) -> str:
@@ -55,7 +93,7 @@ def sign_user_email(email: str) -> str:
     return _signer.dumps(email.strip().lower())
 
 
-def verify_user_email(token: str, max_age: int = 86400 * 30) -> str | None:
+def verify_user_email(token: str, max_age: int = SESSION_COOKIE_MAX_AGE) -> str | None:
     """Verifies a signed session token. Returns email if valid, else None."""
     if not token:
         return None
@@ -93,11 +131,6 @@ def is_master_admin(email: str | None) -> bool:
         return False
     clean_email = email.strip().strip("\"'").lower()
     return clean_email in MASTER_ADMIN_EMAILS
-
-
-import ipaddress
-import socket
-from urllib.parse import urlparse
 
 
 def is_safe_public_url(url: str) -> bool:

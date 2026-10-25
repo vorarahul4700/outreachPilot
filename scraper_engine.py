@@ -7,7 +7,6 @@ Architecture: SeleniumBase (Undetected Chrome) + ThreadPoolExecutor for Parallel
 import os
 import re
 import shutil
-import tempfile
 import time
 import urllib.parse
 from concurrent.futures import ThreadPoolExecutor, as_completed

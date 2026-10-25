@@ -1,6 +1,6 @@
 import asyncio
-from datetime import datetime
 import re
+from datetime import datetime
 from typing import Any
 
 import httpx
@@ -75,14 +75,14 @@ def classify_email(email_str: str) -> str:
 def filter_and_prioritize_emails(email_set: set[str] | list[str]) -> list[tuple[str, str, bool]]:
     """
     Processes a collection of found emails for a company.
-    
+
     Rule:
     If ANY email is an HR/recruitment/careers/jobs email (e.g. hr@, recruit@, careers@, jobs@),
     EXCLUDE all other non-recruitment emails (info@, sales@, contact@, support@, etc.)
     and keep ONLY the HR/recruitment emails.
-    
+
     If NO HR/recruitment email is found, retain all valid emails.
-    
+
     Returns a list of (email_address, email_type, is_primary) tuples, ordered with the best
     contact email first.
     """
@@ -278,8 +278,13 @@ async def deep_enrich_company(
     )
     db.add(c_profile)
 
-    company.is_enriched = True
-    company.enrichment_status = "COMPLETED"
+    has_intel = bool(
+        (ai_profile_data.get("detailed_analysis") and len(str(ai_profile_data["detailed_analysis"]).strip()) > 50) or
+        (ai_profile_data.get("summary") and len(str(ai_profile_data["summary"]).strip()) > 30)
+    )
+
+    company.is_enriched = has_intel
+    company.enrichment_status = "COMPLETED" if has_intel else "INCOMPLETE"
     company.last_enriched_at = datetime.utcnow()
     db.commit()
 

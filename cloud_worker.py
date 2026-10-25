@@ -6,10 +6,8 @@ Combines Google Maps Scouting + Automatic Deep AI Enrichment into a single backg
 """
 
 import argparse
-import asyncio
 import os
 import sys
-import time
 from datetime import datetime
 
 # Prevent Windows console UnicodeEncodeError ('charmap' codec) on checkmarks or emojis
@@ -20,17 +18,8 @@ if hasattr(sys.stdout, "reconfigure"):
     except Exception:
         pass
 
-from db import (
-    Company,
-    CompanyEmail,
-    CompanyProfile,
-    ScoutJob,
-    SessionLocal,
-    init_db
-)
-from enricher import deep_enrich_company
+from db import Company, ScoutJob, SessionLocal, init_db
 from scraper_engine import GoogleScraper, is_genuine_company_domain
-import config
 
 
 def log_job(db, job_id: int, msg: str, progress: int = None, live_card: dict = None):
@@ -86,18 +75,18 @@ def run_worker(job_id: int, keyword: str, city: str, max_pages: int):
 
     job.status = "RUNNING"
     job.progress = 5
-    job.status_message = f"Starting Cloud Worker for '{keyword}' in '{city}'..."
+    job.status_message = f"Scouting verified companies for '{keyword}' in '{city}'..."
     db.commit()
 
-    log_job(db, job_id, f"Cloud Runner initialized (7 GB RAM). Scouting Google for '{keyword}' in '{city}' (Pages: {max_pages})...", 10)
+    log_job(db, job_id, f"Scouting initiated for '{keyword}' in '{city}' (Pages: {max_pages})...", 10)
 
     try:
         def on_scraper_log(msg: str, progress: int = None):
             log_job(db, job_id, msg, progress)
 
-        # Initialize Google Scraper Engine (Headless Chrome in Ubuntu container) with live log callback
+        # Initialize Google Scraper Engine with live log callback
         scraper = GoogleScraper(headless=True, max_workers=10, log_callback=on_scraper_log)
-        log_job(db, job_id, "Launching Headless Chromium browser engine...", 15)
+        log_job(db, job_id, "Connecting to live Google Maps search...", 15)
 
         # Scrape Google Local listings
         scraped_raw = scraper.scrape(
@@ -109,7 +98,7 @@ def run_worker(job_id: int, keyword: str, city: str, max_pages: int):
         )
 
         total_scraped = len(scraped_raw)
-        log_job(db, job_id, f"Google Scouting finished. Discovered {total_scraped} potential company listings.", 50)
+        log_job(db, job_id, f"Google Local search complete. Located {total_scraped} candidate business locations.", 45)
 
         # Filter genuine company listings
         valid_items = []
@@ -120,7 +109,7 @@ def run_worker(job_id: int, keyword: str, city: str, max_pages: int):
                 valid_items.append(item)
 
         total_scraped = len(valid_items)
-        log_job(db, job_id, f"Google Scouting finished. Discovered {total_scraped} genuine company listings.", 50)
+        log_job(db, job_id, f"Domain verification: Identified {total_scraped} verified businesses with working official websites.", 55)
 
         # Refresh database session after prolonged browser scraping to avoid Neon timeout
         try:
@@ -174,7 +163,7 @@ def run_worker(job_id: int, keyword: str, city: str, max_pages: int):
                     "tech_stack": []
                 }
                 registered_cards.append(card_data)
-            except Exception as reg_err:
+            except Exception:
                 try:
                     db.rollback()
                     db.close()
@@ -189,11 +178,11 @@ def run_worker(job_id: int, keyword: str, city: str, max_pages: int):
             job.progress = 100
             job.total_found = len(registered_cards)
             job.results = registered_cards
-            job.status_message = f"Scouting completed! Discovered {len(registered_cards)} genuine companies. Background AI Enrichment active."
+            job.status_message = f"Scouting completed! Discovered {len(registered_cards)} verified businesses. Background AI Enrichment active."
             job.updated_at = datetime.utcnow()
             db.commit()
 
-        log_job(db, job_id, f"Google Scouting finished! {len(registered_cards)} companies registered into Neon DB.", 100)
+        log_job(db, job_id, f"Scouting finished! Saved {len(registered_cards)} verified companies to directory.", 100)
 
         # Trigger decoupled cloud_enrich.yml workflow via GitHub Actions API
         gh_token = os.environ.get("GITHUB_TOKEN")
@@ -208,7 +197,7 @@ def run_worker(job_id: int, keyword: str, city: str, max_pages: int):
                 }
                 resp = httpx.post(dispatch_url, json={"ref": "main"}, headers=headers, timeout=10)
                 if resp.status_code in (200, 204):
-                    log_job(db, job_id, "Successfully triggered Cloud AI Enrichment workflow (cloud_enrich.yml) via GitHub API!")
+                    log_job(db, job_id, "Initiated AI analysis: inspecting websites, tech stacks, and recruiter contacts.")
                 else:
                     log_job(db, job_id, f"Dispatched cloud_enrich trigger (Status {resp.status_code}).")
             except Exception as trig_err:
