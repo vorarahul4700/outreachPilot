@@ -1,83 +1,384 @@
 <!DOCTYPE html>
-<html lang="en">
+<html class="dark" lang="en">
 <head>
   <meta charset="UTF-8">
+  <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg">
+  <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+  <link rel="shortcut icon" href="/static/favicon.ico">
+  <link rel="apple-touch-icon" sizes="180x180" href="/static/favicon.ico">
+  <script>
+    (function() {
+      try {
+        const saved = localStorage.getItem('pilot_theme');
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const theme = saved ? saved : (prefersDark ? 'dark' : 'light');
+        if (theme === 'light') {
+          document.documentElement.classList.remove('dark');
+          document.documentElement.classList.add('light');
+        } else {
+          document.documentElement.classList.add('dark');
+          document.documentElement.classList.remove('light');
+        }
+      } catch (e) {}
+    })();
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Terms of Service — {{ project_name }}</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- High-Performance Self-Hosted Typography -->
+  <link rel="preload" href="/static/fonts/spacegrotesk-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/static/fonts/dmsans-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/static/css/fonts.css">
+  
+  <!-- Core Design System CSS -->
+  <link rel="stylesheet" href="/static/css/style.css?v=8.7">
+  <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
 </head>
-<body class="bg-slate-950 text-slate-100 antialiased min-h-screen py-12 px-4 sm:px-6 lg:px-8">
-  <div class="max-w-3xl mx-auto bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-10 shadow-2xl space-y-8">
-    
-    <!-- Header -->
-    <div class="border-b border-slate-800 pb-6 flex items-center justify-between">
-      <div>
-        <h1 class="text-3xl font-extrabold text-white tracking-tight">{{ project_name }} Terms of Service</h1>
-        <p class="text-sm text-slate-400 mt-1">Last Updated: October 21, 2026</p>
+<body class="bg-surface-container-lowest text-on-surface font-sans antialiased min-h-screen py-6 sm:py-10 px-4 sm:px-6 lg:px-8 selection:bg-primary-container selection:text-on-primary-container">
+
+  <!-- Top Navigation Bar -->
+  <header class="max-w-4xl mx-auto mb-8 flex items-center justify-between bg-surface-container-low border border-outline-variant/30 rounded-2xl px-4 sm:px-6 py-3.5 shadow-sm">
+    <a href="/" class="flex items-center gap-3 hover:opacity-85 transition group" title="{{ project_name }} — Home">
+      <div class="w-8 h-8 rounded-lg bg-primary-container flex items-center justify-center text-on-primary-container shadow-inner">
+        <span class="material-symbols-outlined text-[19px]">rocket_launch</span>
       </div>
-      <a href="/" class="text-xs font-semibold px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:text-white border border-slate-700 transition">
-        &larr; Back to App
+      <div class="flex flex-col">
+        <span class="text-sm sm:text-base font-bold text-on-surface tracking-tight">{{ project_name }}</span>
+        <span class="text-xs text-on-surface-variant">Legal Terms</span>
+      </div>
+    </a>
+
+    <!-- Segmented Page Switcher (Terms <-> Privacy) -->
+    <div class="flex items-center bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-1 gap-1">
+      <a href="/terms" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-surface-container-highest text-on-surface shadow-xs transition cursor-default">
+        Terms
+      </a>
+      <a href="/privacy" class="px-3 py-1.5 rounded-lg text-xs font-medium text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition">
+        Privacy
       </a>
     </div>
 
-    <!-- Acceptance of Terms -->
-    <section class="space-y-3">
-      <h2 class="text-xl font-bold text-indigo-400">1. Acceptance of Terms</h2>
-      <p class="text-sm text-slate-300 leading-relaxed">
-        By accessing or using {{ project_name }} ("the Service"), you agree to be bound by these Terms of Service. If you do not agree to these terms, do not use the Service.
-      </p>
-    </section>
+    <div class="flex items-center gap-2.5">
+      <!-- Dark / Light Theme Toggle Button -->
+      <button id="btn-theme-toggle" type="button" aria-label="Toggle Light / Dark Mode" class="w-9 h-9 rounded-lg flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container border border-outline-variant/40 transition cursor-pointer" title="Toggle Light / Dark Mode">
+        <span id="theme-toggle-icon" class="material-symbols-outlined text-[19px]">light_mode</span>
+      </button>
 
-    <!-- Description of Service -->
-    <section class="space-y-3">
-      <h2 class="text-xl font-bold text-indigo-400">2. Description of Service</h2>
-      <p class="text-sm text-slate-300 leading-relaxed">
-        {{ project_name }} provides tools for discovering public business listings, enriching contact details via publicly accessible websites, generating personalized professional pitch drafts, and dispatching cold correspondence via user-connected email accounts.
-      </p>
-    </section>
+      <a href="/app" class="btn-tactile-slate px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-sm">
+        <span class="material-symbols-outlined text-[16px]">terminal</span>
+        <span class="hidden sm:inline">Workspace</span>
+      </a>
+    </div>
+  </header>
 
-    <!-- Acceptable Use -->
-    <section class="space-y-3">
-      <h2 class="text-xl font-bold text-indigo-400">3. Acceptable Use & Anti-Spam Policy</h2>
-      <p class="text-sm text-slate-300 leading-relaxed">
-        You agree to use {{ project_name }} responsibly and in full compliance with all applicable local, national, and international laws, including the CAN-SPAM Act, GDPR, and Google's Acceptable Use Policy.
-      </p>
-      <ul class="list-disc list-inside text-sm text-slate-300 space-y-1.5 leading-relaxed">
-        <li>You will not use the service to transmit unsolicited bulk marketing, spam, harassment, or malicious content.</li>
-        <li>You are solely responsible for all messages dispatched through your connected email account.</li>
-        <li>Daily sending rate limits are enforced to protect domain reputation and comply with provider thresholds.</li>
-      </ul>
-    </section>
+  <!-- Main Structured Single-Column Container -->
+  <main class="max-w-4xl mx-auto space-y-6">
 
-    <!-- Intellectual Property & User Content -->
-    <section class="space-y-3">
-      <h2 class="text-xl font-bold text-indigo-400">4. User Content & Intellectual Property</h2>
-      <p class="text-sm text-slate-300 leading-relaxed">
-        You retain all rights to any resume, profile, or pitch materials you submit. You grant {{ project_name }} a limited, non-exclusive license solely to process and analyze this content to provide the requested services.
-      </p>
-    </section>
+    <!-- Hero Header Card -->
+    <div class="bg-surface-container-low border border-outline-variant/30 rounded-2xl p-6 sm:p-8 shadow-sm space-y-4">
+      <div class="flex items-center justify-between text-xs text-on-surface-variant border-b border-outline-variant/20 pb-3">
+        <span>Last Updated: October 24, 2026</span>
+        <span class="text-secondary font-medium">Active &amp; Effective</span>
+      </div>
 
-    <!-- Disclaimer of Warranties -->
-    <section class="space-y-3">
-      <h2 class="text-xl font-bold text-indigo-400">5. Disclaimer of Warranties</h2>
-      <p class="text-sm text-slate-300 leading-relaxed">
-        The Service is provided on an "as is" and "as available" basis without warranties of any kind. We do not guarantee email deliverability, recipient response rates, or employment outcomes.
-      </p>
-    </section>
+      <div class="space-y-2">
+        <h1 class="text-2xl sm:text-3xl font-bold text-on-surface tracking-tight">Terms of Service</h1>
+        <p class="text-sm sm:text-base text-on-surface-variant leading-relaxed max-w-2xl">
+          These Terms of Service govern your access to and use of {{ project_name }}. Please read them carefully before using our lead intelligence and cold outreach synthesis platform.
+        </p>
+      </div>
 
-    <!-- Contact -->
-    <section class="space-y-3 border-t border-slate-800 pt-6">
-      <h2 class="text-xl font-bold text-indigo-400">6. Contact</h2>
-      <p class="text-sm text-slate-300 leading-relaxed">
-        For inquiries regarding these Terms, contact us at:
-        <br>
-        <span class="font-semibold text-white">Email:</span> <a href="mailto:vorarahul111@gmail.com" class="text-indigo-400 hover:underline">vorarahul111@gmail.com</a>
-      </p>
-    </section>
+      <!-- 3 Key Highlights Grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+        <div class="p-3.5 rounded-xl bg-surface-container border border-outline-variant/30 space-y-1">
+          <div class="flex items-center gap-1.5 text-secondary text-sm font-semibold">
+            <span class="material-symbols-outlined text-[17px]">verified</span>
+            <span>You Own Your Data</span>
+          </div>
+          <p class="text-xs text-on-surface-variant leading-relaxed">Your resume, profile data, and synthesized pitch drafts remain your exclusive property.</p>
+        </div>
 
-  </div>
+        <div class="p-3.5 rounded-xl bg-surface-container border border-outline-variant/30 space-y-1">
+          <div class="flex items-center gap-1.5 text-secondary text-sm font-semibold">
+            <span class="material-symbols-outlined text-[17px]">shield</span>
+            <span>Zero Spam Mandate</span>
+          </div>
+          <p class="text-xs text-on-surface-variant leading-relaxed">Targeted career and business inquiries only. Automated mass blasts are strictly prohibited.</p>
+        </div>
+
+        <div class="p-3.5 rounded-xl bg-surface-container border border-outline-variant/30 space-y-1">
+          <div class="flex items-center gap-1.5 text-secondary text-sm font-semibold">
+            <span class="material-symbols-outlined text-[17px]">speed</span>
+            <span>Rate-Limit Protected</span>
+          </div>
+          <p class="text-xs text-on-surface-variant leading-relaxed">Built-in dispatch throttling guards your domain reputation and Gmail sending quotas.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 01: Acceptance of Terms -->
+    <article class="bg-surface-container-low border border-outline-variant/30 rounded-2xl p-6 sm:p-7 shadow-sm space-y-3.5">
+      <div class="flex items-center justify-between border-b border-outline-variant/20 pb-3">
+        <div class="flex items-center gap-2.5">
+          <span class="px-2 py-0.5 rounded-md bg-secondary/15 text-secondary text-xs font-bold">01</span>
+          <h2 class="text-base sm:text-lg font-bold text-on-surface">Acceptance of Agreement</h2>
+        </div>
+        <span class="text-xs text-on-surface-variant font-medium">Binding Agreement</span>
+      </div>
+
+      <div class="p-3.5 rounded-xl bg-surface-container border border-outline-variant/20 text-xs text-on-surface-variant flex items-center gap-2 leading-relaxed">
+        <span class="material-symbols-outlined text-secondary text-[16px] shrink-0">info</span>
+        <span>Key Takeaway: Accessing or connecting an account to OutreachPilot constitutes full acceptance of these terms.</span>
+      </div>
+
+      <p class="text-sm text-on-surface-variant leading-relaxed">
+        By accessing or using {{ project_name }} ("the Platform", "the Service", "we", or "us"), you agree to be bound by these Terms of Service and all incorporated operational policies. If you do not agree with any provision stated herein, you must immediately discontinue use of the platform and disconnect your Google account.
+      </p>
+    </article>
+
+    <!-- Section 02: Platform Scope -->
+    <article class="bg-surface-container-low border border-outline-variant/30 rounded-2xl p-6 sm:p-7 shadow-sm space-y-3.5">
+      <div class="flex items-center justify-between border-b border-outline-variant/20 pb-3">
+        <div class="flex items-center gap-2.5">
+          <span class="px-2 py-0.5 rounded-md bg-secondary/15 text-secondary text-xs font-bold">02</span>
+          <h2 class="text-base sm:text-lg font-bold text-on-surface">Platform Scope &amp; AI Capabilities</h2>
+        </div>
+        <span class="text-xs text-on-surface-variant font-medium">Platform Scope</span>
+      </div>
+
+      <div class="p-3.5 rounded-xl bg-surface-container border border-outline-variant/20 text-xs text-on-surface-variant flex items-center gap-2 leading-relaxed">
+        <span class="material-symbols-outlined text-secondary text-[16px] shrink-0">info</span>
+        <span>Key Takeaway: OutreachPilot assists with research, synthesis, and dispatch; human editorial control remains yours.</span>
+      </div>
+
+      <p class="text-sm text-on-surface-variant leading-relaxed">
+        {{ project_name }} provides software intelligence tools designed for professional candidate outreach and company discovery:
+      </p>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+        <div class="p-3.5 rounded-xl bg-surface-container border border-outline-variant/25 space-y-1">
+          <span class="text-sm font-semibold text-on-surface flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-secondary text-[17px]">travel_explore</span>
+            Public Entity Discovery
+          </span>
+          <p class="text-xs text-on-surface-variant leading-relaxed">Indexes publicly available company directories, official websites, and contact endpoints.</p>
+        </div>
+
+        <div class="p-3.5 rounded-xl bg-surface-container border border-outline-variant/25 space-y-1">
+          <span class="text-sm font-semibold text-on-surface flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-secondary text-[17px]">psychology</span>
+            Profile Alignment &amp; Drafting
+          </span>
+          <p class="text-xs text-on-surface-variant leading-relaxed">Analyzes corporate tech stacks to synthesize tailored, context-aware pitch drafts for candidate outreach.</p>
+        </div>
+      </div>
+    </article>
+
+    <!-- Section 03: Acceptable Use & Anti-Spam Compliance -->
+    <article class="bg-surface-container-low border border-outline-variant/30 rounded-2xl p-6 sm:p-7 shadow-sm space-y-4">
+      <div class="flex items-center justify-between border-b border-outline-variant/20 pb-3">
+        <div class="flex items-center gap-2.5">
+          <span class="px-2 py-0.5 rounded-md bg-secondary/15 text-secondary text-xs font-bold">03</span>
+          <h2 class="text-base sm:text-lg font-bold text-on-surface">Acceptable Use &amp; Anti-Spam Compliance</h2>
+        </div>
+        <span class="text-xs text-secondary font-semibold">Strict Compliance</span>
+      </div>
+
+      <p class="text-sm text-on-surface-variant leading-relaxed">
+        OutreachPilot is strictly reserved for professional B2B relationship building. All sent messages must adhere to the CAN-SPAM Act, the General Data Protection Regulation (GDPR), and Google Workspace Acceptable Use Policies.
+      </p>
+
+      <!-- Allowed vs Prohibited Comparison -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+        <div class="p-4 rounded-xl bg-surface-container border border-secondary/30 space-y-2.5">
+          <div class="flex items-center gap-2 text-secondary text-xs font-bold uppercase tracking-wider">
+            <span class="material-symbols-outlined text-[17px]">check_circle</span>
+            <span>Permitted Inquiries</span>
+          </div>
+          <ul class="space-y-1.5 text-xs text-on-surface-variant leading-relaxed">
+            <li class="flex items-start gap-1.5">
+              <span class="text-secondary font-bold">•</span>
+              <span>Direct career proposals tailored to company hiring needs</span>
+            </li>
+            <li class="flex items-start gap-1.5">
+              <span class="text-secondary font-bold">•</span>
+              <span>Contract engineering and technical consulting inquiries</span>
+            </li>
+            <li class="flex items-start gap-1.5">
+              <span class="text-secondary font-bold">•</span>
+              <span>1-to-1 researched business development introductions</span>
+            </li>
+          </ul>
+        </div>
+
+        <div class="p-4 rounded-xl bg-surface-container border border-error/30 space-y-2.5">
+          <div class="flex items-center gap-2 text-error text-xs font-bold uppercase tracking-wider">
+            <span class="material-symbols-outlined text-[17px]">cancel</span>
+            <span>Strictly Prohibited</span>
+          </div>
+          <ul class="space-y-1.5 text-xs text-on-surface-variant leading-relaxed">
+            <li class="flex items-start gap-1.5">
+              <span class="text-error font-bold">•</span>
+              <span>Mass automated blasts without personalized company research</span>
+            </li>
+            <li class="flex items-start gap-1.5">
+              <span class="text-error font-bold">•</span>
+              <span>Phishing, deceptive subject lines, fraud, or affiliate spam</span>
+            </li>
+            <li class="flex items-start gap-1.5">
+              <span class="text-error font-bold">•</span>
+              <span>Harvesting emails to resell on secondary data broker markets</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </article>
+
+    <!-- Section 04: Data Sovereignty -->
+    <article class="bg-surface-container-low border border-outline-variant/30 rounded-2xl p-6 sm:p-7 shadow-sm space-y-3.5">
+      <div class="flex items-center justify-between border-b border-outline-variant/20 pb-3">
+        <div class="flex items-center gap-2.5">
+          <span class="px-2 py-0.5 rounded-md bg-secondary/15 text-secondary text-xs font-bold">04</span>
+          <h2 class="text-base sm:text-lg font-bold text-on-surface">Data Sovereignty &amp; Intellectual Property</h2>
+        </div>
+        <span class="text-xs text-on-surface-variant font-medium">Ownership Guarantee</span>
+      </div>
+
+      <div class="p-3.5 rounded-xl bg-surface-container border border-outline-variant/20 text-xs text-on-surface-variant flex items-center gap-2 leading-relaxed">
+        <span class="material-symbols-outlined text-secondary text-[16px] shrink-0">info</span>
+        <span>Key Takeaway: You own your resume, materials, and correspondence. We never sell or claim rights to your data.</span>
+      </div>
+
+      <p class="text-sm text-on-surface-variant leading-relaxed">
+        You retain 100% unconditional ownership of all resumes, cover notes, pitch drafts, and candidate biographies uploaded to or generated within {{ project_name }}. We claim zero copyright, ownership, or licensing rights over your materials. You grant OutreachPilot only the ephemeral technical authorization required to process text and transmit drafts upon your explicit request.
+      </p>
+    </article>
+
+    <!-- Section 05: Rate Guardrails -->
+    <article class="bg-surface-container-low border border-outline-variant/30 rounded-2xl p-6 sm:p-7 shadow-sm space-y-3.5">
+      <div class="flex items-center justify-between border-b border-outline-variant/20 pb-3">
+        <div class="flex items-center gap-2.5">
+          <span class="px-2 py-0.5 rounded-md bg-secondary/15 text-secondary text-xs font-bold">05</span>
+          <h2 class="text-base sm:text-lg font-bold text-on-surface">Rate Guardrails &amp; Quota Throttling</h2>
+        </div>
+        <span class="text-xs text-on-surface-variant font-medium">Domain Protection</span>
+      </div>
+
+      <p class="text-sm text-on-surface-variant leading-relaxed">
+        To maintain your primary email domain's sender reputation and strictly comply with Google API sending quotas, {{ project_name }} enforces automated transmission delays, randomized staggering intervals, and daily message quotas. Any attempt to modify client scripts or tamper with rate-limiters will result in instant account revocation.
+      </p>
+    </article>
+
+    <!-- Section 06: Warranties & Disclaimers -->
+    <article class="bg-surface-container-low border border-outline-variant/30 rounded-2xl p-6 sm:p-7 shadow-sm space-y-3.5">
+      <div class="flex items-center justify-between border-b border-outline-variant/20 pb-3">
+        <div class="flex items-center gap-2.5">
+          <span class="px-2 py-0.5 rounded-md bg-secondary/15 text-secondary text-xs font-bold">06</span>
+          <h2 class="text-base sm:text-lg font-bold text-on-surface">Disclaimers &amp; Limitation of Liability</h2>
+        </div>
+        <span class="text-xs text-on-surface-variant font-medium">Disclaimer</span>
+      </div>
+
+      <p class="text-sm text-on-surface-variant leading-relaxed">
+        The Service is provided on an "as is" and "as available" basis without warranties of any kind. {{ project_name }} makes no guarantee regarding recipient response rates, hiring decisions, recruiter conversion, or uninterrupted uptime. Under no circumstances shall {{ project_name }} be liable for indirect, punitive, or consequential damages arising from campaign operations.
+      </p>
+    </article>
+
+    <!-- Section 07: Direct Support Contact -->
+    <article class="bg-surface-container-low border border-outline-variant/30 rounded-2xl p-6 sm:p-7 shadow-sm space-y-3.5">
+      <div class="flex items-center justify-between border-b border-outline-variant/20 pb-3">
+        <div class="flex items-center gap-2.5">
+          <span class="px-2 py-0.5 rounded-md bg-secondary/15 text-secondary text-xs font-bold">07</span>
+          <h2 class="text-base sm:text-lg font-bold text-on-surface">Governance &amp; Support Contact</h2>
+        </div>
+        <span class="text-xs text-secondary font-semibold">Direct Reach</span>
+      </div>
+
+      <p class="text-sm text-on-surface-variant leading-relaxed">
+        For inquiries regarding compliance, enterprise terms, or domain notifications, contact our legal infrastructure team directly:
+      </p>
+
+      <div class="p-4 rounded-xl bg-surface-container border border-outline-variant/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-surface-container-highest border border-outline-variant/30 flex items-center justify-center text-primary">
+            <span class="material-symbols-outlined text-[20px]">mail</span>
+          </div>
+          <div>
+            <span class="text-xs text-on-surface-variant block">Compliance Support</span>
+            <a href="mailto:support@outreachpilot.in" class="text-sm font-semibold text-primary hover:underline">support@outreachpilot.in</a>
+          </div>
+        </div>
+
+        <a href="mailto:support@outreachpilot.in" class="btn-tactile-slate px-4 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer shadow-sm">
+          <span class="material-symbols-outlined text-[15px]">send</span>
+          <span>Contact Legal Team</span>
+        </a>
+      </div>
+    </article>
+
+  </main>
+
+  <!-- Clean Centered Footer -->
+  <footer class="max-w-4xl mx-auto mt-12 py-8 border-t border-outline-variant/20 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-on-surface-variant">
+    <div class="flex items-center gap-2">
+      <span class="material-symbols-outlined text-[16px] text-secondary">verified_user</span>
+      <span>{{ project_name }} Legal Architecture • All Rights Reserved</span>
+    </div>
+    <div class="flex items-center gap-4">
+      <a href="/" class="hover:text-on-surface transition-colors">Home</a>
+      <span>•</span>
+      <a href="/privacy" class="hover:text-on-surface transition-colors">Privacy Policy</a>
+      <span>•</span>
+      <a href="/app" class="hover:text-on-surface transition-colors">Workspace</a>
+    </div>
+  </footer>
+
+  <!-- Theme Toggle Logic Script -->
+  <script>
+    function updateThemeIcon(theme) {
+      const isLight = theme === "light";
+      const icon = document.getElementById("theme-toggle-icon");
+      if (icon) icon.textContent = isLight ? "dark_mode" : "light_mode";
+      const btn = document.getElementById("btn-theme-toggle");
+      if (btn) btn.setAttribute("title", isLight ? "Switch to Dark Mode" : "Switch to Light Mode");
+    }
+
+    function toggleTheme() {
+      const isCurrentlyLight = document.documentElement.classList.contains("light");
+      const newTheme = isCurrentlyLight ? "dark" : "light";
+      if (newTheme === "light") {
+        document.documentElement.classList.remove("dark");
+        document.documentElement.classList.add("light");
+      } else {
+        document.documentElement.classList.remove("light");
+        document.documentElement.classList.add("dark");
+      }
+      try {
+        localStorage.setItem("pilot_theme", newTheme);
+      } catch (_) {}
+      updateThemeIcon(newTheme);
+    }
+
+    document.getElementById("btn-theme-toggle")?.addEventListener("click", toggleTheme);
+    updateThemeIcon(document.documentElement.classList.contains("light") ? "light" : "dark");
+
+    // Dynamic system theme listener
+    const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)");
+    if (systemPrefersDark && systemPrefersDark.addEventListener) {
+      systemPrefersDark.addEventListener("change", (e) => {
+        if (!localStorage.getItem("pilot_theme")) {
+          const autoTheme = e.matches ? "dark" : "light";
+          if (autoTheme === "light") {
+            document.documentElement.classList.remove("dark");
+            document.documentElement.classList.add("light");
+          } else {
+            document.documentElement.classList.remove("light");
+            document.documentElement.classList.add("dark");
+          }
+          updateThemeIcon(autoTheme);
+        }
+      });
+    }
+  </script>
 </body>
 </html>

@@ -1,96 +1,403 @@
 <!DOCTYPE html>
-<html lang="en">
+<html class="dark" lang="en">
 <head>
   <meta charset="UTF-8">
+  <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg">
+  <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+  <link rel="shortcut icon" href="/static/favicon.ico">
+  <link rel="apple-touch-icon" sizes="180x180" href="/static/favicon.ico">
+  <script>
+    (function() {
+      try {
+        const saved = localStorage.getItem('pilot_theme');
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const theme = saved ? saved : (prefersDark ? 'dark' : 'light');
+        if (theme === 'light') {
+          document.documentElement.classList.remove('dark');
+          document.documentElement.classList.add('light');
+        } else {
+          document.documentElement.classList.add('dark');
+          document.documentElement.classList.remove('light');
+        }
+      } catch (e) {}
+    })();
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Privacy Policy — {{ project_name }}</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- High-Performance Self-Hosted Typography -->
+  <link rel="preload" href="/static/fonts/spacegrotesk-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/static/fonts/dmsans-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/static/css/fonts.css">
+  
+  <!-- Core Design System CSS -->
+  <link rel="stylesheet" href="/static/css/style.css?v=8.7">
+  <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
 </head>
-<body class="bg-slate-950 text-slate-100 antialiased min-h-screen py-12 px-4 sm:px-6 lg:px-8">
-  <div class="max-w-3xl mx-auto bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-10 shadow-2xl space-y-8">
-    
-    <!-- Header -->
-    <div class="border-b border-slate-800 pb-6 flex items-center justify-between">
-      <div>
-        <h1 class="text-3xl font-extrabold text-white tracking-tight">{{ project_name }} Privacy Policy</h1>
-        <p class="text-sm text-slate-400 mt-1">Last Updated: October 21, 2026</p>
+<body class="bg-surface-container-lowest text-on-surface font-sans antialiased min-h-screen py-6 sm:py-10 px-4 sm:px-6 lg:px-8 selection:bg-primary-container selection:text-on-primary-container">
+
+  <!-- Top Navigation Bar -->
+  <header class="max-w-4xl mx-auto mb-8 flex items-center justify-between bg-surface-container-low border border-outline-variant/30 rounded-2xl px-4 sm:px-6 py-3.5 shadow-sm">
+    <a href="/" class="flex items-center gap-3 hover:opacity-85 transition group" title="{{ project_name }} — Home">
+      <div class="w-8 h-8 rounded-lg bg-primary-container flex items-center justify-center text-on-primary-container shadow-inner">
+        <span class="material-symbols-outlined text-[19px]">rocket_launch</span>
       </div>
-      <a href="/" class="text-xs font-semibold px-3 py-1.5 rounded-lg bg-slate-800 text-slate-300 hover:text-white border border-slate-700 transition">
-        &larr; Back to App
+      <div class="flex flex-col">
+        <span class="text-sm sm:text-base font-bold text-on-surface tracking-tight">{{ project_name }}</span>
+        <span class="text-xs text-on-surface-variant">Privacy Framework</span>
+      </div>
+    </a>
+
+    <!-- Segmented Page Switcher (Terms <-> Privacy) -->
+    <div class="flex items-center bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-1 gap-1">
+      <a href="/terms" class="px-3 py-1.5 rounded-lg text-xs font-medium text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition">
+        Terms
+      </a>
+      <a href="/privacy" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-surface-container-highest text-on-surface shadow-xs transition cursor-default">
+        Privacy
       </a>
     </div>
 
-    <!-- Introduction -->
-    <section class="space-y-3">
-      <h2 class="text-xl font-bold text-indigo-400">1. Introduction</h2>
-      <p class="text-sm text-slate-300 leading-relaxed">
-        {{ project_name }} ("we", "our", or "us") provides autonomous lead prospecting, business intelligence enrichment, and personalized cold outreach tools. This Privacy Policy describes how we collect, use, and protect your information when you access or use our application.
-      </p>
-    </section>
+    <div class="flex items-center gap-2.5">
+      <!-- Dark / Light Theme Toggle Button -->
+      <button id="btn-theme-toggle" type="button" aria-label="Toggle Light / Dark Mode" class="w-9 h-9 rounded-lg flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container border border-outline-variant/40 transition cursor-pointer" title="Toggle Light / Dark Mode">
+        <span id="theme-toggle-icon" class="material-symbols-outlined text-[19px]">light_mode</span>
+      </button>
 
-    <!-- Information We Collect -->
-    <section class="space-y-3">
-      <h2 class="text-xl font-bold text-indigo-400">2. Information We Collect</h2>
-      <ul class="list-disc list-inside text-sm text-slate-300 space-y-1.5 leading-relaxed">
-        <li><strong>Google Account Information:</strong> When you connect your Google Account via OAuth 2.0, we collect your email address and profile name to authenticate your account.</li>
-        <li><strong>Resume & Profile Data:</strong> Candidate skills, experience, and target roles parsed from uploaded resume documents to generate personalized outreach pitches.</li>
-        <li><strong>Outreach Logs:</strong> Timestamps, recipient addresses, subject lines, and message bodies of emails dispatched through your connected account.</li>
-      </ul>
-    </section>
+      <a href="/app" class="btn-tactile-slate px-3.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 cursor-pointer shadow-sm">
+        <span class="material-symbols-outlined text-[16px]">terminal</span>
+        <span class="hidden sm:inline">Workspace</span>
+      </a>
+    </div>
+  </header>
 
-    <!-- Google User Data & Gmail Permissions -->
-    <section class="space-y-4 bg-slate-950/60 border border-indigo-500/30 rounded-xl p-5">
-      <h2 class="text-xl font-bold text-white flex items-center gap-2">
-        <span>3. Google API Data & Gmail Scope Disclosure</span>
-      </h2>
-      <p class="text-sm text-slate-300 leading-relaxed">
-        Our application requests access to the <code>https://www.googleapis.com/auth/gmail.send</code> scope. This restricted permission is utilized solely to send personalized job applications and business outreach emails strictly and explicitly initiated by you.
-      </p>
-      
-      <!-- MANDATORY GOOGLE CLAUSE -->
-      <div class="bg-indigo-950/40 border-l-4 border-indigo-500 p-4 rounded-r-lg">
-        <p class="text-sm font-medium text-indigo-200 leading-relaxed">
-          <strong>Google API Services User Data Policy Compliance:</strong><br>
-          {{ project_name }}'s use and transfer to any other app of information received from Google APIs will adhere to the <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noopener" class="underline text-indigo-400 hover:text-indigo-300">Google API Services User Data Policy</a>, including the Limited Use requirements.
+  <!-- Main Structured Single-Column Container -->
+  <main class="max-w-4xl mx-auto space-y-6">
+
+    <!-- Hero Header Card -->
+    <div class="bg-surface-container-low border border-outline-variant/30 rounded-2xl p-6 sm:p-8 shadow-sm space-y-4">
+      <div class="flex items-center justify-between text-xs text-on-surface-variant border-b border-outline-variant/20 pb-3">
+        <span>Last Updated: October 24, 2026</span>
+        <span class="text-secondary font-medium">Google Limited Use Verified</span>
+      </div>
+
+      <div class="space-y-2">
+        <h1 class="text-2xl sm:text-3xl font-bold text-on-surface tracking-tight">Privacy Policy</h1>
+        <p class="text-sm sm:text-base text-on-surface-variant leading-relaxed max-w-2xl">
+          We treat your data with the highest technical and cryptographic integrity. Zero data reselling, zero inbox inspection, and full compliance with the Google API Services User Data Policy.
         </p>
       </div>
 
-      <ul class="list-disc list-inside text-sm text-slate-300 space-y-1 leading-relaxed">
-        <li>We <strong>never</strong> sell your Google user data to third parties.</li>
-        <li>We <strong>never</strong> use Google user data for advertising, credit scoring, or data aggregation.</li>
-        <li>We <strong>do not read, inspect, or store</strong> incoming inbox messages; our scope is strictly limited to sending emails you review and approve.</li>
-      </ul>
-    </section>
+      <!-- 3 Key Highlights Grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+        <div class="p-3.5 rounded-xl bg-surface-container border border-outline-variant/30 space-y-1">
+          <div class="flex items-center gap-1.5 text-secondary text-sm font-semibold">
+            <span class="material-symbols-outlined text-[17px]">lock</span>
+            <span>AES-128 Encryption</span>
+          </div>
+          <p class="text-xs text-on-surface-variant leading-relaxed">All OAuth tokens and API secrets are encrypted at rest with Fernet cryptography.</p>
+        </div>
 
-    <!-- Data Retention and Security -->
-    <section class="space-y-3">
-      <h2 class="text-xl font-bold text-indigo-400">4. Data Security & Encryption</h2>
-      <p class="text-sm text-slate-300 leading-relaxed">
-        OAuth tokens and refresh tokens are encrypted at rest using industry-standard Fernet (AES-128-CBC) symmetric encryption before being stored in our PostgreSQL database. Uploaded resume files are immediately deleted from disk after text extraction.
+        <div class="p-3.5 rounded-xl bg-surface-container border border-outline-variant/30 space-y-1">
+          <div class="flex items-center gap-1.5 text-secondary text-sm font-semibold">
+            <span class="material-symbols-outlined text-[17px]">visibility_off</span>
+            <span>Zero Inbox Reading</span>
+          </div>
+          <p class="text-xs text-on-surface-variant leading-relaxed">Our scopes are strictly restricted to sending user-approved drafts. We cannot read your inbox.</p>
+        </div>
+
+        <div class="p-3.5 rounded-xl bg-surface-container border border-outline-variant/30 space-y-1">
+          <div class="flex items-center gap-1.5 text-secondary text-sm font-semibold">
+            <span class="material-symbols-outlined text-[17px]">block</span>
+            <span>Zero Model Training</span>
+          </div>
+          <p class="text-xs text-on-surface-variant leading-relaxed">Your resume, pitch drafts, and communications are never used to train public AI models.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 01: Overview -->
+    <article class="bg-surface-container-low border border-outline-variant/30 rounded-2xl p-6 sm:p-7 shadow-sm space-y-3.5">
+      <div class="flex items-center justify-between border-b border-outline-variant/20 pb-3">
+        <div class="flex items-center gap-2.5">
+          <span class="px-2 py-0.5 rounded-md bg-secondary/15 text-secondary text-xs font-bold">01</span>
+          <h2 class="text-base sm:text-lg font-bold text-on-surface">Overview &amp; Privacy Architecture</h2>
+        </div>
+        <span class="text-xs text-on-surface-variant font-medium">Core Commitment</span>
+      </div>
+
+      <div class="p-3.5 rounded-xl bg-surface-container border border-outline-variant/20 text-xs text-on-surface-variant flex items-center gap-2 leading-relaxed">
+        <span class="material-symbols-outlined text-secondary text-[16px] shrink-0">info</span>
+        <span>Key Takeaway: OutreachPilot processes candidate information and company data strictly to synthesize and send your approved outreach.</span>
+      </div>
+
+      <p class="text-sm text-on-surface-variant leading-relaxed">
+        {{ project_name }} ("we", "our", or "us") provides autonomous B2B lead discovery, intelligence enrichment, candidate profile parsing, and personalized cold outreach synthesis. This Privacy Policy details the exact types of data we collect, how information is encrypted, and your sovereign rights over personal information.
       </p>
-    </section>
+    </article>
 
-    <!-- Revoking Access -->
-    <section class="space-y-3">
-      <h2 class="text-xl font-bold text-indigo-400">5. Managing and Revoking Permissions</h2>
-      <p class="text-sm text-slate-300 leading-relaxed">
-        You may revoke {{ project_name }}'s access to your Google Account at any time via your <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener" class="underline text-indigo-400 hover:text-indigo-300">Google Security Settings</a>. Upon revocation, our servers will no longer have access to send emails on your behalf.
+    <!-- Section 02: Information Collected -->
+    <article class="bg-surface-container-low border border-outline-variant/30 rounded-2xl p-6 sm:p-7 shadow-sm space-y-4">
+      <div class="flex items-center justify-between border-b border-outline-variant/20 pb-3">
+        <div class="flex items-center gap-2.5">
+          <span class="px-2 py-0.5 rounded-md bg-secondary/15 text-secondary text-xs font-bold">02</span>
+          <h2 class="text-base sm:text-lg font-bold text-on-surface">Information Collected &amp; Processed</h2>
+        </div>
+        <span class="text-xs text-on-surface-variant font-medium">Data Specifications</span>
+      </div>
+
+      <p class="text-sm text-on-surface-variant leading-relaxed">
+        We collect only the bare minimum technical data required to securely authenticate your session and generate tailored outreach:
       </p>
-    </section>
 
-    <!-- Contact -->
-    <section class="space-y-3 border-t border-slate-800 pt-6">
-      <h2 class="text-xl font-bold text-indigo-400">6. Contact Information</h2>
-      <p class="text-sm text-slate-300 leading-relaxed">
-        If you have questions about this Privacy Policy or your data, please contact the developer at:
-        <br>
-        <span class="font-semibold text-white">Email:</span> <a href="mailto:vorarahul111@gmail.com" class="text-indigo-400 hover:underline">vorarahul111@gmail.com</a>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5 pt-1">
+        <div class="p-4 rounded-xl bg-surface-container border border-outline-variant/30 space-y-2">
+          <div class="flex items-center gap-2 text-on-surface text-sm font-semibold">
+            <span class="material-symbols-outlined text-[17px] text-secondary">account_circle</span>
+            <span>Google Account</span>
+          </div>
+          <p class="text-xs text-on-surface-variant leading-relaxed">
+            Email address, profile display name, and unique user identifier to securely establish authenticated user sessions.
+          </p>
+        </div>
+
+        <div class="p-4 rounded-xl bg-surface-container border border-outline-variant/30 space-y-2">
+          <div class="flex items-center gap-2 text-on-surface text-sm font-semibold">
+            <span class="material-symbols-outlined text-[17px] text-primary">description</span>
+            <span>Resume &amp; Highlights</span>
+          </div>
+          <p class="text-xs text-on-surface-variant leading-relaxed">
+            Technical skills, experience summaries, and role preferences extracted to customize your outreach pitch drafts.
+          </p>
+        </div>
+
+        <div class="p-4 rounded-xl bg-surface-container border border-outline-variant/30 space-y-2">
+          <div class="flex items-center gap-2 text-on-surface text-sm font-semibold">
+            <span class="material-symbols-outlined text-[17px] text-tertiary">history</span>
+            <span>Outreach Audit Logs</span>
+          </div>
+          <p class="text-xs text-on-surface-variant leading-relaxed">
+            Historical records of dispatched messages, recipient emails, delivery timestamps, and status for your tracking.
+          </p>
+        </div>
+      </div>
+    </article>
+
+    <!-- Section 03: Google API Limited Use & Gmail Scopes Matrix -->
+    <article class="bg-surface-container-low border border-secondary/35 rounded-2xl p-6 sm:p-8 shadow-sm space-y-4">
+      <div class="flex items-center justify-between border-b border-outline-variant/20 pb-3">
+        <div class="flex items-center gap-2.5">
+          <span class="px-2 py-0.5 rounded-md bg-secondary/15 text-secondary text-xs font-bold">03</span>
+          <h2 class="text-base sm:text-lg font-bold text-on-surface">Google API User Data &amp; Gmail Scopes</h2>
+        </div>
+        <span class="text-xs text-secondary font-semibold">OAuth Specification</span>
+      </div>
+
+      <p class="text-sm text-on-surface-variant leading-relaxed">
+        Our application requests authorization for sensitive Google OAuth scopes solely to execute actions you explicitly initiate:
       </p>
-    </section>
 
-  </div>
+      <!-- Structured OAuth Scopes Matrix Table -->
+      <div class="overflow-x-auto rounded-xl border border-outline-variant/30 bg-surface-container">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-surface-container-highest/60 text-on-surface border-b border-outline-variant/30">
+            <tr>
+              <th class="py-2.5 px-4 font-semibold">Scope Identifier</th>
+              <th class="py-2.5 px-4 font-semibold">Operational Purpose</th>
+              <th class="py-2.5 px-4 font-semibold">Access Level</th>
+              <th class="py-2.5 px-4 font-semibold">Security Standard</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-outline-variant/20 text-on-surface-variant text-xs">
+            <tr>
+              <td class="py-3 px-4 font-mono text-secondary">https://www.googleapis.com/auth/gmail.send</td>
+              <td class="py-3 px-4">Dispatches user-approved pitches directly through your Gmail</td>
+              <td class="py-3 px-4 text-on-surface font-semibold">Write-Only (Send)</td>
+              <td class="py-3 px-4">Fernet AES-128-CBC at rest</td>
+            </tr>
+            <tr>
+              <td class="py-3 px-4 font-mono text-secondary">https://www.googleapis.com/auth/userinfo.email</td>
+              <td class="py-3 px-4">Authenticates your identity and ties your session to your account</td>
+              <td class="py-3 px-4 text-on-surface font-semibold">Read-Only</td>
+              <td class="py-3 px-4">Encrypted session token</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Mandatory Google Compliance Callout -->
+      <div class="p-4 rounded-xl bg-surface-container-lowest border-l-4 border-secondary space-y-2 shadow-inner">
+        <div class="flex items-center gap-1.5 text-secondary text-xs font-bold uppercase tracking-wider">
+          <span class="material-symbols-outlined text-[16px]">verified</span>
+          <span>Google API Services User Data Policy Compliance</span>
+        </div>
+        <p class="text-sm text-on-surface leading-relaxed">
+          {{ project_name }}'s use and transfer to any other app of information received from Google APIs adheres to the 
+          <a href="https://developers.google.com/terms/api-services-user-data-policy" target="_blank" rel="noopener noreferrer" class="underline text-secondary hover:text-primary font-semibold">Google API Services User Data Policy</a>, 
+          including the Limited Use requirements.
+        </p>
+      </div>
+
+      <!-- Compliance Commitments Grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
+        <div class="p-3.5 rounded-lg bg-surface-container-lowest border border-outline-variant/30 space-y-1">
+          <span class="text-xs text-secondary font-semibold flex items-center gap-1">
+            <span class="material-symbols-outlined text-[15px]">block</span>
+            Zero Data Reselling
+          </span>
+          <p class="text-xs text-on-surface-variant leading-relaxed">We never sell, rent, or trade your credentials, contact data, or leads to any third party.</p>
+        </div>
+
+        <div class="p-3.5 rounded-lg bg-surface-container-lowest border border-outline-variant/30 space-y-1">
+          <span class="text-xs text-secondary font-semibold flex items-center gap-1">
+            <span class="material-symbols-outlined text-[15px]">block</span>
+            Zero Model Training
+          </span>
+          <p class="text-xs text-on-surface-variant leading-relaxed">We never utilize your Google user data or emails to train public AI foundation models.</p>
+        </div>
+
+        <div class="p-3.5 rounded-lg bg-surface-container-lowest border border-outline-variant/30 space-y-1">
+          <span class="text-xs text-secondary font-semibold flex items-center gap-1">
+            <span class="material-symbols-outlined text-[15px]">check</span>
+            No Inbox Snooping
+          </span>
+          <p class="text-xs text-on-surface-variant leading-relaxed">We cannot inspect incoming inbox communications; access is strictly isolated to sending.</p>
+        </div>
+      </div>
+    </article>
+
+    <!-- Section 04: Cryptographic Security -->
+    <article class="bg-surface-container-low border border-outline-variant/30 rounded-2xl p-6 sm:p-7 shadow-sm space-y-3.5">
+      <div class="flex items-center justify-between border-b border-outline-variant/20 pb-3">
+        <div class="flex items-center gap-2.5">
+          <span class="px-2 py-0.5 rounded-md bg-secondary/15 text-secondary text-xs font-bold">04</span>
+          <h2 class="text-base sm:text-lg font-bold text-on-surface">Cryptographic Security &amp; Storage</h2>
+        </div>
+        <span class="text-xs text-on-surface-variant font-medium">Infrastructure Security</span>
+      </div>
+
+      <div class="p-3.5 rounded-xl bg-surface-container border border-outline-variant/20 text-xs text-on-surface-variant flex items-center gap-2 leading-relaxed">
+        <span class="material-symbols-outlined text-secondary text-[16px] shrink-0">lock</span>
+        <span>Key Takeaway: OAuth tokens are symmetrically encrypted at rest with Fernet (AES-128-CBC) before database writes.</span>
+      </div>
+
+      <p class="text-sm text-on-surface-variant leading-relaxed">
+        All OAuth refresh tokens and credentials are encrypted at rest using industry-standard Fernet (AES-128-CBC) symmetric cryptography before persisting to the database. Uploaded resume files are parsed in memory and wiped from disk immediately upon skill extraction.
+      </p>
+    </article>
+
+    <!-- Section 05: Revocation & Erasure -->
+    <article class="bg-surface-container-low border border-outline-variant/30 rounded-2xl p-6 sm:p-7 shadow-sm space-y-3.5">
+      <div class="flex items-center justify-between border-b border-outline-variant/20 pb-3">
+        <div class="flex items-center gap-2.5">
+          <span class="px-2 py-0.5 rounded-md bg-secondary/15 text-secondary text-xs font-bold">05</span>
+          <h2 class="text-base sm:text-lg font-bold text-on-surface">Revoking Access &amp; Sovereign Data Deletion</h2>
+        </div>
+        <span class="text-xs text-secondary font-semibold">User Controls</span>
+      </div>
+
+      <p class="text-sm text-on-surface-variant leading-relaxed">
+        You retain sovereign control over your permissions. You may revoke {{ project_name }}'s authorization at any moment through your 
+        <a href="https://myaccount.google.com/permissions" target="_blank" rel="noopener noreferrer" class="underline text-primary hover:underline font-medium">Google Security Dashboard</a>. 
+        Upon revocation, our servers are immediately barred from dispatching emails or accessing your profile. You may also request complete erasure of your audit logs anytime.
+      </p>
+    </article>
+
+    <!-- Section 06: Contact -->
+    <article class="bg-surface-container-low border border-outline-variant/30 rounded-2xl p-6 sm:p-7 shadow-sm space-y-3.5">
+      <div class="flex items-center justify-between border-b border-outline-variant/20 pb-3">
+        <div class="flex items-center gap-2.5">
+          <span class="px-2 py-0.5 rounded-md bg-secondary/15 text-secondary text-xs font-bold">06</span>
+          <h2 class="text-base sm:text-lg font-bold text-on-surface">Privacy Officer &amp; Compliance Inquiries</h2>
+        </div>
+        <span class="text-xs text-secondary font-semibold">Direct Reach</span>
+      </div>
+
+      <p class="text-sm text-on-surface-variant leading-relaxed">
+        For inquiries regarding compliance, data handling, or to request permanent record deletion, contact our privacy officer directly:
+      </p>
+
+      <div class="p-4 rounded-xl bg-surface-container border border-outline-variant/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-surface-container-highest border border-outline-variant/30 flex items-center justify-center text-primary">
+            <span class="material-symbols-outlined text-[20px]">shield</span>
+          </div>
+          <div>
+            <span class="text-xs text-on-surface-variant block">Privacy &amp; Compliance</span>
+            <a href="mailto:support@outreachpilot.in" class="text-sm font-semibold text-primary hover:underline">support@outreachpilot.in</a>
+          </div>
+        </div>
+
+        <a href="mailto:support@outreachpilot.in" class="btn-tactile-slate px-4 py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 cursor-pointer shadow-sm">
+          <span class="material-symbols-outlined text-[15px]">send</span>
+          <span>Contact Support</span>
+        </a>
+      </div>
+    </article>
+
+  </main>
+
+  <!-- Clean Centered Footer -->
+  <footer class="max-w-4xl mx-auto mt-12 py-8 border-t border-outline-variant/20 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-on-surface-variant">
+    <div class="flex items-center gap-2">
+      <span class="material-symbols-outlined text-[16px] text-secondary">verified_user</span>
+      <span>{{ project_name }} Privacy Architecture • All Rights Reserved</span>
+    </div>
+    <div class="flex items-center gap-4">
+      <a href="/" class="hover:text-on-surface transition-colors">Home</a>
+      <span>•</span>
+      <a href="/terms" class="hover:text-on-surface transition-colors">Terms of Service</a>
+      <span>•</span>
+      <a href="/app" class="hover:text-on-surface transition-colors">Workspace</a>
+    </div>
+  </footer>
+
+  <!-- Theme Toggle Logic Script -->
+  <script>
+    function updateThemeIcon(theme) {
+      const isLight = theme === "light";
+      const icon = document.getElementById("theme-toggle-icon");
+      if (icon) icon.textContent = isLight ? "dark_mode" : "light_mode";
+      const btn = document.getElementById("btn-theme-toggle");
+      if (btn) btn.setAttribute("title", isLight ? "Switch to Dark Mode" : "Switch to Light Mode");
+    }
+
+    function toggleTheme() {
+      const isCurrentlyLight = document.documentElement.classList.contains("light");
+      const newTheme = isCurrentlyLight ? "dark" : "light";
+      if (newTheme === "light") {
+        document.documentElement.classList.remove("dark");
+        document.documentElement.classList.add("light");
+      } else {
+        document.documentElement.classList.remove("light");
+        document.documentElement.classList.add("dark");
+      }
+      try {
+        localStorage.setItem("pilot_theme", newTheme);
+      } catch (_) {}
+      updateThemeIcon(newTheme);
+    }
+
+    document.getElementById("btn-theme-toggle")?.addEventListener("click", toggleTheme);
+    updateThemeIcon(document.documentElement.classList.contains("light") ? "light" : "dark");
+
+    // Dynamic system theme listener
+    const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)");
+    if (systemPrefersDark && systemPrefersDark.addEventListener) {
+      systemPrefersDark.addEventListener("change", (e) => {
+        if (!localStorage.getItem("pilot_theme")) {
+          const autoTheme = e.matches ? "dark" : "light";
+          if (autoTheme === "light") {
+            document.documentElement.classList.remove("dark");
+            document.documentElement.classList.add("light");
+          } else {
+            document.documentElement.classList.remove("light");
+            document.documentElement.classList.add("dark");
+          }
+          updateThemeIcon(autoTheme);
+        }
+      });
+    }
+  </script>
 </body>
 </html>

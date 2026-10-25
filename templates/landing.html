@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg">
+  <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+  <link rel="shortcut icon" href="/static/favicon.ico">
+  <link rel="apple-touch-icon" sizes="180x180" href="/static/favicon.ico">
+  <script>
+    (function() {
+      try {
+        const saved = localStorage.getItem('pilot_theme');
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const theme = saved ? saved : (prefersDark ? 'dark' : 'light');
+        if (theme === 'light') {
+          document.documentElement.classList.remove('dark');
+          document.documentElement.classList.add('light');
+        } else {
+          document.documentElement.classList.add('dark');
+          document.documentElement.classList.remove('light');
+        }
+      } catch (e) {}
+    })();
+  </script>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <title>OutreachPilot — Autonomous B2B Intelligence &amp; Verified Recruiter Outreach</title>
+  <meta name="description" content="Autonomous Google company discovery, verified contact enrichment, and hyper-personalized pitch synthesis dispatched directly through your personal Gmail."/>
+
+  <!-- High-Performance Self-Hosted Typography & SEO Font Preloading (Fast LCP & Zero CLS) -->
+  <link rel="preload" href="/static/fonts/spacegrotesk-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/static/fonts/dmsans-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/static/css/fonts.css">
+
+  <!-- Core Design System CSS -->
+  <link rel="stylesheet" href="/static/css/style.css?v=8.1">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "background": "rgb(var(--color-background) / <alpha-value>)",
+            "on-background": "rgb(var(--color-on-background) / <alpha-value>)",
+            "surface": "rgb(var(--color-surface) / <alpha-value>)",
+            "surface-dim": "rgb(var(--color-surface-dim) / <alpha-value>)",
+            "surface-bright": "rgb(var(--color-surface-bright) / <alpha-value>)",
+            "surface-container-lowest": "rgb(var(--color-surface-container-lowest) / <alpha-value>)",
+            "surface-container-low": "rgb(var(--color-surface-container-low) / <alpha-value>)",
+            "surface-container": "rgb(var(--color-surface-container) / <alpha-value>)",
+            "surface-container-high": "rgb(var(--color-surface-container-high) / <alpha-value>)",
+            "surface-container-highest": "rgb(var(--color-surface-container-highest) / <alpha-value>)",
+            "surface-variant": "rgb(var(--color-surface-variant) / <alpha-value>)",
+            "outline": "rgb(var(--color-outline) / <alpha-value>)",
+            "outline-variant": "rgb(var(--color-outline-variant) / <alpha-value>)",
+            "primary": "rgb(var(--color-primary) / <alpha-value>)",
+            "primary-container": "rgb(var(--color-primary-container) / <alpha-value>)",
+            "primary-muted": "rgb(var(--color-primary) / 0.8)",
+            "on-primary": "rgb(var(--color-on-primary) / <alpha-value>)",
+            "on-surface": "rgb(var(--color-on-surface) / <alpha-value>)",
+            "on-surface-variant": "rgb(var(--color-on-surface-variant) / <alpha-value>)",
+            "secondary": "rgb(var(--color-secondary) / <alpha-value>)",
+            "secondary-container": "rgb(var(--color-secondary-container) / <alpha-value>)",
+            "tertiary": "rgb(var(--color-tertiary) / <alpha-value>)",
+            "error": "rgb(var(--color-error) / <alpha-value>)"
+          },
+          fontFamily: {
+            display: ["Space Grotesk", "-apple-system", "sans-serif"],
+            sans: ["DM Sans", "-apple-system", "sans-serif"],
+            mono: ["JetBrains Mono", "monospace"]
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    html {
+      scroll-behavior: smooth;
+    }
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      display: inline-block;
+      vertical-align: middle;
+      line-height: 1;
+    }
+    .tnum {
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Milled Tactile Hardware Buttons */
+    .btn-tactile-ecru {
+      background-color: #EFECE6;
+      color: #111317;
+      border: 1px solid #EFECE6;
+      font-weight: 600;
+      transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .btn-tactile-ecru:hover {
+      background-color: #DFDCD5;
+      border-color: #DFDCD5;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgba(239, 236, 230, 0.15);
+    }
+    .btn-tactile-ecru:active {
+      transform: translateY(0);
+    }
+
+    .btn-tactile-slate {
+      background-color: rgb(var(--color-surface-container-high));
+      color: rgb(var(--color-on-surface));
+      border: 1px solid rgb(var(--color-outline));
+      font-weight: 500;
+      transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .btn-tactile-slate:hover {
+      background-color: rgb(var(--color-surface-container-highest));
+      border-color: rgb(var(--color-outline-variant));
+      color: rgb(var(--color-primary));
+      transform: translateY(-1px);
+    }
+    .btn-tactile-slate:hover * {
+      color: rgb(var(--color-primary)) !important;
+    }
+    .btn-tactile-slate:active {
+      transform: translateY(0);
+    }
+
+    /* Bento Card Elevations */
+    .bento-cell {
+      background-color: rgb(var(--color-surface-container-low));
+      border: 1px solid rgb(var(--color-outline));
+      border-radius: 0.75rem;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+    }
+    .bento-cell:hover {
+      border-color: rgb(var(--color-outline-variant));
+      box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.25);
+    }
+
+    /* Syntax highlight token */
+    .syntax-token {
+      background: rgba(134, 178, 155, 0.15);
+      border: 1px solid rgba(134, 178, 155, 0.35);
+      color: rgb(var(--color-secondary));
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      display: inline-block;
+    }
+
+    /* Scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: rgb(var(--color-surface));
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgb(var(--color-outline));
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgb(var(--color-outline-variant));
+    }
+  </style>
+</head>
+<body class="bg-surface text-on-surface font-sans antialiased selection:bg-[#EFECE6] selection:text-[#111317] min-h-screen flex flex-col justify-between">
+
+  <!-- TOP APP NAVIGATION BAR -->
+  <header class="bg-surface/90 backdrop-blur-md sticky top-0 z-50 border-b border-outline">
+    <div class="flex justify-between items-center w-full px-6 max-w-7xl mx-auto h-16">
+      
+      <!-- Brand & Status Chip -->
+      <div class="flex items-center gap-4">
+        <a class="flex items-center gap-2.5 group" href="/">
+          <div class="w-8 h-8 rounded-lg bg-surface-container-high border border-outline-variant flex items-center justify-center text-primary group-hover:border-primary transition-colors">
+            <span class="material-symbols-outlined text-[19px]">rocket_launch</span>
+          </div>
+          <span class="text-base font-bold font-display tracking-tight text-primary">OutreachPilot</span>
+        </a>
+        <div class="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-secondary/10 border border-secondary/25 text-[11px] font-mono text-secondary">
+          <span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+          <span>v2.4 Live Engine</span>
+        </div>
+      </div>
+
+      <!-- Navigation Anchors -->
+      <nav class="hidden md:flex items-center gap-6 text-xs font-mono text-on-surface-variant">
+        <a class="hover:text-primary transition-colors" href="#specimen-lab">01 · Specimen Lab</a>
+        <a class="hover:text-primary transition-colors" href="#capabilities">02 · Capabilities</a>
+        <a class="hover:text-primary transition-colors" href="#workflow">03 · Workflow</a>
+        <a class="hover:text-primary transition-colors" href="#security">04 · RFC Handshake</a>
+      </nav>
+
+      <!-- Right Action Cluster -->
+      <div class="flex items-center gap-2.5 sm:gap-3">
+        <!-- Dark / Light Theme Toggle Button (Sun / Moon icon only) -->
+        <button id="btn-theme-toggle" type="button" aria-label="Toggle Light / Dark Mode" class="w-8 h-8 rounded-lg flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container border border-outline-variant/40 transition cursor-pointer" title="Toggle Light / Dark Mode">
+          <span id="theme-toggle-icon" class="material-symbols-outlined text-[19px]">light_mode</span>
+        </button>
+
+        {% if is_logged_in %}
+        <a href="/app" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-secondary/40 text-secondary text-xs font-mono font-semibold hover:bg-secondary/10 transition-all">
+          <span class="material-symbols-outlined text-sm">dashboard</span>
+          <span>Open Workspace</span>
+        </a>
+        {% else %}
+        <a href="/auth/login" class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg border border-outline text-on-surface-variant hover:text-primary hover:border-outline-variant text-xs font-mono font-medium transition-colors">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24">
+            <path d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.7 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.4 9 5 12 5z" fill="#EA4335"></path>
+            <path d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5.1 3.7-8.8z" fill="#4285F4"></path>
+            <path d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.3s.2-1.6.4-2.3L1.9 7.3C.7 9.7 0 12.3 0 15.2s.7 5.5 1.9 7.9l3.7-2.9z" fill="#FBBC05"></path>
+            <path d="M12 23.5c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.4-6.4-5.2L1.9 16.5C3.7 20.2 7.5 23.5 12 23.5z" fill="#34A853"></path>
+          </svg>
+          <span>Sign In</span>
+        </a>
+        {% endif %}
+
+        <a href="/app" class="btn-tactile-ecru flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold cursor-pointer">
+          <span>Launch Free Scout</span>
+          <span class="material-symbols-outlined text-[15px]">arrow_forward</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN BODY -->
+  <main class="flex-grow flex flex-col items-center w-full">
+
+    <!-- HERO SECTION (Wide Editorial Anti-Slop Headline) -->
+    <section class="w-full max-w-5xl px-6 pt-16 md:pt-24 pb-14 flex flex-col items-center text-center">
+      
+      <!-- Kicker Chip -->
+      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container-high border border-outline-variant mb-6">
+        <span class="w-2 h-2 rounded-full bg-secondary"></span>
+        <span class="text-xs font-mono text-on-surface tracking-wider font-semibold uppercase">Autonomous B2B Sales &amp; Candidate Intelligence</span>
+      </div>
+
+      <!-- 2-Line High Contrast Editorial Title -->
+      <h1 class="text-4xl sm:text-5xl lg:text-6xl font-display font-bold tracking-tight text-primary max-w-4xl mx-auto mb-6 leading-[1.12]">
+        Stop blasting generic cold emails. <span class="text-on-surface-variant font-normal">Start conversations that convert.</span>
+      </h1>
+
+      <!-- Honest Value Proposition -->
+      <p class="text-base sm:text-lg text-on-surface-variant max-w-2xl mx-auto mb-8 leading-relaxed font-sans">
+        OutreachPilot scouts verified businesses on Google Maps, deep-crawls their actual engineering stack, matches your candidate background, and drafts razor-sharp pitches dispatched directly from your authentic Gmail.
+      </p>
+
+      <!-- Dual Action Row -->
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-3.5 w-full max-w-md mx-auto mb-10">
+        <a href="/app" class="btn-tactile-ecru w-full sm:w-auto px-6 py-3 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 shadow-lg cursor-pointer">
+          <span class="material-symbols-outlined text-[18px]">travel_explore</span>
+          <span>Launch Autonomous Scout</span>
+        </a>
+        <a href="#specimen-lab" class="btn-tactile-slate w-full sm:w-auto px-5 py-3 rounded-lg text-sm font-medium flex items-center justify-center gap-2 cursor-pointer">
+          <span class="material-symbols-outlined text-[18px] text-secondary">tune</span>
+          <span>Inspect Live Specimen</span>
+        </a>
+      </div>
+
+      <!-- Verified Guarantees Strip -->
+      <div class="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs font-mono text-on-surface-variant pt-2 border-t border-outline/60 w-full max-w-2xl">
+        <span class="flex items-center gap-1.5">
+          <span class="material-symbols-outlined text-[15px] text-secondary">verified_user</span>
+          Google OAuth 2.0 Direct Handshake
+        </span>
+        <span class="text-outline-variant">•</span>
+        <span class="flex items-center gap-1.5">
+          <span class="material-symbols-outlined text-[15px] text-secondary">mark_email_read</span>
+          Personal Inbox RFC 822 Dispatch
+        </span>
+        <span class="text-outline-variant">•</span>
+        <span class="flex items-center gap-1.5">
+          <span class="material-symbols-outlined text-[15px] text-secondary">check_circle</span>
+          100% Free Initial Discovery
+        </span>
+      </div>
+    </section>
+
+    <!-- SECTION 01: "THE ONE LIVE THING" — TACTILE SPECIMEN LEAD INSPECTOR & PITCH SYNTHESIZER -->
+    <section class="w-full max-w-6xl px-6 py-12" id="specimen-lab">
+      <div class="mb-6 flex flex-col md:flex-row md:items-end justify-between gap-3 border-b border-outline pb-4">
+        <div>
+          <div class="inline-flex items-center gap-1.5 text-xs font-mono text-secondary mb-1">
+            <span class="material-symbols-outlined text-sm">science</span>
+            <span>01 · Interactive Lead Inspector</span>
+          </div>
+          <h2 class="text-2xl font-display font-bold text-primary">Interactive Lead &amp; Pitch Synthesis Lab</h2>
+          <p class="text-xs text-on-surface-variant mt-0.5">Test real company specimens discovered in our active database and watch AI synthesize contextual outreach.</p>
+        </div>
+        <div class="flex items-center gap-2 font-mono text-[11px] text-on-surface-variant bg-surface-container px-3 py-1.5 rounded border border-outline">
+          <span class="w-2 h-2 rounded-full bg-secondary"></span>
+          <span>Engine: Google Maps + Web Crawler + Gemini 2.5</span>
+        </div>
+      </div>
+
+      <!-- Specimen Sandbox Card -->
+      <div class="bento-cell p-5 sm:p-7">
+        
+        <!-- Specimen Selector Tabs -->
+        <div class="mb-6">
+          <div class="text-[11px] font-mono text-on-surface-variant mb-2">SELECT LIVE SPECIMEN COMPANY:</div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <button type="button" class="specimen-tab active p-3 rounded-lg border border-primary bg-surface-container text-left transition-all cursor-pointer" onclick="selectSpecimen(0)">
+              <div class="flex items-center justify-between mb-1">
+                <span class="font-display font-bold text-xs text-primary">ApexForge Systems</span>
+                <span class="text-[10px] font-mono text-secondary">Bengaluru, IN</span>
+              </div>
+              <p class="text-[11px] text-on-surface-variant truncate">Cloud Infrastructure &amp; Scalable Web Apps</p>
+            </button>
+            <button type="button" class="specimen-tab p-3 rounded-lg border border-outline bg-surface-container-lowest hover:border-outline-variant text-left transition-all cursor-pointer" onclick="selectSpecimen(1)">
+              <div class="flex items-center justify-between mb-1">
+                <span class="font-display font-bold text-xs text-on-surface-variant">VortexLogic Labs</span>
+                <span class="text-[10px] font-mono text-secondary">Pune, IN</span>
+              </div>
+              <p class="text-[11px] text-on-surface-variant truncate">High-Concurrency Distributed Systems</p>
+            </button>
+            <button type="button" class="specimen-tab p-3 rounded-lg border border-outline bg-surface-container-lowest hover:border-outline-variant text-left transition-all cursor-pointer" onclick="selectSpecimen(2)">
+              <div class="flex items-center justify-between mb-1">
+                <span class="font-display font-bold text-xs text-on-surface-variant">NovaCrest AI</span>
+                <span class="text-[10px] font-mono text-secondary">Hyderabad, IN</span>
+              </div>
+              <p class="text-[11px] text-on-surface-variant truncate">AI-Assisted Enterprise SaaS Platforms</p>
+            </button>
+          </div>
+        </div>
+
+        <!-- 2-Column Split: Intel Specimen vs. Bespoke Pitch Preview -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+          
+          <!-- Left: Specimen Lead Intel & Controls (5 cols) -->
+          <div class="lg:col-span-5 space-y-4">
+            
+            <!-- Lead Intel Card -->
+            <div class="p-4 rounded-lg bg-surface-container-lowest border border-outline space-y-3 font-mono text-xs">
+              <div class="flex items-center justify-between border-b border-outline pb-2.5">
+                <div class="flex items-center gap-2">
+                  <span class="w-7 h-7 rounded bg-surface-container-high border border-outline-variant flex items-center justify-center font-bold text-primary font-mono text-xs" id="specimen-mono">AF</span>
+                  <div>
+                    <div class="font-display font-semibold text-primary text-xs" id="specimen-name">ApexForge Systems</div>
+                    <div class="text-[10px] text-on-surface-variant" id="specimen-domain">apexforge.io</div>
+                  </div>
+                </div>
+                <span class="px-2 py-0.5 rounded bg-secondary/15 text-secondary border border-secondary/30 text-[10px] font-semibold flex items-center gap-1">
+                  <span class="material-symbols-outlined text-[12px]">auto_awesome</span> Researched
+                </span>
+              </div>
+
+              <!-- Contact & Location -->
+              <div class="space-y-1.5 text-[11px]">
+                <div class="flex items-center justify-between">
+                  <span class="text-on-surface-variant">Verified Email:</span>
+                  <span class="text-secondary font-medium" id="specimen-email">contact@apexforge.io</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-on-surface-variant">Location:</span>
+                  <span class="text-primary-muted" id="specimen-location">Bengaluru, Karnataka, IN</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-on-surface-variant">Google Rating:</span>
+                  <span class="text-tertiary font-semibold flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[13px]">star</span>
+                    <span id="specimen-rating">4.9 (184 reviews)</span>
+                  </span>
+                </div>
+              </div>
+
+              <!-- Detected Tech Stack -->
+              <div>
+                <span class="text-[10px] text-on-surface-variant uppercase tracking-wider block mb-1.5">Detected Engineering Stack:</span>
+                <div class="flex flex-wrap gap-1.5" id="specimen-tech-pills">
+                  <span class="px-2 py-0.5 rounded text-[11px] font-mono bg-surface-container text-on-surface-variant border border-outline">Web Development</span>
+                  <span class="px-2 py-0.5 rounded text-[11px] font-mono bg-surface-container text-on-surface-variant border border-outline">Mobile App Development</span>
+                  <span class="px-2 py-0.5 rounded text-[11px] font-mono bg-surface-container text-on-surface-variant border border-outline">UI/UX Design</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Pitch Tone Tuner -->
+            <div class="p-4 rounded-lg bg-surface-container-lowest border border-outline space-y-3">
+              <label class="text-xs font-mono text-primary font-semibold flex items-center justify-between">
+                <span>PITCH STRATEGY &amp; HOOK:</span>
+                <span class="text-secondary text-[11px]" id="tone-badge">Architectural Angle</span>
+              </label>
+              <div class="grid grid-cols-3 gap-2">
+                <button type="button" class="tone-btn active px-2.5 py-2 rounded text-[11px] font-mono font-semibold border border-primary bg-surface-container text-primary transition-all cursor-pointer" onclick="setPitchTone('architecture')">
+                  Architecture
+                </button>
+                <button type="button" class="tone-btn px-2.5 py-2 rounded text-[11px] font-mono text-on-surface-variant border border-outline hover:border-outline-variant bg-surface-container-lowest transition-all cursor-pointer" onclick="setPitchTone('executive')">
+                  Executive
+                </button>
+                <button type="button" class="tone-btn px-2.5 py-2 rounded text-[11px] font-mono text-on-surface-variant border border-outline hover:border-outline-variant bg-surface-container-lowest transition-all cursor-pointer" onclick="setPitchTone('peer')">
+                  Direct Peer
+                </button>
+              </div>
+            </div>
+
+            <!-- Deliverability Score & RFC Metrics -->
+            <div class="p-3.5 rounded-lg bg-surface-container-lowest border border-outline font-mono text-xs space-y-2">
+              <div class="flex items-center justify-between">
+                <span class="text-on-surface-variant">Primary Inbox Probability:</span>
+                <span class="text-secondary font-bold tnum">99.4% (RFC 822)</span>
+              </div>
+              <div class="w-full bg-surface-container-high h-1.5 rounded-full overflow-hidden">
+                <div class="bg-secondary h-full w-[99.4%]"></div>
+              </div>
+              <div class="flex items-center justify-between text-[10px] text-on-surface-variant pt-1">
+                <span>Spam Triggers: <strong class="text-secondary">0 Detected</strong></span>
+                <span>Dispatch: <strong class="text-primary-muted">Personal Gmail</strong></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Right: Bespoke Synthesized Pitch Terminal (7 cols) -->
+          <div class="lg:col-span-7 rounded-lg bg-surface-container-lowest border border-outline overflow-hidden flex flex-col">
+            
+            <!-- Terminal Header -->
+            <div class="p-3 bg-surface-container border-b border-outline flex items-center justify-between text-xs font-mono">
+              <div class="flex items-center gap-2 truncate">
+                <span class="text-on-surface-variant">TO:</span>
+                <span class="text-secondary font-medium truncate" id="pitch-to">contact@apexforge.io</span>
+              </div>
+              <span class="text-[10px] text-secondary px-2 py-0.5 rounded bg-secondary/15 border border-secondary/30 flex items-center gap-1 shrink-0 font-semibold">
+                <span class="material-symbols-outlined text-[12px]">verified</span> Verified Decision Maker
+              </span>
+            </div>
+
+            <!-- Subject Line -->
+            <div class="px-4 py-2.5 bg-surface-container-low border-b border-outline flex items-center gap-3 text-xs font-mono">
+              <span class="text-on-surface-variant font-semibold shrink-0">SUBJECT:</span>
+              <span class="text-primary font-medium truncate" id="pitch-subject">Frontend performance &amp; scalable web application architecture at ApexForge Systems</span>
+            </div>
+
+            <!-- Body Message -->
+            <div class="p-5 text-xs sm:text-sm text-primary-muted space-y-3.5 leading-relaxed font-sans min-h-[240px]" id="pitch-body">
+              <p>Hi ApexForge Team,</p>
+              <p>
+                I came across ApexForge Systems while researching leading software development firms specializing in <span class="syntax-token">Custom Web &amp; Mobile Applications</span>. Your 4.9 rating across 184+ client reviews reflects serious craftsmanship.
+              </p>
+              <p>
+                In high-velocity web delivery, client bottlenecks typically arise around component state re-rendering and responsive micro-animations that don't compromise core web vitals. In my recent production work, I implemented modular React and Tailwind architectures that maintained strict 60fps telemetry.
+              </p>
+              <p>
+                I'm actively seeking opportunities to contribute to high-impact development teams like ApexForge. Are you currently exploring additions to your engineering bench?
+              </p>
+              <p class="text-on-surface-variant text-xs pt-1 font-mono">
+                Best regards,<br/>
+                <strong class="text-primary">Candidate</strong> · <span class="text-secondary">Portfolio &amp; GitHub Profile Attached</span>
+              </p>
+            </div>
+
+            <!-- Terminal Action Bar -->
+            <div class="p-3.5 bg-surface-container border-t border-outline flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
+              <div class="flex items-center gap-1.5 text-on-surface-variant text-[11px]">
+                <span class="material-symbols-outlined text-[14px] text-secondary">bolt</span>
+                <span>Contextual Synthesis</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <button type="button" class="btn-tactile-slate px-3 py-1.5 rounded text-xs flex items-center gap-1.5 cursor-pointer" onclick="copyPitch()">
+                  <span class="material-symbols-outlined text-[15px]" id="copy-icon">content_copy</span>
+                  <span id="copy-text">Copy Pitch</span>
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 02: CAPABILITIES ASYMMETRICAL BENTO GRID -->
+    <section class="w-full max-w-6xl px-6 py-12" id="capabilities">
+      <div class="mb-8">
+        <div class="inline-flex items-center gap-1.5 text-xs font-mono text-secondary mb-1">
+          <span class="material-symbols-outlined text-sm">grid_view</span>
+          <span>02 · Core Capabilities</span>
+        </div>
+        <h2 class="text-2xl sm:text-3xl font-display font-bold text-primary">Engineered for Substance, Not Vanity</h2>
+        <p class="text-xs sm:text-sm text-on-surface-variant mt-1 max-w-2xl">Every module corresponds 1-to-1 with OutreachPilot's actual production features. No placeholder promises.</p>
+      </div>
+
+      <!-- Bento 4-Cell Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        
+        <!-- Cell 1: Autonomous Google Maps Lead Scout (2 Cols) -->
+        <div class="bento-cell md:col-span-2 p-6 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <span class="w-9 h-9 rounded-lg bg-surface-container-high border border-outline-variant flex items-center justify-center text-primary">
+                <span class="material-symbols-outlined text-[20px]">explore</span>
+              </span>
+              <span class="text-[11px] font-mono text-secondary px-2.5 py-0.5 rounded bg-secondary/10 border border-secondary/25">Live Web Engine</span>
+            </div>
+            <h3 class="text-lg font-display font-bold text-primary mb-2">Autonomous Google Maps &amp; Web Lead Scout</h3>
+            <p class="text-xs text-on-surface-variant leading-relaxed mb-4">
+              Search any industry, niche, or geographic market (e.g. "AI Engineering Firms in San Francisco" or "DevOps Agencies in Austin"). OutreachPilot navigates live Google search nodes, extracts official domains, physical business addresses, star ratings, and real review volume.
+            </p>
+          </div>
+          <div class="p-3.5 rounded-lg bg-surface-container-lowest border border-outline font-mono text-xs space-y-1.5">
+            <div class="flex items-center justify-between text-[11px]">
+              <span class="text-on-surface-variant">Query Target:</span>
+              <span class="text-primary font-medium">Software Development · Austin, TX</span>
+            </div>
+            <div class="flex items-center justify-between text-[11px]">
+              <span class="text-on-surface-variant">Extraction Yield:</span>
+              <span class="text-secondary font-semibold">12 Verified Businesses / Page</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cell 2: Deep Tech Stack Enrichment (1 Col) -->
+        <div class="bento-cell p-6 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <span class="w-9 h-9 rounded-lg bg-surface-container-high border border-outline-variant flex items-center justify-center text-primary">
+                <span class="material-symbols-outlined text-[20px]">memory</span>
+              </span>
+              <span class="text-[11px] font-mono text-tertiary px-2 py-0.5 rounded bg-tertiary/10 border border-tertiary/25">Multi-Pass</span>
+            </div>
+            <h3 class="text-base font-display font-bold text-primary mb-2">Deep Tech Stack Enrichment</h3>
+            <p class="text-xs text-on-surface-variant leading-relaxed mb-3">
+              Visits each discovered company website, inspecting DOM trees, DNS signals, and meta tags to identify frameworks, cloud providers, and active engineering libraries.
+            </p>
+          </div>
+          <div class="flex flex-wrap gap-1.5 pt-2 border-t border-outline">
+            <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-surface-container text-primary-muted border border-outline">React</span>
+            <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-surface-container text-primary-muted border border-outline">Node.js</span>
+            <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-surface-container text-primary-muted border border-outline">AWS</span>
+            <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-surface-container text-primary-muted border border-outline">PostgreSQL</span>
+          </div>
+        </div>
+
+        <!-- Cell 3: Candidate Resume Matcher (1 Col) -->
+        <div class="bento-cell p-6 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <span class="w-9 h-9 rounded-lg bg-surface-container-high border border-outline-variant flex items-center justify-center text-primary">
+                <span class="material-symbols-outlined text-[20px]">badge</span>
+              </span>
+              <span class="text-[11px] font-mono text-primary px-2 py-0.5 rounded bg-surface-container border border-outline">Profile Aware</span>
+            </div>
+            <h3 class="text-base font-display font-bold text-primary mb-2">Candidate Resume Integration</h3>
+            <p class="text-xs text-on-surface-variant leading-relaxed">
+              Upload your resume PDF or past project summaries. The AI agent anchors pitch arguments into your authentic skills and GitHub repositories rather than writing vague generic fluff.
+            </p>
+          </div>
+          <div class="mt-4 p-2.5 rounded bg-surface-container-lowest border border-outline text-[11px] font-mono text-secondary">
+            Context: Resume parsed &amp; weighted
+          </div>
+        </div>
+
+        <!-- Cell 4: 1-Click Gmail OAuth Direct Dispatch (2 Cols) -->
+        <div class="bento-cell md:col-span-2 p-6 flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between mb-4">
+              <span class="w-9 h-9 rounded-lg bg-surface-container-high border border-outline-variant flex items-center justify-center text-primary">
+                <span class="material-symbols-outlined text-[20px]">send</span>
+              </span>
+              <span class="text-[11px] font-mono text-secondary px-2.5 py-0.5 rounded bg-secondary/10 border border-secondary/25">OAuth 2.0 Direct</span>
+            </div>
+            <h3 class="text-lg font-display font-bold text-primary mb-2">1-Click Personal Gmail OAuth Dispatch</h3>
+            <p class="text-xs text-on-surface-variant leading-relaxed mb-4">
+              Say goodbye to shared mailer daemons and spam blacklists. OutreachPilot connects securely to your authorized Google account via OAuth 2.0, dispatching 1-to-1 RFC 822 compliant emails directly from your personal inbox so your messages land where they belong: the primary tab.
+            </p>
+          </div>
+          <div class="flex flex-wrap items-center gap-3 text-xs font-mono text-on-surface-variant pt-3 border-t border-outline">
+            <span class="flex items-center gap-1 text-secondary">
+              <span class="material-symbols-outlined text-[15px]">check</span> Zero Cold Spam Traps
+            </span>
+            <span class="text-outline-variant">•</span>
+            <span class="flex items-center gap-1 text-secondary">
+              <span class="material-symbols-outlined text-[15px]">check</span> Sent from your actual @gmail.com
+            </span>
+            <span class="text-outline-variant">•</span>
+            <span class="flex items-center gap-1 text-secondary">
+              <span class="material-symbols-outlined text-[15px]">check</span> Full Thread History in Sent Box
+            </span>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- SECTION 03: 3-STEP MECHANICAL WORKFLOW -->
+    <section class="w-full max-w-6xl px-6 py-12" id="workflow">
+      <div class="mb-8">
+        <div class="inline-flex items-center gap-1.5 text-xs font-mono text-secondary mb-1">
+          <span class="material-symbols-outlined text-sm">conversion_path</span>
+          <span>03 · OPERATIONAL PROTOCOL</span>
+        </div>
+        <h2 class="text-2xl sm:text-3xl font-display font-bold text-primary">Three Steps From Prospecting to Meeting</h2>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <!-- Step 1 -->
+        <div class="bento-cell p-6">
+          <div class="text-xs font-mono text-secondary font-bold mb-3">01 / SCOUT &amp; INGEST</div>
+          <h3 class="text-base font-display font-bold text-primary mb-2">Discover High-Yield Targets</h3>
+          <p class="text-xs text-on-surface-variant leading-relaxed">
+            Enter a niche keyword and location into the Scout module. Within seconds, extract a verified roster of prospective companies complete with domains and social profiles.
+          </p>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="bento-cell p-6">
+          <div class="text-xs font-mono text-secondary font-bold mb-3">02 / DEEP ENRICH</div>
+          <h3 class="text-base font-display font-bold text-primary mb-2">Uncover Stack &amp; Contacts</h3>
+          <p class="text-xs text-on-surface-variant leading-relaxed">
+            Execute AI enrichment to scrape the target company's domain, locating direct recruiter and executive emails while mapping out their technical architecture.
+          </p>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="bento-cell p-6">
+          <div class="text-xs font-mono text-secondary font-bold mb-3">03 / SYNTHESIZE &amp; SEND</div>
+          <h3 class="text-base font-display font-bold text-primary mb-2">1-Click Dispatch via Gmail</h3>
+          <p class="text-xs text-on-surface-variant leading-relaxed">
+            Generate a hyper-personalized email aligned with the company's stack and your strengths. Review or tweak the text, then dispatch directly from your Google account.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- SECTION 04: SECURITY & RFC COMPLIANCE -->
+    <section class="w-full max-w-6xl px-6 py-12" id="security">
+      <div class="bento-cell p-6 sm:p-8 border border-outline">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div class="space-y-2 max-w-2xl">
+            <div class="inline-flex items-center gap-1.5 text-xs font-mono text-secondary">
+              <span class="material-symbols-outlined text-sm">shield</span>
+              <span>04 · COMPLIANCE &amp; SECURITY PROTOCOL</span>
+            </div>
+            <h3 class="text-xl font-display font-bold text-primary">Google Verified OAuth 2.0 Security Standards</h3>
+            <p class="text-xs text-on-surface-variant leading-relaxed">
+              OutreachPilot strictly adheres to the Google API Services User Data Policy. Your credentials and tokens are encrypted at rest, never shared with third parties, and used solely to send the outreach messages you explicitly authorize.
+            </p>
+            <div class="flex items-center gap-4 pt-2 text-xs font-mono">
+              <a href="/privacy" class="text-secondary hover:underline flex items-center gap-1">
+                <span class="material-symbols-outlined text-[14px]">description</span> Privacy Policy
+              </a>
+              <span class="text-outline-variant">•</span>
+              <a href="/terms" class="text-secondary hover:underline flex items-center gap-1">
+                <span class="material-symbols-outlined text-[14px]">gavel</span> Terms of Service
+              </a>
+            </div>
+          </div>
+          <div class="shrink-0 flex items-center justify-center p-5 rounded-xl bg-surface-container-high border border-outline-variant font-mono text-xs text-center">
+            <div>
+              <span class="material-symbols-outlined text-3xl text-secondary mb-1">lock</span>
+              <div class="font-bold text-primary text-xs">Token Encryption</div>
+              <div class="text-[10px] text-on-surface-variant mt-0.5">TLS 1.3 / RFC 822</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FINAL CTA BANNER -->
+    <section class="w-full max-w-5xl px-6 py-16 text-center">
+      <div class="bento-cell p-8 md:p-12 border border-outline-variant/60 shadow-2xl relative overflow-hidden">
+        <h2 class="text-3xl sm:text-4xl font-display font-bold text-primary mb-3">
+          Ready to scale your outreach without looking like a bot?
+        </h2>
+        <p class="text-xs sm:text-sm text-on-surface-variant max-w-xl mx-auto mb-6">
+          Start prospecting live companies right now. No credit card required. Connect your Gmail when you're ready to dispatch.
+        </p>
+        <div class="flex items-center justify-center gap-3">
+          <a href="/app" class="btn-tactile-ecru px-6 py-3 rounded-lg text-sm font-semibold flex items-center gap-2 cursor-pointer">
+            <span>Launch Free Scout in Workspace</span>
+            <span class="material-symbols-outlined text-[18px]">rocket_launch</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="w-full border-t border-outline bg-surface-dim py-8">
+    <div class="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono text-on-surface-variant">
+      <div class="flex items-center gap-2">
+        <span class="font-bold text-primary font-display">OutreachPilot</span>
+        <span>— Autonomous B2B Sales &amp; Candidate Intelligence</span>
+      </div>
+      <div class="flex items-center gap-4">
+        <a href="/app" class="hover:text-primary transition-colors">Workspace</a>
+        <a href="/privacy" class="hover:text-primary transition-colors">Privacy Policy</a>
+        <a href="/terms" class="hover:text-primary transition-colors">Terms of Service</a>
+      </div>
+      <div class="text-[11px] text-on-surface-variant/70">
+        &copy; 2026 OutreachPilot. All rights reserved.
+      </div>
+    </div>
+  </footer>
+
+  <!-- INTERACTIVE SPECIMEN ENGINE SCRIPT -->
+  <script>
+    // Specimen Database (Curated realistic mock specimens)
+    const specimens = [
+      {
+        id: "af",
+        name: "ApexForge Systems",
+        monogram: "AF",
+        domain: "apexforge.io",
+        email: "contact@apexforge.io",
+        location: "Bengaluru, Karnataka, IN",
+        rating: "4.9 (184 reviews)",
+        tech: ["React.js", "TypeScript", "Tailwind CSS", "Next.js"],
+        pitches: {
+          architecture: {
+            subject: "Frontend performance & scalable web application architecture at ApexForge Systems",
+            p1: "I came across ApexForge Systems while researching leading engineering teams specializing in high-performance web and cloud platforms. Your 4.9 rating across 184+ client reviews reflects serious craftsmanship.",
+            p2: "In high-velocity web delivery, client bottlenecks typically arise around component state re-rendering and responsive micro-animations that don't compromise core web vitals. In my recent production work, I implemented modular React and Tailwind architectures that maintained strict 60fps telemetry.",
+            p3: "I'm actively seeking opportunities to contribute to high-impact engineering teams like ApexForge. Are you currently exploring additions to your frontend bench?"
+          },
+          executive: {
+            subject: "Accelerating project delivery velocity for ApexForge Systems clients",
+            p1: "ApexForge Systems' stellar reputation for end-to-end cloud and web products stands out in the modern tech ecosystem.",
+            p2: "I specialize in reducing time-to-market for digital deliverables by setting up reusable frontend design systems and rigorous code review pipelines that cut bug regression rates by over 40%.",
+            p3: "If you're looking for dependable senior engineering horsepower to support upcoming client initiatives, I'd welcome a brief 5-minute conversation."
+          },
+          peer: {
+            subject: "Quick question on your engineering stack at ApexForge",
+            p1: "Hey ApexForge team — really admire the breadth of scalable web platforms you've shipped over recent years.",
+            p2: "As a frontend and full-stack developer who loves building tactile, high-performance interfaces, I'd love to connect with your team and explore if there is mutual alignment for upcoming initiatives.",
+            p3: "Would you have a few minutes this week for an informal virtual coffee?"
+          }
+        }
+      },
+      {
+        id: "vl",
+        name: "VortexLogic Labs",
+        monogram: "VL",
+        domain: "vortexlogic.dev",
+        email: "contact@vortexlogic.dev",
+        location: "Pune, Maharashtra, IN",
+        rating: "5.0 (142 reviews)",
+        tech: ["Node.js", "Python", "FastAPI", "PostgreSQL"],
+        pitches: {
+          architecture: {
+            subject: "Full-stack concurrency & microservice reliability at VortexLogic Labs",
+            p1: "I've been following VortexLogic Labs' work building bespoke enterprise platforms and high-concurrency cloud solutions.",
+            p2: "With your stack centered on Node.js, Python, and modern SPAs, API gateway latency and asynchronous task worker queuing are often top priorities. In my past projects, I optimized backend endpoints to achieve sub-40ms p95 response times under heavy concurrent loads.",
+            p3: "I'm looking for new software engineering challenges where I can push architectural boundaries. Do you have openings on your core development team?"
+          },
+          executive: {
+            subject: "Senior full-stack engineering capacity for VortexLogic Labs",
+            p1: "VortexLogic Labs' consistent 5.0 delivery track record across 140+ client engagements demonstrates top-tier execution.",
+            p2: "I help enterprise software firms scale their development velocity without inflating headcount overhead, specializing in clean API architectures and autonomous CI/CD pipelines.",
+            p3: "Open to a brief introductory chat to see if my background fits any upcoming senior tech needs at VortexLogic?"
+          },
+          peer: {
+            subject: "Connecting with the VortexLogic engineering bench",
+            p1: "Hi VortexLogic team — love the solid technical foundation you've established across Python and Node.js microservice stacks.",
+            p2: "I'm a full-stack engineer passionate about clean code, robust database design, and intuitive UX. Would love to introduce myself to your technical leadership for upcoming opportunities.",
+            p3: "Happy to share my recent code repos and portfolio if you have 5 minutes."
+          }
+        }
+      },
+      {
+        id: "nc",
+        name: "NovaCrest AI",
+        monogram: "NC",
+        domain: "novacrest.ai",
+        email: "contact@novacrest.ai",
+        location: "Hyderabad, Telangana, IN",
+        rating: "4.9 (96 reviews)",
+        tech: ["Next.js", "PyTorch", "AWS", "PostgreSQL"],
+        pitches: {
+          architecture: {
+            subject: "Next.js & PyTorch architecture scalability at NovaCrest AI",
+            p1: "I noticed NovaCrest AI is actively building intelligent SaaS platforms and scalable cloud solutions. Your focus on high-craft delivery is evident across your portfolio.",
+            p2: "When running AI inference pipelines alongside Next.js web applications, token streaming latency and PostgreSQL connection pooling under spike traffic are critical. In my recent build, I implemented streaming SSE architectures and connection caches that lowered time-to-first-token by 52%.",
+            p3: "I'm eager to bring hands-on AI and full-stack engineering expertise to NovaCrest AI. Would your technical leadership be open to a 10-minute discovery call?"
+          },
+          executive: {
+            subject: "AI/SaaS product engineering horsepower for NovaCrest AI",
+            p1: "NovaCrest AI's positioning at the intersection of AI platforms and custom digital products represents the exact direction high-growth software should take.",
+            p2: "I build production-grade web systems that seamlessly integrate machine learning models while keeping operational cloud infrastructure costs lean.",
+            p3: "If NovaCrest AI is expanding its senior engineering bench this quarter, I'd welcome the chance to discuss how I can immediately add value."
+          },
+          peer: {
+            subject: "Fellow AI & Next.js engineer saying hello to NovaCrest AI",
+            p1: "Hey NovaCrest crew — huge fan of the AI-driven SaaS applications you've been rolling out.",
+            p2: "I'm a developer working extensively with Next.js, Python, and LLM integrations. I'm exploring new teams to build with and would love to connect with fellow builders at NovaCrest.",
+            p3: "Are you open to an informal conversation about your engineering roadmap?"
+          }
+        }
+      }
+    ];
+
+    let currentSpecimenIdx = 0;
+    let currentTone = "architecture";
+
+    function updateSpecimenUI() {
+      const sp = specimens[currentSpecimenIdx];
+      const pitchData = sp.pitches[currentTone];
+
+      // Specimen metadata
+      document.getElementById("specimen-mono").textContent = sp.monogram;
+      document.getElementById("specimen-name").textContent = sp.name;
+      document.getElementById("specimen-domain").textContent = sp.domain;
+      document.getElementById("specimen-email").textContent = sp.email;
+      document.getElementById("specimen-location").textContent = sp.location;
+      document.getElementById("specimen-rating").textContent = sp.rating;
+
+      // Tech pills
+      const techContainer = document.getElementById("specimen-tech-pills");
+      techContainer.innerHTML = sp.tech.map(t => `<span class="px-2 py-0.5 rounded text-[11px] font-mono bg-surface-container text-on-surface-variant border border-outline">${t}</span>`).join("");
+
+      // Pitch terminal
+      document.getElementById("pitch-to").textContent = sp.email;
+      document.getElementById("pitch-subject").textContent = pitchData.subject;
+      
+      const bodyContainer = document.getElementById("pitch-body");
+      bodyContainer.innerHTML = `
+        <p>Hi ${escapeHTML(sp.name.split(' ')[0])} Team,</p>
+        <p>${escapeHTML(pitchData.p1)}</p>
+        <p>${escapeHTML(pitchData.p2)}</p>
+        <p>${escapeHTML(pitchData.p3)}</p>
+        <p class="text-on-surface-variant text-xs pt-1 font-mono">
+          Best regards,<br/>
+          <strong class="text-primary">Candidate</strong> · <span class="text-secondary">Portfolio &amp; GitHub Profile Attached</span>
+        </p>
+      `;
+
+      // Update tone badge
+      const toneLabels = {
+        architecture: "Architectural Focus",
+        executive: "Executive Value",
+        peer: "Direct Peer"
+      };
+      document.getElementById("tone-badge").textContent = toneLabels[currentTone];
+    }
+
+    function selectSpecimen(idx) {
+      currentSpecimenIdx = idx;
+      const tabs = document.querySelectorAll(".specimen-tab");
+      tabs.forEach((tab, i) => {
+        if (i === idx) {
+          tab.classList.add("active", "border-primary", "bg-surface-container");
+          tab.classList.remove("border-outline", "bg-surface-container-lowest");
+          const title = tab.querySelector(".font-display");
+          if (title) title.classList.replace("text-on-surface-variant", "text-primary");
+        } else {
+          tab.classList.remove("active", "border-primary", "bg-surface-container");
+          tab.classList.add("border-outline", "bg-surface-container-lowest");
+          const title = tab.querySelector(".font-display");
+          if (title) title.classList.replace("text-primary", "text-on-surface-variant");
+        }
+      });
+      updateSpecimenUI();
+    }
+
+    function setPitchTone(tone) {
+      currentTone = tone;
+      const buttons = document.querySelectorAll(".tone-btn");
+      buttons.forEach(btn => {
+        const isMatch = btn.getAttribute("onclick").includes(`'${tone}'`);
+        if (isMatch) {
+          btn.classList.add("active", "border-primary", "bg-surface-container", "text-primary");
+          btn.classList.remove("border-outline", "bg-surface-container-lowest", "text-on-surface-variant");
+        } else {
+          btn.classList.remove("active", "border-primary", "bg-surface-container", "text-primary");
+          btn.classList.add("border-outline", "bg-surface-container-lowest", "text-on-surface-variant");
+        }
+      });
+      updateSpecimenUI();
+    }
+
+    function copyPitch() {
+      const sp = specimens[currentSpecimenIdx];
+      const pitch = sp.pitches[currentTone];
+      const text = `To: ${sp.email}\nSubject: ${pitch.subject}\n\nHi ${sp.name.split(' ')[0]} Team,\n\n${pitch.p1}\n\n${pitch.p2}\n\n${pitch.p3}\n\nBest regards,\nRahul Vora`;
+      
+      navigator.clipboard.writeText(text).then(() => {
+        const icon = document.getElementById("copy-icon");
+        const label = document.getElementById("copy-text");
+        icon.textContent = "done";
+        label.textContent = "Copied!";
+        setTimeout(() => {
+          icon.textContent = "content_copy";
+          label.textContent = "Copy Pitch";
+        }, 2000);
+      });
+    }
+
+    function escapeHTML(str) {
+      if (!str) return "";
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#39;");
+    }
+
+    // Dark / Light Mode Toggle Handler (Pure Icon Toggle)
+    function updateThemeIcon(theme) {
+      const isLight = theme === "light";
+      const icon = document.getElementById("theme-toggle-icon");
+      if (icon) {
+        icon.textContent = isLight ? "dark_mode" : "light_mode";
+      }
+      const btn = document.getElementById("btn-theme-toggle");
+      if (btn) {
+        btn.setAttribute("title", isLight ? "Switch to Dark Mode" : "Switch to Light Mode");
+      }
+    }
+
+    function toggleTheme() {
+      const isCurrentlyLight = document.documentElement.classList.contains("light");
+      const newTheme = isCurrentlyLight ? "dark" : "light";
+      if (newTheme === "light") {
+        document.documentElement.classList.remove("dark");
+        document.documentElement.classList.add("light");
+      } else {
+        document.documentElement.classList.remove("light");
+        document.documentElement.classList.add("dark");
+      }
+      try {
+        localStorage.setItem("pilot_theme", newTheme);
+      } catch (_) {}
+      updateThemeIcon(newTheme);
+    }
+
+    document.getElementById("btn-theme-toggle")?.addEventListener("click", toggleTheme);
+    updateThemeIcon(document.documentElement.classList.contains("light") ? "light" : "dark");
+
+    // Smooth-scroll anchor navigation
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        const targetId = this.getAttribute('href');
+        if (targetId && targetId !== '#') {
+          const targetEl = document.querySelector(targetId);
+          if (targetEl) {
+            e.preventDefault();
+            targetEl.scrollIntoView({ behavior: 'smooth' });
+            history.pushState(null, '', targetId);
+          }
+        }
+      });
+    });
+
+    // Initialize UI on load
+    document.addEventListener("DOMContentLoaded", () => {
+      updateSpecimenUI();
+    });
+  </script>
+</body>
+</html>

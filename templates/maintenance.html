@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg">
+  <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+  <link rel="shortcut icon" href="/static/favicon.ico">
+  <link rel="apple-touch-icon" sizes="180x180" href="/static/favicon.ico">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Under Maintenance — {{ project_name | default("OutreachPilot") }}</title>
+  
+  <!-- High-Performance Self-Hosted Typography & SEO Font Preloading -->
+  <link rel="preload" href="/static/fonts/spacegrotesk-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/static/fonts/dmsans-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/static/css/fonts.css">
+  
+  <!-- Core Design System CSS -->
+  <link rel="stylesheet" href="/static/css/style.css?v=8.1">
+  <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+  <script>
+    (function() {
+      try {
+        const saved = localStorage.getItem("pilot_theme");
+        if (saved === "light") {
+          document.documentElement.classList.remove("dark");
+          document.documentElement.classList.add("light");
+        } else {
+          document.documentElement.classList.add("dark");
+          document.documentElement.classList.remove("light");
+        }
+      } catch (e) {}
+    })();
+  </script>
+</head>
+<body class="bg-surface-container-lowest text-on-surface font-body-md antialiased min-h-screen flex flex-col justify-between selection:bg-primary-container selection:text-on-primary-container">
+
+  <!-- Header Navigation Bar -->
+  <header class="w-full border-b border-outline-variant/30 bg-surface-container-low/70 backdrop-blur-md sticky top-0 z-50">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <a href="/" class="flex items-center gap-2.5 group">
+        <div class="w-8 h-8 rounded-lg bg-primary-container flex items-center justify-center text-on-primary-container shadow-inner">
+          <span class="material-symbols-outlined text-[19px]">rocket_launch</span>
+        </div>
+        <span class="font-headline text-headline-sm font-bold text-on-surface tracking-tight group-hover:text-primary transition-colors">{{ project_name | default("OutreachPilot") }}</span>
+      </a>
+
+      <div class="flex items-center gap-3">
+        <!-- Theme Toggle -->
+        <button id="btn-theme-toggle" type="button" aria-label="Toggle Light / Dark Mode" class="w-9 h-9 rounded-lg flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container border border-outline-variant/40 transition cursor-pointer" title="Toggle Light / Dark Mode">
+          <span id="theme-toggle-icon" class="material-symbols-outlined text-[19px]">light_mode</span>
+        </button>
+
+        <a href="/" class="btn-tactile-slate px-3.5 py-1.5 rounded-lg text-xs font-mono font-semibold flex items-center gap-1.5 cursor-pointer">
+          <span class="material-symbols-outlined text-[16px]">home</span>
+          <span>Landing Page</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Maintenance Card -->
+  <main class="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-8">
+    <div class="w-full max-w-xl bg-surface-container-low border border-outline-variant/50 rounded-2xl p-6 sm:p-10 shadow-2xl relative overflow-hidden text-center space-y-6">
+      
+      <!-- Ambient Glow Behind Status -->
+      <div class="absolute -top-24 left-1/2 -translate-x-1/2 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+      <!-- Icon -->
+      <div class="w-16 h-16 mx-auto rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 shadow-inner">
+        <span class="material-symbols-outlined text-[36px]">engineering</span>
+      </div>
+
+      <!-- Title & Headline -->
+      <div class="space-y-2">
+        <h1 class="text-2xl sm:text-3xl font-headline font-bold tracking-tight text-on-surface">
+          System Maintenance in Progress
+        </h1>
+        <p class="text-sm font-body text-on-surface-variant max-w-md mx-auto leading-relaxed">
+          The application workspace is temporarily offline while we perform scheduled platform upgrades. All company datasets, prospect lists, and outreach pipelines are securely preserved.
+        </p>
+      </div>
+
+      <!-- Live Status Telemetry Box -->
+      <div class="bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-4 max-w-md mx-auto space-y-2 text-left">
+        <div class="flex items-center justify-between text-xs">
+          <span class="text-on-surface-variant flex items-center gap-2">
+            <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+            <span>Platform Status</span>
+          </span>
+          <span class="font-mono text-amber-400 font-medium">Scheduled Upgrades</span>
+        </div>
+        <div class="flex items-center justify-between text-xs border-t border-outline-variant/20 pt-2">
+          <span class="text-on-surface-variant flex items-center gap-2">
+            <span class="material-symbols-outlined text-[14px] text-emerald-400">shield_check</span>
+            <span>Data Security</span>
+          </span>
+          <span class="font-mono text-emerald-400 font-medium">100% Backed Up</span>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="pt-2 border-t border-outline-variant/30 flex flex-col sm:flex-row items-center justify-center gap-3">
+        <button onclick="window.location.reload()" class="w-full sm:w-auto btn-card-pitch px-5 py-2.5 rounded-lg text-xs font-headline font-semibold flex items-center justify-center gap-2 cursor-pointer shadow-md">
+          <span class="material-symbols-outlined text-[17px]">refresh</span>
+          <span>Check Again</span>
+        </button>
+
+        <a href="/" class="w-full sm:w-auto btn-tactile-slate px-4 py-2.5 rounded-lg text-xs font-headline font-medium flex items-center justify-center gap-1.5 cursor-pointer">
+          <span class="material-symbols-outlined text-[16px]">arrow_back</span>
+          <span>View Landing Page</span>
+        </a>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="w-full border-t border-outline-variant/30 py-4 px-4 text-center text-xs text-on-surface-variant/80 font-mono">
+    &copy; 2026 {{ project_name | default("OutreachPilot") }}. All systems monitored.
+  </footer>
+
+  <!-- Theme Toggle Script -->
+  <script>
+    const themeBtn = document.getElementById("btn-theme-toggle");
+    const themeIcon = document.getElementById("theme-toggle-icon");
+    
+    function updateIcon() {
+      const isDark = document.documentElement.classList.contains("dark");
+      if (themeIcon) {
+        themeIcon.textContent = isDark ? "light_mode" : "dark_mode";
+      }
+    }
+    
+    updateIcon();
+    
+    if (themeBtn) {
+      themeBtn.addEventListener("click", () => {
+        const isDark = document.documentElement.classList.contains("dark");
+        if (isDark) {
+          document.documentElement.classList.remove("dark");
+          document.documentElement.classList.add("light");
+          localStorage.setItem("pilot_theme", "light");
+        } else {
+          document.documentElement.classList.remove("light");
+          document.documentElement.classList.add("dark");
+          localStorage.setItem("pilot_theme", "dark");
+        }
+        updateIcon();
+      });
+    }
+  </script>
+</body>
+</html>
