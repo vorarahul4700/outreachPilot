@@ -14,4 +14,4 @@ services:
       - key: GROQ_MODEL
         value: "llama-3.3-70b-versatile"
       - key: MASTER_ADMIN_EMAILS
-        value: "vorarahul111@gmail.com"
+        sync: false
