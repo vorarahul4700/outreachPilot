@@ -1,182 +1,262 @@
 <!DOCTYPE html>
-<html lang="en">
+<html class="dark" lang="en">
 <head>
   <meta charset="UTF-8">
+  <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg">
+  <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+  <link rel="shortcut icon" href="/static/favicon.ico">
+  <link rel="apple-touch-icon" sizes="180x180" href="/static/favicon.ico">
+  <script>
+    (function() {
+      try {
+        const saved = localStorage.getItem('pilot_theme');
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const theme = saved ? saved : (prefersDark ? 'dark' : 'light');
+        if (theme === 'light') {
+          document.documentElement.classList.remove('dark');
+          document.documentElement.classList.add('light');
+        } else {
+          document.documentElement.classList.add('dark');
+          document.documentElement.classList.remove('light');
+        }
+      } catch (e) {}
+    })();
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="OutreachPilot — AI-powered B2B lead intelligence and personalized outreach automation platform.">
+  <meta name="theme-color" content="#111319">
   <title>{{ project_name }} — {{ tagline }}</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- High-Performance Self-Hosted Typography & SEO Font Preloading (Fast LCP & Zero CLS) -->
+  <link rel="preload" href="/static/fonts/spacegrotesk-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/static/fonts/dmsans-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/static/css/fonts.css">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "background": "rgb(var(--color-background) / <alpha-value>)",
+            "on-background": "rgb(var(--color-on-background) / <alpha-value>)",
+            "surface": "rgb(var(--color-surface) / <alpha-value>)",
+            "surface-dim": "rgb(var(--color-surface-dim) / <alpha-value>)",
+            "surface-bright": "rgb(var(--color-surface-bright) / <alpha-value>)",
+            "surface-container-lowest": "rgb(var(--color-surface-container-lowest) / <alpha-value>)",
+            "surface-container-low": "rgb(var(--color-surface-container-low) / <alpha-value>)",
+            "surface-container": "rgb(var(--color-surface-container) / <alpha-value>)",
+            "surface-container-high": "rgb(var(--color-surface-container-high) / <alpha-value>)",
+            "surface-container-highest": "rgb(var(--color-surface-container-highest) / <alpha-value>)",
+            "surface-variant": "rgb(var(--color-surface-variant) / <alpha-value>)",
+            "on-surface": "rgb(var(--color-on-surface) / <alpha-value>)",
+            "on-surface-variant": "rgb(var(--color-on-surface-variant) / <alpha-value>)",
+            "outline": "rgb(var(--color-outline) / <alpha-value>)",
+            "outline-variant": "rgb(var(--color-outline-variant) / <alpha-value>)",
+            "primary": "rgb(var(--color-primary) / <alpha-value>)",
+            "primary-container": "rgb(var(--color-primary-container) / <alpha-value>)",
+            "on-primary": "rgb(var(--color-on-primary) / <alpha-value>)",
+            "on-primary-container": "rgb(var(--color-on-primary-container) / <alpha-value>)",
+            "primary-fixed": "rgb(var(--color-primary) / <alpha-value>)",
+            "primary-fixed-dim": "rgb(var(--color-primary-container) / <alpha-value>)",
+            "inverse-primary": "rgb(var(--color-on-primary) / <alpha-value>)",
+            "surface-tint": "rgb(var(--color-primary) / <alpha-value>)",
+            "secondary": "rgb(var(--color-secondary) / <alpha-value>)",
+            "secondary-container": "rgb(var(--color-secondary-container) / <alpha-value>)",
+            "on-secondary": "rgb(var(--color-on-secondary) / <alpha-value>)",
+            "on-secondary-container": "rgb(var(--color-on-surface) / <alpha-value>)",
+            "secondary-fixed": "rgb(var(--color-secondary) / <alpha-value>)",
+            "secondary-fixed-dim": "rgb(var(--color-secondary-container) / <alpha-value>)",
+            "tertiary": "rgb(var(--color-tertiary) / <alpha-value>)",
+            "tertiary-container": "rgb(var(--color-tertiary-container) / <alpha-value>)",
+            "on-tertiary": "rgb(var(--color-on-tertiary) / <alpha-value>)",
+            "on-tertiary-container": "rgb(var(--color-on-surface) / <alpha-value>)",
+            "error": "rgb(var(--color-error) / <alpha-value>)",
+            "error-container": "rgb(var(--color-error) / 0.15)",
+            "on-error": "#FFFFFF",
+            "on-error-container": "rgb(var(--color-error) / <alpha-value>)"
+          },
+          fontFamily: {
+            "headline": ["Space Grotesk", "sans-serif"],
+            "caption": ["JetBrains Mono", "monospace"],
+            "body-md": ["DM Sans", "Inter", "sans-serif"],
+            "headline-md": ["Space Grotesk", "sans-serif"],
+            "label-sm": ["JetBrains Mono", "monospace"],
+            "headline-lg": ["Space Grotesk", "sans-serif"],
+            "headline-xl": ["Space Grotesk", "sans-serif"],
+            "body-sm": ["DM Sans", "Inter", "sans-serif"],
+            "headline-xl-mobile": ["Space Grotesk", "sans-serif"],
+            "metric-num": ["Space Grotesk", "sans-serif"],
+            "headline-sm": ["Space Grotesk", "sans-serif"],
+            "label-md": ["JetBrains Mono", "monospace"],
+            "body-lg": ["DM Sans", "Inter", "sans-serif"]
+          },
+          fontSize: {
+            "caption": ["11px", { "lineHeight": "14px", "letterSpacing": "0.04em", "fontWeight": "500" }],
+            "body-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0em", "fontWeight": "400" }],
+            "headline-md": ["20px", { "lineHeight": "26px", "letterSpacing": "-0.015em", "fontWeight": "600" }],
+            "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.06em", "fontWeight": "600" }],
+            "headline-lg": ["24px", { "lineHeight": "30px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+            "headline-xl": ["32px", { "lineHeight": "38px", "letterSpacing": "-0.025em", "fontWeight": "600" }],
+            "body-sm": ["13px", { "lineHeight": "18px", "letterSpacing": "0em", "fontWeight": "400" }],
+            "headline-xl-mobile": ["26px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+            "metric-num": ["28px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+            "headline-sm": ["16px", { "lineHeight": "22px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+            "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.04em", "fontWeight": "500" }],
+            "body-lg": ["16px", { "lineHeight": "24px", "letterSpacing": "-0.005em", "fontWeight": "400" }]
+          }
+        }
+      }
+    };
+  </script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-  <link rel="stylesheet" href="/static/css/style.css?v=3.0">
+  <link rel="stylesheet" href="/static/css/style.css?v=8.6">
 </head>
-<body class="bg-slate-950 text-slate-100 antialiased min-h-screen flex overflow-x-hidden">
+<body class="bg-surface text-on-surface font-body-md antialiased min-h-screen flex selection:bg-primary-container selection:text-on-primary-container overflow-x-hidden">
 
   <!-- Mobile Drawer Overlay Backdrop -->
-  <div id="mobile-sidebar-overlay"></div>
+  <div id="mobile-sidebar-overlay" class="hidden fixed inset-0 z-30 bg-black/60 backdrop-blur-sm md:hidden"></div>
 
   <!-- ========================================== -->
-  <!-- LEFT SIDEBAR NAVIGATION (COLLAPSIBLE)      -->
+  <!-- LEFT SIDEBAR NAVIGATION (STITCH EXACT)     -->
   <!-- ========================================== -->
-  <aside id="app-sidebar" class="fixed top-0 bottom-0 left-0 z-40 bg-slate-900 border-r border-slate-800 flex flex-col justify-between w-64 shadow-2xl overflow-y-auto overflow-x-hidden">
-    <!-- Top Branding & Navigation -->
-    <div class="p-4 space-y-6">
+  <aside id="app-sidebar" class="fixed top-0 left-0 h-screen w-60 z-40 bg-surface-container-low border-r border-outline-variant/30 flex flex-col justify-between transition-transform duration-200 -translate-x-full md:translate-x-0">
+    <div class="p-4 flex flex-col gap-6">
       
-      <!-- Brand Logo & Shrink/Expand Toggle -->
-      <div class="flex items-center justify-between">
-        <div id="sidebar-brand-btn" class="flex items-center space-x-3 overflow-hidden cursor-pointer" title="Click to Expand when collapsed">
-          <div class="h-9 w-9 rounded-lg bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 font-bold shrink-0">
-            <i data-lucide="compass" class="w-5 h-5"></i>
+      <!-- Brand Header (Redirects to Home) -->
+      <div class="flex items-center justify-between px-2 pt-1">
+        <a href="/" class="flex items-center gap-3 hover:opacity-85 transition cursor-pointer" title="{{ project_name }} — Home">
+          <div class="w-8 h-8 rounded-lg bg-primary-container flex items-center justify-center text-on-primary-container shadow-inner">
+            <span class="material-symbols-outlined text-[20px]" data-icon="rocket_launch">rocket_launch</span>
           </div>
-          <div class="sidebar-text truncate">
-            <div class="flex items-center space-x-1.5">
-              <span class="font-extrabold text-base tracking-tight text-white">{{ project_name }}</span>
-              <span class="text-[10px] px-1.5 py-0.2 rounded-full bg-slate-800 text-slate-400 border border-slate-700 font-medium">v2.0</span>
+          <div class="flex flex-col">
+            <div class="flex items-center gap-2">
+              <span class="text-headline-sm font-headline-sm font-bold text-on-surface tracking-tight">{{ project_name }}</span>
             </div>
-            <p class="text-[11px] text-slate-400 truncate -mt-0.5">{{ app_descriptor }}</p>
           </div>
-        </div>
-        <div class="flex items-center space-x-1">
-          <button id="btn-toggle-sidebar" title="Collapse Sidebar" class="hidden md:flex sidebar-text p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 border border-transparent hover:border-slate-700 transition cursor-pointer">
-            <i data-lucide="panel-left-close" class="w-4 h-4"></i>
+        </a>
+        <div class="flex items-center gap-1.5">
+          <!-- Dark / Light Theme Toggle Button (Sun / Moon icon only - Desktop only in sidebar, mobile top bar has its own) -->
+          <button id="btn-theme-toggle" type="button" aria-label="Toggle Light / Dark Mode" class="hidden md:flex w-8 h-8 rounded-lg items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container border border-outline-variant/40 transition cursor-pointer" title="Toggle Light / Dark Mode">
+            <span id="theme-toggle-icon" class="material-symbols-outlined text-[19px]">light_mode</span>
           </button>
-          <button id="btn-close-sidebar-mobile" title="Close Menu" class="md:hidden p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer">
-            <i data-lucide="x" class="w-5 h-5"></i>
+          <button id="btn-close-sidebar-mobile" class="md:hidden text-on-surface-variant hover:text-on-surface p-1 rounded" title="Close Menu">
+            <span class="material-symbols-outlined text-[20px]">close</span>
           </button>
         </div>
       </div>
 
-      <!-- Navigation Tabs List (3 primary menu items) -->
-      <nav class="space-y-1.5">
-        <button id="tab-companies" class="tab-btn sidebar-nav-item active w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all">
-          <div class="flex items-center space-x-2.5 truncate">
-            <i data-lucide="building-2" class="w-4 h-4 text-sky-400 shrink-0"></i>
-            <span class="sidebar-text truncate">1. All Companies</span>
-          </div>
-          <span id="nav-companies-badge" class="sidebar-badge px-2 py-0.5 rounded-full bg-slate-800 text-indigo-400 border border-slate-700 text-[10px] font-mono">0</span>
+      <!-- Main Navigation Cluster -->
+      <nav class="flex flex-col gap-1">
+        <!-- Tab 1: Companies (Active) -->
+        <button id="tab-companies" class="tab-btn sidebar-nav-item active flex items-center gap-3 px-3 py-2 rounded-lg bg-surface-container-highest/60 text-primary font-medium transition-all duration-150 ease-in-out cursor-pointer text-left w-full" title="Companies Directory">
+          <span class="material-symbols-outlined text-[18px]" data-icon="domain">domain</span>
+          <span class="text-label-md font-label-md">Companies</span>
+          <span class="active-dot ml-auto w-1.5 h-1.5 rounded-full bg-primary"></span>
         </button>
 
-        <button id="tab-resume" class="tab-btn sidebar-nav-item w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all">
-          <div class="flex items-center space-x-2.5 truncate">
-            <i data-lucide="user-check" class="w-4 h-4 text-amber-400 shrink-0"></i>
-            <span class="sidebar-text truncate">2. Candidate Profile</span>
-          </div>
+        <!-- Tab 2: Scout Leads (Inactive) -->
+        <button id="tab-scout" class="tab-btn sidebar-nav-item flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all duration-150 ease-in-out cursor-pointer text-left w-full" title="Scout Leads">
+          <span class="material-symbols-outlined text-[18px]" data-icon="person_search">person_search</span>
+          <span class="text-label-md font-label-md">Scout Leads</span>
+          <span class="active-dot hidden ml-auto w-1.5 h-1.5 rounded-full bg-primary"></span>
         </button>
 
-        <button id="tab-outreach" class="tab-btn sidebar-nav-item w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold transition-all">
-          <div class="flex items-center space-x-2.5 truncate">
-            <i data-lucide="mail" class="w-4 h-4 text-rose-400 shrink-0"></i>
-            <span class="sidebar-text truncate">3. Outreach Hub</span>
-          </div>
+        <!-- Tab 3: Outreach Hub (Inactive) -->
+        <button id="tab-outreach" class="tab-btn sidebar-nav-item flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all duration-150 ease-in-out cursor-pointer text-left w-full" title="Outreach Hub">
+          <span class="material-symbols-outlined text-[18px]" data-icon="send">send</span>
+          <span class="text-label-md font-label-md">Outreach Hub</span>
+          <span class="active-dot hidden ml-auto w-1.5 h-1.5 rounded-full bg-primary"></span>
         </button>
+
+        <!-- Tab 4: Candidate Profile (Inactive) -->
+        <button id="tab-resume" class="tab-btn sidebar-nav-item flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all duration-150 ease-in-out cursor-pointer text-left w-full" title="Candidate Profile & Resume">
+          <span class="material-symbols-outlined text-[18px]" data-icon="account_circle">account_circle</span>
+          <span class="text-label-md font-label-md">Candidate Profile</span>
+          <span class="active-dot hidden ml-auto w-1.5 h-1.5 rounded-full bg-primary"></span>
+        </button>
+
       </nav>
     </div>
 
-    <!-- Bottom Sidebar Section (Auth, Dev Mode, Collapse Icon) -->
-    <div class="p-4 border-t border-slate-800/80 space-y-2.5 bg-slate-900/60">
+    <!-- Footer Profile & Connection Status -->
+    <div class="p-4 border-t border-outline-variant/30 flex flex-col gap-3">
       {% if dev_mode %}
-      <div class="sidebar-text px-2.5 py-1.5 rounded-lg bg-amber-950/60 border border-amber-800 text-amber-300 text-[10px] font-medium flex items-center space-x-2">
-        <span class="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse shrink-0"></span>
-        <span class="truncate">Dev Sandbox Active</span>
+      <div class="px-2.5 py-1.5 rounded-lg bg-surface-container border border-outline-variant/40 text-on-surface-variant text-caption flex items-center justify-between">
+        <span class="flex items-center gap-1.5 text-secondary">
+          <span class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span>
+          Dev Sandbox
+        </span>
+        <button id="btn-sidebar-admin-login" type="button" class="text-primary hover:underline text-[10px] cursor-pointer" title="Switch to Admin">Switch</button>
       </div>
       {% endif %}
 
-      <!-- Logged In State Box -->
-      <div id="auth-box-logged-in" class="{% if not is_logged_in %}hidden{% endif %} space-y-2">
-        <div id="sidebar-admin-badge" class="{% if not is_master_admin %}hidden{% endif %} flex items-center space-x-1.5 px-2.5 py-1 rounded-lg bg-rose-950/80 border border-rose-700/80 text-rose-300 text-[10px] font-bold tracking-wide uppercase">
-          <i data-lucide="shield-check" class="w-3.5 h-3.5 text-rose-400 shrink-0"></i>
-          <span class="truncate">Master Admin Active</span>
+      <!-- State 1: Logged In (Only shown when authenticated) -->
+      <div id="auth-box-logged-in" class="{% if not is_logged_in %}hidden{% endif %} flex items-center justify-between px-2">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <div id="user-avatar-initials" class="w-8 h-8 rounded-full bg-surface-container-highest border border-outline-variant/40 flex items-center justify-center text-label-md font-label-md text-on-surface font-semibold shrink-0">
+            {{ (user.name[:2] if user.name else user.email[:2])|upper if user else "U" }}
+          </div>
+          <div class="flex flex-col min-w-0">
+            <span class="text-label-md font-label-md text-on-surface truncate" id="user-display-email">{{ user.email if user and is_logged_in else "" }}</span>
+            <div class="flex items-center gap-1.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+              <span class="text-caption font-caption text-secondary">Google Connected</span>
+            </div>
+          </div>
         </div>
-        <div class="flex items-center space-x-2 px-2.5 py-1.5 rounded-lg bg-emerald-950/60 border border-emerald-800 text-emerald-300 text-[11px]">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 shrink-0"></span>
-          <span id="user-display-email" class="truncate font-mono">{{ user.email if user else "Logged In" }}</span>
-        </div>
-        <button id="btn-logout" type="button" class="sidebar-text w-full py-1.5 px-2 rounded-lg bg-slate-800 hover:bg-rose-950/40 hover:text-rose-300 border border-slate-700 text-[11px] text-slate-400 transition cursor-pointer flex items-center justify-center space-x-1.5">
-          <i data-lucide="log-out" class="w-3 h-3"></i>
-          <span>Disconnect / Logout</span>
+        <button id="btn-logout" class="text-on-surface-variant hover:text-error transition-colors p-1 rounded cursor-pointer shrink-0" title="Disconnect / Sign Out">
+          <span class="material-symbols-outlined text-[18px]" data-icon="logout">logout</span>
         </button>
       </div>
 
-      <!-- Logged Out State Box -->
-      <div id="auth-box-logged-out" class="{% if is_logged_in %}hidden{% endif %} space-y-2">
-        <a href="/auth/google/login" class="flex items-center justify-center space-x-2 w-full py-2 px-2.5 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-sm transition">
-          <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24"><path fill="#ffffff" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#ffffff" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#ffffff" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#ffffff" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
-          <span class="sidebar-text truncate">Sign in with Google</span>
-        </a>
-        {% if dev_mode %}
-        <div class="space-y-1.5 pt-1">
-          <button id="btn-sidebar-admin-login" type="button" class="sidebar-text flex items-center justify-center space-x-1.5 w-full py-1.5 px-2 rounded-lg bg-rose-950/60 hover:bg-rose-900/80 border border-rose-800 text-[11px] font-semibold text-rose-300 transition cursor-pointer" title="Sign in as Master Admin (vorarahul111@gmail.com)">
-            <i data-lucide="shield-check" class="w-3.5 h-3.5 text-rose-400"></i>
-            <span>Dev: Master Admin</span>
-          </button>
-          <button id="btn-sidebar-demo-login" type="button" class="sidebar-text flex items-center justify-center space-x-1.5 w-full py-1.5 px-2 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-[11px] font-medium text-slate-300 transition cursor-pointer" title="Sign in as Standard Demo User">
-            <i data-lucide="user" class="w-3 h-3 text-slate-400"></i>
-            <span>Dev: Standard User</span>
-          </button>
+      <!-- State 2: Logged Out / Guest Mode -->
+      <div id="auth-box-logged-out" class="{% if is_logged_in %}hidden{% endif %} flex flex-col gap-2 px-1">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-2 min-w-0">
+            <div class="w-7 h-7 rounded-full bg-surface-container-highest border border-outline-variant/30 flex items-center justify-center text-on-surface-variant shrink-0">
+              <span class="material-symbols-outlined text-[16px]">person_outline</span>
+            </div>
+            <div class="flex flex-col min-w-0">
+              <span class="text-label-sm font-label-sm text-on-surface-variant font-medium">Guest Mode</span>
+              <span class="text-[10px] font-caption text-outline">Sign in to unlock AI</span>
+            </div>
+          </div>
+          <span class="w-1.5 h-1.5 rounded-full bg-amber-500/70" title="Not connected"></span>
         </div>
-        {% endif %}
+        <a href="/auth/google/login" id="btn-sidebar-google-login" class="btn-tactile-slate w-full py-2 px-3 rounded-lg font-medium text-caption flex items-center justify-center gap-1.5 shadow-sm transition cursor-pointer text-on-surface">
+          <span class="material-symbols-outlined text-[15px]">login</span>
+          <span>Sign In with Google</span>
+        </a>
       </div>
-
-      <!-- Quick Expand Button in Mini Mode -->
-      <button id="btn-expand-sidebar-mini" title="Expand Sidebar" class="sidebar-icon-only hidden w-full py-2 items-center justify-center rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer">
-        <i data-lucide="panel-left-open" class="w-4 h-4"></i>
-      </button>
     </div>
   </aside>
 
   <!-- ========================================== -->
-  <!-- MAIN CONTENT AREA                          -->
-  <!-- ========================================== -->
-  <div id="main-content-wrap" class="flex-1 ml-0 md:ml-64 min-h-screen flex flex-col bg-slate-950 w-full min-w-0 overflow-x-hidden">
+  <!-- MAIN WORKSPACE                             -->
+  <main id="main-content-wrap" class="flex-1 ml-0 md:ml-60 min-h-screen bg-surface-container-lowest p-3.5 sm:p-6 lg:p-8 pb-16 sm:pb-24 w-full min-w-0 overflow-x-hidden">
     
-    <!-- Top Utility Header -->
-    <header class="border-b border-slate-800/80 bg-slate-900/80 backdrop-blur sticky top-0 z-30 px-3 sm:px-6 lg:px-8 py-2.5 sm:py-3 flex items-center justify-between gap-3 sm:gap-6 overflow-hidden">
-      <div class="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1 mr-2 overflow-hidden">
-        <!-- Mobile Drawer Hamburger Toggle Button -->
-        <button id="btn-mobile-sidebar" type="button" aria-label="Open Navigation Menu" class="md:hidden p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition cursor-pointer shrink-0">
-          <i data-lucide="menu" class="w-4 h-4"></i>
+    <!-- Mobile Hamburger Toggle Bar -->
+    <div class="md:hidden flex items-center justify-between pb-4 mb-4 border-b border-outline-variant/30">
+      <div class="flex items-center gap-2">
+        <button id="btn-mobile-sidebar" type="button" aria-label="Open Navigation Menu" class="p-1.5 rounded-lg bg-surface-container text-on-surface border border-outline-variant/40 cursor-pointer">
+          <span class="material-symbols-outlined text-[20px]">menu</span>
         </button>
-        <div class="min-w-0 flex-1 overflow-hidden">
-          <h1 id="page-current-title" class="text-xs sm:text-sm font-bold text-white flex items-center space-x-1.5 sm:space-x-2 min-w-0">
-            <i data-lucide="building-2" class="w-4 h-4 text-sky-400 shrink-0"></i>
-            <span class="whitespace-nowrap">All Companies & Leads</span>
-          </h1>
-          <p id="page-current-subtitle" class="hidden lg:block text-[11px] text-slate-400">Complete database of verified leads. Filter, sort, view contact details, and prepare outreach.</p>
-        </div>
+        <a href="/" class="font-bold text-headline-sm text-on-surface hover:opacity-85 transition" title="{{ project_name }} — Home">{{ project_name }}</a>
       </div>
-
-      <div class="flex items-center space-x-1.5 sm:space-x-2.5 shrink-0">
-        <!-- Scout Leads Quick Button -->
-        <button id="btn-header-scout" type="button" class="p-1.5 sm:px-2.5 sm:py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold transition cursor-pointer flex items-center space-x-1.5 shadow-sm shrink-0" title="Find new business leads from Google Maps">
-          <i data-lucide="radar" class="w-3.5 h-3.5 shrink-0"></i>
-          <span class="hidden lg:inline">Find Leads</span>
-          <span class="hidden sm:inline lg:hidden">Search</span>
+      <div class="flex items-center gap-2">
+        <!-- Sun / Moon Theme Toggle on Mobile -->
+        <button id="btn-theme-toggle-mobile" type="button" aria-label="Toggle Light / Dark Mode" class="p-1.5 rounded-lg bg-surface-container text-on-surface-variant hover:text-on-surface border border-outline-variant/40 cursor-pointer flex items-center justify-center" title="Toggle Light / Dark Mode">
+          <span class="theme-toggle-icon-mobile material-symbols-outlined text-[19px]">light_mode</span>
         </button>
-
-        <div class="hidden xl:flex items-center space-x-2 px-3 py-1 bg-slate-900 border border-slate-800 rounded-lg text-xs shrink-0">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 shrink-0"></span>
-          <span class="text-slate-400 font-medium">Verified: <strong id="header-leads-counter" class="text-white">0</strong></span>
-        </div>
-        {% if dev_mode %}
-        <div id="header-admin-quick-switch" class="flex items-center space-x-1.5 shrink-0">
-          <button id="btn-header-admin-login" type="button" class="p-1.5 sm:px-2.5 sm:py-1.5 bg-rose-950/80 hover:bg-rose-900 border border-rose-800 text-[11px] font-semibold text-rose-300 rounded-lg transition cursor-pointer flex items-center space-x-1.5 shadow-sm shrink-0" title="Quick Switch: Master Admin (vorarahul111@gmail.com)">
-            <i data-lucide="shield-check" class="w-3.5 h-3.5 text-rose-400 shrink-0"></i>
-            <span class="hidden 2xl:inline">Dev: Master Admin</span>
-            <span class="hidden md:inline 2xl:hidden">Admin</span>
-          </button>
-        </div>
-        {% endif %}
-        <button id="btn-quick-refresh" type="button" class="p-1.5 sm:px-2.5 sm:py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-medium transition cursor-pointer flex items-center space-x-1.5 shrink-0" title="Refresh directory data">
-          <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-slate-300 shrink-0"></i>
-          <span class="hidden lg:inline">Refresh</span>
+        <button id="btn-quick-refresh" type="button" class="p-1.5 rounded-lg bg-surface-container text-on-surface-variant hover:text-on-surface border border-outline-variant/40 cursor-pointer" title="Refresh directory data">
+          <span class="material-symbols-outlined text-[18px]">refresh</span>
         </button>
       </div>
-    </header>
-
-    <!-- Main Screens Container -->
-    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-5 sm:py-6 space-y-5 sm:space-y-6">
+    </div>
 
       <!-- ========================================== -->
       <!-- TAB: LEAD SCOUT (SEARCH & DISCOVERY)       -->
@@ -184,67 +264,80 @@
       <section id="section-scout" class="tab-section hidden space-y-6">
         
         <!-- Search Control Card -->
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-sm space-y-4">
+        <div class="bg-surface-container-low border border-outline-variant/40 rounded-2xl p-5 sm:p-6 shadow-sm space-y-4 relative">
           <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <h2 class="text-base font-bold text-white flex items-center space-x-2">
-                <i data-lucide="radar" class="w-4 h-4 text-indigo-400"></i>
+              <h2 class="text-headline-sm font-headline-sm text-on-surface font-semibold flex items-center gap-2">
+                <span class="material-symbols-outlined text-[20px] text-primary">radar</span>
                 <span>Google Local Lead Scout</span>
-                <span class="text-xs font-normal text-emerald-400 bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800 flex items-center space-x-1">
-                  <i data-lucide="shield-check" class="w-3 h-3 inline"></i>
+                <span class="text-caption font-caption text-secondary bg-secondary/10 px-2.5 py-0.5 rounded border border-secondary/20 flex items-center gap-1 font-mono">
+                  <span class="material-symbols-outlined text-[13px]">verified</span>
                   <span>Genuine Domains Only</span>
                 </span>
               </h2>
-              <p class="text-xs text-slate-400 mt-1">Discover verified companies with official websites. Unofficial/local dummy domains are automatically filtered out.</p>
+              <p class="text-body-sm font-body-sm text-on-surface-variant mt-1">Discover verified companies with official websites. Unofficial and dummy domains are automatically filtered out.</p>
             </div>
             
-            <div class="flex items-center space-x-2">
-              <button id="btn-switch-to-companies" type="button" class="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-semibold transition flex items-center space-x-1.5 cursor-pointer shadow-sm">
-                <i data-lucide="arrow-left" class="w-3.5 h-3.5 text-slate-400"></i>
-                <span>← Back to All Companies (<span class="badge-total-count">0</span>)</span>
+            <div class="flex items-center gap-2">
+              <button id="btn-switch-to-companies" type="button" class="btn-tactile-slate px-3.5 py-2 text-on-surface rounded text-label-sm font-label-sm transition-colors flex items-center gap-1.5 cursor-pointer">
+                <span class="material-symbols-outlined text-[16px]">arrow_back</span>
+                <span>Back to All Companies (<span class="badge-total-count">0</span>)</span>
               </button>
             </div>
           </div>
 
-          <form id="scout-form" onsubmit="return false;" class="space-y-3 pt-2">
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3">
-              <div class="sm:col-span-2 lg:col-span-4">
-                <label class="block text-xs font-medium text-slate-400 mb-1">Target Keyword / Industry</label>
-                <input type="text" id="input-keyword" placeholder="e.g. IT Companies, Software Agencies" value="IT Companies" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500">
+          <form id="scout-form" class="space-y-4 pt-1">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-end">
+              <div class="sm:col-span-2 lg:col-span-3">
+                <label for="input-keyword" class="block text-label-sm font-label-sm text-on-surface-variant mb-1.5 flex items-center justify-between">
+                  <span>Target Keyword / Industry</span>
+                  <span class="text-amber-400 font-mono text-[10px] tracking-wider uppercase px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/25">Required</span>
+                </label>
+                <input type="text" id="input-keyword" required placeholder="e.g. IT Companies, Software Agencies" value="" class="w-full h-10 px-3.5 text-body-sm font-body-sm text-on-surface placeholder:text-outline transition">
               </div>
               <div class="sm:col-span-1 lg:col-span-3">
-                <label class="block text-xs font-medium text-slate-400 mb-1">City / Location</label>
-                <input type="text" id="input-city" placeholder="e.g. Surat, Austin, London" value="Surat" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500">
+                <label for="input-city" class="block text-label-sm font-label-sm text-on-surface-variant mb-1.5 flex items-center justify-between">
+                  <span>City / Location</span>
+                  <span class="text-amber-400 font-mono text-[10px] tracking-wider uppercase px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/25">Required</span>
+                </label>
+                <input type="text" id="input-city" required placeholder="e.g. Surat, Austin, London" value="" class="w-full h-10 px-3.5 text-body-sm font-body-sm text-on-surface placeholder:text-outline transition">
               </div>
+              <!-- Custom Tactile Dropdown: Pages to Scrape -->
               <div class="sm:col-span-1 lg:col-span-2">
-                <label class="block text-xs font-medium text-slate-400 mb-1">Pages to Scrape</label>
-                <select id="input-pages" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-indigo-500">
-                  <option value="1">1 Page (~20 leads)</option>
-                  <option value="2" selected>2 Pages (~40 leads)</option>
-                  <option value="3">3 Pages (~60 leads)</option>
-                  <option value="5">5 Pages (~100 leads)</option>
-                  <option value="10">10 Pages (~200 leads)</option>
-                  <option value="15">15 Pages (~300 leads)</option>
-                  <option value="20">20 Pages (~400 leads)</option>
-                  <option value="30">30 Pages (~600 leads)</option>
-                  <option value="0">⚡ All Available Pages (Auto-Detect Until End)</option>
-                </select>
+                <label class="block text-label-sm font-label-sm text-on-surface-variant mb-1.5">Pages to Scrape</label>
+                <div class="custom-dropdown relative w-full" id="dropdown-scout-pages">
+                  <input type="hidden" id="input-pages" value="2">
+                  <button type="button" class="custom-dropdown-btn w-full" aria-haspopup="listbox" aria-expanded="false" title="Pages to Scrape">
+                    <span class="custom-dropdown-label truncate">2 Pages (~40 leads)</span>
+                    <span class="material-symbols-outlined text-[16px] text-on-surface-variant dropdown-chevron">expand_more</span>
+                  </button>
+                  <div class="custom-dropdown-menu">
+                    <div class="custom-dropdown-list custom-scrollbar" role="listbox"></div>
+                  </div>
+                </div>
               </div>
-              <div class="sm:col-span-1 lg:col-span-1">
-                <label class="block text-xs font-medium text-slate-400 mb-1" title="Country code for Google results (gl)">Country</label>
-                <select id="input-gl" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-2 text-xs text-slate-100 focus:outline-none focus:border-indigo-500">
-                  <option value="in" selected>IN (India)</option>
-                  <option value="us">US (USA)</option>
-                  <option value="uk">UK</option>
-                  <option value="ca">CA (Canada)</option>
-                  <option value="ae">AE (UAE)</option>
-                  <option value="de">DE (Germany)</option>
-                  <option value="au">AU (Australia)</option>
-                </select>
+
+              <!-- Custom Tactile Dropdown: Country -->
+              <div class="sm:col-span-1 lg:col-span-2">
+                <label class="block text-label-sm font-label-sm text-on-surface-variant mb-1.5" title="Country code for Google results (gl)">Country</label>
+                <div class="custom-dropdown relative w-full" id="dropdown-scout-gl">
+                  <input type="hidden" id="input-gl" value="in">
+                  <button type="button" class="custom-dropdown-btn w-full" aria-haspopup="listbox" aria-expanded="false" title="Target Country">
+                    <span class="custom-dropdown-label truncate">IN (India)</span>
+                    <span class="material-symbols-outlined text-[16px] text-on-surface-variant dropdown-chevron">expand_more</span>
+                  </button>
+                  <div class="custom-dropdown-menu">
+                    <div class="custom-dropdown-search-wrap">
+                      <span class="material-symbols-outlined text-[15px] text-on-surface-variant absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">search</span>
+                      <input type="text" class="custom-dropdown-search" placeholder="Search country..." autocomplete="off">
+                    </div>
+                    <div class="custom-dropdown-list custom-scrollbar" role="listbox"></div>
+                  </div>
+                </div>
               </div>
-              <div class="sm:col-span-1 lg:col-span-2 flex items-end">
-                <button type="button" id="btn-start-scout" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-2 px-3 rounded-lg text-xs transition flex items-center justify-center space-x-1.5 shadow-sm cursor-pointer">
-                  <i data-lucide="search" class="w-3.5 h-3.5"></i>
+              <div class="sm:col-span-1 lg:col-span-2 flex flex-col justify-end">
+                <button type="submit" id="btn-start-scout" class="w-full h-10 btn-tactile-ecru font-label-md text-label-md font-semibold px-4 rounded-lg transition-colors flex items-center justify-center gap-1.5 shadow-sm cursor-pointer">
+                  <span class="material-symbols-outlined text-[18px]">search</span>
                   <span>Find Leads</span>
                 </button>
               </div>
@@ -253,18 +346,18 @@
             <!-- Advanced / Optional Fields Toggle -->
             <div class="pt-1">
               <details class="w-full group">
-                <summary class="cursor-pointer text-slate-500 hover:text-slate-300 transition text-[11px] select-none flex items-center space-x-1.5">
-                  <i data-lucide="sliders-horizontal" class="w-3 h-3"></i>
+                <summary class="cursor-pointer text-on-surface-variant hover:text-on-surface transition text-caption font-caption flex items-center gap-1.5">
+                  <span class="material-symbols-outlined text-[16px]">tune</span>
                   <span>Advanced Options (Direct URL, Language)</span>
                 </summary>
-                <div class="grid grid-cols-1 md:grid-cols-12 gap-3 mt-2 pt-2 border-t border-slate-800/60">
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-3 mt-2 pt-2 border-t border-outline-variant/20">
                   <div class="md:col-span-9">
-                    <label class="block text-[11px] font-medium text-slate-400 mb-1">Direct Google Local Search URL (Overrides Keyword/City)</label>
-                    <input type="text" id="input-url" placeholder="https://www.google.com/search?q=...&udm=local" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500">
+                    <label class="block text-caption font-caption text-on-surface-variant mb-1 font-medium">Direct Google Local Search URL (Overrides Keyword/City)</label>
+                    <input type="text" id="input-url" placeholder="https://www.google.com/search?q=...&udm=local" class="w-full bg-surface-container-lowest border border-outline-variant/30 rounded-lg px-3.5 py-1.5 text-body-sm font-body-sm text-on-surface placeholder:text-on-surface-variant/70 focus:outline-none focus:border-primary-container transition">
                   </div>
                   <div class="md:col-span-3">
-                    <label class="block text-[11px] font-medium text-slate-400 mb-1">Language Code (hl)</label>
-                    <input type="text" id="input-hl" value="en" placeholder="en" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500">
+                    <label class="block text-caption font-caption text-on-surface-variant mb-1 font-medium">Language Code (hl)</label>
+                    <input type="text" id="input-hl" value="en" placeholder="en" class="w-full bg-surface-container-lowest border border-outline-variant/30 rounded-lg px-3.5 py-1.5 text-body-sm font-body-sm text-on-surface placeholder:text-on-surface-variant/70 focus:outline-none focus:border-primary-container transition">
                   </div>
                 </div>
               </details>
@@ -272,33 +365,33 @@
           </form>
 
           <!-- Live Scraping Monitor (Collapsed by default, expands when active) -->
-          <div id="scout-monitor" class="hidden bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3">
-            <div class="flex items-center justify-between text-xs">
-              <div class="flex items-center space-x-2">
-                <span class="inline-block w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span id="monitor-status" class="font-medium text-slate-200">Searching Google Maps for businesses...</span>
+          <div id="scout-monitor" class="hidden bg-surface-container-lowest border border-outline-variant/30 rounded-xl p-4 sm:p-5 space-y-3.5 shadow-inner">
+            <div class="flex items-center justify-between text-body-sm">
+              <div class="flex items-center gap-2.5">
+                <span class="inline-block w-2.5 h-2.5 rounded-full bg-secondary animate-pulse"></span>
+                <span id="monitor-status" class="font-medium text-on-surface">Searching Google Maps for businesses...</span>
               </div>
-              <div class="flex items-center space-x-3">
-                <span id="monitor-count" class="font-mono text-indigo-400 font-bold bg-indigo-950/80 px-2 py-0.5 rounded border border-indigo-800 text-xs">0 Found</span>
-                <button id="btn-toggle-logs" type="button" class="text-[11px] text-slate-400 hover:text-slate-200 transition underline cursor-pointer">Hide Activity</button>
+              <div class="flex items-center gap-3">
+                <span id="monitor-count" class="font-mono text-primary font-semibold bg-primary/10 px-2.5 py-0.5 rounded-md border border-primary/20 text-caption font-caption">0 Found</span>
+                <button id="btn-toggle-logs" type="button" class="text-caption font-caption text-outline hover:text-on-surface transition underline cursor-pointer">Hide Activity</button>
               </div>
             </div>
             
-            <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
-              <div id="monitor-progress-bar" class="bg-gradient-to-r from-indigo-500 to-sky-400 h-full transition-all duration-300 rounded-full" style="width: 0%"></div>
+            <div class="w-full bg-surface-container rounded-full h-2 overflow-hidden border border-outline-variant/20">
+              <div id="monitor-progress-bar" class="bg-primary-container h-full transition-all duration-300 rounded-full" style="width: 0%"></div>
             </div>
 
             <!-- Real-time Terminal Log Console -->
-            <div id="scout-terminal-container" class="space-y-1 pt-1">
-              <div class="flex items-center justify-between text-[10px] text-slate-500 font-mono">
-                <span class="flex items-center space-x-1">
-                  <i data-lucide="activity" class="w-3 h-3 text-slate-400 inline"></i>
+            <div id="scout-terminal-container" class="space-y-1.5 pt-1">
+              <div class="flex items-center justify-between text-[11px] text-outline font-mono">
+                <span class="flex items-center gap-1.5">
+                  <span class="material-symbols-outlined text-[14px]">terminal</span>
                   <span>Live Search Activity</span>
                 </span>
                 <span>Automated Search Engine</span>
               </div>
-              <div id="scout-terminal-logs" class="bg-black/80 border border-slate-800/90 rounded-lg p-2.5 font-mono text-[11px] text-emerald-400 space-y-1 max-h-36 overflow-y-auto leading-relaxed select-text shadow-inner">
-                <div class="text-slate-500 italic">Engine ready. Click 'Find Leads' to see real-time search progress...</div>
+              <div id="scout-terminal-logs" class="bg-surface-container-lowest border border-outline-variant/30 rounded-xl p-3 font-mono text-[11px] text-secondary space-y-1 max-h-36 overflow-y-auto leading-relaxed select-text shadow-inner">
+                <div class="text-outline italic">Engine ready. Click 'Find Leads' to see real-time search progress...</div>
               </div>
             </div>
           </div>
@@ -309,42 +402,45 @@
         <!-- ========================================== -->
         <div id="scout-results-section" class="space-y-4">
           <!-- Section Header Bar -->
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-900 border border-slate-800 rounded-2xl px-5 py-4 shadow-sm">
-            <div class="space-y-0.5">
-              <div class="flex items-center space-x-2">
-                <span class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                <h3 class="text-sm font-bold text-white flex items-center space-x-2">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-surface-container-low border border-outline-variant/30 rounded-xl px-5 py-4 shadow-sm">
+            <div class="space-y-1">
+              <div class="flex items-center gap-2">
+                <span class="w-2.5 h-2.5 rounded-full bg-secondary animate-pulse"></span>
+                <h3 class="text-headline-sm font-headline-sm text-on-surface font-semibold flex items-center gap-2">
                   <span>Discovered Leads</span>
-                  <span id="scout-leads-count" class="px-2 py-0.5 rounded-full bg-indigo-950 text-indigo-400 border border-indigo-800 text-[11px] font-mono font-semibold">0 Leads</span>
+                  <span id="scout-leads-count" class="px-2.5 py-0.5 rounded-full bg-surface-container text-primary border border-outline-variant/30 text-caption font-caption font-mono font-semibold">0 Leads</span>
                 </h3>
               </div>
-              <p class="text-xs text-slate-400">
-                Showing verified businesses matching: <strong id="scout-query-label" class="text-indigo-300 font-semibold">"IT Companies" in "Surat"</strong>
+              <p class="text-body-sm font-body-sm text-on-surface-variant">
+                Showing verified businesses matching: <strong id="scout-query-label" class="text-on-surface font-semibold">—</strong>
               </p>
             </div>
-
           </div>
 
-          <!-- Scout Live Cards Grid (Mobile 2-col, Laptop/Desktop 3-col) -->
-          <div id="scout-cards-container" class="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4.5">
-            <!-- Dynamically populated -->
+          <!-- Scout Live Cards Grid (Mobile 1-col, Tablet 2-col, Desktop 3-col - No stretchy cards) -->
+          <div id="scout-cards-container" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+            <!-- Dynamically populated by app.js -->
           </div>
 
           <!-- Scout Live Pagination Controls -->
-          <div id="scout-pagination" class="hidden bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm select-none">
-            <div class="flex items-center space-x-2 text-xs text-slate-400">
-              <span>Showing <strong id="scout-page-range" class="text-white font-semibold">0-0</strong> of <strong id="scout-page-total" class="text-white font-semibold">0</strong> leads</span>
+          <div id="scout-pagination" class="hidden bg-surface-container-low border border-outline-variant/30 rounded-xl px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-3">
+            <div class="flex items-center space-x-2 text-caption font-caption text-on-surface-variant">
+              <span>Showing <strong id="scout-page-range" class="text-on-surface font-semibold">0-0</strong> of <strong id="scout-page-total" class="text-on-surface font-semibold">0</strong> leads</span>
             </div>
 
             <div class="flex items-center space-x-2 sm:space-x-3 flex-wrap justify-center">
-              <div class="flex items-center space-x-1.5 text-xs text-slate-400">
-                <span class="hidden sm:inline">Per page:</span>
-                <select id="scout-per-page" class="bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 cursor-pointer">
-                  <option value="12" selected>12</option>
-                  <option value="24">24</option>
-                  <option value="48">48</option>
-                  <option value="0">All</option>
-                </select>
+              <div class="flex items-center gap-2 text-caption font-caption text-on-surface-variant">
+                <span class="hidden sm:inline font-mono text-[11px]">Per page:</span>
+                <div class="custom-dropdown dropdown-compact relative" id="dropdown-scout-per-page">
+                  <input type="hidden" id="scout-per-page" value="15">
+                  <button type="button" class="custom-dropdown-btn" aria-haspopup="listbox" aria-expanded="false" title="Leads per page">
+                    <span class="custom-dropdown-label">15</span>
+                    <span class="material-symbols-outlined dropdown-chevron text-[15px]">expand_more</span>
+                  </button>
+                  <div class="custom-dropdown-menu align-right">
+                    <div class="custom-dropdown-list custom-scrollbar" role="listbox"></div>
+                  </div>
+                </div>
               </div>
 
               <div id="scout-page-buttons" class="flex items-center space-x-1">
@@ -356,248 +452,345 @@
       </section>
 
       <!-- ========================================== -->
-      <!-- TAB 1: ALL COMPANIES DIRECTORY             -->
+      <!-- TAB 1: ALL COMPANIES DIRECTORY (STITCH UI) -->
       <!-- ========================================== -->
       <section id="section-companies" class="tab-section space-y-6">
         
-        <!-- Metrics / Stats Header -->
-        <div id="company-metrics-grid" class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
-          <!-- Card 1: Verified Leads -->
-          <div id="stat-card-all" class="bg-slate-900 border border-slate-800 hover:border-slate-600 rounded-xl p-3 sm:p-4 space-y-1 transition cursor-pointer select-none group relative min-w-0" title="Click to show All Verified Leads">
-            <div class="flex items-center justify-between gap-1">
-              <span class="text-[11px] sm:text-xs text-slate-300 font-medium group-hover:text-white transition whitespace-nowrap">Verified Leads</span>
-              <span class="stat-pill text-[9px] px-1.5 py-0.5 rounded font-mono text-slate-500 group-hover:text-slate-300 bg-slate-950/60 border border-slate-800 transition shrink-0">All</span>
+        <!-- Top Header & Primary Action (Artisanal Studio Workshop) -->
+        <header class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h1 class="text-headline-xl font-headline-xl text-on-surface font-bold tracking-tight">Companies</h1>
+            <p class="text-body-md font-body-md text-on-surface-variant mt-1">Manage and engage with <span id="header-leads-counter">0</span> verified prospective companies.</p>
+          </div>
+          <div class="flex items-center gap-3">
+            <button id="btn-goto-scout" type="button" class="btn-tactile-ecru flex items-center gap-2 px-4 py-2 rounded font-label-md text-label-md shadow-sm font-semibold cursor-pointer">
+              <span class="material-symbols-outlined text-[18px]">add</span>
+              <span>Scout New Leads</span>
+            </button>
+          </div>
+        </header>
+
+        <!-- Quick Stats Metric Cards (2x2 on mobile, 4-col on desktop) -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <!-- Stat 1: Total Prospects -->
+          <div id="stat-card-all" class="bg-surface-container-low border border-outline-variant/30 rounded-xl p-3.5 sm:p-5 flex flex-col justify-between hover:border-outline-variant/60 transition-colors cursor-pointer">
+            <div class="flex items-center justify-between text-on-surface-variant mb-2">
+              <span class="text-label-sm font-label-sm">Total Prospects</span>
+              <span class="material-symbols-outlined text-[18px] text-primary">domain</span>
             </div>
-            <div class="flex items-baseline space-x-1.5 sm:space-x-2">
-              <span id="companies-total-count" class="text-xl sm:text-2xl font-bold text-white">0</span>
-              <span class="text-[9px] sm:text-[10px] text-emerald-400 font-medium flex items-center space-x-0.5 shrink-0">
-                <i data-lucide="shield-check" class="w-3 h-3 inline"></i>
-                <span>Active</span>
-              </span>
+            <div class="flex items-baseline gap-2">
+              <span id="companies-total-count" class="text-metric-num font-metric-num text-on-surface font-semibold tabular-nums">0</span>
             </div>
+            <p id="stat-all-subtext" class="text-caption font-caption text-on-surface-variant mt-2 font-mono text-[11px] truncate">Verified companies</p>
           </div>
 
-          <!-- Card 2: AI Enriched -->
-          <div id="stat-card-enriched" class="bg-slate-900 border border-slate-800 hover:border-indigo-500/60 rounded-xl p-3 sm:p-4 space-y-1 transition cursor-pointer select-none group relative min-w-0" title="Click to filter AI Enriched Leads">
-            <div class="flex items-center justify-between gap-1">
-              <span class="text-[11px] sm:text-xs text-slate-300 font-medium group-hover:text-indigo-300 transition whitespace-nowrap">AI Enriched</span>
-              <span class="stat-pill text-[9px] px-1.5 py-0.5 rounded font-mono text-slate-500 group-hover:text-indigo-300 bg-slate-950/60 border border-slate-800 transition shrink-0">Filter</span>
+          <!-- Stat 2: Enriched Emails -->
+          <div id="stat-card-emails" class="bg-surface-container-low border border-outline-variant/30 rounded-xl p-3.5 sm:p-5 flex flex-col justify-between hover:border-outline-variant/60 transition-colors cursor-pointer">
+            <div class="flex items-center justify-between text-on-surface-variant mb-2">
+              <span class="text-label-sm font-label-sm">Enriched Emails</span>
+              <span class="material-symbols-outlined text-[18px] text-secondary">verified</span>
             </div>
-            <div class="flex items-baseline space-x-1.5 sm:space-x-2">
-              <span id="stat-enriched-count" class="text-xl sm:text-2xl font-bold text-indigo-400">0</span>
-              <span class="text-[9px] sm:text-[10px] text-slate-400 font-mono">Profiled</span>
+            <div class="flex items-baseline gap-2">
+              <span id="stat-emails-count" class="text-metric-num font-metric-num text-on-surface font-semibold tabular-nums">0</span>
+              <span class="text-caption font-caption text-on-surface-variant font-mono">/ <span id="stat-emails-total">0</span></span>
             </div>
+            <p id="stat-yield-text" class="text-caption font-caption text-on-surface-variant mt-2 font-mono text-[11px] truncate">0% contact yield</p>
           </div>
 
-          <!-- Card 3: Discovered Emails -->
-          <div id="stat-card-emails" class="bg-slate-900 border border-slate-800 hover:border-emerald-500/60 rounded-xl p-3 sm:p-4 space-y-1 transition cursor-pointer select-none group relative min-w-0" title="Click to filter Leads with Verified Emails">
-            <div class="flex items-center justify-between gap-1">
-              <span class="text-[11px] sm:text-xs text-slate-300 font-medium group-hover:text-emerald-300 transition whitespace-nowrap">With Emails</span>
-              <span class="stat-pill text-[9px] px-1.5 py-0.5 rounded font-mono text-slate-500 group-hover:text-emerald-300 bg-slate-950/60 border border-slate-800 transition shrink-0">Filter</span>
+          <!-- Stat 3: AI Researched -->
+          <div id="stat-card-enriched" class="bg-surface-container-low border border-outline-variant/30 rounded-xl p-3.5 sm:p-5 flex flex-col justify-between hover:border-outline-variant/60 transition-colors cursor-pointer">
+            <div class="flex items-center justify-between text-on-surface-variant mb-2">
+              <span class="text-label-sm font-label-sm">AI Researched</span>
+              <span class="material-symbols-outlined text-[18px] text-tertiary">auto_awesome</span>
             </div>
-            <div class="flex items-baseline space-x-1.5 sm:space-x-2">
-              <span id="stat-emails-count" class="text-xl sm:text-2xl font-bold text-emerald-400">0</span>
-              <span class="text-[9px] sm:text-[10px] text-slate-400 font-mono">Contacts</span>
+            <div class="flex items-baseline gap-2">
+              <span id="stat-enriched-count" class="text-metric-num font-metric-num text-on-surface font-semibold tabular-nums">0</span>
+              <span id="stat-enriched-badge" class="text-caption font-caption text-secondary px-1.5 py-0.5 rounded bg-secondary/10 font-mono text-[11px]">0 Active</span>
             </div>
+            <p class="text-caption font-caption text-on-surface-variant mt-2 font-mono text-[11px] truncate">Ready for outreach</p>
           </div>
 
-          <!-- Card 4: Outreach Contacted -->
-          <div id="stat-card-contacted" class="bg-slate-900 border border-slate-800 hover:border-sky-500/60 rounded-xl p-3 sm:p-4 space-y-1 transition cursor-pointer select-none group relative min-w-0" title="Click to filter Contacted Leads">
-            <div class="flex items-center justify-between gap-1">
-              <span class="text-[11px] sm:text-xs text-slate-300 font-medium group-hover:text-sky-300 transition whitespace-nowrap">Emails Sent</span>
-              <span class="stat-pill text-[9px] px-1.5 py-0.5 rounded font-mono text-slate-500 group-hover:text-sky-300 bg-slate-950/60 border border-slate-800 transition shrink-0">Filter</span>
+          <!-- Stat 4: Pitched -->
+          <div id="stat-card-contacted" class="bg-surface-container-low border border-outline-variant/30 rounded-xl p-3.5 sm:p-5 flex flex-col justify-between hover:border-outline-variant/60 transition-colors cursor-pointer" title="Click to view sent pitches (requires sign-in)">
+            <div class="flex items-center justify-between text-on-surface-variant mb-2">
+              <span class="text-label-sm font-label-sm">Pitched</span>
+              <span class="material-symbols-outlined text-[18px] text-primary">send</span>
             </div>
-            <div class="flex items-baseline space-x-1.5 sm:space-x-2">
-              <span id="stat-contacted-count" class="text-xl sm:text-2xl font-bold text-sky-400">0</span>
-              <span class="text-[9px] sm:text-[10px] text-slate-400 font-mono">Contacted</span>
+            <div class="flex items-baseline gap-2">
+              <span id="stat-contacted-count" class="text-metric-num font-metric-num text-on-surface font-semibold tabular-nums">0</span>
+              <span id="stat-contacted-badge" class="text-caption font-caption text-outline px-1.5 py-0.5 rounded bg-surface-container-highest font-mono text-[11px]">Sign in</span>
             </div>
-          </div>
-          <!-- Master Admin KPI Card: Invalid / Excluded Leads -->
-          <div id="stat-card-invalid" class="hidden col-span-2 md:col-span-1 bg-rose-950/20 border border-rose-500/30 hover:border-rose-500/70 transition cursor-pointer rounded-xl p-3 sm:p-4 space-y-1 group relative select-none min-w-0">
-            <div class="flex items-center justify-between gap-1">
-              <span class="text-[11px] sm:text-xs text-rose-400 font-semibold flex items-center space-x-1 whitespace-nowrap">
-                <i data-lucide="shield-alert" class="w-3.5 h-3.5 text-rose-400 shrink-0"></i>
-                <span>Excluded Leads</span>
-              </span>
-              <span class="text-[9px] bg-rose-900/60 text-rose-200 border border-rose-700/50 px-1.5 py-0.2 rounded font-bold uppercase tracking-wider shrink-0">Admin</span>
-            </div>
-            <div class="flex items-baseline space-x-1.5 sm:space-x-2">
-              <span id="stat-invalid-count" class="text-xl sm:text-2xl font-bold text-rose-400">0</span>
-              <span id="stat-invalid-hint" class="text-[9px] sm:text-[10px] text-slate-400 font-mono">Filter</span>
-            </div>
+            <p id="stat-contacted-text" class="text-caption font-caption text-on-surface-variant mt-2 font-mono text-[11px] truncate">Sign in to track your pitches</p>
           </div>
         </div>
 
-        <!-- Master Admin Standard User Preview Active Notice -->
-        <div id="admin-preview-banner" class="hidden bg-amber-950/40 border border-amber-800/80 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-amber-300">
-          <div class="flex items-center space-x-2">
-            <i data-lucide="eye" class="w-4 h-4 text-amber-400 shrink-0"></i>
-            <span><strong>Standard User Preview Active:</strong> You are experiencing the application exactly as standard users see it. Invalid companies and admin delete/restore controls are hidden.</span>
+        <!-- Filter & Search Bar Section (Streamlined, Responsive Grid, No Overlapping) -->
+        <section class="bg-surface-container-low border border-outline-variant/30 rounded-xl p-2.5 sm:p-3 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-2.5 sm:gap-3">
+          <!-- Left: Search Input -->
+          <div class="relative w-full lg:max-w-sm flex items-center">
+            <span class="material-symbols-outlined absolute left-3.5 text-on-surface-variant text-[18px] pointer-events-none">search</span>
+            <input id="filter-search" class="w-full h-10 pl-10 pr-4 text-body-sm font-body-sm text-on-surface placeholder:text-on-surface-variant/70 focus:outline-none rounded-lg bg-surface-container-lowest border border-outline-variant/30 focus:border-outline-variant/70 transition" placeholder="Search by name, tech stack, domain, or location..." type="text"/>
           </div>
-          <button id="btn-banner-exit-preview" type="button" class="shrink-0 px-3 py-1.5 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-lg text-xs transition cursor-pointer flex items-center justify-center space-x-1 shadow-sm">
-            <i data-lucide="shield-check" class="w-3.5 h-3.5"></i>
-            <span>Back to Master Admin View</span>
-          </button>
-        </div>
 
-        <!-- Controls & Filter Toolbar -->
-        <div class="bg-slate-900 border border-slate-800 rounded-xl divide-y divide-slate-800/80 shadow-sm">
-          
-          <!-- Top Row: Primary Actions, Admin Controls & View Switcher -->
-          <div class="p-3 sm:p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3">
-            <!-- Action Buttons: Full width CTA on mobile, balanced secondary buttons -->
-            <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
-              <!-- Find New Leads Button -->
-              <button type="button" id="btn-goto-scout" class="w-full sm:w-auto bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg px-4 py-2 sm:py-1.5 text-xs font-semibold transition flex items-center justify-center space-x-1.5 cursor-pointer shadow-sm shadow-indigo-950/50" title="Search and extract verified company leads">
-                <i data-lucide="search" class="w-3.5 h-3.5 text-indigo-200"></i>
-                <span>Find New Leads</span>
+          <!-- Right Sub-Bar: Dynamic Tech Stack, City, Reset & Refresh -->
+          <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full lg:w-auto">
+            <div class="grid grid-cols-2 gap-2 w-full sm:flex sm:items-center sm:w-auto">
+              <!-- Tech Stack Filter -->
+              <div class="custom-dropdown relative w-full sm:w-[170px]" id="dropdown-filter-tech">
+                <input type="hidden" id="filter-tech-select" value="">
+                <button type="button" class="custom-dropdown-btn" aria-haspopup="listbox" aria-expanded="false" title="Filter by Identified Tech Stack">
+                  <span class="custom-dropdown-label truncate">Tech Stack (All)</span>
+                  <span class="material-symbols-outlined text-[16px] text-on-surface-variant dropdown-chevron">expand_more</span>
+                </button>
+                <div class="custom-dropdown-menu">
+                  <div class="custom-dropdown-search-wrap">
+                    <span class="material-symbols-outlined text-[15px] text-on-surface-variant absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">search</span>
+                    <input type="text" class="custom-dropdown-search" placeholder="Search stack..." autocomplete="off">
+                  </div>
+                  <div class="custom-dropdown-list custom-scrollbar" role="listbox"></div>
+                </div>
+              </div>
+
+              <!-- Dynamic City Dropdown -->
+              <div class="custom-dropdown relative w-full sm:w-[140px]" id="dropdown-filter-city">
+                <input type="hidden" id="filter-city-select" value="">
+                <button type="button" class="custom-dropdown-btn" aria-haspopup="listbox" aria-expanded="false" title="Filter by City">
+                  <span class="custom-dropdown-label truncate">All Cities</span>
+                  <span class="material-symbols-outlined text-[16px] text-on-surface-variant dropdown-chevron">expand_more</span>
+                </button>
+                <div class="custom-dropdown-menu align-right">
+                  <div class="custom-dropdown-search-wrap">
+                    <span class="material-symbols-outlined text-[15px] text-on-surface-variant absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">search</span>
+                    <input type="text" class="custom-dropdown-search" placeholder="Search city..." autocomplete="off">
+                  </div>
+                  <div class="custom-dropdown-list custom-scrollbar" role="listbox"></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2 justify-end sm:justify-start shrink-0">
+              <!-- Reset Filters Button -->
+              <button id="btn-reset-filters" type="button" class="btn-tactile-slate h-10 px-3 rounded-lg text-xs font-mono flex items-center justify-center gap-1.5 text-on-surface-variant hover:text-on-surface cursor-pointer flex-1 sm:flex-initial" title="Reset all search &amp; filter selections">
+                <span class="material-symbols-outlined text-[16px]">restart_alt</span>
+                <span>Reset</span>
               </button>
 
-              <!-- Secondary Actions: Export CSV & Refresh -->
-              <div class="flex items-center gap-2 w-full sm:w-auto">
-                <!-- Export CSV Button -->
-                <button type="button" id="btn-export-csv" class="flex-1 sm:flex-none justify-center bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg px-3 py-1.5 text-xs font-medium transition flex items-center space-x-1.5 cursor-pointer whitespace-nowrap" title="Export verified leads to CSV spreadsheet">
-                  <i data-lucide="download" class="w-3.5 h-3.5 text-slate-400"></i>
-                  <span>Export CSV</span>
-                </button>
-              </div>
-
-              <!-- Desktop-only secondary refresh -->
-              <button type="button" id="btn-load-companies" class="hidden sm:flex bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700/80 rounded-lg px-3 py-1.5 text-xs font-medium transition items-center space-x-1.5 cursor-pointer">
-                <i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-slate-400"></i>
-                <span>Refresh</span>
+              <!-- Refresh Button -->
+              <button id="btn-quick-refresh-btn" type="button" class="h-10 px-2.5 rounded-lg bg-surface-container border border-outline-variant/40 text-on-surface-variant hover:text-on-surface cursor-pointer shrink-0 flex items-center justify-center" title="Refresh list">
+                <span class="material-symbols-outlined text-[18px]">refresh</span>
               </button>
             </div>
-
-            <!-- Right: Admin View Switcher & Multi-Select Checkbox -->
-            <div class="flex items-center gap-2 justify-between sm:justify-end w-full sm:w-auto">
-              <!-- Master Admin Mode Switcher -->
-              <div id="admin-mode-toggle-group" class="hidden items-center bg-slate-950 p-1 rounded-lg border border-indigo-900/60 flex-1 sm:flex-none justify-center">
-                <button id="btn-mode-admin" type="button" class="flex-1 sm:flex-none justify-center px-2 sm:px-2.5 py-1 rounded text-xs font-semibold bg-indigo-600 text-white transition cursor-pointer flex items-center space-x-1 sm:space-x-1.5 shadow-sm" title="Master Admin Mode: See invalid leads & admin actions">
-                  <i data-lucide="shield-check" class="w-3.5 h-3.5 text-white"></i>
-                  <span class="hidden sm:inline">Admin View</span>
-                  <span class="sm:hidden text-[11px]">Admin</span>
-                </button>
-                <button id="btn-mode-preview" type="button" class="flex-1 sm:flex-none justify-center px-2 sm:px-2.5 py-1 rounded text-xs font-semibold text-slate-400 hover:text-white transition cursor-pointer flex items-center space-x-1 sm:space-x-1.5" title="Standard User Preview: Experience app as a regular user">
-                  <i data-lucide="eye" class="w-3.5 h-3.5 text-slate-400"></i>
-                  <span class="hidden sm:inline">User Preview</span>
-                  <span class="sm:hidden text-[11px]">Preview</span>
-                </button>
-              </div>
-
-              <!-- Multi-Select Checkbox Control -->
-              <label id="container-select-all" class="flex items-center space-x-2 bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-800 hover:border-slate-700 cursor-pointer select-none transition shrink-0" title="Select or deselect all leads on current page">
-                <input type="checkbox" id="checkbox-select-all" class="w-3.5 h-3.5 rounded bg-slate-900 border-slate-700 text-indigo-600 focus:ring-indigo-500 cursor-pointer">
-                <span id="label-select-all" class="text-xs font-medium text-slate-300 whitespace-nowrap">Select All</span>
-              </label>
-            </div>
           </div>
+        </section>
 
-          <!-- Bottom Row: Filters & Search Controls (Clean 2x2 grid on mobile) -->
-          <div class="p-3 bg-slate-950/40 flex flex-col lg:flex-row lg:items-center justify-between gap-2.5">
-            
-            <!-- Filters Grid on mobile, inline flex on tablet/desktop -->
-            <div class="grid grid-cols-2 sm:flex sm:flex-wrap items-center gap-2 sm:gap-2.5 w-full lg:w-auto">
-              <!-- Keyword Filter Select -->
-              <div class="flex items-center space-x-1 col-span-1">
-                <select id="filter-keyword-select" class="w-full bg-slate-900 border border-slate-700/80 rounded-lg px-2 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 cursor-pointer hover:border-slate-600 transition" title="Filter by Keyword / Industry">
-                  <option value="">All Keywords</option>
-                </select>
-              </div>
-
-              <!-- City Filter Select -->
-              <div class="flex items-center space-x-1 col-span-1">
-                <select id="filter-city-select" class="w-full bg-slate-900 border border-slate-700/80 rounded-lg px-2 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 cursor-pointer hover:border-slate-600 transition" title="Filter by City">
-                  <option value="">All Cities</option>
-                </select>
-              </div>
-
-              <!-- Sort By Select -->
-              <div class="flex items-center space-x-1 col-span-1">
-                <select id="sort-select" class="w-full bg-slate-900 border border-slate-700/80 rounded-lg px-2 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 cursor-pointer hover:border-slate-600 transition" title="Sort Leads">
-                  <option value="rating_desc" selected>Highest Rated</option>
-                  <option value="enriched_desc">Enriched First</option>
-                  <option value="reviews_desc">Most Reviewed</option>
-                  <option value="rating_asc">Lowest Rating</option>
-                  <option value="newest">Newest Added</option>
-                  <option value="name_asc">Company Name (A - Z)</option>
-                </select>
-              </div>
-
-              <!-- Filter: Discovered Emails Only Toggle Pill -->
-              <div class="col-span-1">
-                <button type="button" id="btn-filter-emails" class="w-full sm:w-auto justify-center px-2.5 py-1.5 rounded-lg text-xs font-medium transition flex items-center space-x-1.5 cursor-pointer bg-slate-900 text-slate-300 hover:text-white border border-slate-700/80 shrink-0" title="Toggle Leads with Direct Verified Emails">
-                  <i data-lucide="mail-check" class="w-3.5 h-3.5 text-emerald-400"></i>
-                  <span>Has Email</span>
-                  <span id="badge-emails-count" class="px-1.5 py-0.2 rounded-full bg-slate-800 text-[10px] text-emerald-400 font-mono">0</span>
-                </button>
-              </div>
-            </div>
-
-            <!-- Search Input (Full width on mobile, right aligned on desktop) -->
-            <div class="relative w-full lg:w-72 shrink-0">
-              <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
-              <input type="text" id="filter-search" placeholder="Search name, domain, tech..." class="w-full bg-slate-900 border border-slate-700/80 rounded-lg pr-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition" style="padding-left: 2.25rem !important;">
-            </div>
-
+        <!-- Directory Pagination Controls (Positioned directly above cards grid for immediate access) -->
+        <div id="companies-pagination" class="hidden bg-surface-container-low border border-outline-variant/30 rounded-xl px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm">
+          <div class="flex items-center space-x-2 text-caption text-on-surface-variant">
+            <span>Showing <strong id="companies-page-range" class="text-on-surface font-semibold">0-0</strong> of <strong id="companies-page-total" class="text-on-surface font-semibold">0</strong> leads</span>
           </div>
-        </div>
-
-        <!-- Companies Card Grid Container (Mobile 2-col, Laptop/Desktop 3-col) -->
-        <div id="companies-container" class="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4.5">
-          <!-- Populated by app.js -->
-        </div>
-
-        <!-- Floating Bulk Action Bar (Visible when 1+ companies selected) -->
-        <div id="bulk-action-bar" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-900/95 backdrop-blur-md border border-slate-700/90 shadow-2xl shadow-black/80 rounded-2xl px-4 sm:px-6 py-3 flex items-center gap-3 sm:gap-4 text-xs animate-in fade-in slide-in-from-bottom-4 duration-200">
-          <div class="flex items-center space-x-2 text-white font-semibold">
-            <span id="bulk-selected-count" class="px-2 py-0.5 rounded-full bg-indigo-600 text-white font-mono text-[11px] font-bold">0</span>
-            <span class="whitespace-nowrap">Selected</span>
-          </div>
-
-          <div class="h-4 w-px bg-slate-700"></div>
-
-          <!-- Bulk Exclude Button -->
-          <button id="btn-bulk-exclude" type="button" class="px-3.5 sm:px-4 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-500 text-white font-semibold transition flex items-center space-x-1.5 shadow-sm cursor-pointer whitespace-nowrap">
-            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-            <span>Exclude Selected (<span class="bulk-count-num">0</span>)</span>
-          </button>
-
-          <!-- Bulk Restore Button (For Invalid Leads View) -->
-          <button id="btn-bulk-restore" type="button" class="hidden px-3.5 sm:px-4 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition flex items-center space-x-1.5 shadow-sm cursor-pointer whitespace-nowrap">
-            <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i>
-            <span>Restore Selected (<span class="bulk-count-num">0</span>)</span>
-          </button>
-
-          <!-- Clear Selection Button -->
-          <button id="btn-bulk-clear" type="button" class="px-2.5 py-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition cursor-pointer whitespace-nowrap">
-            Clear
-          </button>
-        </div>
-
-        <!-- Directory Pagination Controls -->
-        <div id="companies-pagination" class="hidden bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm select-none">
-          <div class="flex items-center space-x-2 text-xs text-slate-400">
-            <span>Showing <strong id="companies-page-range" class="text-white font-semibold">0-0</strong> of <strong id="companies-page-total" class="text-white font-semibold">0</strong> leads</span>
-          </div>
-
           <div class="flex items-center space-x-2 sm:space-x-3 flex-wrap justify-center">
-            <div class="flex items-center space-x-1.5 text-xs text-slate-400">
-              <span class="hidden sm:inline">Per page:</span>
-              <select id="companies-per-page" class="bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 cursor-pointer">
-                <option value="12" selected>12</option>
-                <option value="24">24</option>
-                <option value="48">48</option>
-                <option value="96">96</option>
-                <option value="0">All</option>
-              </select>
+            <div class="flex items-center gap-2 text-caption text-on-surface-variant">
+              <span class="hidden sm:inline font-mono text-[11px]">Per page:</span>
+              <div class="custom-dropdown dropdown-compact relative" id="dropdown-companies-per-page">
+                <input type="hidden" id="companies-per-page" value="15">
+                <button type="button" class="custom-dropdown-btn" aria-haspopup="listbox" aria-expanded="false" title="Leads per page">
+                  <span class="custom-dropdown-label">15</span>
+                  <span class="material-symbols-outlined dropdown-chevron text-[15px]">expand_more</span>
+                </button>
+                <div class="custom-dropdown-menu align-right">
+                  <div class="custom-dropdown-list custom-scrollbar" role="listbox"></div>
+                </div>
+              </div>
             </div>
+            <div id="companies-page-buttons" class="flex items-center space-x-1"></div>
+          </div>
+        </div>
 
-            <div id="companies-page-buttons" class="flex items-center space-x-1">
-              <!-- Populated dynamically by app.js -->
+        <!-- 3-Column Company Cards Grid (Stitch Exact) -->
+        <div id="companies-container" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+          <!-- Initial Preload Skeletons (Theme-Adaptive) -->
+          <div class="skeleton-shimmer bg-surface-container-low border border-outline-variant/30 rounded-xl p-5 flex flex-col justify-between min-h-[220px]">
+            <div class="space-y-3.5">
+              <div class="flex items-start gap-3">
+                <div class="w-9 h-9 rounded-md bg-surface-container-highest shrink-0"></div>
+                <div class="space-y-2 flex-1 min-w-0">
+                  <div class="h-4 bg-surface-container-highest rounded w-3/4"></div>
+                  <div class="h-3 bg-surface-container rounded w-1/2"></div>
+                </div>
+              </div>
+              <div class="space-y-1.5 pt-1">
+                <div class="h-3 bg-surface-container rounded w-full"></div>
+                <div class="h-3 bg-surface-container rounded w-4/5"></div>
+              </div>
+              <div class="flex gap-1.5 pt-2">
+                <div class="h-5 bg-surface-container-highest rounded w-16"></div>
+                <div class="h-5 bg-surface-container-highest rounded w-20"></div>
+                <div class="h-5 bg-surface-container-highest rounded w-14"></div>
+              </div>
+            </div>
+            <div class="pt-3.5 border-t border-outline-variant/30 flex gap-2 mt-4">
+              <div class="h-8 bg-surface-container-highest rounded w-1/2"></div>
+              <div class="h-8 bg-surface-container-highest rounded w-1/2"></div>
+            </div>
+          </div>
+          <div class="skeleton-shimmer bg-surface-container-low border border-outline-variant/30 rounded-xl p-5 flex flex-col justify-between min-h-[220px]">
+            <div class="space-y-3.5">
+              <div class="flex items-start gap-3">
+                <div class="w-9 h-9 rounded-md bg-surface-container-highest shrink-0"></div>
+                <div class="space-y-2 flex-1 min-w-0">
+                  <div class="h-4 bg-surface-container-highest rounded w-3/4"></div>
+                  <div class="h-3 bg-surface-container rounded w-1/2"></div>
+                </div>
+              </div>
+              <div class="space-y-1.5 pt-1">
+                <div class="h-3 bg-surface-container rounded w-full"></div>
+                <div class="h-3 bg-surface-container rounded w-4/5"></div>
+              </div>
+              <div class="flex gap-1.5 pt-2">
+                <div class="h-5 bg-surface-container-highest rounded w-16"></div>
+                <div class="h-5 bg-surface-container-highest rounded w-20"></div>
+                <div class="h-5 bg-surface-container-highest rounded w-14"></div>
+              </div>
+            </div>
+            <div class="pt-3.5 border-t border-outline-variant/30 flex gap-2 mt-4">
+              <div class="h-8 bg-surface-container-highest rounded w-1/2"></div>
+              <div class="h-8 bg-surface-container-highest rounded w-1/2"></div>
+            </div>
+          </div>
+          <div class="skeleton-shimmer bg-surface-container-low border border-outline-variant/30 rounded-xl p-5 flex flex-col justify-between min-h-[220px]">
+            <div class="space-y-3.5">
+              <div class="flex items-start gap-3">
+                <div class="w-9 h-9 rounded-md bg-surface-container-highest shrink-0"></div>
+                <div class="space-y-2 flex-1 min-w-0">
+                  <div class="h-4 bg-surface-container-highest rounded w-3/4"></div>
+                  <div class="h-3 bg-surface-container rounded w-1/2"></div>
+                </div>
+              </div>
+              <div class="space-y-1.5 pt-1">
+                <div class="h-3 bg-surface-container rounded w-full"></div>
+                <div class="h-3 bg-surface-container rounded w-4/5"></div>
+              </div>
+              <div class="flex gap-1.5 pt-2">
+                <div class="h-5 bg-surface-container-highest rounded w-16"></div>
+                <div class="h-5 bg-surface-container-highest rounded w-20"></div>
+                <div class="h-5 bg-surface-container-highest rounded w-14"></div>
+              </div>
+            </div>
+            <div class="pt-3.5 border-t border-outline-variant/30 flex gap-2 mt-4">
+              <div class="h-8 bg-surface-container-highest rounded w-1/2"></div>
+              <div class="h-8 bg-surface-container-highest rounded w-1/2"></div>
+            </div>
+          </div>
+          <div class="skeleton-shimmer bg-surface-container-low border border-outline-variant/30 rounded-xl p-5 flex flex-col justify-between min-h-[220px] hidden md:flex">
+            <div class="space-y-3.5">
+              <div class="flex items-start gap-3">
+                <div class="w-9 h-9 rounded-md bg-surface-container-highest shrink-0"></div>
+                <div class="space-y-2 flex-1 min-w-0">
+                  <div class="h-4 bg-surface-container-highest rounded w-3/4"></div>
+                  <div class="h-3 bg-surface-container rounded w-1/2"></div>
+                </div>
+              </div>
+              <div class="space-y-1.5 pt-1">
+                <div class="h-3 bg-surface-container rounded w-full"></div>
+                <div class="h-3 bg-surface-container rounded w-4/5"></div>
+              </div>
+              <div class="flex gap-1.5 pt-2">
+                <div class="h-5 bg-surface-container-highest rounded w-16"></div>
+                <div class="h-5 bg-surface-container-highest rounded w-20"></div>
+                <div class="h-5 bg-surface-container-highest rounded w-14"></div>
+              </div>
+            </div>
+            <div class="pt-3.5 border-t border-outline-variant/30 flex gap-2 mt-4">
+              <div class="h-8 bg-surface-container-highest rounded w-1/2"></div>
+              <div class="h-8 bg-surface-container-highest rounded w-1/2"></div>
+            </div>
+          </div>
+          <div class="skeleton-shimmer bg-surface-container-low border border-outline-variant/30 rounded-xl p-5 flex flex-col justify-between min-h-[220px] hidden md:flex">
+            <div class="space-y-3.5">
+              <div class="flex items-start gap-3">
+                <div class="w-9 h-9 rounded-md bg-surface-container-highest shrink-0"></div>
+                <div class="space-y-2 flex-1 min-w-0">
+                  <div class="h-4 bg-surface-container-highest rounded w-3/4"></div>
+                  <div class="h-3 bg-surface-container rounded w-1/2"></div>
+                </div>
+              </div>
+              <div class="space-y-1.5 pt-1">
+                <div class="h-3 bg-surface-container rounded w-full"></div>
+                <div class="h-3 bg-surface-container rounded w-4/5"></div>
+              </div>
+              <div class="flex gap-1.5 pt-2">
+                <div class="h-5 bg-surface-container-highest rounded w-16"></div>
+                <div class="h-5 bg-surface-container-highest rounded w-20"></div>
+                <div class="h-5 bg-surface-container-highest rounded w-14"></div>
+              </div>
+            </div>
+            <div class="pt-3.5 border-t border-outline-variant/30 flex gap-2 mt-4">
+              <div class="h-8 bg-surface-container-highest rounded w-1/2"></div>
+              <div class="h-8 bg-surface-container-highest rounded w-1/2"></div>
+            </div>
+          </div>
+          <div class="skeleton-shimmer bg-surface-container-low border border-outline-variant/30 rounded-xl p-5 flex flex-col justify-between min-h-[220px] hidden xl:flex">
+            <div class="space-y-3.5">
+              <div class="flex items-start gap-3">
+                <div class="w-9 h-9 rounded-md bg-surface-container-highest shrink-0"></div>
+                <div class="space-y-2 flex-1 min-w-0">
+                  <div class="h-4 bg-surface-container-highest rounded w-3/4"></div>
+                  <div class="h-3 bg-surface-container rounded w-1/2"></div>
+                </div>
+              </div>
+              <div class="space-y-1.5 pt-1">
+                <div class="h-3 bg-surface-container rounded w-full"></div>
+                <div class="h-3 bg-surface-container rounded w-4/5"></div>
+              </div>
+              <div class="flex gap-1.5 pt-2">
+                <div class="h-5 bg-surface-container-highest rounded w-16"></div>
+                <div class="h-5 bg-surface-container-highest rounded w-20"></div>
+                <div class="h-5 bg-surface-container-highest rounded w-14"></div>
+              </div>
+            </div>
+            <div class="pt-3.5 border-t border-outline-variant/30 flex gap-2 mt-4">
+              <div class="h-8 bg-surface-container-highest rounded w-1/2"></div>
+              <div class="h-8 bg-surface-container-highest rounded w-1/2"></div>
             </div>
           </div>
         </div>
+
+        <!-- Floating Multi-Select Action Dock (Artisanal Hardware Transport) -->
+        <aside id="bulk-action-bar" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
+          <div class="bg-surface-container/95 backdrop-blur-md border border-outline-variant/40 px-5 py-2.5 rounded-xl flex items-center gap-4 shadow-2xl">
+            <!-- Counter & Badge -->
+            <div class="flex items-center gap-2">
+              <span class="flex h-2 w-2 rounded-full bg-secondary animate-pulse"></span>
+              <span class="text-label-md font-label-md text-on-surface font-semibold whitespace-nowrap font-mono">
+                <span id="bulk-selected-count">0</span> leads selected
+              </span>
+            </div>
+            <!-- Subtle Vertical Divider -->
+            <div class="h-4 w-px bg-outline-variant/40"></div>
+            <!-- Action Buttons -->
+            <div class="flex items-center gap-2">
+              <button id="btn-bulk-enrich" type="button" class="btn-tactile-slate flex items-center gap-1.5 px-3 py-1.5 rounded text-label-sm font-label-sm transition-colors cursor-pointer">
+                <span class="material-symbols-outlined text-[16px] text-tertiary">auto_awesome</span>
+                <span>Bulk AI Research</span>
+              </button>
+              <button id="btn-bulk-pitch" type="button" class="btn-tactile-ecru flex items-center gap-1.5 px-3.5 py-1.5 rounded text-label-sm font-label-sm font-semibold transition-colors cursor-pointer">
+                <span class="material-symbols-outlined text-[16px]">mail</span>
+                <span>Generate Pitches</span>
+              </button>
+              <button id="btn-bulk-exclude" type="button" class="flex items-center gap-1.5 px-3.5 py-1.5 rounded bg-error/15 hover:bg-error/25 text-error border border-error/30 text-label-sm font-label-sm font-semibold transition-colors cursor-pointer">
+                <span class="material-symbols-outlined text-[16px]">block</span>
+                <span>Exclude Selected</span>
+              </button>
+              <button id="btn-bulk-restore" type="button" class="hidden flex items-center gap-1.5 px-3.5 py-1.5 rounded bg-secondary/15 hover:bg-secondary/25 text-secondary border border-secondary/30 text-label-sm font-label-sm font-semibold transition-colors cursor-pointer">
+                <span class="material-symbols-outlined text-[16px]">restore</span>
+                <span>Restore Selected</span>
+              </button>
+              <button id="btn-bulk-clear" type="button" class="text-caption font-caption text-on-surface-variant hover:text-on-surface ml-1 px-2 py-1 transition-colors cursor-pointer font-mono">
+                Clear
+              </button>
+            </div>
+          </div>
+        </aside>
       </section>
 
     <!-- ========================================== -->
@@ -607,99 +800,105 @@
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
         
         <!-- Upload Card -->
-        <div class="lg:col-span-5 bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+        <div class="lg:col-span-5 bg-surface-container-low border border-outline-variant/30 rounded-xl p-5 sm:p-6 shadow-sm space-y-5 relative overflow-hidden">
           <div>
-            <h2 class="text-base font-bold text-white flex items-center space-x-2">
-              <i data-lucide="file-up" class="w-4 h-4 text-indigo-400"></i>
+            <h2 class="text-headline-sm font-headline-sm text-on-surface font-semibold flex items-center gap-2">
+              <span class="material-symbols-outlined text-[20px] text-primary">upload_file</span>
               <span>Upload Candidate Resume</span>
             </h2>
-            <p class="text-xs text-slate-400 mt-1">Instant AI skill extraction. Your uploaded file is automatically deleted after processing for privacy.</p>
+            <p class="text-body-sm font-body-sm text-on-surface-variant mt-1">Instant AI skill extraction. Your uploaded file is automatically deleted after processing for privacy.</p>
           </div>
 
           <form id="resume-form" class="space-y-4">
             <div>
-              <label class="block text-xs font-medium text-slate-400 mb-1">Target Job Role</label>
-              <input type="text" id="input-target-role" placeholder="e.g. Senior Full-Stack Engineer" value="Full-Stack Developer" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500">
+              <label for="input-target-role" class="block text-label-sm font-label-sm text-on-surface-variant mb-1.5 flex items-center justify-between">
+                <span>Target Job Role</span>
+                <span class="text-amber-400 font-mono text-[10px] tracking-wider uppercase px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/25">Required</span>
+              </label>
+              <input type="text" id="input-target-role" required placeholder="e.g. Senior Full-Stack Engineer" value="" class="w-full recessed-well px-3.5 py-2 text-body-sm font-body-sm text-on-surface placeholder:text-outline focus:outline-none focus:border-primary-container transition">
             </div>
 
             <div>
-              <label class="block text-xs font-medium text-slate-400 mb-1">Resume File (PDF or Plain Text)</label>
-              <div class="border-2 border-dashed border-slate-800 hover:border-slate-700 rounded-xl p-6 text-center cursor-pointer bg-slate-950/50 transition" id="dropzone">
+              <label class="block text-label-sm font-label-sm text-on-surface-variant mb-1.5 flex items-center justify-between">
+                <span>Resume File (PDF or Plain Text)</span>
+                <span class="text-amber-400/90 font-mono text-[10px] tracking-wider uppercase px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/25">Required (File or Link)</span>
+              </label>
+              <div class="border-2 border-dashed border-outline-variant/40 hover:border-primary-container/80 rounded-xl p-6 text-center cursor-pointer bg-surface-container-lowest hover:bg-surface-container/60 transition group" id="dropzone">
                 <input type="file" id="input-resume-file" accept=".pdf,.txt,.docx" class="hidden">
                 <div class="mb-2 flex items-center justify-center">
-                  <i data-lucide="cloud-upload" class="w-8 h-8 text-indigo-400"></i>
+                  <div class="w-10 h-10 rounded-lg bg-surface-container-highest border border-outline-variant/30 flex items-center justify-center text-primary group-hover:scale-105 transition">
+                    <span class="material-symbols-outlined text-[22px]">cloud_upload</span>
+                  </div>
                 </div>
-                <p class="text-xs font-medium text-slate-300" id="file-label">Click to select or drag & drop resume file</p>
-                <p class="text-[11px] text-slate-500 mt-0.5">Supports PDF and TXT</p>
+                <p class="text-label-md font-label-md text-on-surface font-medium" id="file-label">Click to select or drag & drop resume file</p>
+                <p class="text-caption font-caption text-outline mt-0.5">Supports PDF and TXT</p>
               </div>
             </div>
 
             <div>
-              <label class="block text-xs font-medium text-slate-400 mb-1 flex items-center justify-between">
+              <label class="block text-label-sm font-label-sm text-on-surface-variant mb-1.5 flex items-center justify-between">
                 <span>Resume / Portfolio Link (Optional)</span>
-                <span class="text-[10px] text-indigo-400 font-mono">Auto-included in emails</span>
+                <span class="text-caption font-caption text-primary font-mono">Auto-included in emails</span>
               </label>
               <div class="relative">
-                <i data-lucide="link" class="w-3.5 h-3.5 text-slate-500 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
-                <input type="url" id="input-resume-link" placeholder="https://drive.google.com/... or personal portfolio" class="w-full bg-slate-950 border border-slate-800 rounded-lg pr-3 py-2 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500" style="padding-left: 2.25rem !important;">
+                <span class="material-symbols-outlined text-[16px] text-outline absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">link</span>
+                <input type="url" id="input-resume-link" placeholder="https://drive.google.com/... or personal portfolio" class="w-full recessed-well pr-3.5 py-2 text-body-sm font-body-sm text-on-surface placeholder:text-outline focus:outline-none focus:border-primary-container transition" style="padding-left: 2.25rem !important;">
               </div>
-              <p class="text-[10px] text-slate-500 mt-1">Google Drive, Notion, or GitHub link. The AI Pitch Generator seamlessly integrates this in your outreach emails.</p>
+              <p class="text-caption font-caption text-outline mt-1">Google Drive, Notion, or GitHub link. The AI Pitch Generator seamlessly integrates this in your outreach emails.</p>
             </div>
 
-            <button type="submit" id="btn-parse-resume" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-2.5 rounded-lg text-xs transition flex items-center justify-center space-x-1.5 cursor-pointer shadow-sm">
-              <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-300"></i>
+            <button type="submit" id="btn-parse-resume" class="w-full btn-tactile-ecru font-label-md text-label-md font-semibold py-2.5 px-4 rounded transition-colors flex items-center justify-center gap-2 shadow-sm cursor-pointer">
+              <span class="material-symbols-outlined text-[18px]">auto_awesome</span>
               <span>Analyze Resume with AI</span>
             </button>
           </form>
         </div>
 
         <!-- AI Parsed Profile Summary Card -->
-        <div class="lg:col-span-7 bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-4">
+        <div class="lg:col-span-7 bg-surface-container-low border border-outline-variant/30 rounded-xl p-5 sm:p-6 shadow-sm space-y-5 relative overflow-hidden">
           <div class="flex items-center justify-between">
-            <h2 class="text-base font-bold text-white flex items-center space-x-2">
-              <i data-lucide="cpu" class="w-4 h-4 text-indigo-400"></i>
+            <h2 class="text-headline-sm font-headline-sm text-on-surface font-semibold flex items-center gap-2">
+              <span class="material-symbols-outlined text-[20px] text-primary">psychology</span>
               <span>AI-Powered Candidate Profile</span>
             </h2>
-            <span class="text-xs px-2 py-0.5 rounded bg-emerald-950/60 text-emerald-400 border border-emerald-800 flex items-center space-x-1">
-              <i data-lucide="check-circle-2" class="w-3 h-3"></i>
+            <span class="text-caption font-caption px-2.5 py-0.5 rounded-full bg-secondary/10 text-secondary border border-secondary/20 flex items-center gap-1 font-medium">
+              <span class="material-symbols-outlined text-[13px]">check_circle</span>
               <span>Active Profile</span>
             </span>
           </div>
 
-          <div id="profile-display" class="space-y-4 text-xs">
-            <div class="bg-slate-950 border border-slate-800 rounded-xl p-4">
-              <span class="text-slate-400 font-medium block mb-1">Professional Summary:</span>
-              <p id="profile-pitch" class="text-slate-200 leading-relaxed">Upload your resume to extract career highlights, key strengths, and an introductory summary.</p>
+          <div id="profile-display" class="space-y-4 text-body-sm font-body-sm">
+            <div class="bg-surface-container-lowest border border-outline-variant/30 rounded-xl p-4">
+              <span class="text-label-sm font-label-sm text-on-surface-variant block mb-1">Professional Summary:</span>
+              <p id="profile-pitch" class="text-on-surface leading-relaxed">Upload your resume to extract career highlights, key strengths, and an introductory summary.</p>
             </div>
 
             <div>
-              <span class="text-slate-400 font-medium block mb-2">Extracted Core Skills:</span>
+              <span class="text-label-sm font-label-sm text-on-surface-variant block mb-2 font-medium">Extracted Core Skills:</span>
               <div id="profile-skills" class="flex flex-wrap gap-1.5">
-                <span class="px-2.5 py-1 rounded bg-slate-800 text-slate-300 text-xs">Python</span>
-                <span class="px-2.5 py-1 rounded bg-slate-800 text-slate-300 text-xs">FastAPI</span>
-                <span class="px-2.5 py-1 rounded bg-slate-800 text-slate-300 text-xs">PostgreSQL</span>
+                <span class="text-caption font-caption text-on-surface-variant italic">No skills extracted yet. Upload a resume to extract skills.</span>
               </div>
             </div>
 
             <div>
-              <span class="text-slate-400 font-medium block mb-2">Career Achievements & Highlights:</span>
-              <ul id="profile-achievements" class="space-y-1.5 text-slate-300 list-disc list-inside">
-                <li>Demonstrated expertise in scalable software architecture and API development.</li>
+              <span class="text-label-sm font-label-sm text-on-surface-variant block mb-2 font-medium">Career Achievements & Highlights:</span>
+              <ul id="profile-achievements" class="space-y-1.5 text-on-surface-variant list-disc list-inside">
+                <li class="list-none text-caption font-caption text-on-surface-variant italic">No achievements extracted yet.</li>
               </ul>
             </div>
 
             <div>
               <div class="flex items-center justify-between mb-2">
-                <span class="text-slate-300 font-medium flex items-center space-x-1.5 text-xs">
-                  <i data-lucide="file-text" class="w-3.5 h-3.5 text-indigo-400"></i>
-                  <span>Comprehensive Candidate Evaluation Dossier:</span>
+                <span class="text-label-sm font-label-sm text-on-surface font-medium flex items-center gap-1.5">
+                  <span class="material-symbols-outlined text-[16px] text-primary">description</span>
+                  <span>Comprehensive Candidate Profile Analysis:</span>
                 </span>
-                <button id="btn-copy-profile-analysis" type="button" class="inline-flex items-center space-x-1 px-2.5 py-1 text-[11px] font-medium bg-slate-900 hover:bg-slate-800 text-slate-300 hover:text-white rounded-lg border border-slate-700/80 transition cursor-pointer shadow-sm active:scale-95" title="Copy analyzed dossier">
-                  <i data-lucide="copy" class="w-3.5 h-3.5 text-indigo-400"></i>
+                <button id="btn-copy-profile-analysis" type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-label-sm font-label-sm font-medium bg-surface-container hover:bg-surface-container-high text-on-surface rounded-lg border border-outline-variant/40 transition cursor-pointer" title="Copy analyzed dossier">
+                  <span class="material-symbols-outlined text-[15px] text-primary">content_copy</span>
                   <span id="copy-profile-analysis-text">Copy Analysis</span>
                 </button>
               </div>
-              <div id="profile-detailed-analysis" class="text-slate-300 leading-relaxed max-h-96 overflow-y-auto font-sans text-xs bg-slate-950 p-4 rounded-xl border border-slate-800 shadow-inner markdown-content">
+              <div id="profile-detailed-analysis" class="text-on-surface leading-relaxed max-h-96 overflow-y-auto font-sans text-body-sm bg-surface-container-lowest p-4 rounded-xl border border-outline-variant/30 shadow-inner markdown-content">
                 Upload your resume above to generate a comprehensive career assessment, technical evaluation, and personalized introduction.
               </div>
             </div>
@@ -712,220 +911,290 @@
     <!-- ========================================== -->
     <!-- TAB 3: OUTREACH HUB & AUDIT COMMAND CENTER -->
     <!-- ========================================== -->
-    <section id="section-outreach" class="tab-section hidden space-y-5 sm:space-y-6">
+    <!-- ========================================== -->
+    <!-- TAB 3: OUTREACH HUB & AUDIT COMMAND CENTER -->
+    <!-- ========================================== -->
+    <section id="section-outreach" class="tab-section hidden space-y-6">
       
-      <!-- Top Action Bar -->
-      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 shadow-sm">
-        <div class="min-w-0">
-          <h2 class="text-base font-bold text-white flex items-center space-x-2">
-            <i data-lucide="mail-check" class="w-4 h-4 text-rose-400 shrink-0"></i>
-            <span>Outreach Command Center</span>
-            <span class="text-[10px] bg-rose-950/70 text-rose-300 border border-rose-800/80 px-2 py-0.5 rounded font-mono shrink-0">1-on-1 Direct Outreach</span>
-          </h2>
-          <p class="text-xs text-slate-400 mt-1 leading-relaxed">Review personalized emails, launch 1-click Gmail messages, and track your sent outreach.</p>
+      <!-- Top Action Bar (Studio Workshop Header) -->
+      <header class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+          <h1 class="text-headline-xl font-headline-xl text-on-surface font-bold tracking-tight">Outreach Hub</h1>
+          <p class="text-body-md font-body-md text-on-surface-variant mt-1">Review tailored pitches, launch 1-click Gmail drafts, and track dispatched campaigns.</p>
         </div>
-        <div class="flex items-center space-x-2 shrink-0">
-          <button id="btn-gen-all-pitches" class="w-full sm:w-auto px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold transition flex items-center justify-center space-x-1.5 cursor-pointer shadow-sm">
-            <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-300"></i>
+        <div class="flex items-center gap-2.5 flex-wrap">
+          <button id="btn-toggle-activity" type="button" class="btn-tactile-slate px-3.5 py-2 rounded text-label-sm font-label-sm font-medium transition flex items-center gap-2 cursor-pointer" title="Toggle Live Activity & Sent History Feed">
+            <span class="w-2 h-2 rounded-full bg-[#86B29B] animate-pulse"></span>
+            <span>Activity Stream</span>
+            <span id="activity-badge-count" class="px-1.5 py-0.2 rounded text-[10px] font-mono bg-[#86B29B]/20 text-[#86B29B]">0</span>
+          </button>
+          <button id="btn-gen-all-pitches" type="button" class="btn-tactile-ecru px-4 py-2 rounded font-label-md text-label-md font-semibold transition-colors flex items-center justify-center gap-1.5 shadow-sm cursor-pointer">
+            <span class="material-symbols-outlined text-[18px]">auto_awesome</span>
             <span>Prepare All Emails</span>
           </button>
         </div>
+      </header>
+
+      <!-- Quick Metrics Strip (Bento Cassettes) -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div id="outreach-stat-all" class="bg-surface-container-low border border-outline-variant/30 hover:border-outline-variant/60 rounded-xl p-4 sm:p-5 space-y-1.5 transition-colors cursor-pointer">
+          <span class="text-label-sm font-label-sm text-on-surface-variant block whitespace-nowrap">Total Targets</span>
+          <div class="flex items-baseline gap-2">
+            <span id="outreach-count-total" class="text-metric-num font-metric-num text-on-surface font-semibold tracking-tight tabular-nums">0</span>
+            <span class="text-caption font-caption text-on-surface-variant font-mono">Queue</span>
+          </div>
+        </div>
+
+        <div id="outreach-stat-emails" class="bg-surface-container-low border border-outline-variant/30 hover:border-outline-variant/60 rounded-xl p-4 sm:p-5 space-y-1.5 transition-colors cursor-pointer">
+          <span class="text-label-sm font-label-sm text-on-surface-variant block whitespace-nowrap">Verified Direct Emails</span>
+          <div class="flex items-baseline gap-2">
+            <span id="outreach-count-emails" class="text-metric-num font-metric-num text-secondary font-semibold tracking-tight tabular-nums">0</span>
+            <span class="text-caption font-caption text-secondary/80 font-mono">Direct</span>
+          </div>
+        </div>
+
+        <div id="outreach-stat-ready" class="bg-surface-container-low border border-outline-variant/30 hover:border-outline-variant/60 rounded-xl p-4 sm:p-5 space-y-1.5 transition-colors cursor-pointer">
+          <span class="text-label-sm font-label-sm text-on-surface-variant block whitespace-nowrap">Ready to Dispatch</span>
+          <div class="flex items-baseline gap-2">
+            <span id="outreach-count-ready" class="text-metric-num font-metric-num text-primary font-semibold tracking-tight tabular-nums">0</span>
+            <span class="text-caption font-caption text-on-surface-variant font-mono">Pending</span>
+          </div>
+        </div>
+
+        <div id="outreach-stat-sent" class="bg-surface-container-low border border-outline-variant/30 hover:border-outline-variant/60 rounded-xl p-4 sm:p-5 space-y-1.5 transition-colors cursor-pointer">
+          <span class="text-label-sm font-label-sm text-on-surface-variant block whitespace-nowrap">Campaigns Sent</span>
+          <div class="flex items-baseline gap-2">
+            <span id="outreach-count-sent" class="text-metric-num font-metric-num text-secondary font-semibold tracking-tight tabular-nums">0</span>
+            <span class="text-caption font-caption text-on-surface-variant font-mono">Contacted</span>
+          </div>
+        </div>
       </div>
 
-      <!-- Session Resume & Email Attachment Card -->
-      <div class="bg-slate-900 border border-slate-800 rounded-xl p-3.5 sm:p-4 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-sm">
-        <div class="flex items-center space-x-3 min-w-0">
-          <div class="w-9 h-9 rounded-lg bg-indigo-950/80 border border-indigo-800/60 flex items-center justify-center text-indigo-400 shrink-0">
-            <i data-lucide="paperclip" class="w-4 h-4"></i>
+      <!-- Hardware Attachment Bay: Session Resume Attachment Cassette -->
+      <div class="bg-surface-container-low border border-outline-variant/30 rounded-xl p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
+        <div class="flex items-center gap-3.5 min-w-0">
+          <div class="w-10 h-10 rounded-lg bg-surface-container-highest border border-outline-variant/30 flex items-center justify-center text-primary shrink-0 shadow-sm">
+            <span class="material-symbols-outlined text-[20px]">attach_file</span>
           </div>
-          <div class="min-w-0">
-            <div class="flex items-center space-x-2">
-              <span class="text-xs font-semibold text-white">Session Resume File</span>
-              <span class="text-[10px] bg-amber-950/70 text-amber-300 border border-amber-800/60 px-1.5 py-0.2 rounded font-mono">Temp / Session</span>
+          <div class="min-w-0 space-y-0.5">
+            <div class="flex items-center gap-2">
+              <span class="text-label-md font-label-md font-semibold text-on-surface">Candidate Resume Attachment</span>
+              <span class="text-caption font-caption bg-secondary/10 text-secondary border border-secondary/20 px-2 py-0.5 rounded-full font-mono text-[10px]">Session Storage</span>
             </div>
-            <p id="outreach-resume-status" class="text-[11px] text-slate-400 truncate mt-0.5">
+            <p id="outreach-resume-status" class="text-caption font-caption text-on-surface-variant truncate">
               No resume selected for this session. Choose a PDF file to attach when sending cold emails.
             </p>
           </div>
         </div>
 
-        <div class="flex items-center space-x-2.5 shrink-0 flex-wrap">
+        <div class="flex items-center gap-2.5 shrink-0 flex-wrap">
           <!-- Hidden File Input -->
           <input type="file" id="outreach-resume-file" accept=".pdf,.doc,.docx" class="hidden">
 
           <!-- Choose File Button -->
-          <button type="button" id="btn-choose-outreach-resume" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-medium transition flex items-center space-x-1.5 cursor-pointer">
-            <i data-lucide="file-up" class="w-3.5 h-3.5 text-indigo-400"></i>
+          <button type="button" id="btn-choose-outreach-resume" class="btn-tactile-slate px-3.5 py-2 rounded text-label-sm font-label-sm font-medium transition-colors flex items-center gap-1.5 cursor-pointer">
+            <span class="material-symbols-outlined text-[16px] text-primary">upload_file</span>
             <span id="btn-choose-resume-text">Choose Resume File</span>
           </button>
 
           <!-- Remove File Button (hidden by default) -->
-          <button type="button" id="btn-remove-outreach-resume" class="hidden p-1.5 rounded-lg bg-rose-950/40 hover:bg-rose-900/60 text-rose-400 border border-rose-800/60 transition cursor-pointer" title="Remove selected session resume">
-            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+          <button type="button" id="btn-remove-outreach-resume" class="hidden p-2 rounded-lg bg-error/10 hover:bg-error/20 text-error border border-error/20 transition cursor-pointer" title="Remove selected session resume">
+            <span class="material-symbols-outlined text-[16px]">delete</span>
           </button>
 
-          <div class="h-6 w-px bg-slate-800 hidden sm:block"></div>
+          <div class="h-6 w-px bg-outline-variant/30 hidden sm:block"></div>
 
           <!-- Attach in Email Slider Toggle -->
-          <label class="toggle-switch flex items-center space-x-2.5 bg-slate-950/80 px-3 py-1.5 rounded-lg border border-slate-800 hover:border-slate-700 transition" title="Toggle resume attachment in outgoing email">
+          <label class="toggle-switch flex items-center gap-2.5 bg-surface-container-lowest px-3 py-2 rounded-lg border border-outline-variant/30 hover:border-outline-variant/60 transition cursor-pointer" title="Toggle resume attachment in outgoing email">
             <input type="checkbox" id="toggle-attach-resume">
             <span class="toggle-slider"></span>
-            <span class="text-xs font-semibold text-slate-200 whitespace-nowrap">Attach resume in email</span>
+            <span class="text-label-sm font-label-sm font-medium text-on-surface whitespace-nowrap">Attach in outgoing Gmail</span>
           </label>
         </div>
       </div>
 
-      <!-- Quick Metrics Strip for Outreach Pipeline -->
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <div id="outreach-stat-all" class="bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-xl p-3 space-y-0.5 transition cursor-pointer select-none">
-          <span class="text-[11px] text-slate-300 font-medium block whitespace-nowrap">Total Leads</span>
-          <div class="flex items-baseline space-x-1.5">
-            <span id="outreach-count-total" class="text-lg sm:text-xl font-bold text-white">0</span>
-            <span class="text-[9px] text-slate-400 font-mono">Queue</span>
-          </div>
+      <!-- Filter & Search Toolbar (Responsive Grid, Fluid Dropdowns, No Overlapping) -->
+      <section class="bg-surface-container-low border border-outline-variant/30 rounded-xl p-2.5 sm:p-3 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-2.5 sm:gap-3">
+        <!-- Left Group: Search Input -->
+        <div class="relative w-full lg:max-w-sm flex items-center">
+          <span class="material-symbols-outlined absolute left-3.5 text-on-surface-variant text-[18px] pointer-events-none">search</span>
+          <input type="text" id="outreach-search-input" placeholder="Search by company name, email, tech stack, or domain..." class="w-full h-10 pl-10 pr-4 text-body-sm font-body-sm text-on-surface placeholder:text-on-surface-variant/70 focus:outline-none rounded-lg bg-surface-container-lowest border border-outline-variant/30 focus:border-outline-variant/70 transition">
         </div>
 
-        <div id="outreach-stat-emails" class="bg-slate-900 border border-slate-800 hover:border-emerald-600/60 rounded-xl p-3 space-y-0.5 transition cursor-pointer select-none">
-          <span class="text-[11px] text-slate-300 font-medium block whitespace-nowrap">Verified Emails</span>
-          <div class="flex items-baseline space-x-1.5">
-            <span id="outreach-count-emails" class="text-lg sm:text-xl font-bold text-emerald-400">0</span>
-            <span class="text-[9px] text-emerald-400/80 font-mono">Direct</span>
+        <!-- Right Group: Dynamic Tech Stack, City, Reset & View Switcher -->
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full lg:w-auto">
+          <div class="grid grid-cols-2 gap-2 w-full sm:flex sm:items-center sm:w-auto">
+            <!-- Tech Stack Filter -->
+            <div class="custom-dropdown relative w-full sm:w-[170px]" id="dropdown-outreach-tech">
+              <input type="hidden" id="outreach-tech-select" value="">
+              <button type="button" class="custom-dropdown-btn" aria-haspopup="listbox" aria-expanded="false" title="Filter by Identified Tech Stack">
+                <span class="custom-dropdown-label truncate">Tech Stack (All)</span>
+                <span class="material-symbols-outlined text-[16px] text-on-surface-variant dropdown-chevron">expand_more</span>
+              </button>
+              <div class="custom-dropdown-menu">
+                <div class="custom-dropdown-search-wrap">
+                  <span class="material-symbols-outlined text-[15px] text-on-surface-variant absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">search</span>
+                  <input type="text" class="custom-dropdown-search" placeholder="Search stack..." autocomplete="off">
+                </div>
+                <div class="custom-dropdown-list custom-scrollbar" role="listbox"></div>
+              </div>
+            </div>
+
+            <!-- City Filter -->
+            <div class="custom-dropdown relative w-full sm:w-[140px]" id="dropdown-outreach-city">
+              <input type="hidden" id="outreach-city-select" value="">
+              <button type="button" class="custom-dropdown-btn" aria-haspopup="listbox" aria-expanded="false" title="Filter by City">
+                <span class="custom-dropdown-label truncate">All Cities</span>
+                <span class="material-symbols-outlined text-[16px] text-on-surface-variant dropdown-chevron">expand_more</span>
+              </button>
+              <div class="custom-dropdown-menu align-right">
+                <div class="custom-dropdown-search-wrap">
+                  <span class="material-symbols-outlined text-[15px] text-on-surface-variant absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">search</span>
+                  <input type="text" class="custom-dropdown-search" placeholder="Search city..." autocomplete="off">
+                </div>
+                <div class="custom-dropdown-list custom-scrollbar" role="listbox"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 justify-end sm:justify-start shrink-0">
+            <button id="btn-outreach-reset" type="button" class="btn-tactile-slate h-10 px-3 rounded-lg text-xs font-mono flex items-center justify-center gap-1.5 text-on-surface-variant hover:text-on-surface cursor-pointer flex-1 sm:flex-initial" title="Reset outreach filters">
+              <span class="material-symbols-outlined text-[16px]">restart_alt</span>
+              <span>Reset</span>
+            </button>
+
+            <!-- View Mode Toggle: Grid Cards vs Compact Stream -->
+            <div class="flex items-center bg-surface-container-lowest border border-outline-variant/30 rounded-lg p-0.5 shrink-0">
+              <button id="btn-outreach-view-grid" type="button" class="h-9 px-2.5 rounded-md text-xs font-mono flex items-center gap-1 bg-surface-container-highest text-on-surface cursor-pointer transition" title="Cards View">
+                <span class="material-symbols-outlined text-[16px]">grid_view</span>
+              </button>
+              <button id="btn-outreach-view-list" type="button" class="h-9 px-2.5 rounded-md text-xs font-mono flex items-center gap-1 text-on-surface-variant hover:text-on-surface cursor-pointer transition" title="Compact List View">
+                <span class="material-symbols-outlined text-[16px]">view_agenda</span>
+              </button>
+            </div>
           </div>
         </div>
+      </section>
 
-        <div id="outreach-stat-ready" class="bg-slate-900 border border-slate-800 hover:border-indigo-600/60 rounded-xl p-3 space-y-0.5 transition cursor-pointer select-none">
-          <span class="text-[11px] text-slate-300 font-medium block whitespace-nowrap">Ready to Email</span>
-          <div class="flex items-baseline space-x-1.5">
-            <span id="outreach-count-ready" class="text-lg sm:text-xl font-bold text-indigo-400">0</span>
-            <span class="text-[9px] text-slate-400 font-mono">Pending</span>
-          </div>
+      <!-- Outreach Pipeline Pagination Controls (Positioned directly above cards grid) -->
+      <div id="outreach-pagination" class="hidden bg-surface-container-low border border-outline-variant/30 rounded-xl px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm">
+        <div class="flex items-center space-x-2 text-caption font-caption text-on-surface-variant">
+          <span>Showing <strong id="outreach-page-range" class="text-on-surface font-semibold">0-0</strong> of <strong id="outreach-page-total" class="text-on-surface font-semibold">0</strong> targets</span>
         </div>
 
-        <div id="outreach-stat-sent" class="bg-slate-900 border border-slate-800 hover:border-sky-600/60 rounded-xl p-3 space-y-0.5 transition cursor-pointer select-none">
-          <span class="text-[11px] text-slate-300 font-medium block whitespace-nowrap">Emails Sent</span>
-          <div class="flex items-baseline space-x-1.5">
-            <span id="outreach-count-sent" class="text-lg sm:text-xl font-bold text-sky-400">0</span>
-            <span class="text-[9px] text-slate-400 font-mono">Contacted</span>
+        <div class="flex items-center space-x-2 sm:space-x-3 flex-wrap justify-center">
+          <div class="flex items-center gap-2 text-caption font-caption text-on-surface-variant">
+            <span class="hidden sm:inline font-mono text-[11px]">Per page:</span>
+            <div class="custom-dropdown dropdown-compact relative" id="dropdown-outreach-per-page">
+              <input type="hidden" id="outreach-per-page" value="15">
+              <button type="button" class="custom-dropdown-btn" aria-haspopup="listbox" aria-expanded="false" title="Targets per page">
+                <span class="custom-dropdown-label">15</span>
+                <span class="material-symbols-outlined dropdown-chevron text-[15px]">expand_more</span>
+              </button>
+              <div class="custom-dropdown-menu align-right">
+                <div class="custom-dropdown-list custom-scrollbar" role="listbox"></div>
+              </div>
+            </div>
+          </div>
+
+          <div id="outreach-page-buttons" class="flex items-center space-x-1">
+            <!-- Populated dynamically by app.js -->
           </div>
         </div>
       </div>
 
-      <!-- Main Layout: Pipeline (Left 8 cols) + Audit History (Right 4 cols) -->
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 sm:gap-6 items-start">
-        
-        <!-- Left: Outreach Pipeline with Search, Filter Pills & Pagination -->
-        <div class="lg:col-span-8 space-y-3.5">
-          
-          <!-- Search & Filter Controls Card -->
-          <div class="bg-slate-900 border border-slate-800 rounded-xl p-3 space-y-2.5 shadow-sm">
-            <!-- Full-width Search Input -->
-            <div class="relative w-full">
-              <i data-lucide="search" class="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"></i>
-              <input type="text" id="outreach-search-input" placeholder="Search by company name, email address, or website domain..." class="w-full bg-slate-950 border border-slate-800 rounded-lg pr-3 py-2 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition" style="padding-left: 2.25rem !important;">
-            </div>
-
-            <!-- Filter Pills (Dedicated row, perfectly single-line, equal heights) -->
-            <div class="flex items-center space-x-1.5 sm:space-x-2 overflow-x-auto no-scrollbar py-0.5 w-full">
-              <button type="button" id="outreach-filter-all" class="outreach-pill active px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white transition cursor-pointer whitespace-nowrap shrink-0 focus:outline-none shadow-sm">
-                All (<span class="outreach-badge-all">0</span>)
-              </button>
-              <button type="button" id="outreach-filter-emails" class="outreach-pill px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white bg-slate-950 border border-slate-800 transition cursor-pointer whitespace-nowrap shrink-0 focus:outline-none">
-                With Email (<span class="outreach-badge-emails">0</span>)
-              </button>
-              <button type="button" id="outreach-filter-ready" class="outreach-pill px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white bg-slate-950 border border-slate-800 transition cursor-pointer whitespace-nowrap shrink-0 focus:outline-none">
-                Not Contacted (<span class="outreach-badge-ready">0</span>)
-              </button>
-              <button type="button" id="outreach-filter-sent" class="outreach-pill px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white bg-slate-950 border border-slate-800 transition cursor-pointer whitespace-nowrap shrink-0 focus:outline-none">
-                Contacted (<span class="outreach-badge-sent">0</span>)
-              </button>
-            </div>
-          </div>
-
-          <!-- Pitch Cards List Container -->
-          <div id="pitches-container" class="space-y-2.5">
-            <!-- Rendered dynamically by app.js (sliced by page size) -->
-          </div>
-
-          <!-- Outreach Pipeline Pagination Controls -->
-          <div id="outreach-pagination" class="hidden bg-slate-900 border border-slate-800 rounded-xl px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm select-none">
-            <div class="flex items-center space-x-2 text-xs text-slate-400">
-              <span>Showing <strong id="outreach-page-range" class="text-white font-semibold">0-0</strong> of <strong id="outreach-page-total" class="text-white font-semibold">0</strong> targets</span>
-            </div>
-
-            <div class="flex items-center space-x-2 sm:space-x-3 flex-wrap justify-center">
-              <div class="flex items-center space-x-1.5 text-xs text-slate-400">
-                <span class="hidden sm:inline">Per page:</span>
-                <select id="outreach-per-page" class="bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 cursor-pointer">
-                  <option value="10" selected>10</option>
-                  <option value="25">25</option>
-                  <option value="50">50</option>
-                  <option value="0">All</option>
-                </select>
-              </div>
-
-              <div id="outreach-page-buttons" class="flex items-center space-x-1">
-                <!-- Populated dynamically by app.js -->
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Right: Sticky Outreach Audit History -->
-        <div class="lg:col-span-4 bg-slate-900 border border-slate-800 rounded-2xl p-4 space-y-3 lg:sticky lg:top-20 self-start shadow-sm">
-          <div class="flex items-center justify-between">
-            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center space-x-1.5">
-              <i data-lucide="clock" class="w-3.5 h-3.5 text-indigo-400"></i>
-              <span>Recent Outreach Activity</span>
-            </h3>
-            <span class="text-[10px] text-emerald-400 font-mono bg-emerald-950/60 border border-emerald-800 px-1.5 py-0.2 rounded">Live</span>
-          </div>
-          <div id="audit-logs" class="space-y-2 text-xs max-h-[calc(100vh-14rem)] overflow-y-auto pr-1">
-            <p class="text-slate-500 italic">No emails sent yet today.</p>
-          </div>
-        </div>
-
+      <!-- Main Outreach Prospects Container (Grid by default, switches dynamically) -->
+      <div id="pitches-container" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+        <!-- Rendered dynamically by app.js -->
       </div>
     </section>
+
+    <!-- OUTREACH ACTIVITY SLIDE-OVER DRAWER (Theme-adaptive design system) -->
+    <div id="outreach-activity-drawer-root" class="fixed inset-0 z-[120] pointer-events-none overflow-hidden">
+      <!-- Backdrop -->
+      <div id="outreach-activity-backdrop" class="fixed inset-0 bg-black/60 backdrop-blur-sm opacity-0 transition-opacity duration-300 pointer-events-none"></div>
+
+      <!-- Slide Drawer Container -->
+      <aside id="outreach-activity-drawer" class="fixed right-0 top-0 bottom-0 w-full max-w-md bg-surface-container-low border-l border-outline-variant/40 shadow-2xl p-5 sm:p-6 flex flex-col justify-between translate-x-full transition-transform duration-300 ease-in-out pointer-events-auto z-10">
+        <div>
+          <!-- Header -->
+          <div class="flex items-center justify-between pb-4 border-b border-outline-variant/30">
+            <div class="flex items-center gap-2.5">
+              <div class="w-8 h-8 rounded-lg bg-surface-container border border-outline-variant/40 flex items-center justify-center text-secondary shadow-sm">
+                <span class="material-symbols-outlined text-[18px]">history</span>
+              </div>
+              <div>
+                <h3 class="font-headline font-semibold text-sm text-on-surface flex items-center gap-2">
+                  <span>Outreach Activity Stream</span>
+                  <span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
+                </h3>
+                <span class="text-caption font-mono text-on-surface-variant">Real-time campaign telemetry</span>
+              </div>
+            </div>
+            <button id="btn-close-activity" type="button" class="text-on-surface-variant hover:text-on-surface p-1.5 rounded-lg hover:bg-surface-container transition cursor-pointer" title="Close activity stream">
+              <span class="material-symbols-outlined text-[20px]">close</span>
+            </button>
+          </div>
+
+          <!-- Audit Logs Scroll Area -->
+          <div class="pt-4 space-y-3">
+            <div class="flex items-center justify-between text-caption font-mono text-outline">
+              <span>DISPATCHED CAMPAIGNS</span>
+              <span class="text-secondary font-medium">GMAIL SYNC ACTIVE</span>
+            </div>
+            <div id="audit-logs" class="space-y-2.5 max-h-[calc(100vh-14rem)] overflow-y-auto pr-1 select-text">
+              <p class="text-outline italic text-xs py-4 text-center">No emails sent yet today.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="pt-4 border-t border-outline-variant/30 text-caption font-mono text-outline flex items-center justify-between">
+          <span>OutreachPilot Telemetry</span>
+          <span>Google OAuth 2.0</span>
+        </div>
+      </aside>
+    </div>
   </main>
   </div> <!-- /main-content-wrap -->
 
   <!-- COMPANY DETAILS MODAL -->
-  <div id="company-modal" class="fixed inset-0 z-[100] bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
-    <div class="relative bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full shadow-2xl shadow-indigo-950/50 max-h-[90vh] sm:max-h-[84vh] flex flex-col my-auto overflow-hidden">
+  <div id="company-modal" class="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+    <div class="relative bg-surface-container-low border border-outline-variant/30 rounded-2xl max-w-2xl w-full shadow-2xl max-h-[90vh] sm:max-h-[84vh] flex flex-col my-auto overflow-hidden">
       
       <!-- Modal Header (Sticky Pin) -->
-      <div class="px-5 py-4 border-b border-slate-800/80 bg-slate-900/95 shrink-0 space-y-2.5">
+      <div class="px-5 py-4 border-b border-outline-variant/20 bg-surface-container-lowest/95 backdrop-blur-md shrink-0 space-y-2.5">
         <div class="flex items-start justify-between gap-3">
           <div class="min-w-0 space-y-1">
             <div class="flex items-center space-x-2 flex-wrap gap-y-1">
-              <h3 class="text-base sm:text-lg font-bold text-white break-words min-w-0" id="cmodal-name">Company Name</h3>
+              <h3 class="text-base sm:text-lg font-bold text-on-surface break-words min-w-0" id="cmodal-name">Company Name</h3>
               <span id="cmodal-badge"></span>
             </div>
-            <div class="flex items-center space-x-3 text-xs text-slate-400 flex-wrap gap-y-1">
-              <a id="cmodal-website" href="#" target="_blank" rel="noopener noreferrer" class="font-mono text-indigo-400 hover:text-indigo-300 hover:underline flex items-center space-x-1 max-w-full break-all">
-                <i data-lucide="globe" class="w-3.5 h-3.5 shrink-0"></i>
+            <div class="flex items-center space-x-3 text-caption font-caption text-on-surface-variant flex-wrap gap-y-1">
+              <a id="cmodal-website" href="#" target="_blank" rel="noopener noreferrer" class="font-mono text-primary hover:underline flex items-center gap-1 max-w-full break-all">
+                <span class="material-symbols-outlined text-[14px]">language</span>
                 <span id="cmodal-domain" class="break-all">domain.com</span>
-                <i data-lucide="external-link" class="w-2.5 h-2.5 shrink-0 opacity-70"></i>
+                <span class="material-symbols-outlined text-[12px] opacity-70">open_in_new</span>
               </a>
-              <span id="cmodal-rating" class="text-amber-400 font-semibold flex items-center space-x-1 shrink-0">
-                <i data-lucide="star" class="w-3.5 h-3.5 text-amber-400 fill-amber-400"></i>
+              <span id="cmodal-rating" class="text-tertiary font-semibold flex items-center gap-1 shrink-0 font-mono">
+                <span class="material-symbols-outlined text-[14px] text-tertiary">star</span>
                 <span>4.8 (12 reviews)</span>
               </span>
             </div>
           </div>
-          <button id="cmodal-close" type="button" aria-label="Close dialog" class="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition cursor-pointer shrink-0">
-            <i data-lucide="x" class="w-5 h-5"></i>
+          <button id="cmodal-close" type="button" aria-label="Close dialog" class="p-1.5 rounded-lg text-outline hover:text-on-surface hover:bg-surface-container transition cursor-pointer shrink-0">
+            <span class="material-symbols-outlined text-[20px]">close</span>
           </button>
         </div>
 
         <!-- Segmented Tab Navigation inside Modal -->
-        <div class="flex items-center space-x-1 bg-slate-950 p-1 rounded-xl border border-slate-800/80 text-xs font-semibold select-none">
-          <button type="button" id="cmodal-tab-btn-overview" class="cmodal-tab-btn active flex-1 py-1.5 px-3 rounded-lg text-center transition flex items-center justify-center space-x-1.5 cursor-pointer bg-indigo-600 text-white shadow-sm">
-            <i data-lucide="building-2" class="w-3.5 h-3.5 shrink-0"></i>
+        <div class="flex items-center space-x-1 bg-surface-container-lowest p-1 rounded-xl border border-outline-variant/30 text-caption font-semibold font-mono">
+          <button type="button" id="cmodal-tab-btn-overview" class="cmodal-tab-btn active flex-1 py-1.5 px-3 rounded-lg text-center transition flex items-center justify-center gap-1.5 cursor-pointer bg-surface-container-highest text-on-surface shadow-sm">
+            <span class="material-symbols-outlined text-[15px]">apartment</span>
             <span>Overview & Contacts</span>
           </button>
-          <button type="button" id="cmodal-tab-btn-ai" class="cmodal-tab-btn flex-1 py-1.5 px-3 rounded-lg text-center transition flex items-center justify-center space-x-1.5 cursor-pointer text-slate-400 hover:text-white hover:bg-slate-900">
-            <i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-400 shrink-0"></i>
+          <button type="button" id="cmodal-tab-btn-ai" class="cmodal-tab-btn flex-1 py-1.5 px-3 rounded-lg text-center transition flex items-center justify-center gap-1.5 cursor-pointer text-on-surface-variant hover:text-on-surface hover:bg-surface-container">
+            <span class="material-symbols-outlined text-[15px] text-tertiary">auto_awesome</span>
             <span>AI Intel & Report</span>
           </button>
         </div>
@@ -937,22 +1206,22 @@
         <!-- PANEL 1: Overview & Contacts -->
         <div id="cmodal-panel-overview" class="space-y-4">
           <!-- Contact & Location Grid -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
-            <div class="bg-slate-950/80 border border-slate-800/80 rounded-xl p-3 space-y-1">
-              <span class="text-slate-500 font-medium uppercase text-[10px] tracking-wider flex items-center space-x-1">
-                <i data-lucide="phone" class="w-3 h-3 text-slate-500"></i>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-body-sm">
+            <div class="recessed-well p-3.5 space-y-1">
+              <span class="text-outline font-medium uppercase text-[10px] tracking-wider flex items-center gap-1 font-mono">
+                <span class="material-symbols-outlined text-[14px]">call</span>
                 <span>Direct Phone</span>
               </span>
-              <p id="cmodal-phone" class="text-slate-200 font-mono">N/A</p>
+              <p id="cmodal-phone" class="text-on-surface font-mono">N/A</p>
             </div>
-            <div class="bg-slate-950/80 border border-slate-800/80 rounded-xl p-3 space-y-1 min-w-0">
-              <span class="text-slate-500 font-medium uppercase text-[10px] tracking-wider flex items-center space-x-1">
-                <i data-lucide="map-pin" class="w-3 h-3 text-slate-500"></i>
+            <div class="recessed-well p-3.5 space-y-1 min-w-0">
+              <span class="text-outline font-medium uppercase text-[10px] tracking-wider flex items-center gap-1 font-mono">
+                <span class="material-symbols-outlined text-[14px]">location_on</span>
                 <span>Location (Google Maps)</span>
               </span>
               <div id="cmodal-location-container" class="break-words">
-                <a id="cmodal-location-link" href="#" target="_blank" rel="noopener noreferrer" class="text-indigo-400 hover:text-indigo-300 hover:underline flex items-start space-x-1 font-medium break-words" title="Open in Google Maps">
-                  <i data-lucide="external-link" class="w-3 h-3 shrink-0 text-indigo-400 mt-0.5"></i>
+                <a id="cmodal-location-link" href="#" target="_blank" rel="noopener noreferrer" class="text-primary hover:underline flex items-start gap-1 font-medium break-words font-mono text-[12px]" title="Open in Google Maps">
+                  <span class="material-symbols-outlined text-[14px] shrink-0 text-primary mt-0.5">open_in_new</span>
                   <span id="cmodal-address" class="break-words">N/A</span>
                 </a>
               </div>
@@ -962,39 +1231,39 @@
           <!-- Discovered Emails Section -->
           <div class="space-y-2">
             <div class="flex items-center justify-between">
-              <h4 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center space-x-1.5">
-                <i data-lucide="mail" class="w-3.5 h-3.5 text-emerald-400"></i>
+              <h4 class="text-label-sm font-semibold uppercase tracking-wider text-on-surface-variant flex items-center gap-1.5 font-mono text-[11px]">
+                <span class="material-symbols-outlined text-[16px] text-secondary">mail</span>
                 <span>Discovered Contact & HR Emails</span>
               </h4>
-              <span id="cmodal-emails-count" class="text-[11px] text-slate-400 font-mono bg-slate-950 px-2 py-0.5 rounded border border-slate-800">0 emails</span>
+              <span id="cmodal-emails-count" class="text-caption text-secondary font-mono bg-secondary/10 px-2 py-0.5 rounded border border-secondary/20">0 emails</span>
             </div>
-            <div id="cmodal-emails-container" class="bg-slate-950/80 border border-slate-800/80 rounded-xl p-3 flex flex-wrap gap-2 text-xs">
-              <span class="text-slate-500 italic">No emails found yet. Click "Enrich with AI" below to discover contacts.</span>
+            <div id="cmodal-emails-container" class="recessed-well p-3 flex flex-wrap gap-2 text-caption font-mono">
+              <span class="text-outline italic">No emails found yet. Click "Enrich with AI" below to discover contacts.</span>
             </div>
           </div>
 
           <!-- Executive Summary & Vibe -->
-          <div class="bg-slate-950/80 border border-slate-800/80 rounded-xl p-4 space-y-3 text-xs">
+          <div class="recessed-well p-4 space-y-3 text-body-sm">
             <div>
-              <span class="text-slate-400 font-semibold block mb-1">Company Executive Overview:</span>
-              <p id="cmodal-summary" class="text-slate-300 leading-relaxed">Not enriched yet. Click "Enrich with AI" below to analyze company details and tech stack.</p>
+              <span class="text-on-surface font-semibold block mb-1">Company Executive Overview:</span>
+              <p id="cmodal-summary" class="text-on-surface-variant leading-relaxed">Not enriched yet. Click "Enrich with AI" below to analyze company details and tech stack.</p>
             </div>
 
-            <div class="grid grid-cols-2 gap-3 pt-2.5 border-t border-slate-900">
+            <div class="grid grid-cols-2 gap-3 pt-2.5 border-t border-outline-variant/20 font-mono text-[11px]">
               <div>
-                <span class="text-slate-500 text-[10px] uppercase font-semibold block">Industry</span>
-                <p id="cmodal-industry" class="text-slate-200 font-medium mt-0.5">Technology</p>
+                <span class="text-outline text-[10px] uppercase font-semibold block">Industry</span>
+                <p id="cmodal-industry" class="text-on-surface font-medium mt-0.5">Technology</p>
               </div>
               <div>
-                <span class="text-slate-500 text-[10px] uppercase font-semibold block">Tone / Vibe</span>
-                <p id="cmodal-tone" class="text-slate-200 font-medium mt-0.5">Professional</p>
+                <span class="text-outline text-[10px] uppercase font-semibold block">Tone / Vibe</span>
+                <p id="cmodal-tone" class="text-on-surface font-medium mt-0.5">Professional</p>
               </div>
             </div>
 
-            <div class="pt-2.5 border-t border-slate-900">
-              <span class="text-slate-400 font-semibold block mb-1.5">Identified Tech Stack:</span>
-              <div id="cmodal-techstack" class="flex flex-wrap gap-1.5">
-                <span class="text-slate-500 italic text-[11px]">Analyze with AI to detect company technologies.</span>
+            <div class="pt-2.5 border-t border-outline-variant/20">
+              <span class="text-on-surface font-semibold block mb-1.5 text-[12px]">Identified Tech Stack:</span>
+              <div id="cmodal-techstack" class="flex flex-wrap gap-1.5 font-mono text-[11px]">
+                <span class="text-outline italic text-caption">Analyze with AI to detect company technologies.</span>
               </div>
             </div>
           </div>
@@ -1002,19 +1271,18 @@
 
         <!-- PANEL 2: AI Intelligence & Deep Technical Report -->
         <div id="cmodal-panel-ai" class="space-y-3 hidden">
-          <div class="bg-slate-950/80 border border-slate-800/80 rounded-xl p-4 space-y-3 text-xs">
-            <div class="flex items-center justify-between border-b border-slate-900 pb-2">
-              <div class="flex items-center space-x-1.5 text-slate-300 font-semibold">
-                <i data-lucide="file-text" class="w-3.5 h-3.5 text-indigo-400"></i>
+          <div class="recessed-well p-4 space-y-3 text-body-sm">
+            <div class="flex items-center justify-between border-b border-outline-variant/20 pb-2">
+              <div class="flex items-center gap-1.5 text-on-surface font-semibold">
+                <span class="material-symbols-outlined text-[16px] text-primary">description</span>
                 <span>Technical Intelligence Report</span>
-                <span class="text-[10px] text-slate-500 font-mono">(500–700 words)</span>
               </div>
-              <button type="button" id="cmodal-btn-copy-report" class="px-2 py-1 rounded bg-slate-900 hover:bg-slate-800 text-slate-400 hover:text-white border border-slate-800 text-[11px] font-medium transition flex items-center space-x-1 cursor-pointer">
-                <i data-lucide="copy" class="w-3 h-3"></i>
+              <button type="button" id="cmodal-btn-copy-report" class="btn-tactile-slate px-2.5 py-1 rounded text-caption font-medium transition flex items-center gap-1 cursor-pointer font-mono">
+                <span class="material-symbols-outlined text-[14px]">content_copy</span>
                 <span>Copy</span>
               </button>
             </div>
-            <div id="cmodal-detailed-analysis" class="text-slate-300 leading-relaxed max-h-72 overflow-y-auto font-sans text-xs bg-slate-900/60 p-3.5 rounded-lg border border-slate-800/80 markdown-content">
+            <div id="cmodal-detailed-analysis" class="text-on-surface-variant leading-relaxed max-h-72 overflow-y-auto font-sans text-body-sm bg-surface-container-lowest p-3.5 rounded-xl border border-outline-variant/30 markdown-content">
               Not enriched yet. Click "Enrich with AI" below to generate a detailed intelligence report.
             </div>
           </div>
@@ -1023,24 +1291,24 @@
       </div>
 
       <!-- Modal Footer Actions (Sticky Pin) -->
-      <div class="px-5 py-3 border-t border-slate-800/80 bg-slate-900/95 flex flex-col sm:flex-row sm:items-center justify-between gap-2 shrink-0">
+      <div class="px-5 py-3.5 border-t border-outline-variant/20 bg-surface-container-lowest/95 backdrop-blur-md flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 shrink-0">
         <div class="flex items-center space-x-2 w-full sm:w-auto">
-          <button id="cmodal-btn-enrich" type="button" class="flex-1 sm:flex-initial px-3.5 py-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 rounded-xl text-xs font-semibold transition flex items-center justify-center space-x-1.5 cursor-pointer shadow-sm active:scale-95">
-            <i data-lucide="zap" class="w-3.5 h-3.5 text-amber-300"></i>
+          <button id="cmodal-btn-enrich" type="button" class="btn-tactile-slate flex-1 sm:flex-initial px-4 py-2 rounded text-label-sm font-label-sm font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer">
+            <span class="material-symbols-outlined text-[16px] text-tertiary">auto_awesome</span>
             <span>Enrich with AI</span>
           </button>
-          <button id="cmodal-btn-admin-action" type="button" class="hidden px-3 py-2 rounded-xl text-xs font-semibold transition flex items-center space-x-1.5 cursor-pointer">
-            <i data-lucide="shield-alert" class="w-3.5 h-3.5"></i>
+          <button id="cmodal-btn-admin-action" type="button" class="hidden px-3.5 py-2 rounded text-label-sm font-label-sm font-semibold transition flex items-center gap-1.5 cursor-pointer">
+            <span class="material-symbols-outlined text-[16px]">shield</span>
             <span id="cmodal-admin-action-text">Mark as Invalid</span>
           </button>
         </div>
 
         <div class="flex items-center space-x-2 w-full sm:w-auto justify-end">
-          <button id="cmodal-btn-cancel" type="button" class="px-3.5 py-2 rounded-xl border border-slate-800 hover:bg-slate-800 text-slate-400 hover:text-white text-xs font-medium transition cursor-pointer">
+          <button id="cmodal-btn-cancel" type="button" class="btn-tactile-slate px-3.5 py-2 rounded text-label-sm font-label-sm transition cursor-pointer">
             Close
           </button>
-          <button id="cmodal-btn-pitch" type="button" class="flex-1 sm:flex-initial px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-semibold transition flex items-center justify-center space-x-1.5 shadow-md shadow-indigo-600/20 cursor-pointer active:scale-95">
-            <i data-lucide="send" class="w-3.5 h-3.5"></i>
+          <button id="cmodal-btn-pitch" type="button" class="btn-tactile-ecru flex-1 sm:flex-initial px-4 py-2 font-semibold rounded text-label-sm font-label-sm transition flex items-center justify-center gap-1.5 cursor-pointer">
+            <span class="material-symbols-outlined text-[16px]">send</span>
             <span>Write Outreach Email</span>
           </button>
         </div>
@@ -1049,115 +1317,116 @@
     </div>
   </div>
 
-  <!-- PITCH PREVIEW & EDIT MODAL -->
-  <div id="pitch-modal" class="fixed inset-0 z-[100] w-screen h-screen bg-slate-950/85 backdrop-blur-md hidden flex items-center justify-center p-4 overflow-hidden">
-    <div class="relative bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full p-6 space-y-4 shadow-2xl my-auto">
-      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+  <!-- PITCH PREVIEW & EDIT MODAL (Artisanal Inspection Bay) -->
+  <div id="pitch-modal" class="fixed inset-0 z-[100] w-screen h-screen bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4 overflow-hidden">
+    <div class="relative bg-surface-container-low border border-outline-variant/30 rounded-2xl max-w-2xl w-full p-6 space-y-4 shadow-2xl my-auto">
+      <div class="flex items-center justify-between border-b border-outline-variant/20 pb-3">
         <div>
-          <h3 class="text-base font-bold text-white" id="modal-company-name">Personalized Outreach Email</h3>
-          <p class="text-xs text-slate-400">Recipient: <span id="modal-target-email" class="font-mono text-emerald-400 font-semibold">hr@company.com</span></p>
+          <h3 class="text-base font-bold text-on-surface" id="modal-company-name">Personalized Outreach Email</h3>
+          <p class="text-caption font-caption text-on-surface-variant font-mono">Recipient: <span id="modal-target-email" class="text-secondary font-semibold">hr@company.com</span></p>
         </div>
-        <button id="modal-close" class="text-slate-400 hover:text-white p-1 transition cursor-pointer">
-          <i data-lucide="x" class="w-5 h-5"></i>
+        <button id="modal-close" class="text-outline hover:text-on-surface p-1.5 rounded-lg hover:bg-surface-container transition cursor-pointer">
+          <span class="material-symbols-outlined text-[20px]">close</span>
         </button>
       </div>
 
       <div class="space-y-3">
         <div>
-          <label class="block text-xs font-medium text-slate-400 mb-1">Subject Line</label>
-          <input type="text" id="modal-subject" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-100 focus:outline-none focus:border-indigo-500">
+          <label class="block text-label-sm font-label-sm text-on-surface-variant mb-1 font-medium">Subject Line</label>
+          <input type="text" id="modal-subject" class="w-full recessed-well px-3.5 py-2.5 text-body-sm text-on-surface focus:outline-none focus:border-primary-container transition">
         </div>
         <div>
-          <label class="block text-xs font-medium text-slate-400 mb-1">Email Message</label>
-          <textarea id="modal-body" rows="7" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-xs text-slate-100 font-mono leading-relaxed focus:outline-none focus:border-indigo-500"></textarea>
+          <label class="block text-label-sm font-label-sm text-on-surface-variant mb-1 font-medium">Email Message</label>
+          <textarea id="modal-body" rows="7" class="w-full recessed-well p-3 text-body-sm text-on-surface font-mono leading-relaxed focus:outline-none focus:border-primary-container transition"></textarea>
         </div>
       </div>
 
       <!-- Resume Attachment Option in Pitch Modal -->
-      <div class="bg-slate-950/70 border border-slate-800 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs">
-        <div class="flex items-center space-x-2.5 min-w-0">
-          <i data-lucide="paperclip" class="w-4 h-4 text-indigo-400 shrink-0"></i>
+      <div class="bg-surface-container-lowest border border-outline-variant/30 rounded-xl p-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-body-sm">
+        <div class="flex items-center gap-2.5 min-w-0">
+          <span class="material-symbols-outlined text-[18px] text-primary shrink-0">attach_file</span>
           <div class="min-w-0">
-            <div class="flex items-center space-x-1.5 flex-wrap">
-              <span class="font-semibold text-slate-200">Attachment:</span>
-              <span id="pitch-modal-resume-name" class="font-mono text-emerald-400 truncate max-w-[200px] sm:max-w-[280px]">No file selected</span>
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <span class="font-semibold text-on-surface">Attachment:</span>
+              <span id="pitch-modal-resume-name" class="font-mono text-secondary truncate max-w-[200px] sm:max-w-[280px]">No file selected</span>
             </div>
-            <p class="text-[11px] text-slate-400">Attached directly to the email sent via your authorized Gmail account.</p>
+            <p class="text-caption font-caption text-outline">Attached directly to the email sent via your authorized Gmail account.</p>
           </div>
         </div>
 
-        <div class="flex items-center space-x-2.5 shrink-0">
-          <button type="button" id="btn-pitch-modal-choose-resume" class="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-indigo-300 border border-slate-700 text-xs font-medium transition cursor-pointer">
+        <div class="flex items-center gap-2.5 shrink-0">
+          <button type="button" id="btn-pitch-modal-choose-resume" class="btn-tactile-slate px-3 py-1.5 rounded text-label-sm font-label-sm font-medium transition cursor-pointer">
             Pick File
           </button>
           <!-- Attach in Email Slider Toggle -->
-          <label class="toggle-switch flex items-center space-x-2 bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-800 hover:border-slate-700 transition" title="Toggle resume attachment in outgoing email">
+          <label class="toggle-switch flex items-center gap-2 bg-surface-container px-3 py-1.5 rounded-lg border border-outline-variant/40 hover:border-outline-variant/60 transition cursor-pointer" title="Toggle resume attachment in outgoing email">
             <input type="checkbox" id="pitch-modal-attach-toggle">
             <span class="toggle-slider"></span>
-            <span class="text-xs font-semibold text-slate-200 whitespace-nowrap">Attach resume in email</span>
+            <span class="text-label-sm font-label-sm font-medium text-on-surface whitespace-nowrap">Attach resume</span>
           </label>
         </div>
       </div>
 
       <div class="flex items-center justify-between pt-2">
-        <button id="btn-copy-pitch" class="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-xs font-medium text-slate-300 transition flex items-center space-x-1.5 cursor-pointer">
-          <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+        <button id="btn-copy-pitch" class="btn-tactile-slate px-3.5 py-2 rounded text-label-sm font-label-sm font-medium text-on-surface transition flex items-center gap-1.5 cursor-pointer">
+          <span class="material-symbols-outlined text-[15px]">content_copy</span>
           <span>Copy Message</span>
         </button>
 
-        <div class="flex items-center space-x-2">
-          <a id="btn-launch-gmail" href="#" target="_blank" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white rounded-lg text-xs font-medium border border-slate-700 transition flex items-center space-x-1 cursor-pointer" title="Open in Gmail Web compose window">
-            <i data-lucide="external-link" class="w-3 h-3"></i>
-            <span>Open in Gmail Web</span>
+        <div class="flex items-center gap-2">
+          <a id="btn-launch-gmail" href="#" target="_blank" class="btn-tactile-slate px-3.5 py-2 text-on-surface rounded text-label-sm font-label-sm font-medium transition flex items-center gap-1 cursor-pointer" title="Open in Gmail Web compose window">
+            <span class="material-symbols-outlined text-[15px]">open_in_new</span>
+            <span>Gmail Web</span>
           </a>
-          <button id="btn-send-direct-oauth" type="button" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold transition flex items-center space-x-1.5 cursor-pointer shadow-sm active:scale-95">
-            <i data-lucide="send" class="w-3.5 h-3.5"></i>
+          <button id="btn-send-direct-oauth" type="button" class="btn-tactile-ecru px-4 py-2 rounded text-label-sm font-label-sm font-semibold transition flex items-center gap-1.5 cursor-pointer">
+            <span class="material-symbols-outlined text-[15px]">send</span>
             <span id="btn-send-direct-text">Send via Gmail</span>
           </button>
         </div>
       </div>
     </div>
   </div>
+
   <!-- SENT EMAIL DETAILS MODAL -->
-  <div id="sent-email-modal" class="fixed inset-0 z-[105] w-screen h-screen bg-slate-950/85 backdrop-blur-md hidden flex items-center justify-center p-4 overflow-hidden">
-    <div class="relative bg-slate-900 border border-slate-800 rounded-2xl max-w-2xl w-full p-6 space-y-4 shadow-2xl my-auto">
-      <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+  <div id="sent-email-modal" class="fixed inset-0 z-[105] w-screen h-screen bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4 overflow-hidden">
+    <div class="relative bg-surface-container-low border border-outline-variant/30 rounded-2xl max-w-2xl w-full p-6 space-y-4 shadow-2xl my-auto">
+      <div class="flex items-center justify-between border-b border-outline-variant/20 pb-3">
         <div>
-          <div class="flex items-center space-x-2">
-            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-sky-950 border border-sky-800 text-sky-400 uppercase tracking-wide flex items-center space-x-1">
-              <i data-lucide="check-circle-2" class="w-3 h-3 text-sky-400"></i>
+          <div class="flex items-center gap-2">
+            <span class="px-2.5 py-0.5 rounded-full text-caption font-semibold bg-primary-container/15 border border-primary-container/30 text-primary uppercase tracking-wide flex items-center gap-1">
+              <span class="material-symbols-outlined text-[13px]">check_circle</span>
               <span id="sent-modal-method">SENT</span>
             </span>
-            <h3 class="text-base font-bold text-white truncate" id="sent-modal-company-name">Company Name</h3>
+            <h3 class="text-base font-bold text-on-surface truncate" id="sent-modal-company-name">Company Name</h3>
           </div>
-          <p class="text-xs text-slate-400 mt-1">Recipient: <span id="sent-modal-recipient" class="font-mono text-emerald-400 font-semibold">hr@company.com</span> &bull; <span id="sent-modal-date" class="text-slate-500">Oct 19, 2026</span></p>
+          <p class="text-caption font-caption text-on-surface-variant mt-1">Recipient: <span id="sent-modal-recipient" class="font-mono text-secondary font-semibold">hr@company.com</span> &bull; <span id="sent-modal-date" class="text-outline">Oct 19, 2026</span></p>
         </div>
-        <button id="sent-modal-close" type="button" aria-label="Close" class="text-slate-400 hover:text-white p-1.5 rounded-lg hover:bg-slate-800 transition cursor-pointer">
-          <i data-lucide="x" class="w-5 h-5"></i>
+        <button id="sent-modal-close" type="button" aria-label="Close" class="text-outline hover:text-on-surface p-1.5 rounded-lg hover:bg-surface-container transition cursor-pointer">
+          <span class="material-symbols-outlined text-[20px]">close</span>
         </button>
       </div>
 
       <div class="space-y-3">
         <div>
-          <label class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Subject</label>
-          <div id="sent-modal-subject" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-3 py-2 text-xs text-slate-100 font-medium select-text">
+          <label class="block text-label-sm font-label-sm text-on-surface-variant font-medium uppercase tracking-wider mb-1">Subject</label>
+          <div id="sent-modal-subject" class="w-full bg-surface-container-lowest border border-outline-variant/30 rounded-xl px-3.5 py-2.5 text-body-sm text-on-surface font-medium select-text">
             Subject
           </div>
         </div>
         <div>
-          <label class="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">Email Message Sent</label>
-          <div id="sent-modal-body" class="w-full bg-slate-950 border border-slate-800 rounded-lg p-3 text-xs text-slate-200 font-mono leading-relaxed whitespace-pre-wrap max-h-72 overflow-y-auto select-text">
+          <label class="block text-label-sm font-label-sm text-on-surface-variant font-medium uppercase tracking-wider mb-1">Email Message Sent</label>
+          <div id="sent-modal-body" class="w-full bg-surface-container-lowest border border-outline-variant/30 rounded-xl p-3.5 text-body-sm text-on-surface font-mono leading-relaxed whitespace-pre-wrap max-h-72 overflow-y-auto select-text">
             Body
           </div>
         </div>
       </div>
 
       <div class="flex items-center justify-between pt-2">
-        <button id="btn-copy-sent-email" type="button" class="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg text-xs font-medium text-slate-300 transition flex items-center space-x-1.5 cursor-pointer">
-          <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+        <button id="btn-copy-sent-email" type="button" class="px-3.5 py-2 bg-surface-container hover:bg-surface-container-high border border-outline-variant/40 rounded-lg text-label-sm font-label-sm font-medium text-on-surface transition flex items-center gap-1.5 cursor-pointer">
+          <span class="material-symbols-outlined text-[15px]">content_copy</span>
           <span>Copy Content</span>
         </button>
-        <button id="btn-close-sent-email" type="button" class="px-4 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-semibold transition cursor-pointer">
+        <button id="btn-close-sent-email" type="button" class="px-4 py-2 bg-surface-container hover:bg-surface-container-high text-on-surface rounded-lg text-label-sm font-label-sm font-semibold border border-outline-variant/40 transition cursor-pointer">
           Close
         </button>
       </div>
@@ -1165,52 +1434,60 @@
   </div>
 
   <!-- LOGIN REQUIRED MODAL -->
-  <div id="login-modal" class="fixed inset-0 z-[110] w-screen h-screen bg-slate-950/85 backdrop-blur-md hidden flex items-center justify-center p-4 overflow-hidden">
-    <div class="relative bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl my-auto text-center">
-      <div class="mx-auto w-12 h-12 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400">
-        <i data-lucide="lock" class="w-6 h-6"></i>
+  <div id="login-modal" class="fixed inset-0 z-[110] w-screen h-screen bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4 overflow-hidden">
+    <div class="relative bg-surface-container-low border border-outline-variant/30 rounded-2xl max-w-lg w-full p-6 sm:p-7 space-y-4 shadow-2xl my-auto text-center">
+      <div class="mx-auto w-12 h-12 rounded-2xl bg-primary-container/20 border border-primary-container/30 flex items-center justify-center text-primary">
+        <span class="material-symbols-outlined text-[24px]">lock</span>
       </div>
       <div>
-        <h3 id="login-modal-title" class="text-base font-bold text-white">Please Log In</h3>
-        <p id="login-modal-desc" class="text-xs text-slate-400 mt-1.5 leading-relaxed">
+        <h3 id="login-modal-title" class="text-headline-sm font-headline-sm font-bold text-on-surface">Please Log In</h3>
+        <p id="login-modal-desc" class="text-body-sm font-body-sm text-on-surface-variant mt-1.5 leading-relaxed">
           Please log in to use this feature. Sign in with Google to analyze leads, detect tech stacks, and generate personalized outreach.
         </p>
       </div>
 
       <div class="space-y-2.5 pt-2">
-        <a id="btn-modal-google-login" href="/auth/google/login" class="flex items-center justify-center space-x-2 w-full py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-sm transition">
-          <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24"><path fill="#ffffff" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#ffffff" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#ffffff" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#ffffff" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
+        <a id="btn-modal-google-login" href="/auth/google/login" class="btn-tactile-slate flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-lg text-label-md font-label-md font-semibold transition shadow-sm cursor-pointer">
+          <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24"><path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
           <span>Sign In with Google</span>
         </a>
 
         {% if dev_mode %}
-        <div class="space-y-1.5 pt-2 border-t border-slate-800/80">
-          <span class="text-[10px] font-semibold text-slate-500 uppercase tracking-wider block">Dev Sandbox Quick Access</span>
-          <button id="btn-modal-admin-login" type="button" class="w-full py-2.5 px-3 rounded-xl bg-rose-950/70 hover:bg-rose-900/90 border border-rose-800 text-xs font-bold text-rose-200 transition cursor-pointer flex items-center justify-center space-x-2 shadow-sm" title="Sign In as Master Admin (vorarahul111@gmail.com)">
-            <i data-lucide="shield-check" class="w-4 h-4 text-rose-400"></i>
-            <span>Sign In as Master Admin (vorarahul111@gmail.com)</span>
+        <div class="space-y-1.5 pt-2 border-t border-outline-variant/20">
+          <span class="text-caption font-caption text-outline uppercase tracking-wider block">Dev Sandbox Quick Access</span>
+          <button id="btn-modal-admin-login" type="button" class="w-full py-2.5 px-3 rounded-lg bg-error/10 hover:bg-error/20 border border-error/30 text-label-sm font-label-sm font-bold text-error transition cursor-pointer flex items-center justify-center gap-2 shadow-sm" title="Sign In as Master Admin">
+            <span class="material-symbols-outlined text-[16px]">verified_user</span>
+            <span>Sign In as Master Admin</span>
           </button>
-          <button id="btn-modal-demo-login" type="button" class="w-full py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs font-medium text-slate-300 transition cursor-pointer flex items-center justify-center space-x-2" title="Sign In as Standard User">
-            <i data-lucide="user" class="w-3.5 h-3.5 text-slate-400"></i>
+          <button id="btn-modal-demo-login" type="button" class="w-full py-2 px-3 rounded-lg bg-surface-container hover:bg-surface-container-high border border-outline-variant/30 text-label-sm font-label-sm font-medium text-on-surface transition cursor-pointer flex items-center justify-center gap-2" title="Sign In as Standard User">
+            <span class="material-symbols-outlined text-[16px]">person</span>
             <span>Sign In as Standard User</span>
           </button>
         </div>
         {% endif %}
 
-        <button id="login-modal-close" type="button" class="w-full py-1.5 text-xs text-slate-500 hover:text-slate-300 transition cursor-pointer">
+        <button id="login-modal-close" type="button" class="w-full py-1.5 text-label-sm font-label-sm text-outline hover:text-on-surface transition cursor-pointer">
           Cancel
         </button>
       </div>
     </div>
   </div>
 
-  <script>
-    window.__INITIAL_AUTH__ = {
-      is_logged_in: {{ 'true' if is_logged_in else 'false' }},
-      email: {% if user and is_logged_in %}"{{ user.email }}"{% else %}null{% endif %},
-      is_master_admin: {{ 'true' if is_master_admin else 'false' }}
-    };
+  <script id="initial-auth-data" type="application/json">
+    {
+      "is_logged_in": {{ 'true' if is_logged_in else 'false' }},
+      "email": {% if user and is_logged_in %}"{{ user.email }}"{% else %}null{% endif %},
+      "is_master_admin": {{ 'true' if is_master_admin else 'false' }},
+      "dev_mode": {{ 'true' if dev_mode else 'false' }}
+    }
   </script>
-  <script src="/static/js/app.js?v=3.2"></script>
+  <script>
+    try {
+      window.__INITIAL_AUTH__ = JSON.parse(document.getElementById("initial-auth-data").textContent);
+    } catch (_) {
+      window.__INITIAL_AUTH__ = { is_logged_in: false, email: null, is_master_admin: false, dev_mode: false };
+    }
+  </script>
+  <script src="/static/js/app.js?v=8.3"></script>
 </body>
 </html>

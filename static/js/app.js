@@ -5,7 +5,11 @@ document.addEventListener("DOMContentLoaded", () => {
   let companies = [];
   let pollInterval = null;
   let activeTab = "companies";
-  let isMasterAdmin = false;
+  let currentUser = (window.__INITIAL_AUTH__ && typeof window.__INITIAL_AUTH__.is_logged_in === "boolean")
+    ? { ...window.__INITIAL_AUTH__ }
+    : { is_logged_in: false, email: null, is_master_admin: false, dev_mode: false };
+  let isMasterAdmin = Boolean(currentUser && currentUser.is_master_admin);
+  let isDevMode = Boolean(currentUser && currentUser.dev_mode);
   let adminViewMode = "admin"; // "admin" or "preview"
   let filterInvalidOnly = false;
   let invalidCount = 0;
@@ -64,13 +68,23 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
     let html = escapeHTML(text);
-    html = html.replace(/^### (.*$)/gim, '<h4 class="text-indigo-300 font-bold text-xs mt-3 mb-1 uppercase tracking-wider">$1</h4>');
+    html = html.replace(/^### (.*$)/gim, '<h4 class="text-primary font-bold text-xs mt-3 mb-1 uppercase tracking-wider">$1</h4>');
     html = html.replace(/^## (.*$)/gim, '<h3 class="text-white font-bold text-sm mt-3 mb-1.5">$1</h3>');
     html = html.replace(/\*\*(.*?)\*\*/gim, '<strong class="text-white font-semibold">$1</strong>');
-    html = html.replace(/^\- (.*$)/gim, '<div class="flex items-start space-x-1.5 my-1 ml-2"><span class="text-indigo-400 font-bold">•</span><span class="text-slate-200">$1</span></div>');
+    html = html.replace(/^\- (.*$)/gim, '<div class="flex items-start space-x-1.5 my-1 ml-2"><span class="text-primary font-bold">•</span><span class="text-slate-200">$1</span></div>');
     html = html.replace(/\n\n/gim, '<div class="h-2"></div>');
     html = html.replace(/\n/gim, '<br>');
     return html;
+  }
+
+  function getCompanyMonogram(name) {
+    if (!name) return "CO";
+    const clean = String(name).trim().replace(/[^a-zA-Z0-9\s]/g, "");
+    const parts = clean.split(/\s+/).filter(Boolean);
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[1][0]).toUpperCase();
+    }
+    return clean.slice(0, 2).toUpperCase() || "CO";
   }
 
   function showToast(message, type = "info") {
@@ -78,40 +92,40 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!container) {
       container = document.createElement("div");
       container.id = "toast-container";
-      container.className = "fixed top-6 left-1/2 -translate-x-1/2 z-[9999] flex flex-col items-center space-y-2.5 pointer-events-none w-[92vw] max-w-lg";
+      container.className = "fixed top-6 left-1/2 -translate-x-1/2 z-[9999] flex flex-col items-center space-y-2.5 pointer-events-none w-[94vw] max-w-2xl";
       document.body.appendChild(container);
     }
     const toast = document.createElement("div");
     
-    let bgClass = "bg-slate-900/95 border-indigo-500/80 text-indigo-100 shadow-[0_12px_40px_rgba(99,102,241,0.35)]";
+    let bgClass = "bg-surface-container-low/95 border-outline-variant/50 text-on-surface shadow-[0_12px_40px_rgba(0,0,0,0.6)]";
     let icon = "info";
-    let badge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 uppercase tracking-wider shrink-0">Info</span>`;
+    let badge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-primary-container/20 text-primary border border-primary-container/40 uppercase tracking-wider shrink-0">Info</span>`;
 
     if (type === "error") {
-      bgClass = "bg-rose-950/95 border-rose-500 text-rose-100 shadow-[0_14px_45px_rgba(244,63,94,0.45)] ring-1 ring-rose-500/50";
+      bgClass = "bg-surface-container-low/95 border-error/60 text-on-surface shadow-[0_14px_45px_rgba(255,84,73,0.25)] ring-1 ring-error/40";
       icon = "alert-octagon";
-      badge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40 uppercase tracking-wider shrink-0">Error</span>`;
+      badge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-error/20 text-error border border-error/40 uppercase tracking-wider shrink-0">Error</span>`;
     } else if (type === "warning") {
-      bgClass = "bg-amber-950/95 border-amber-500 text-amber-100 shadow-[0_14px_45px_rgba(245,158,11,0.45)] ring-1 ring-amber-500/50";
+      bgClass = "bg-surface-container-low/95 border-tertiary/60 text-on-surface shadow-[0_14px_45px_rgba(255,185,95,0.25)] ring-1 ring-tertiary/40";
       const isAuthPrompt = message.toLowerCase().includes("sign in") || message.toLowerCase().includes("login") || message.toLowerCase().includes("auth");
       icon = isAuthPrompt ? "lock" : "alert-triangle";
       const badgeText = isAuthPrompt ? "Sign In Required" : "Attention";
-      badge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 uppercase tracking-wider shrink-0">${badgeText}</span>`;
+      badge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-tertiary/20 text-tertiary border border-tertiary/40 uppercase tracking-wider shrink-0">${badgeText}</span>`;
     } else if (type === "success") {
-      bgClass = "bg-emerald-950/95 border-emerald-500 text-emerald-100 shadow-[0_14px_45px_rgba(16,185,129,0.4)] ring-1 ring-emerald-500/50";
+      bgClass = "bg-surface-container-low/95 border-secondary/60 text-on-surface shadow-[0_14px_45px_rgba(78,222,163,0.25)] ring-1 ring-secondary/40";
       icon = "check-circle-2";
-      badge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 uppercase tracking-wider shrink-0">Success</span>`;
+      badge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-secondary/20 text-secondary border border-secondary/40 uppercase tracking-wider shrink-0">Success</span>`;
     }
 
-    toast.className = `${bgClass} border rounded-2xl px-4 py-3 flex items-center justify-between space-x-3 text-xs font-medium pointer-events-auto backdrop-blur-md transition-all duration-300 transform -translate-y-4 opacity-0 scale-95 w-full`;
+    toast.className = `${bgClass} border rounded-2xl px-5 py-3.5 flex items-center justify-between space-x-4 text-body-sm font-medium pointer-events-auto backdrop-blur-md transition-all duration-300 transform -translate-y-4 opacity-0 scale-95 w-auto min-w-[340px] sm:min-w-[500px] max-w-2xl shadow-xl`;
     toast.innerHTML = `
-      <div class="flex items-center space-x-2.5 min-w-0">
-        <i data-lucide="${icon}" class="w-5 h-5 shrink-0"></i>
+      <div class="flex items-center space-x-3.5 min-w-0 flex-1">
+        <i data-lucide="${icon}" class="w-5 h-5 shrink-0 text-on-surface"></i>
         ${badge}
-        <span class="break-words leading-snug">${message}</span>
+        <span class="leading-relaxed text-sm">${message}</span>
       </div>
-      <button type="button" class="toast-close p-1 hover:bg-white/10 rounded-lg text-slate-400 hover:text-white transition shrink-0 cursor-pointer" title="Dismiss">
-        <i data-lucide="x" class="w-3.5 h-3.5"></i>
+      <button type="button" class="toast-close p-1.5 hover:bg-surface-container-highest rounded-lg text-outline hover:text-on-surface transition shrink-0 cursor-pointer ml-2" title="Dismiss">
+        <i data-lucide="x" class="w-4 h-4"></i>
       </button>
     `;
 
@@ -140,32 +154,102 @@ document.addEventListener("DOMContentLoaded", () => {
     }, displayDuration);
   }
 
+  // Centralized HTTP error prompt handler for 4xx/5xx status codes
+  async function handleHttpError(response, defaultMsg = "Request failed") {
+    let errorDetail = "";
+    try {
+      const clone = response.clone();
+      const contentType = clone.headers.get("content-type") || "";
+      if (contentType.includes("application/json")) {
+        const data = await clone.json();
+        errorDetail = data.detail || data.error || data.message || "";
+      } else {
+        const text = await clone.text();
+        if (text && text.length < 200 && !text.includes("<html")) {
+          errorDetail = text;
+        }
+      }
+    } catch (_) {}
+
+    const status = response ? response.status : 0;
+    if (status === 401) {
+      showToast(errorDetail || "Authentication required. Please sign in to continue.", "warning");
+    } else if (status === 403) {
+      showToast(errorDetail || "Access restricted. Master Admin privileges required.", "error");
+    } else if (status === 404) {
+      showToast(errorDetail || "Requested resource or endpoint was not found.", "warning");
+    } else if (status === 422) {
+      showToast(errorDetail || "Invalid request payload. Please verify your input parameters.", "warning");
+    } else if (status === 429) {
+      showToast(errorDetail || "Rate limit reached. Please wait a moment before retrying.", "warning");
+    } else if (status >= 500) {
+      showToast(errorDetail || "Server telemetry error. Please try again in a few moments.", "error");
+    } else {
+      showToast(errorDetail || defaultMsg || `Request failed with HTTP ${status}`, "error");
+    }
+  }
+
+  // Expose globally for modular usage
+  window.showToast = showToast;
+  window.handleHttpError = handleHttpError;
+
+  function highlightFieldWarning(element, message = null) {
+    if (!element) return;
+    element.classList.add("input-warning-highlight");
+    try {
+      if (typeof element.focus === "function") {
+        element.focus();
+      }
+      if (typeof element.scrollIntoView === "function") {
+        element.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    } catch (_) {}
+
+    if (message) {
+      showToast(message, "warning");
+    }
+
+    const cleanup = () => {
+      element.classList.remove("input-warning-highlight");
+      element.removeEventListener("input", cleanup);
+      element.removeEventListener("change", cleanup);
+    };
+    element.addEventListener("input", cleanup);
+    element.addEventListener("change", cleanup);
+
+    setTimeout(() => {
+      element.classList.remove("input-warning-highlight");
+    }, 3200);
+  }
+
   function switchTab(tabId) {
-    [tabScout, tabCompanies, tabResume, tabOutreach].forEach(t => t?.classList.remove("active"));
-    [secScout, secCompanies, secResume, secOutreach].forEach(s => s?.classList.add("hidden"));
+    const navItems = [
+      { id: "companies", btn: tabCompanies, sec: secCompanies },
+      { id: "scout", btn: tabScout, sec: secScout },
+      { id: "outreach", btn: tabOutreach, sec: secOutreach },
+      { id: "resume", btn: tabResume, sec: secResume }
+    ];
+
+    navItems.forEach(({ id, btn, sec }) => {
+      const dot = btn?.querySelector(".active-dot");
+      if (id === tabId) {
+        btn?.classList.add("active", "bg-surface-container-highest/60", "text-primary");
+        btn?.classList.remove("text-on-surface-variant");
+        dot?.classList.remove("hidden");
+        sec?.classList.remove("hidden");
+      } else {
+        btn?.classList.remove("active", "bg-surface-container-highest/60", "text-primary");
+        btn?.classList.add("text-on-surface-variant");
+        dot?.classList.add("hidden");
+        sec?.classList.add("hidden");
+      }
+    });
 
     if (tabId === "scout") {
-      tabScout?.classList.add("active");
-      secScout?.classList.remove("hidden");
-      if (pageTitle) pageTitle.innerHTML = '<i data-lucide="radar" class="w-4 h-4 text-indigo-400 shrink-0"></i><span class="whitespace-nowrap">Find New Leads</span>';
-      if (pageSubtitle) pageSubtitle.textContent = "Search Google Maps in real time to find verified local businesses and contact details.";
       updateScoutViewFromInputs();
     } else if (tabId === "companies") {
-      tabCompanies?.classList.add("active");
-      secCompanies?.classList.remove("hidden");
-      if (pageTitle) pageTitle.innerHTML = '<i data-lucide="building-2" class="w-4 h-4 text-sky-400 shrink-0"></i><span class="whitespace-nowrap">All Companies & Leads</span>';
-      if (pageSubtitle) pageSubtitle.textContent = "Browse your verified business leads. Filter, sort, view contact details, and prepare outreach.";
       applyCompanyFiltersAndRender();
-    } else if (tabId === "resume") {
-      tabResume?.classList.add("active");
-      secResume?.classList.remove("hidden");
-      if (pageTitle) pageTitle.innerHTML = '<i data-lucide="user-check" class="w-4 h-4 text-amber-400 shrink-0"></i><span class="whitespace-nowrap">Candidate Profile & Skills</span>';
-      if (pageSubtitle) pageSubtitle.textContent = "Upload your resume to extract skills, experience, and tailor your outreach with AI.";
     } else if (tabId === "outreach") {
-      tabOutreach?.classList.add("active");
-      secOutreach?.classList.remove("hidden");
-      if (pageTitle) pageTitle.innerHTML = '<i data-lucide="mail" class="w-4 h-4 text-rose-400 shrink-0"></i><span class="whitespace-nowrap">1-on-1 Direct Outreach</span>';
-      if (pageSubtitle) pageSubtitle.textContent = "Review personalized outreach emails, launch in 1-click, and track sent messages.";
       renderPitchesList();
       fetchAuditLogs();
     }
@@ -272,6 +356,14 @@ document.addEventListener("DOMContentLoaded", () => {
   const companiesContainer = document.getElementById("companies-container");
 
   function updateBulkActionBar() {
+    const canManageLeads = Boolean((isMasterAdmin && currentUser && currentUser.is_logged_in) || isDevMode);
+    if (!canManageLeads) {
+      if (bulkActionBar) {
+        bulkActionBar.classList.add("hidden");
+        bulkActionBar.classList.remove("flex");
+      }
+      return;
+    }
     const count = selectedCompanyIds.size;
     if (!bulkActionBar) return;
 
@@ -340,8 +432,11 @@ document.addEventListener("DOMContentLoaded", () => {
           if (id) {
             selectedCompanyIds.add(id);
             chk.checked = true;
-            const parentCard = chk.closest(".company-card, .company-card-invalid");
-            if (parentCard) parentCard.classList.add("ring-2", "ring-indigo-500/80", "bg-slate-800/80");
+            const parentCard = chk.closest(".company-card") || chk.closest(".company-card-invalid") || chk.closest("div[data-id]");
+            if (parentCard) {
+              parentCard.classList.add("border-primary", "ring-1", "ring-primary");
+              parentCard.classList.remove("border-outline-variant/30");
+            }
           }
         });
       } else {
@@ -350,8 +445,11 @@ document.addEventListener("DOMContentLoaded", () => {
           if (id) {
             selectedCompanyIds.delete(id);
             chk.checked = false;
-            const parentCard = chk.closest(".company-card, .company-card-invalid");
-            if (parentCard) parentCard.classList.remove("ring-2", "ring-indigo-500/80", "bg-slate-800/80", "ring-rose-500/80");
+            const parentCard = chk.closest(".company-card") || chk.closest(".company-card-invalid") || chk.closest("div[data-id]");
+            if (parentCard) {
+              parentCard.classList.remove("border-primary", "ring-1", "ring-primary", "ring-2", "ring-primary/60", "border-primary", "bg-slate-800/80", "bg-slate-800/90", "border-primary-container", "ring-primary-container");
+              parentCard.classList.add("border-outline-variant/30");
+            }
           }
         });
       }
@@ -367,8 +465,15 @@ document.addEventListener("DOMContentLoaded", () => {
       selectedCompanyIds.clear();
       document.querySelectorAll(".company-checkbox").forEach(chk => {
         chk.checked = false;
-        const parentCard = chk.closest(".company-card, .company-card-invalid");
-        if (parentCard) parentCard.classList.remove("ring-2", "ring-indigo-500/80", "bg-slate-800/80", "ring-rose-500/80");
+      });
+      document.querySelectorAll(".company-card, .company-card-invalid").forEach(card => {
+        card.classList.remove(
+          "border-primary", "ring-1", "ring-primary", "ring-2", 
+          "ring-primary/60", "border-primary", "bg-slate-800/80", 
+          "bg-slate-800/90", "border-primary-container", "ring-primary-container", 
+          "ring-rose-500/80", "border-rose-500", "bg-rose-500/10"
+        );
+        card.classList.add("border-outline-variant/30");
       });
       if (checkboxSelectAll) {
         checkboxSelectAll.checked = false;
@@ -488,9 +593,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const filterInput = document.getElementById("filter-search");
   const filterKeywordSelect = document.getElementById("filter-keyword-select");
+  const filterTechSelect = document.getElementById("filter-tech-select");
   const filterCitySelect = document.getElementById("filter-city-select");
   const sortSelect = document.getElementById("sort-select");
   const btnFilterEmails = document.getElementById("btn-filter-emails");
+  const filterTabExcluded = document.getElementById("filter-tab-excluded");
 
   // Companies Directory Pagination State & Elements
   const companiesPagination = document.getElementById("companies-pagination");
@@ -499,8 +606,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const companiesPerPageSelect = document.getElementById("companies-per-page");
   const companiesPageButtons = document.getElementById("companies-page-buttons");
   let companiesCurrentPage = 1;
-  let companiesPerPage = 12;
+  let companiesPerPage = 15;
   let currentFilteredCompanies = [];
+  const companyDetailCache = new Map();
 
   // Scout Leads Pagination State & Elements
   const scoutPagination = document.getElementById("scout-pagination");
@@ -509,7 +617,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const scoutPerPageSelect = document.getElementById("scout-per-page");
   const scoutPageButtons = document.getElementById("scout-page-buttons");
   let scoutCurrentPage = 1;
-  let scoutPerPage = 12;
+  let scoutPerPage = 15;
   let currentScoutList = [];
   let currentScoutQueryLabel = "";
   let liveScrapedResults = [];
@@ -553,7 +661,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const prevBtnMobile = document.createElement("button");
     prevBtnMobile.type = "button";
-    prevBtnMobile.className = `p-1.5 rounded-lg text-xs font-medium border border-slate-700 ${safeCurrentPage === 1 ? 'opacity-40 cursor-not-allowed text-slate-500 bg-slate-900' : 'bg-slate-800 text-slate-200 hover:bg-slate-700 cursor-pointer'}`;
+    prevBtnMobile.className = `p-1.5 rounded-lg text-xs font-medium border ${safeCurrentPage === 1 ? 'opacity-40 cursor-not-allowed text-on-surface-variant/40 border-outline-variant/30 bg-surface-container' : 'btn-tactile-slate text-on-surface hover:bg-surface-container-high cursor-pointer'}`;
     prevBtnMobile.innerHTML = `<i data-lucide="chevron-left" class="w-3.5 h-3.5"></i>`;
     prevBtnMobile.disabled = safeCurrentPage === 1;
     prevBtnMobile.addEventListener("click", () => {
@@ -561,12 +669,12 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     const pageInfoMobile = document.createElement("span");
-    pageInfoMobile.className = "text-xs font-mono text-slate-300 px-1.5";
+    pageInfoMobile.className = "text-xs font-mono text-on-surface font-semibold px-2";
     pageInfoMobile.textContent = `${safeCurrentPage} / ${totalPages}`;
 
     const nextBtnMobile = document.createElement("button");
     nextBtnMobile.type = "button";
-    nextBtnMobile.className = `p-1.5 rounded-lg text-xs font-medium border border-slate-700 ${safeCurrentPage === totalPages ? 'opacity-40 cursor-not-allowed text-slate-500 bg-slate-900' : 'bg-slate-800 text-slate-200 hover:bg-slate-700 cursor-pointer'}`;
+    nextBtnMobile.className = `p-1.5 rounded-lg text-xs font-medium border ${safeCurrentPage === totalPages ? 'opacity-40 cursor-not-allowed text-on-surface-variant/40 border-outline-variant/30 bg-surface-container' : 'btn-tactile-slate text-on-surface hover:bg-surface-container-high cursor-pointer'}`;
     nextBtnMobile.innerHTML = `<i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>`;
     nextBtnMobile.disabled = safeCurrentPage === totalPages;
     nextBtnMobile.addEventListener("click", () => {
@@ -584,7 +692,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const prevBtnDesktop = document.createElement("button");
     prevBtnDesktop.type = "button";
-    prevBtnDesktop.className = `px-2.5 py-1 rounded-lg text-xs font-medium border border-slate-700 flex items-center space-x-1 ${safeCurrentPage === 1 ? 'opacity-40 cursor-not-allowed text-slate-500 bg-slate-900' : 'bg-slate-800 text-slate-200 hover:bg-slate-700 cursor-pointer'}`;
+    prevBtnDesktop.className = `px-2.5 py-1 rounded-lg text-xs font-medium border flex items-center space-x-1 ${safeCurrentPage === 1 ? 'opacity-40 cursor-not-allowed text-on-surface-variant/40 border-outline-variant/30 bg-surface-container' : 'btn-tactile-slate text-on-surface hover:bg-surface-container-high cursor-pointer'}`;
     prevBtnDesktop.innerHTML = `<i data-lucide="chevron-left" class="w-3.5 h-3.5"></i><span>Prev</span>`;
     prevBtnDesktop.disabled = safeCurrentPage === 1;
     prevBtnDesktop.addEventListener("click", () => {
@@ -610,13 +718,13 @@ document.addEventListener("DOMContentLoaded", () => {
     pageNumbers.forEach(p => {
       if (p === "...") {
         const dots = document.createElement("span");
-        dots.className = "px-2 py-1 text-xs text-slate-500";
+        dots.className = "px-2 py-1 text-xs text-on-surface-variant/60 font-mono";
         dots.textContent = "...";
         desktopWrapper.appendChild(dots);
       } else {
         const btn = document.createElement("button");
         btn.type = "button";
-        btn.className = `min-w-[32px] px-2 py-1 rounded-lg text-xs font-medium transition cursor-pointer ${p === safeCurrentPage ? 'bg-indigo-600 text-white font-bold shadow-sm' : 'bg-slate-800 text-slate-300 hover:bg-slate-700 border border-slate-700'}`;
+        btn.className = `min-w-[32px] px-2.5 py-1 rounded-lg text-xs font-mono font-medium transition cursor-pointer ${p === safeCurrentPage ? 'bg-primary text-on-primary font-bold shadow-sm' : 'btn-tactile-slate text-on-surface-variant hover:text-on-surface'}`;
         btn.textContent = p;
         btn.addEventListener("click", () => {
           if (p !== safeCurrentPage) onPageChange(p);
@@ -627,7 +735,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const nextBtnDesktop = document.createElement("button");
     nextBtnDesktop.type = "button";
-    nextBtnDesktop.className = `px-2.5 py-1 rounded-lg text-xs font-medium border border-slate-700 flex items-center space-x-1 ${safeCurrentPage === totalPages ? 'opacity-40 cursor-not-allowed text-slate-500 bg-slate-900' : 'bg-slate-800 text-slate-200 hover:bg-slate-700 cursor-pointer'}`;
+    nextBtnDesktop.className = `px-2.5 py-1 rounded-lg text-xs font-medium border flex items-center space-x-1 ${safeCurrentPage === totalPages ? 'opacity-40 cursor-not-allowed text-on-surface-variant/40 border-outline-variant/30 bg-surface-container' : 'btn-tactile-slate text-on-surface hover:bg-surface-container-high cursor-pointer'}`;
     nextBtnDesktop.innerHTML = `<span>Next</span><i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>`;
     nextBtnDesktop.disabled = safeCurrentPage === totalPages;
     nextBtnDesktop.addEventListener("click", () => {
@@ -676,7 +784,7 @@ document.addEventListener("DOMContentLoaded", () => {
     currentScoutQueryLabel = queryLabel;
 
     if (scoutLeadsCount) scoutLeadsCount.textContent = `${(list || []).length} Leads`;
-    if (scoutQueryLabel) scoutQueryLabel.textContent = queryLabel || '"IT Companies" in "Surat"';
+    if (scoutQueryLabel) scoutQueryLabel.textContent = queryLabel || '—';
 
     if (scoutCardsContainer) scoutCardsContainer.innerHTML = "";
     if (scoutPagination) scoutPagination.classList.add("hidden");
@@ -684,13 +792,13 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!list || list.length === 0) {
       if (scoutCardsContainer) {
         scoutCardsContainer.innerHTML = `
-          <div class="col-span-full py-12 px-4 text-center bg-slate-900/60 border border-slate-800 rounded-2xl space-y-3">
-            <div class="inline-flex p-3 rounded-full bg-indigo-950/60 text-indigo-400 border border-indigo-800/60 shadow-sm">
+          <div class="col-span-full py-12 px-4 text-center bg-surface-container-low border border-outline-variant/30 rounded-2xl space-y-3 shadow-sm">
+            <div class="inline-flex p-3 rounded-full bg-primary/10 text-primary border border-primary/20 shadow-sm">
               <i data-lucide="radar" class="w-6 h-6"></i>
             </div>
-            <p class="text-sm font-semibold text-slate-200">Ready to Discover Leads</p>
-            <p class="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
-              Enter your Target Keyword and Location above, then click <strong class="text-indigo-400">"Find Leads"</strong>. Real-time scraped leads from your search session will appear here instantly.
+            <p class="text-sm font-semibold text-on-surface">Ready to Discover Leads</p>
+            <p class="text-xs text-on-surface-variant max-w-md mx-auto leading-relaxed">
+              Enter your Target Keyword and Location above, then click <strong class="text-primary">"Find Leads"</strong>. Real-time scraped leads from your search session will appear here instantly.
             </p>
           </div>
         `;
@@ -713,73 +821,90 @@ document.addEventListener("DOMContentLoaded", () => {
       const siteUrl = c.website_url || (c.domain ? `https://${c.domain}` : "#");
 
       const badge = c.already_contacted 
-        ? `<span class="px-2 py-0.5 rounded bg-emerald-950/80 text-emerald-400 border border-emerald-800 text-[10px] font-semibold flex items-center space-x-1 shrink-0"><i data-lucide="check" class="w-3 h-3 text-emerald-400"></i><span>Contacted</span></span>`
+        ? `<span class="px-2 py-0.5 rounded text-caption font-mono bg-primary/10 text-primary border border-primary/30 text-[10px] font-semibold flex items-center space-x-1 shrink-0"><span class="material-symbols-outlined text-[12px]">check</span><span>Contacted</span></span>`
         : (c.is_enriched 
-            ? `<span class="px-2 py-0.5 rounded bg-indigo-950/80 text-indigo-400 border border-indigo-800 text-[10px] font-semibold flex items-center space-x-1 shrink-0"><i data-lucide="zap" class="w-3 h-3 text-indigo-400"></i><span>Enriched</span></span>`
-            : `<span class="px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700 text-[10px] shrink-0">Verified</span>`);
+            ? `<span class="px-2 py-0.5 rounded text-caption font-mono bg-secondary/15 text-secondary border border-secondary/30 text-[10px] font-semibold flex items-center space-x-1 shrink-0"><span class="material-symbols-outlined text-[12px]">auto_awesome</span><span>Enriched</span></span>`
+            : `<span class="px-2 py-0.5 rounded text-caption font-mono bg-surface-container text-on-surface-variant border border-outline-variant/60 text-[10px] shrink-0">Verified</span>`);
 
       const ratingDisplay = (c.rating && c.rating > 0)
-        ? `<span class="text-amber-400 font-semibold flex items-center space-x-1">
-             <i data-lucide="star" class="w-3.5 h-3.5 text-amber-400 fill-amber-400"></i><span>${Number(c.rating).toFixed(1)}</span>
-             <span class="text-slate-500 font-normal text-[10px]">(${c.reviews_count || 0})</span>
+        ? `<span class="text-tertiary font-semibold flex items-center space-x-1 font-mono text-[11px]">
+             <span class="material-symbols-outlined text-[13px] text-tertiary">star</span><span>${Number(c.rating).toFixed(1)}</span>
+             <span class="text-on-surface-variant font-normal text-[10px]">(${c.reviews_count || 0})</span>
            </span>`
-        : `<span class="text-slate-500 text-[10px]">No ratings</span>`;
+        : `<span class="text-on-surface-variant text-[10px] font-mono">No ratings</span>`;
 
-      // 1. Scout Lead Card
+      // 1. Scout Lead Card (Artisanal Bento Workshop UI)
       if (scoutCardsContainer) {
         const card = document.createElement("div");
-        card.className = "scout-lead-card bg-slate-900 border border-slate-800 hover:border-indigo-500/60 rounded-xl p-2.5 sm:p-4 flex flex-col justify-between transition group shadow-sm cursor-pointer relative min-w-0";
+        const monogram = getCompanyMonogram(c.name);
+        const monoThemes = [
+          { bg: "bg-surface-container-high text-on-surface border-outline-variant/60" },
+          { bg: "bg-secondary/15 text-secondary border-secondary/30" },
+          { bg: "bg-tertiary/15 text-tertiary border-tertiary/30" },
+          { bg: "bg-surface-container-highest text-on-surface-variant border-outline-variant/60" }
+        ];
+        const monoTheme = monoThemes[(c.id || 0) % monoThemes.length];
+        const ratingVal = (c.rating && c.rating > 0) ? Number(c.rating).toFixed(1) : null;
+
+        card.className = "scout-lead-card group bg-surface-container-low border border-outline-variant/50 hover:border-outline hover:bg-surface-container rounded-xl p-5 flex flex-col justify-between transition-all duration-200 shadow-sm hover:shadow-lg cursor-pointer relative min-w-0";
         card.innerHTML = `
-          <div class="space-y-1.5 pointer-events-none">
-            <!-- Top micro row: Badge -->
-            <div class="flex items-center justify-between gap-1 pointer-events-auto">
-              <div class="flex items-center space-x-1 min-w-0">
+          <div>
+            <!-- Top Row: Monogram + Name + Domain + Badge -->
+            <div class="flex items-start justify-between gap-3 mb-3">
+              <div class="flex items-start gap-2.5 min-w-0 flex-1">
+                <div class="w-10 h-10 rounded-lg flex items-center justify-center font-bold text-label-md ${monoTheme.bg} border shrink-0 font-mono shadow-sm">
+                  ${monogram}
+                </div>
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-start justify-between gap-1.5">
+                    <h3 class="text-headline-sm font-headline-sm text-on-surface font-semibold break-words line-clamp-2 leading-snug hover:text-primary" title="${escapeHTML(c.name)}">${escapeHTML(c.name)}</h3>
+                    <a class="text-on-surface-variant hover:text-primary transition-colors shrink-0 mt-0.5" href="${siteUrl}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();" title="Visit website">
+                      <span class="material-symbols-outlined text-[14px]">open_in_new</span>
+                    </a>
+                  </div>
+                  <span class="text-caption font-mono text-on-surface-variant truncate block mt-0.5">${escapeHTML(c.domain || '')}</span>
+                </div>
+              </div>
+              <div class="shrink-0 pt-0.5">
                 ${badge}
               </div>
             </div>
 
-            <!-- Company Name: Full-width, wraps up to 2 lines -->
-            <h4 class="font-bold text-xs sm:text-sm text-white group-hover:text-indigo-400 transition leading-tight break-words pt-0.5" title="${escapeHTML(c.name)}">
-              ${escapeHTML(c.name)}
-            </h4>
-
-            <!-- Domain Link -->
-            <div class="flex items-center space-x-1.5 pt-0.5">
-              <a href="${siteUrl}" target="_blank" rel="noopener noreferrer" class="scout-site-link inline-flex items-center space-x-1 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded bg-slate-950 border border-slate-800 hover:border-indigo-600 text-indigo-400 hover:text-indigo-300 text-[10px] sm:text-[11px] font-mono transition max-w-full pointer-events-auto" onclick="event.stopPropagation();" title="Visit ${escapeHTML(c.domain)}">
-                <i data-lucide="globe" class="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0"></i>
-                <span class="break-all">${escapeHTML(c.domain || 'Website')}</span>
-                <i data-lucide="external-link" class="w-2.5 h-2.5 sm:w-3 sm:h-3 shrink-0 opacity-70"></i>
-              </a>
-            </div>
-
             <!-- Meta: Rating & Phone -->
-            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between text-[10px] sm:text-xs pt-1 border-t border-slate-800/60 gap-1">
-              <div class="flex items-center shrink-0">${ratingDisplay}</div>
+            <div class="flex items-center justify-between text-caption font-caption py-2 border-y border-outline-variant/40 mb-3 gap-2">
+              <div class="flex items-center gap-1 text-on-surface shrink-0 font-mono text-[11px]">
+                ${ratingVal ? `
+                  <span class="material-symbols-outlined text-[14px] text-tertiary">star</span>
+                  <span class="font-semibold text-tertiary">${ratingVal}</span>
+                  <span class="text-on-surface-variant">(${c.reviews_count || 0})</span>
+                ` : `<span class="text-on-surface-variant">No ratings</span>`}
+              </div>
               ${c.phone ? `
-                <a href="tel:${escapeHTML(c.phone)}" class="text-slate-400 hover:text-white font-mono text-[10px] sm:text-[11px] flex items-center space-x-0.5 whitespace-nowrap pointer-events-auto shrink-0" onclick="event.stopPropagation();" title="Call ${escapeHTML(c.phone)}">
-                  <i data-lucide="phone" class="w-2.5 h-2.5 sm:w-3 sm:h-3 text-slate-500 shrink-0"></i>
-                  <span>${escapeHTML(c.phone)}</span>
+                <a href="tel:${escapeHTML(c.phone)}" class="text-on-surface-variant hover:text-on-surface flex items-center gap-1 font-mono truncate text-[11px]" onclick="event.stopPropagation();" title="Call ${escapeHTML(c.phone)}">
+                  <span class="material-symbols-outlined text-[13px]">phone</span>
+                  <span class="truncate">${escapeHTML(c.phone)}</span>
                 </a>
               ` : ''}
             </div>
 
-            <!-- Address & Maps -->
-            <div class="text-[10px] sm:text-[11px] text-slate-400 flex items-start space-x-1 pointer-events-auto min-w-0">
-              <i data-lucide="map-pin" class="w-3 h-3 text-slate-500 shrink-0 mt-0.5"></i>
-              <a href="${mapsUrl}" target="_blank" rel="noopener noreferrer" class="hover:text-indigo-400 break-words flex-1 leading-tight" onclick="event.stopPropagation();" title="${escapeHTML(cleanAddr || c.city || 'Google Maps')}">
+            <!-- Address & Location -->
+            <div class="text-caption font-caption text-on-surface-variant flex items-center gap-1.5 mb-4 truncate font-mono text-[11px]">
+              <span class="material-symbols-outlined text-[14px] text-on-surface-variant shrink-0">location_on</span>
+              <a href="${mapsUrl}" target="_blank" rel="noopener noreferrer" class="hover:text-on-surface truncate" onclick="event.stopPropagation();" title="${escapeHTML(cleanAddr || c.city || 'Google Maps')}">
                 ${escapeHTML(cleanAddr || (c.city ? c.city + ', Location' : 'Location'))}
               </a>
             </div>
           </div>
 
-          <!-- Bottom Action Buttons -->
-          <div class="pt-2 sm:pt-3 mt-2 sm:mt-3 border-t border-slate-800/80 flex items-center justify-between gap-1.5 sm:gap-2">
-            <a href="${siteUrl}" target="_blank" rel="noopener noreferrer" class="flex-1 text-center justify-center px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-[10px] sm:text-[11px] font-medium transition flex items-center space-x-1" onclick="event.stopPropagation();">
-              <span>Site</span>
-              <i data-lucide="external-link" class="w-2.5 h-2.5 sm:w-3 sm:h-3"></i>
+          <!-- Bottom Tactile Action Buttons -->
+          <div class="grid grid-cols-2 gap-2 mt-auto pt-3 border-t border-outline-variant/40">
+            <a href="${siteUrl}" target="_blank" rel="noopener noreferrer" class="btn-tactile-slate px-3 py-1.5 rounded text-label-sm font-label-sm font-medium transition-colors text-center flex items-center justify-center gap-1" onclick="event.stopPropagation();">
+              <span>Visit Site</span>
+              <span class="material-symbols-outlined text-[13px]">open_in_new</span>
             </a>
-            <button type="button" class="btn-scout-card-enrich flex-1 text-center justify-center px-2 py-1 rounded bg-indigo-600 hover:bg-indigo-500 text-white text-[10px] sm:text-[11px] font-semibold transition flex items-center space-x-1 shadow-sm">
-              <span>Enrich with AI</span>
+            <button type="button" class="btn-scout-card-enrich btn-tactile-ecru px-3 py-1.5 rounded text-label-sm font-label-sm font-semibold transition-colors text-center cursor-pointer flex items-center justify-center gap-1">
+              <span class="material-symbols-outlined text-[14px]">auto_awesome</span>
+              <span>Enrich</span>
             </button>
           </div>
         `;
@@ -829,14 +954,17 @@ document.addEventListener("DOMContentLoaded", () => {
     if (resetPage) {
       scoutCurrentPage = 1;
     }
-    const kwDisplay = inputKeyword?.value?.trim() || "IT Companies";
-    const cityDisplay = inputCity?.value?.trim() || "Surat";
+    const kwDisplay = inputKeyword?.value?.trim() || "";
+    const cityDisplay = inputCity?.value?.trim() || "";
+    const queryTag = (kwDisplay && cityDisplay)
+      ? `"${kwDisplay}" in "${cityDisplay}"`
+      : (kwDisplay ? `"${kwDisplay}"` : (cityDisplay ? `in "${cityDisplay}"` : ""));
 
     // Find Leads tab ONLY shows live real-time scraped leads from current session
     if (liveScrapedResults && liveScrapedResults.length > 0) {
-      renderScoutResults(liveScrapedResults, `Discovered Leads: "${kwDisplay}" in "${cityDisplay}"`);
+      renderScoutResults(liveScrapedResults, queryTag ? `Discovered Leads: ${queryTag}` : "Discovered Leads");
     } else {
-      renderScoutResults([], `Ready to Search: "${kwDisplay}" in "${cityDisplay}"`);
+      renderScoutResults([], queryTag ? `Ready to Search: ${queryTag}` : "—");
     }
   }
 
@@ -917,94 +1045,26 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnBannerExitPreview = document.getElementById("btn-banner-exit-preview");
 
   function updateMetricCardStyles() {
-    // 1. All Genuine Card
-    if (!activeMetricFilter || activeMetricFilter === "all") {
-      statCardAll?.classList.add("ring-2", "ring-emerald-500/70", "border-emerald-500/80", "bg-emerald-950/20");
-      statCardAll?.classList.remove("border-slate-800");
-      const pill = statCardAll?.querySelector(".stat-pill");
-      if (pill) {
-        pill.textContent = "Active";
-        pill.className = "stat-pill text-[9px] px-1.5 py-0.5 rounded font-mono text-emerald-300 bg-emerald-900/60 border border-emerald-700/60 transition";
-      }
-    } else {
-      statCardAll?.classList.remove("ring-2", "ring-emerald-500/70", "border-emerald-500/80", "bg-emerald-950/20");
-      statCardAll?.classList.add("border-slate-800");
-      const pill = statCardAll?.querySelector(".stat-pill");
-      if (pill) {
-        pill.textContent = "All";
-        pill.className = "stat-pill text-[9px] px-1.5 py-0.5 rounded font-mono text-slate-500 group-hover:text-slate-300 bg-slate-950/60 border border-slate-800 transition";
-      }
-    }
+    const current = (!activeMetricFilter || activeMetricFilter === "all") ? "all" : activeMetricFilter;
+    const cards = [
+      { id: "all", el: statCardAll, activeRing: "ring-[#EFECE6]/80", activeBorder: "border-[#EFECE6]" },
+      { id: "emails", el: statCardEmails, activeRing: "ring-[#86B29B]/80", activeBorder: "border-[#86B29B]" },
+      { id: "enriched", el: statCardEnriched, activeRing: "ring-[#A48464]/80", activeBorder: "border-[#A48464]" },
+      { id: "contacted", el: statCardContacted, activeRing: "ring-[#EFECE6]/80", activeBorder: "border-[#EFECE6]" },
+      { id: "invalid", el: statCardInvalid, activeRing: "ring-[#E06C75]/80", activeBorder: "border-[#E06C75]" }
+    ];
 
-    // 2. Enriched Card
-    if (activeMetricFilter === "enriched") {
-      statCardEnriched?.classList.add("ring-2", "ring-indigo-500/70", "border-indigo-500/80", "bg-indigo-950/30");
-      statCardEnriched?.classList.remove("border-slate-800");
-      const pill = statCardEnriched?.querySelector(".stat-pill");
-      if (pill) {
-        pill.textContent = "Active";
-        pill.className = "stat-pill text-[9px] px-1.5 py-0.5 rounded font-mono text-indigo-200 bg-indigo-900/60 border border-indigo-700/60 transition";
+    cards.forEach(c => {
+      if (!c.el) return;
+      const isActive = (c.id === current);
+      if (isActive) {
+        c.el.classList.add("ring-2", "ring-primary/25", "border-primary", "bg-surface-container-high", "shadow-sm");
+        c.el.classList.remove("border-outline-variant/30", "bg-surface-container-low", "opacity-80");
+      } else {
+        c.el.classList.remove("ring-2", "ring-primary/25", "border-primary", "bg-surface-container-high", "shadow-sm");
+        c.el.classList.add("border-outline-variant/30", "bg-surface-container-low", "opacity-80");
       }
-    } else {
-      statCardEnriched?.classList.remove("ring-2", "ring-indigo-500/70", "border-indigo-500/80", "bg-indigo-950/30");
-      statCardEnriched?.classList.add("border-slate-800");
-      const pill = statCardEnriched?.querySelector(".stat-pill");
-      if (pill) {
-        pill.textContent = "Filter";
-        pill.className = "stat-pill text-[9px] px-1.5 py-0.5 rounded font-mono text-slate-500 group-hover:text-indigo-300 bg-slate-950/60 border border-slate-800 transition";
-      }
-    }
-
-    // 3. Emails Card & Toolbar Button
-    if (activeMetricFilter === "emails") {
-      statCardEmails?.classList.add("ring-2", "ring-emerald-500/70", "border-emerald-500/80", "bg-emerald-950/30");
-      statCardEmails?.classList.remove("border-slate-800");
-      const pill = statCardEmails?.querySelector(".stat-pill");
-      if (pill) {
-        pill.textContent = "Active";
-        pill.className = "stat-pill text-[9px] px-1.5 py-0.5 rounded font-mono text-emerald-200 bg-emerald-900/60 border border-emerald-700/60 transition";
-      }
-      btnFilterEmails?.classList.add("bg-emerald-950/80", "text-emerald-300", "border-emerald-700");
-      btnFilterEmails?.classList.remove("bg-slate-950", "text-slate-400");
-    } else {
-      statCardEmails?.classList.remove("ring-2", "ring-emerald-500/70", "border-emerald-500/80", "bg-emerald-950/30");
-      statCardEmails?.classList.add("border-slate-800");
-      const pill = statCardEmails?.querySelector(".stat-pill");
-      if (pill) {
-        pill.textContent = "Filter";
-        pill.className = "stat-pill text-[9px] px-1.5 py-0.5 rounded font-mono text-slate-500 group-hover:text-emerald-300 bg-slate-950/60 border border-slate-800 transition";
-      }
-      btnFilterEmails?.classList.remove("bg-emerald-950/80", "text-emerald-300", "border-emerald-700");
-      btnFilterEmails?.classList.add("bg-slate-950", "text-slate-400");
-    }
-
-    // 4. Contacted Card
-    if (activeMetricFilter === "contacted") {
-      statCardContacted?.classList.add("ring-2", "ring-sky-500/70", "border-sky-500/80", "bg-sky-950/30");
-      statCardContacted?.classList.remove("border-slate-800");
-      const pill = statCardContacted?.querySelector(".stat-pill");
-      if (pill) {
-        pill.textContent = "Active";
-        pill.className = "stat-pill text-[9px] px-1.5 py-0.5 rounded font-mono text-sky-200 bg-sky-900/60 border border-sky-700/60 transition";
-      }
-    } else {
-      statCardContacted?.classList.remove("ring-2", "ring-sky-500/70", "border-sky-500/80", "bg-sky-950/30");
-      statCardContacted?.classList.add("border-slate-800");
-      const pill = statCardContacted?.querySelector(".stat-pill");
-      if (pill) {
-        pill.textContent = "Filter";
-        pill.className = "stat-pill text-[9px] px-1.5 py-0.5 rounded font-mono text-slate-500 group-hover:text-sky-300 bg-slate-950/60 border border-slate-800 transition";
-      }
-    }
-
-    // 5. Invalid Card
-    if (activeMetricFilter === "invalid") {
-      statCardInvalid?.classList.add("ring-2", "ring-rose-500/70", "border-rose-500/80", "bg-rose-950/40");
-      if (statInvalidHint) statInvalidHint.textContent = "Active (Click to reset)";
-    } else {
-      statCardInvalid?.classList.remove("ring-2", "ring-rose-500/70", "border-rose-500/80", "bg-rose-950/40");
-      if (statInvalidHint) statInvalidHint.textContent = "Click to filter";
-    }
+    });
   }
 
   function setActiveMetricFilter(filterName) {
@@ -1027,7 +1087,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function setAdminViewMode(mode) {
     adminViewMode = mode;
     if (mode === "admin") {
-      btnModeAdmin?.classList.add("bg-indigo-600", "text-white");
+      btnModeAdmin?.classList.add("bg-primary-container", "text-white");
       btnModeAdmin?.classList.remove("text-slate-400");
       btnModePreview?.classList.remove("bg-amber-600", "text-white");
       btnModePreview?.classList.add("text-slate-400");
@@ -1036,7 +1096,7 @@ document.addEventListener("DOMContentLoaded", () => {
     } else {
       btnModePreview?.classList.add("bg-amber-600", "text-white");
       btnModePreview?.classList.remove("text-slate-400");
-      btnModeAdmin?.classList.remove("bg-indigo-600", "text-white");
+      btnModeAdmin?.classList.remove("bg-primary-container", "text-white");
       btnModeAdmin?.classList.add("text-slate-400");
       adminPreviewBanner?.classList.remove("hidden");
       statCardInvalid?.classList.add("hidden");
@@ -1058,7 +1118,13 @@ document.addEventListener("DOMContentLoaded", () => {
   if (statCardAll) statCardAll.addEventListener("click", () => setActiveMetricFilter(null));
   if (statCardEnriched) statCardEnriched.addEventListener("click", () => setActiveMetricFilter("enriched"));
   if (statCardEmails) statCardEmails.addEventListener("click", () => setActiveMetricFilter("emails"));
-  if (statCardContacted) statCardContacted.addEventListener("click", () => setActiveMetricFilter("contacted"));
+  if (statCardContacted) {
+    statCardContacted.addEventListener("click", () => {
+      requireLogin(() => {
+        setActiveMetricFilter("contacted");
+      }, "Please sign in with Google to view and track your sent pitches.");
+    });
+  }
   if (statCardInvalid) statCardInvalid.addEventListener("click", () => setActiveMetricFilter("invalid"));
 
   async function handleInvalidateCompany(id, companyName) {
@@ -1115,37 +1181,105 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  function updateCompanyMetrics(list) {
-    const validList = list.filter(c => !c.is_invalid);
-    const total = validList.length;
-    const enriched = validList.filter(c => c.is_enriched).length;
-    const withEmails = validList.filter(c => c.emails && c.emails.length > 0).length;
-    const contacted = validList.filter(c => c.already_contacted).length;
+  function updateCompanyMetrics(statsOrList) {
+    const isLoggedIn = Boolean(
+      (currentUser && currentUser.is_logged_in) ||
+      (statsOrList && statsOrList.is_logged_in)
+    );
 
-    const totalCountEl = document.getElementById("companies-total-count");
-    if (totalCountEl) totalCountEl.textContent = total;
+    if (statsOrList && typeof statsOrList.total === "number") {
+      const total = statsOrList.total || 0;
+      const enriched = statsOrList.enriched || 0;
+      const withEmails = statsOrList.emails || 0;
+      const contacted = (isLoggedIn && typeof statsOrList.contacted === "number") ? statsOrList.contacted : null;
+      const invalid = statsOrList.invalid || 0;
 
-    const navBadgeEl = document.getElementById("nav-companies-badge");
-    if (navBadgeEl) navBadgeEl.textContent = total;
+      const totalCountEl = document.getElementById("companies-total-count");
+      if (totalCountEl) totalCountEl.textContent = total;
 
-    const headerCounter = document.getElementById("header-leads-counter");
-    if (headerCounter) headerCounter.textContent = total;
+      const navBadgeEl = document.getElementById("nav-companies-badge");
+      if (navBadgeEl) navBadgeEl.textContent = total;
 
-    document.querySelectorAll(".badge-total-count").forEach(el => el.textContent = total);
+      const headerCounter = document.getElementById("header-leads-counter");
+      if (headerCounter) headerCounter.textContent = total;
 
-    const statEnriched = document.getElementById("stat-enriched-count");
-    if (statEnriched) statEnriched.textContent = enriched;
+      document.querySelectorAll(".badge-total-count").forEach(el => el.textContent = total);
 
-    const statEmails = document.getElementById("stat-emails-count");
-    if (statEmails) statEmails.textContent = withEmails;
+      const statEnriched = document.getElementById("stat-enriched-count");
+      if (statEnriched) statEnriched.textContent = enriched;
 
-    const badgeEmails = document.getElementById("badge-emails-count");
-    if (badgeEmails) badgeEmails.textContent = withEmails;
+      const statEmails = document.getElementById("stat-emails-count");
+      if (statEmails) statEmails.textContent = withEmails;
 
-    const statContacted = document.getElementById("stat-contacted-count");
-    if (statContacted) statContacted.textContent = contacted;
+      const badgeEmails = document.getElementById("badge-emails-count");
+      if (badgeEmails) badgeEmails.textContent = withEmails;
 
-    if (statInvalidCount) statInvalidCount.textContent = invalidCount;
+      // Contacted / Pitched Stat Card (STRICT: only visible if user is logged in and only for this user)
+      const statContacted = document.getElementById("stat-contacted-count");
+      const statContactedBadge = document.getElementById("stat-contacted-badge");
+      const statContactedText = document.getElementById("stat-contacted-text");
+
+      if (statContacted && statContactedBadge && statContactedText) {
+        if (!isLoggedIn) {
+          statContacted.textContent = "0";
+          statContactedBadge.textContent = "Sign in";
+          statContactedBadge.className = "text-caption font-caption text-outline px-1.5 py-0.5 rounded bg-surface-container font-mono text-[11px]";
+          statContactedText.textContent = "Sign in to track your pitches";
+        } else {
+          const userContacted = contacted !== null ? contacted : 0;
+          statContacted.textContent = userContacted;
+          if (userContacted === 0) {
+            statContactedBadge.textContent = "0% outreach";
+            statContactedBadge.className = "text-caption font-caption text-outline px-1.5 py-0.5 rounded bg-surface-container-highest font-mono text-[11px]";
+            statContactedText.textContent = "No campaigns sent yet";
+          } else {
+            const responseRatePct = total > 0 ? Math.round((userContacted / total) * 100) : 0;
+            statContactedBadge.textContent = `${responseRatePct}% outreach`;
+            statContactedBadge.className = "text-caption font-caption text-secondary px-1.5 py-0.5 rounded bg-secondary/10 font-mono text-[11px]";
+            statContactedText.textContent = `${userContacted} of ${total} contacted`;
+          }
+        }
+      }
+
+      const statEmailsTotal = document.getElementById("stat-emails-total");
+      if (statEmailsTotal) statEmailsTotal.textContent = total;
+
+      const statYield = document.getElementById("stat-yield-text");
+      if (statYield) {
+        const yieldPct = total > 0 ? Math.round((withEmails / total) * 100) : 0;
+        statYield.textContent = `${yieldPct}% contact yield`;
+      }
+
+      const pillAll = document.getElementById("pill-count-all");
+      if (pillAll) pillAll.textContent = total;
+      const pillResearched = document.getElementById("pill-count-researched");
+      if (pillResearched) pillResearched.textContent = enriched;
+      const pillPitched = document.getElementById("pill-count-pitched");
+      if (pillPitched) {
+        pillPitched.textContent = (isLoggedIn && contacted !== null) ? contacted : "0";
+      }
+      const pillExcluded = document.getElementById("pill-count-excluded");
+      if (pillExcluded) pillExcluded.textContent = invalid;
+
+      if (statInvalidCount) statInvalidCount.textContent = invalid;
+    } else if (Array.isArray(statsOrList)) {
+      const validList = statsOrList.filter(c => !c.is_invalid);
+      const total = validList.length;
+      const enriched = validList.filter(c => c.is_enriched).length;
+      const withEmails = validList.filter(c => c.emails && c.emails.length > 0).length;
+      const contacted = isLoggedIn ? validList.filter(c => c.already_contacted).length : null;
+
+      const totalCountEl = document.getElementById("companies-total-count");
+      if (totalCountEl) totalCountEl.textContent = total;
+      const statEnriched = document.getElementById("stat-enriched-count");
+      if (statEnriched) statEnriched.textContent = enriched;
+      const statEmails = document.getElementById("stat-emails-count");
+      if (statEmails) statEmails.textContent = withEmails;
+      const statContacted = document.getElementById("stat-contacted-count");
+      if (statContacted) {
+        statContacted.textContent = isLoggedIn ? (contacted ?? 0) : "0";
+      }
+    }
 
     // Visibility of Master Admin controls based on login & mode
     if (isMasterAdmin && adminViewMode === "admin") {
@@ -1166,70 +1300,484 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  function renderSkeletonCompanies(count = 6) {
+    if (!companiesContainer) return;
+    companiesContainer.innerHTML = Array.from({ length: count }).map(() => `
+      <div class="skeleton-shimmer bg-surface-container-low border border-outline-variant/30 rounded-xl p-5 flex flex-col justify-between min-h-[220px]">
+        <div class="space-y-3.5">
+          <div class="flex items-start gap-3">
+            <div class="w-9 h-9 rounded-md bg-surface-container-highest shrink-0"></div>
+            <div class="space-y-2 flex-1 min-w-0">
+              <div class="h-4 bg-surface-container-highest rounded w-3/4"></div>
+              <div class="h-3 bg-surface-container rounded w-1/2"></div>
+            </div>
+          </div>
+          <div class="space-y-1.5 pt-1">
+            <div class="h-3 bg-surface-container rounded w-full"></div>
+            <div class="h-3 bg-surface-container rounded w-4/5"></div>
+          </div>
+          <div class="flex gap-1.5 pt-2">
+            <div class="h-5 bg-surface-container-highest rounded w-16"></div>
+            <div class="h-5 bg-surface-container-highest rounded w-20"></div>
+            <div class="h-5 bg-surface-container-highest rounded w-14"></div>
+          </div>
+        </div>
+        <div class="pt-3.5 border-t border-outline-variant/30 flex gap-2 mt-4">
+          <div class="h-8 bg-surface-container-highest rounded w-1/2"></div>
+          <div class="h-8 bg-surface-container-highest rounded w-1/2"></div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  let filterDebounceTimer = null;
   function applyCompanyFiltersAndRender(resetPage = false) {
     if (resetPage) {
       companiesCurrentPage = 1;
     }
-    const q = (filterInput?.value || "").trim().toLowerCase();
-    const selectedKeyword = (filterKeywordSelect?.value || "").trim().toLowerCase();
-    const selectedCity = (filterCitySelect?.value || "").trim().toLowerCase();
-    let filtered = companies;
-
-    // 1. Master Admin Invalid Leads Filtering
-    if (activeMetricFilter === "invalid") {
-      filtered = filtered.filter(c => c.is_invalid);
-    } else {
-      filtered = filtered.filter(c => !c.is_invalid);
-    }
-
-    // 2. Active Metric Card Filter
-    if (activeMetricFilter === "enriched") {
-      filtered = filtered.filter(c => c.is_enriched);
-    } else if (activeMetricFilter === "emails") {
-      filtered = filtered.filter(c => c.emails && c.emails.length > 0);
-    } else if (activeMetricFilter === "contacted") {
-      filtered = filtered.filter(c => c.already_contacted);
-    }
-
-    // 3. Filter by Scout Keyword / AI-Normalized Category
-    if (selectedKeyword) {
-      filtered = filtered.filter(c => {
-        const normKw = (c.normalized_keyword || "").toLowerCase();
-        const rawKw = (c.search_keyword || "").toLowerCase();
-        const srcQuery = (c.source_query || "").toLowerCase();
-        return normKw === selectedKeyword || rawKw === selectedKeyword || srcQuery.includes(selectedKeyword);
-      });
-    }
-
-    // 4. Filter by City
-    if (selectedCity) {
-      filtered = filtered.filter(c => {
-        const compCity = (c.city || "").toLowerCase();
-        const addr = (c.address || "").toLowerCase();
-        const srcQuery = (c.source_query || "").toLowerCase();
-        return compCity === selectedCity || addr.includes(selectedCity) || srcQuery.includes(selectedCity);
-      });
-    }
-
-    // 5. Filter by Search Query
-    if (q) {
-      filtered = filtered.filter(c => 
-        (c.name || "").toLowerCase().includes(q) || 
-        (c.domain || "").toLowerCase().includes(q) ||
-        (c.address || "").toLowerCase().includes(q) ||
-        (c.city || "").toLowerCase().includes(q) ||
-        (c.normalized_keyword || "").toLowerCase().includes(q) ||
-        (c.source_query || "").toLowerCase().includes(q) ||
-        (c.profile && c.profile.summary && c.profile.summary.toLowerCase().includes(q)) ||
-        (c.emails && c.emails.some(em => em.toLowerCase().includes(q)))
-      );
-    }
-
-    renderCompanies(filtered);
+    clearTimeout(filterDebounceTimer);
+    filterDebounceTimer = setTimeout(() => {
+      fetchCompanies(!resetPage);
+    }, 150);
   }
 
-  if (filterKeywordSelect) {
-    filterKeywordSelect.addEventListener("change", () => applyCompanyFiltersAndRender(true));
+  const btnResetFilters = document.getElementById("btn-reset-filters");
+  if (btnResetFilters) {
+    btnResetFilters.addEventListener("click", () => {
+      if (filterInput) filterInput.value = "";
+      if (filterTechSelect) filterTechSelect.value = "";
+      if (filterCitySelect) filterCitySelect.value = "";
+      if (ddFilterTech) ddFilterTech.reset();
+      if (ddFilterCity) ddFilterCity.reset();
+      activeMetricFilter = null;
+      document.querySelectorAll(".filter-tab-btn").forEach(btn => {
+        if (btn.id === "filter-tab-all") {
+          btn.classList.add("active", "bg-surface-container-highest", "text-on-surface");
+          btn.classList.remove("text-on-surface-variant");
+        } else {
+          btn.classList.remove("active", "bg-surface-container-highest", "text-on-surface");
+          btn.classList.add("text-on-surface-variant");
+        }
+      });
+      updateMetricCardStyles();
+      applyCompanyFiltersAndRender(true);
+      showToast("Filters reset to default", "info");
+    });
+  }
+
+  // --- Tactile Custom Dropdown Component Controller (Supports Single & Multi-Select) ---
+  function initCustomDropdown({ containerId, inputId, defaultLabel, searchPlaceholder, isMulti = false, onSelect }) {
+    const container = document.getElementById(containerId);
+    if (!container) return null;
+    const input = document.getElementById(inputId);
+    const btn = container.querySelector(".custom-dropdown-btn");
+    const label = container.querySelector(".custom-dropdown-label");
+    const searchInput = container.querySelector(".custom-dropdown-search");
+    const listEl = container.querySelector(".custom-dropdown-list");
+
+    let currentOptions = [];
+    let selectedValues = new Set();
+    let selectedValue = "";
+
+    // Parse initial input value
+    if (input && input.value) {
+      if (isMulti) {
+        input.value.split(",").map(v => v.trim()).filter(Boolean).forEach(v => selectedValues.add(v));
+      } else {
+        selectedValue = input.value.trim();
+      }
+    }
+
+    // Helper to update the trigger button label
+    function updateTriggerLabel() {
+      if (isMulti) {
+        if (selectedValues.size === 0) {
+          label.textContent = defaultLabel;
+          btn.removeAttribute("title");
+        } else if (selectedValues.size === 1) {
+          const onlyVal = Array.from(selectedValues)[0];
+          const matched = currentOptions.find(o => o.value === onlyVal);
+          const text = matched ? (matched.count ? `${matched.label} (${matched.count})` : matched.label) : onlyVal;
+          label.textContent = text;
+          btn.setAttribute("title", text);
+        } else {
+          const baseName = defaultLabel.replace(" (All)", "").replace("All ", "");
+          label.textContent = `${baseName} (${selectedValues.size})`;
+          const names = Array.from(selectedValues).map(v => {
+            const m = currentOptions.find(o => o.value === v);
+            return m ? m.label : v;
+          }).join(", ");
+          btn.setAttribute("title", `${baseName}: ${names}`);
+        }
+      } else {
+        const matched = currentOptions.find(o => o.value === selectedValue);
+        if (matched && matched.label) {
+          label.textContent = matched.count ? `${matched.label} (${matched.count})` : matched.label;
+        } else {
+          label.textContent = defaultLabel;
+        }
+      }
+    }
+
+    function renderList(filterQuery = "") {
+      if (!listEl) return;
+      const q = (filterQuery || "").trim().toLowerCase();
+      const filtered = currentOptions.filter(opt => 
+        !q || opt.label.toLowerCase().includes(q) || (opt.value && opt.value.toLowerCase().includes(q))
+      );
+
+      // Multi-select quick toolbar (Selection count + Clear All action)
+      let toolbarHtml = "";
+      if (isMulti && selectedValues.size > 0) {
+        toolbarHtml = `
+          <div class="custom-dropdown-toolbar">
+            <span class="text-primary font-semibold">${selectedValues.size} selected</span>
+            <button type="button" class="btn-dropdown-clear text-[11px] text-on-surface-variant hover:text-error transition cursor-pointer">Clear all</button>
+          </div>
+        `;
+      }
+
+      if (filtered.length === 0) {
+        listEl.innerHTML = `${toolbarHtml}<div class="custom-dropdown-empty">No matching options</div>`;
+        attachToolbarEvents();
+        return;
+      }
+
+      listEl.innerHTML = toolbarHtml + filtered.map(opt => {
+        const isSelected = isMulti 
+          ? (opt.value ? selectedValues.has(opt.value) : (selectedValues.size === 0))
+          : (opt.value === selectedValue);
+          
+        const countHtml = (opt.count !== undefined && opt.count !== null)
+          ? `<span class="count-badge">${opt.count}</span>`
+          : '';
+
+        if (isMulti) {
+          return `
+            <div class="custom-dropdown-item ${isSelected ? 'is-selected' : ''}" data-value="${escapeHTML(opt.value)}">
+              <div class="flex items-center min-w-0 flex-1 truncate">
+                <span class="custom-dropdown-checkbox ${isSelected && opt.value ? 'is-checked' : ''}">
+                  <span class="material-symbols-outlined check-icon">check</span>
+                </span>
+                <span class="truncate ${isSelected && opt.value ? 'font-semibold text-primary' : ''}">${escapeHTML(opt.label)}</span>
+              </div>
+              ${countHtml}
+            </div>
+          `;
+        } else {
+          return `
+            <div class="custom-dropdown-item ${isSelected ? 'is-selected' : ''}" data-value="${escapeHTML(opt.value)}">
+              <div class="flex items-center min-w-0 flex-1 truncate">
+                <span class="material-symbols-outlined check-icon">check</span>
+                <span class="truncate">${escapeHTML(opt.label)}</span>
+              </div>
+              ${countHtml}
+            </div>
+          `;
+        }
+      }).join("");
+
+      attachToolbarEvents();
+
+      listEl.querySelectorAll(".custom-dropdown-item").forEach(item => {
+        item.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const val = item.dataset.value;
+          if (isMulti) {
+            toggleMultiValue(val);
+          } else {
+            selectValue(val);
+            closeDropdown();
+          }
+        });
+      });
+    }
+
+    function attachToolbarEvents() {
+      const clearBtn = listEl.querySelector(".btn-dropdown-clear");
+      if (clearBtn) {
+        clearBtn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          clearAll();
+        });
+      }
+    }
+
+    function toggleMultiValue(val) {
+      if (!val) {
+        selectedValues.clear();
+      } else {
+        if (selectedValues.has(val)) {
+          selectedValues.delete(val);
+        } else {
+          selectedValues.add(val);
+        }
+      }
+      syncMultiState();
+    }
+
+    function clearAll() {
+      selectedValues.clear();
+      syncMultiState();
+    }
+
+    function syncMultiState() {
+      const serialized = Array.from(selectedValues).join(",");
+      if (input) {
+        input.value = serialized;
+        input.dispatchEvent(new Event("change"));
+      }
+      updateTriggerLabel();
+      renderList(searchInput ? searchInput.value : "");
+      if (onSelect) onSelect(serialized);
+    }
+
+    function selectValue(val) {
+      selectedValue = (val || "");
+      if (input) {
+        input.value = selectedValue;
+        input.dispatchEvent(new Event("change"));
+      }
+      updateTriggerLabel();
+      renderList(searchInput ? searchInput.value : "");
+      if (onSelect) onSelect(selectedValue);
+    }
+
+    function openDropdown() {
+      document.querySelectorAll(".custom-dropdown.is-open").forEach(d => {
+        if (d !== container) d.classList.remove("is-open");
+      });
+      container.classList.add("is-open");
+      if (btn) btn.setAttribute("aria-expanded", "true");
+      if (searchInput) {
+        searchInput.value = "";
+        renderList("");
+        setTimeout(() => searchInput.focus(), 60);
+      } else {
+        renderList("");
+      }
+    }
+
+    function closeDropdown() {
+      container.classList.remove("is-open");
+      if (btn) btn.setAttribute("aria-expanded", "false");
+    }
+
+    if (btn) {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (container.classList.contains("is-open")) {
+          closeDropdown();
+        } else {
+          openDropdown();
+        }
+      });
+    }
+
+    if (searchInput) {
+      searchInput.addEventListener("input", (e) => {
+        renderList(e.target.value);
+      });
+      searchInput.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          closeDropdown();
+        }
+      });
+    }
+
+    document.addEventListener("click", (e) => {
+      if (!container.contains(e.target)) {
+        closeDropdown();
+      }
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && container.classList.contains("is-open")) {
+        closeDropdown();
+      }
+    });
+
+    return {
+      setOptions(newOptions) {
+        currentOptions = newOptions || [];
+        updateTriggerLabel();
+        renderList();
+      },
+      setValue(val) {
+        if (isMulti) {
+          selectedValues.clear();
+          if (Array.isArray(val)) {
+            val.forEach(v => selectedValues.add(v.trim()));
+          } else if (typeof val === "string" && val.trim()) {
+            val.split(",").forEach(v => selectedValues.add(v.trim()));
+          }
+          syncMultiState();
+        } else {
+          selectValue(val);
+        }
+      },
+      getValue() {
+        return isMulti ? Array.from(selectedValues).join(",") : selectedValue;
+      },
+      getValues() {
+        return isMulti ? Array.from(selectedValues) : (selectedValue ? [selectedValue] : []);
+      },
+      reset() {
+        if (isMulti) {
+          clearAll();
+        } else {
+          selectValue("");
+        }
+      }
+    };
+  }
+
+  // Initialize tactile dropdown instances (Tech stack & City are both multi-selectable)
+  const ddFilterTech = initCustomDropdown({
+    containerId: "dropdown-filter-tech",
+    inputId: "filter-tech-select",
+    defaultLabel: "Tech Stack (All)",
+    searchPlaceholder: "Search stack...",
+    isMulti: true,
+    onSelect: () => applyCompanyFiltersAndRender(true)
+  });
+
+  const ddFilterCity = initCustomDropdown({
+    containerId: "dropdown-filter-city",
+    inputId: "filter-city-select",
+    defaultLabel: "All Cities",
+    searchPlaceholder: "Search city...",
+    isMulti: true,
+    onSelect: () => applyCompanyFiltersAndRender(true)
+  });
+
+  const ddOutreachTech = initCustomDropdown({
+    containerId: "dropdown-outreach-tech",
+    inputId: "outreach-tech-select",
+    defaultLabel: "Tech Stack (All)",
+    searchPlaceholder: "Search stack...",
+    isMulti: true,
+    onSelect: (val) => {
+      outreachSelectedTech = (val || "").trim().toLowerCase();
+      outreachCurrentPage = 1;
+      renderPitchesList();
+    }
+  });
+
+  const ddOutreachCity = initCustomDropdown({
+    containerId: "dropdown-outreach-city",
+    inputId: "outreach-city-select",
+    defaultLabel: "All Cities",
+    searchPlaceholder: "Search city...",
+    isMulti: true,
+    onSelect: (val) => {
+      outreachSelectedCity = (val || "").trim().toLowerCase();
+      outreachCurrentPage = 1;
+      renderPitchesList();
+    }
+  });
+
+  // Initialize Scout Leads Tactile Dropdowns
+  const ddScoutPages = initCustomDropdown({
+    containerId: "dropdown-scout-pages",
+    inputId: "input-pages",
+    defaultLabel: "2 Pages (~40 leads)"
+  });
+  if (ddScoutPages) {
+    ddScoutPages.setOptions([
+      { value: "1", label: "1 Page (~20 leads)" },
+      { value: "2", label: "2 Pages (~40 leads)" },
+      { value: "3", label: "3 Pages (~60 leads)" },
+      { value: "5", label: "5 Pages (~100 leads)" },
+      { value: "10", label: "10 Pages (~200 leads)" },
+      { value: "15", label: "15 Pages (~300 leads)" },
+      { value: "20", label: "20 Pages (~400 leads)" },
+      { value: "30", label: "30 Pages (~600 leads)" },
+      { value: "0", label: "⚡ All Available Pages" }
+    ]);
+  }
+
+  const ddScoutGl = initCustomDropdown({
+    containerId: "dropdown-scout-gl",
+    inputId: "input-gl",
+    defaultLabel: "IN (India)",
+    searchPlaceholder: "Search country..."
+  });
+  if (ddScoutGl) {
+    ddScoutGl.setOptions([
+      { value: "in", label: "IN (India)" },
+      { value: "us", label: "US (USA)" },
+      { value: "uk", label: "UK" },
+      { value: "ca", label: "CA (Canada)" },
+      { value: "ae", label: "AE (UAE)" },
+      { value: "de", label: "DE (Germany)" },
+      { value: "au", label: "AU (Australia)" }
+    ]);
+  }
+
+  // Initialize Compact Per-Page Pagination Dropdowns
+  const ddCompaniesPerPage = initCustomDropdown({
+    containerId: "dropdown-companies-per-page",
+    inputId: "companies-per-page",
+    defaultLabel: "15",
+    onSelect: (val) => {
+      companiesPerPage = parseInt(val, 10);
+      companiesCurrentPage = 1;
+      fetchCompanies();
+    }
+  });
+  if (ddCompaniesPerPage) {
+    ddCompaniesPerPage.setOptions([
+      { value: "15", label: "15" },
+      { value: "30", label: "30" },
+      { value: "45", label: "45" },
+      { value: "75", label: "75" },
+      { value: "150", label: "150" }
+    ]);
+  }
+
+  const ddOutreachPerPage = initCustomDropdown({
+    containerId: "dropdown-outreach-per-page",
+    inputId: "outreach-per-page",
+    defaultLabel: "15",
+    onSelect: (val) => {
+      outreachPerPage = parseInt(val, 10);
+      outreachCurrentPage = 1;
+      renderPitchesList();
+    }
+  });
+  if (ddOutreachPerPage) {
+    ddOutreachPerPage.setOptions([
+      { value: "15", label: "15" },
+      { value: "30", label: "30" },
+      { value: "45", label: "45" },
+      { value: "75", label: "75" },
+      { value: "150", label: "150" }
+    ]);
+  }
+
+  const ddScoutPerPage = initCustomDropdown({
+    containerId: "dropdown-scout-per-page",
+    inputId: "scout-per-page",
+    defaultLabel: "15",
+    onSelect: (val) => {
+      scoutPerPage = parseInt(val, 10);
+      scoutCurrentPage = 1;
+      renderScoutResults(currentScoutList, currentScoutQueryLabel);
+    }
+  });
+  if (ddScoutPerPage) {
+    ddScoutPerPage.setOptions([
+      { value: "15", label: "15" },
+      { value: "30", label: "30" },
+      { value: "45", label: "45" },
+      { value: "75", label: "75" },
+      { value: "150", label: "150" }
+    ]);
+  }
+
+  if (filterTechSelect) {
+    filterTechSelect.addEventListener("change", () => applyCompanyFiltersAndRender(true));
   }
 
   if (filterCitySelect) {
@@ -1242,41 +1790,96 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  let totalServerCount = 0;
+  let totalServerPages = 1;
+
+  let filterOptionsLoaded = false;
+
+  // Fetch cached filter options (Tech Stacks & Cities with counts) from backend
+  async function fetchCompaniesFilters() {
+    try {
+      const res = await fetch("/api/companies/filters");
+      if (!res.ok) return;
+      const data = await res.json();
+      filterOptionsLoaded = true;
+
+      // Build tech options
+      const techOpts = [{ value: "", label: "Tech Stack (All)", count: null }];
+      (data.tech_stacks || []).forEach(t => {
+        techOpts.push({ value: t.name.toLowerCase(), label: t.name, count: t.count });
+      });
+      if (ddFilterTech) ddFilterTech.setOptions(techOpts);
+      if (ddOutreachTech) ddOutreachTech.setOptions(techOpts);
+
+      // Build city options
+      const cityOpts = [{ value: "", label: "All Cities", count: null }];
+      (data.cities || []).forEach(c => {
+        cityOpts.push({ value: c.name.toLowerCase(), label: c.name, count: c.count });
+      });
+      if (ddFilterCity) ddFilterCity.setOptions(cityOpts);
+      if (ddOutreachCity) ddOutreachCity.setOptions(cityOpts);
+
+      if (data.stats) {
+        updateCompanyMetrics(data.stats);
+      }
+    } catch (e) {
+      console.warn("Failed to fetch company filters:", e);
+    }
+  }
+
   async function fetchCompanies(preservePage = true) {
     try {
-      const res = await fetch("/api/companies");
+      if (!companies || companies.length === 0) {
+        renderSkeletonCompanies(6);
+      }
+
+      if (!preservePage) {
+        companiesCurrentPage = 1;
+      }
+
+      const q = (filterInput?.value || "").trim();
+      const selectedTech = (filterTechSelect?.value || "").trim();
+      const selectedCity = (filterCitySelect?.value || "").trim();
+      const selectedSort = (sortSelect?.value || "newest").trim();
+      const statusParam = activeMetricFilter || "all";
+      const pageSize = (companiesPerPage !== undefined && companiesPerPage !== null) ? companiesPerPage : 12;
+
+      const params = new URLSearchParams({
+        page: companiesCurrentPage,
+        page_size: pageSize,
+        search: q,
+        tech: selectedTech,
+        city: selectedCity,
+        status: statusParam,
+        sort: selectedSort
+      });
+
+      const res = await fetch(`/api/companies?${params.toString()}`);
+      if (!res.ok) {
+        console.warn(`[Directory] API responded with HTTP ${res.status}. Retrying in 1.5s...`);
+        setTimeout(() => fetchCompanies(preservePage), 1500);
+        return;
+      }
       const data = await res.json();
       companies = data.companies || [];
+      totalServerCount = data.total_count || 0;
+      totalServerPages = data.total_pages || 1;
+      companiesCurrentPage = data.current_page || 1;
       invalidCount = data.invalid_count || 0;
       if (typeof data.is_master_admin === "boolean") {
         isMasterAdmin = data.is_master_admin;
       }
-
-      // Populate available AI-normalized keywords dropdown dynamically
-      if (filterKeywordSelect && data.available_keywords) {
-        const curVal = filterKeywordSelect.value;
-        const opts = ['<option value="">All Keywords</option>'];
-        data.available_keywords.forEach(kw => {
-          opts.push(`<option value="${kw}">${kw}</option>`);
-        });
-        filterKeywordSelect.innerHTML = opts.join('');
-        filterKeywordSelect.value = curVal;
+      if (typeof data.dev_mode === "boolean") {
+        isDevMode = data.dev_mode;
       }
 
-      // Populate available cities dropdown dynamically
-      if (filterCitySelect && data.available_cities) {
-        const curCityVal = filterCitySelect.value;
-        const cityOpts = ['<option value="">All Cities</option>'];
-        data.available_cities.forEach(city => {
-          cityOpts.push(`<option value="${city}">${city}</option>`);
-        });
-        filterCitySelect.innerHTML = cityOpts.join('');
-        filterCitySelect.value = curCityVal;
+      // Populate filter dropdowns on initial load
+      if (!filterOptionsLoaded) {
+        fetchCompaniesFilters();
       }
 
-      updateCompanyMetrics(companies);
       updateMetricCardStyles();
-      applyCompanyFiltersAndRender(!preservePage);
+      renderCompanies(companies);
       updateScoutViewFromInputs();
       if (activeTab === "outreach") {
         renderPitchesList();
@@ -1311,50 +1914,49 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (companiesContainer) {
         companiesContainer.innerHTML = `
-          <div class="col-span-full py-12 text-center text-slate-500 bg-slate-900/50 border border-slate-800 rounded-2xl">
-            <p class="text-sm font-medium">${emptyTitle}</p>
-            <p class="text-xs text-slate-600 mt-1">${emptyMsg}</p>
+          <div class="col-span-full py-12 px-4 text-center bg-surface-container-low border border-outline-variant/30 rounded-2xl space-y-3 shadow-sm transition-colors">
+            <div class="inline-flex p-3 rounded-full bg-primary/10 text-primary border border-primary/20 shadow-sm">
+              <i data-lucide="layers" class="w-6 h-6"></i>
+            </div>
+            <p class="text-sm font-semibold text-on-surface">${emptyTitle}</p>
+            <p class="text-xs text-on-surface-variant max-w-md mx-auto leading-relaxed">${emptyMsg}</p>
           </div>
         `;
+        refreshIcons();
       }
       updateBulkActionBar();
       updateSelectAllCheckboxState([]);
       return;
     }
 
-    const sortedList = sortCompaniesList(list);
-    const totalItems = sortedList.length;
-    const totalPages = companiesPerPage > 0 ? Math.ceil(totalItems / companiesPerPage) : 1;
-    companiesCurrentPage = Math.min(Math.max(1, companiesCurrentPage), totalPages);
-
-    const pagedList = companiesPerPage > 0
-      ? sortedList.slice((companiesCurrentPage - 1) * companiesPerPage, companiesCurrentPage * companiesPerPage)
-      : sortedList;
+    const pagedList = list;
+    const totalItems = totalServerCount;
 
     pagedList.forEach(c => {
       // 1. Grid Card
       if (companiesContainer) {
         const card = document.createElement("div");
         const isSelected = selectedCompanyIds.has(c.id);
+        const canManageLeads = Boolean((isMasterAdmin && currentUser && currentUser.is_logged_in) || isDevMode);
 
         if (c.is_invalid) {
           // Invalid Lead Grid Card Styling
-          card.className = `company-card-invalid bg-slate-900 border ${isSelected ? 'border-rose-500 ring-2 ring-rose-500/80 bg-rose-950/20' : 'border-rose-900/60 hover:border-rose-600'} rounded-xl p-3 sm:p-4 flex flex-col justify-between transition group shadow-sm cursor-pointer relative min-w-0`;
+          card.className = `company-card-invalid bg-[#111827] border ${isSelected ? 'border-rose-500 ring-2 ring-rose-500/80 bg-rose-500/10' : 'border-rose-500/20 hover:border-rose-500/40'} rounded-2xl p-4 sm:p-5 flex flex-col justify-between transition-all duration-200 group shadow-lg cursor-pointer relative min-w-0`;
           card.innerHTML = `
             <div class="space-y-2 pointer-events-none">
               <div class="flex items-start justify-between gap-1.5 pointer-events-auto">
                 <div class="flex items-center space-x-2 flex-1 min-w-0">
-                  <input type="checkbox" class="company-checkbox w-4 h-4 rounded bg-slate-950 border-rose-800 text-rose-600 focus:ring-rose-500 cursor-pointer shrink-0 transition" data-id="${c.id}" ${isSelected ? 'checked' : ''} title="Select lead">
+                  ${canManageLeads ? `<input type="checkbox" class="company-checkbox w-4 h-4 rounded bg-[#0d1117] border-rose-800 text-rose-600 focus:ring-rose-500 cursor-pointer shrink-0 transition" data-id="${c.id}" ${isSelected ? 'checked' : ''} title="Select lead">` : ''}
                   <h4 class="font-bold text-xs sm:text-sm text-white group-hover:text-rose-400 transition flex items-center space-x-1.5 break-words flex-1">
                     <span>${escapeHTML(c.name)}</span>
                   </h4>
                 </div>
-                <span class="px-1.5 sm:px-2 py-0.5 rounded bg-rose-950 text-rose-300 border border-rose-700 text-[9px] sm:text-[10px] font-bold flex items-center space-x-1 shrink-0">
+                <span class="px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-300 border border-rose-500/20 text-[9px] sm:text-[10px] font-bold flex items-center space-x-1 shrink-0">
                   <i data-lucide="shield-alert" class="w-2.5 h-2.5 sm:w-3 sm:h-3 text-rose-400"></i>
                   <span>INVALID</span>
                 </span>
               </div>
-              <div class="text-[10px] sm:text-[11px] text-rose-300/90 bg-rose-950/40 p-2 rounded-lg border border-rose-900/50 space-y-0.5">
+              <div class="text-[10px] sm:text-[11px] text-rose-300/90 bg-rose-500/10 p-2.5 rounded-xl border border-rose-500/20 space-y-0.5">
                 <div class="flex items-center space-x-1 font-semibold text-rose-400 text-[9px] sm:text-[10px] uppercase tracking-wider">
                   <i data-lucide="alert-circle" class="w-3 h-3"></i>
                   <span>Excluded</span>
@@ -1368,12 +1970,14 @@ document.addEventListener("DOMContentLoaded", () => {
               </div>
             </div>
 
-            <div class="pt-2 sm:pt-3 mt-2 sm:mt-3 border-t border-rose-900/50 flex items-center justify-end">
-              <button class="btn-single-restore w-full text-center justify-center text-[11px] sm:text-xs px-2 sm:px-3 py-1 rounded bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition flex items-center space-x-1 shadow-sm cursor-pointer" data-id="${c.id}" title="Restore company to active directory">
+            ${canManageLeads ? `
+            <div class="pt-2.5 sm:pt-3 mt-2.5 sm:mt-3 border-t border-rose-500/20 flex items-center justify-end">
+              <button class="btn-single-restore w-full text-center justify-center text-[11px] sm:text-xs px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition flex items-center space-x-1 shadow-sm cursor-pointer" data-id="${c.id}" title="Restore company to active directory">
                 <i data-lucide="rotate-ccw" class="w-3 h-3"></i>
                 <span>Restore Lead</span>
               </button>
             </div>
+            ` : ''}
           `;
 
           const btnRestore = card.querySelector(".btn-single-restore");
@@ -1386,118 +1990,147 @@ document.addEventListener("DOMContentLoaded", () => {
 
         } else {
           // Genuine Active Company Grid Card
-          const badge = c.already_contacted 
-            ? `<span onclick="event.stopPropagation(); window.viewSentEmailForCompany(${c.id})" class="px-2 py-0.5 rounded bg-sky-950/80 hover:bg-sky-900 text-sky-400 border border-sky-800 text-[10px] font-semibold flex items-center space-x-1 shrink-0 cursor-pointer transition shadow-sm" title="Click to view message sent"><i data-lucide="check" class="w-3 h-3 text-sky-400"></i><span>Contacted ${c.contacted_at || ''}</span></span>`
-            : (c.is_enriched 
-                ? `<span class="px-2 py-0.5 rounded bg-indigo-950/80 text-indigo-400 border border-indigo-800 text-[10px] font-semibold flex items-center space-x-1 shrink-0"><i data-lucide="zap" class="w-3 h-3 text-indigo-400"></i><span>Enriched</span></span>`
-                : `<span class="px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700 text-[10px] shrink-0">Verified</span>`);
+          const monogram = getCompanyMonogram(c.name);
+          const monoThemes = [
+            { bg: "bg-surface-container-high text-on-surface border-outline-variant/60" },
+            { bg: "bg-secondary/15 text-secondary border-secondary/30" },
+            { bg: "bg-tertiary/15 text-tertiary border-tertiary/30" },
+            { bg: "bg-surface-container-highest text-on-surface-variant border-outline-variant/60" }
+          ];
+          const monoTheme = monoThemes[(c.id || 0) % monoThemes.length];
 
-          const ratingDisplay = (c.rating && c.rating > 0)
-            ? `<span class="text-amber-400 font-semibold flex items-center space-x-1">
-                 <i data-lucide="star" class="w-3.5 h-3.5 text-amber-400 fill-amber-400 shrink-0"></i><span>${Number(c.rating).toFixed(1)}</span>
-                 <span class="text-slate-500 font-normal text-[10px]">(${c.reviews_count || 0})</span>
-               </span>`
-            : `<span class="text-slate-500 text-[10px]">No ratings yet</span>`;
-
-          const adminDeleteBtn = (isMasterAdmin && adminViewMode === "admin")
-            ? `<button class="btn-single-invalidate text-slate-500 hover:text-rose-400 hover:bg-rose-950/40 p-1 rounded transition cursor-pointer" data-id="${c.id}" title="Mark company as invalid (Master Admin)"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>`
+          // Rating & Reviews display
+          const ratingVal = (c.rating && c.rating > 0) ? Number(c.rating).toFixed(1) : null;
+          const ratingDisplay = ratingVal
+            ? `<div class="flex items-center gap-1 text-tertiary text-caption font-semibold shrink-0">
+                 <span class="material-symbols-outlined text-[14px] text-tertiary">star</span>
+                 <span>${ratingVal}</span>
+                 <span class="text-on-surface-variant font-normal">(${c.reviews_count || 0})</span>
+               </div>`
             : '';
 
-          const cardCleanAddr = cleanAddressText(c.address);
-          const cardMapsUrl = c.location_url || buildMapsUrl(c.name, cardCleanAddr, c.city || "");
+          // Status Badge: Pitched, Researched, Uncontacted
+          let statusBadge = "";
+          if (c.already_contacted) {
+            statusBadge = `<span onclick="event.stopPropagation(); window.viewSentEmailForCompany && window.viewSentEmailForCompany(${c.id})" class="px-2.5 py-0.5 rounded text-caption font-mono bg-primary/10 text-primary border border-primary/30 shrink-0 cursor-pointer flex items-center gap-1 font-semibold hover:brightness-110" title="Click to view outreach sent"><span class="material-symbols-outlined text-[13px]">check_circle</span><span>Pitched</span></span>`;
+          } else if (c.is_enriched) {
+            statusBadge = `<span class="px-2.5 py-0.5 rounded text-caption font-mono bg-secondary/15 text-secondary border border-secondary/30 shrink-0 flex items-center gap-1 font-semibold"><span class="material-symbols-outlined text-[13px]">auto_awesome</span><span>Researched</span></span>`;
+          } else {
+            statusBadge = `<span class="px-2.5 py-0.5 rounded text-caption font-mono bg-surface-container text-on-surface-variant border border-outline-variant/60 shrink-0">Uncontacted</span>`;
+          }
 
-          card.className = `company-card bg-slate-900 border ${isSelected ? 'border-indigo-500 ring-2 ring-indigo-500/80 bg-slate-800/90' : 'border-slate-800 hover:border-slate-600'} rounded-xl p-2.5 sm:p-4 flex flex-col justify-between transition group shadow-sm cursor-pointer relative min-w-0`;
+          // Description (2-line clamp with JSON cleanup)
+          let rawDesc = (c.profile && c.profile.summary)
+            ? c.profile.summary
+            : (c.description || (c.normalized_keyword ? `${c.normalized_keyword} engineering and enterprise solutions.` : 'Enterprise technology solutions automating operational pipelines.'));
+          if (typeof rawDesc === 'string') {
+            const trimmed = rawDesc.trim();
+            if (trimmed.startsWith('{') || trimmed.includes('"summary"')) {
+              try {
+                const parsed = JSON.parse(trimmed);
+                rawDesc = parsed.summary || parsed.description || rawDesc;
+              } catch (_) {
+                rawDesc = rawDesc.replace(/^[{\s(]*"?summary"?\s*:\s*"?/i, '').replace(/["}\s)]+$/, '');
+              }
+            }
+          }
+          const descText = rawDesc;
+
+          // Contact & Location
+          const primaryEmail = (c.emails && c.emails.length > 0)
+            ? c.emails[0]
+            : (c.contact_email || (c.domain ? `contact@${c.domain}` : 'contact@company.com'));
+          const hasEmail = Boolean(c.emails && c.emails.length > 0);
+          const emailIcon = hasEmail ? 'mark_email_read' : 'mail';
+          const emailColor = hasEmail ? 'text-secondary' : 'text-on-surface-variant';
+          const emailTextClass = hasEmail ? 'text-secondary font-medium' : 'text-on-surface-variant';
+          const locationText = c.city ? `${c.city}, IN` : (cleanAddressText(c.address) || 'San Francisco, CA');
+
+          // Tech stack pills in quiet micro-chip style
+          let techStack = (c.profile && c.profile.tech_stack && c.profile.tech_stack.length > 0)
+            ? c.profile.tech_stack.slice(0, 4)
+            : ["Next.js", "PyTorch", "AWS", "PostgreSQL"];
+          const techPillsHtml = techStack.map(t => `<span class="px-2 py-0.5 rounded text-[11px] font-mono tracking-wide bg-surface-container text-on-surface-variant border border-outline-variant/30">${escapeHTML(t)}</span>`).join('');
+
+          const excludeBtn = canManageLeads
+            ? `<button class="btn-single-invalidate text-on-surface-variant hover:text-error p-1 rounded transition cursor-pointer" data-id="${c.id}" title="Exclude lead from outreach"><span class="material-symbols-outlined text-[16px]">block</span></button>`
+            : '';
+          const checkboxHtml = canManageLeads
+            ? `<input type="checkbox" class="company-checkbox w-4 h-4 rounded border-outline-variant/60 bg-surface-container-lowest text-primary focus:ring-0 cursor-pointer shrink-0 mt-1" data-id="${c.id}" ${isSelected ? 'checked' : ''}/>`
+            : '';
+
+          card.className = `company-card group bg-surface-container-low border ${isSelected ? 'border-primary ring-1 ring-primary' : 'border-outline-variant/40 hover:border-outline-variant/80 hover:shadow-lg'} rounded-xl p-5 flex flex-col justify-between transition-all duration-150 relative cursor-pointer min-w-0`;
           card.innerHTML = `
-            <div class="space-y-1.5 pointer-events-none">
-              <!-- Top micro row: Checkbox, Badge & Admin Action -->
-              <div class="flex items-center justify-between gap-1 pointer-events-auto">
-                <div class="flex items-center space-x-2 overflow-hidden min-w-0">
-                  <input type="checkbox" class="company-checkbox w-4 h-4 rounded bg-slate-950 border-slate-700 text-indigo-600 focus:ring-indigo-500 cursor-pointer shrink-0 transition" data-id="${c.id}" ${isSelected ? 'checked' : ''} title="Select lead">
-                  ${badge}
-                </div>
-                ${adminDeleteBtn}
-              </div>
-
-              <!-- Company Name: Full width, wraps up to 2 lines -->
-              <h4 class="font-bold text-xs sm:text-sm text-white group-hover:text-indigo-400 transition leading-tight break-words pt-0.5" title="${escapeHTML(c.name)}">
-                ${escapeHTML(c.name)}
-              </h4>
-
-              <!-- Domain Link -->
-              <div class="flex items-center space-x-1.5 pt-0.5">
-                <a href="${c.website_url || 'https://' + c.domain}" target="_blank" rel="noopener noreferrer" class="company-site-link inline-flex items-center space-x-1 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded bg-slate-950 border border-slate-800 hover:border-indigo-600 text-indigo-400 hover:text-indigo-300 text-[10px] sm:text-[11px] font-mono transition max-w-full pointer-events-auto" onclick="event.stopPropagation();" title="Visit ${escapeHTML(c.domain)}">
-                  <i data-lucide="globe" class="w-3 h-3 sm:w-3.5 sm:h-3.5 shrink-0"></i>
-                  <span class="break-all">${escapeHTML(c.domain)}</span>
-                  <i data-lucide="external-link" class="w-2.5 h-2.5 sm:w-3 sm:h-3 shrink-0 opacity-70"></i>
-                </a>
-              </div>
-
-              <!-- Meta: Rating & Phone -->
-              <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between text-[10px] sm:text-xs pt-1 border-t border-slate-800/60 gap-1">
-                <div class="flex items-center shrink-0">${ratingDisplay}</div>
-                ${c.phone ? `
-                  <a href="tel:${escapeHTML(c.phone)}" class="text-slate-400 hover:text-white font-mono text-[10px] sm:text-[11px] flex items-center space-x-0.5 whitespace-nowrap pointer-events-auto shrink-0" onclick="event.stopPropagation();" title="Call ${escapeHTML(c.phone)}">
-                    <i data-lucide="phone" class="w-2.5 h-2.5 sm:w-3 sm:h-3 text-slate-500 shrink-0"></i>
-                    <span>${escapeHTML(c.phone)}</span>
-                  </a>
-                ` : ''}
-              </div>
-
-              <!-- Keyword & City Badges -->
-              <div class="flex items-center gap-1 flex-wrap pt-0.5">
-                ${c.normalized_keyword ? `<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] sm:text-[10px] font-medium bg-indigo-950/70 text-indigo-300 border border-indigo-800/60 leading-tight">${escapeHTML(c.normalized_keyword)}</span>` : ''}
-                ${c.city ? `<span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] sm:text-[10px] font-medium bg-slate-800 text-slate-300 border border-slate-700/60 leading-tight"><i data-lucide="map-pin" class="w-2 h-2 mr-0.5 text-slate-400 shrink-0"></i><span>${escapeHTML(c.city)}</span></span>` : ''}
-              </div>
-
-              <!-- Address & Maps -->
-              ${cardMapsUrl ? `
-                <div class="text-[10px] sm:text-[11px] text-slate-400 flex items-start space-x-1 pointer-events-auto min-w-0">
-                  <i data-lucide="map-pin" class="w-3 h-3 text-slate-500 shrink-0 mt-0.5"></i>
-                  <a href="${cardMapsUrl}" target="_blank" rel="noopener noreferrer" class="hover:text-indigo-400 break-words flex-1 leading-tight" onclick="event.stopPropagation()" title="${escapeHTML(cardCleanAddr || 'Google Maps')}">
-                    ${escapeHTML(cardCleanAddr || (c.city ? c.city + ', Location' : 'Google Maps Location'))}
-                  </a>
-                </div>
-              ` : ''}
-
-              <!-- Discovered Emails -->
-              ${c.emails && c.emails.length > 0 ? `
-                <div class="text-[10px] sm:text-[11px] text-emerald-400 font-mono flex items-start space-x-1 min-w-0">
-                  <i data-lucide="mail" class="w-3 h-3 text-emerald-400 shrink-0 mt-0.5"></i>
-                  <span class="break-all leading-tight">${escapeHTML(c.emails[0])}${c.emails.length > 1 ? ` (+${c.emails.length - 1})` : ''}</span>
-                </div>
-              ` : ''}
-
-              <!-- AI Profile Summary (if enriched) -->
-              ${c.profile ? `
-                <div class="pt-1.5 border-t border-slate-800/80">
-                  <p class="text-[10px] sm:text-xs text-slate-300 line-clamp-2 leading-relaxed">${escapeHTML(c.profile.summary)}</p>
-                  <div class="flex flex-wrap gap-1 mt-1">
-                    ${(c.profile.tech_stack || []).slice(0, 2).map(t => `<span class="px-1.5 py-0.2 rounded text-[9px] sm:text-[10px] bg-slate-800 text-slate-300 border border-slate-700 font-mono">${escapeHTML(t)}</span>`).join('')}
+            <div>
+              <!-- Part 1: Header (Checkbox + Monogram + Name/Domain + Badge) -->
+              <div class="flex items-start justify-between gap-3 mb-3">
+                <div class="flex items-start gap-2.5 min-w-0 flex-1">
+                  ${checkboxHtml}
+                  <div class="w-9 h-9 rounded-md flex items-center justify-center font-bold text-label-sm ${monoTheme.bg} border shrink-0 font-mono shadow-sm">
+                    ${monogram}
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <div class="flex items-start justify-between gap-1.5">
+                      <h3 class="text-headline-sm font-headline-sm text-on-surface font-semibold break-words line-clamp-2 leading-snug" title="${escapeHTML(c.name)}">${escapeHTML(c.name)}</h3>
+                      <a class="text-on-surface-variant hover:text-primary transition-colors shrink-0 mt-0.5" href="${c.website_url || 'https://' + c.domain}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();" title="Visit website">
+                        <span class="material-symbols-outlined text-[14px]">open_in_new</span>
+                      </a>
+                    </div>
+                    <div class="flex items-center gap-2 mt-1">
+                      <span class="text-caption font-mono text-on-surface-variant truncate block">${escapeHTML(c.domain || '')}</span>
+                      ${ratingDisplay}
+                    </div>
                   </div>
                 </div>
-              ` : ''}
+                <div class="flex items-center gap-1.5 shrink-0 pt-0.5">
+                  ${statusBadge}
+                  ${excludeBtn}
+                </div>
+              </div>
+
+              <!-- Part 2: Description (2 lines clamp, breathable) -->
+              <p class="text-body-sm font-body-sm text-on-surface-variant mb-3.5 line-clamp-2 leading-relaxed">
+                ${escapeHTML(descText)}
+              </p>
+
+              <!-- Part 3: Contact, Location & Tech (Clean vertical flow without cage border-y) -->
+              <div class="flex flex-col gap-2.5 mb-4">
+                <div class="flex items-center justify-between text-caption font-caption gap-2">
+                  <div class="flex items-center gap-1.5 ${emailTextClass} truncate min-w-0 font-mono text-caption">
+                    <span class="material-symbols-outlined text-[15px] ${emailColor} shrink-0">${emailIcon}</span>
+                    <span class="truncate">${escapeHTML(primaryEmail)}</span>
+                  </div>
+                  <div class="flex items-center gap-1 text-on-surface-variant shrink-0 font-mono text-[11px]">
+                    <span class="material-symbols-outlined text-[14px]">location_on</span>
+                    <span>${escapeHTML(locationText)}</span>
+                  </div>
+                </div>
+                <div class="flex flex-wrap gap-1.5">
+                  ${techPillsHtml}
+                </div>
+              </div>
             </div>
 
-            <!-- Bottom Action Buttons: 50/50 flex-1 compact -->
-            <div class="pt-2 sm:pt-3 mt-2 sm:mt-3 border-t border-slate-800/80 flex items-center justify-between gap-1.5 sm:gap-2">
-              <button class="btn-single-enrich flex-1 text-center justify-center text-[10px] sm:text-xs px-2 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition flex items-center space-x-1 cursor-pointer min-w-0" data-id="${c.id}" title="${c.is_enriched ? 'Re-crawl and re-enrich subpages' : 'Deep enrich subpages with AI'}">
-                <i data-lucide="${c.is_enriched ? 'refresh-cw' : 'zap'}" class="w-2.5 h-2.5 sm:w-3 sm:h-3 text-slate-300 shrink-0"></i>
-                <span>${c.is_enriched ? 'Re-Enrich' : 'Enrich with AI'}</span>
+            <!-- Part 4: Tactile Action Buttons (Milled Hardware Look with rest-state subtle pitch button) -->
+            <div class="grid grid-cols-2 gap-2 mt-auto pt-3.5 border-t border-outline-variant/30">
+              <button type="button" class="btn-single-details btn-tactile-slate px-3 py-2 rounded text-label-sm font-label-sm font-semibold transition-all text-center cursor-pointer flex items-center justify-center gap-1.5 text-on-surface">
+                <span class="material-symbols-outlined text-[16px]">visibility</span>
+                <span class="text-on-surface">View Intel</span>
               </button>
-              <button class="btn-single-pitch flex-1 text-center justify-center text-[10px] sm:text-xs px-2 py-1 rounded bg-indigo-600 hover:bg-indigo-500 text-white font-semibold transition flex items-center space-x-1 cursor-pointer shadow-sm min-w-0" data-id="${c.id}" title="Generate personalized outreach email">
-                <i data-lucide="send" class="w-2.5 h-2.5 sm:w-3 sm:h-3 shrink-0"></i>
-                <span>Send Email</span>
+              <button type="button" class="btn-single-pitch btn-card-pitch px-3 py-2 rounded text-label-sm font-label-sm font-semibold transition-all text-center cursor-pointer flex items-center justify-center gap-1.5">
+                <span class="material-symbols-outlined text-[16px]">send</span>
+                <span>Draft Pitch</span>
               </button>
             </div>
           `;
 
-          const btnEnrich = card.querySelector(".btn-single-enrich");
+          const btnDetails = card.querySelector(".btn-single-details");
           const btnPitch = card.querySelector(".btn-single-pitch");
           const btnInvalidate = card.querySelector(".btn-single-invalidate");
-          if (btnEnrich) {
-            btnEnrich.addEventListener("click", (e) => {
+          if (btnDetails) {
+            btnDetails.addEventListener("click", (e) => {
               e.stopPropagation();
-              handleSingleEnrich(btnEnrich, c.id);
+              openCompanyDetailsModal(c);
             });
           }
           if (btnPitch) {
@@ -1522,18 +2155,12 @@ document.addEventListener("DOMContentLoaded", () => {
             e.stopPropagation();
             if (chk.checked) {
               selectedCompanyIds.add(c.id);
-              if (c.is_invalid) {
-                card.classList.add("ring-2", "ring-rose-500/80", "border-rose-500", "bg-rose-950/20");
-              } else {
-                card.classList.add("ring-2", "ring-indigo-500/80", "border-indigo-500", "bg-slate-800/90");
-              }
+              card.classList.add("border-primary", "ring-1", "ring-primary");
+              card.classList.remove("border-outline-variant/30");
             } else {
               selectedCompanyIds.delete(c.id);
-              if (c.is_invalid) {
-                card.classList.remove("ring-2", "ring-rose-500/80", "border-rose-500", "bg-rose-950/20");
-              } else {
-                card.classList.remove("ring-2", "ring-indigo-500/80", "border-indigo-500", "bg-slate-800/90");
-              }
+              card.classList.remove("border-primary", "ring-1", "ring-primary");
+              card.classList.add("border-outline-variant/30");
             }
             updateBulkActionBar();
             updateSelectAllCheckboxState(pagedList);
@@ -1561,7 +2188,7 @@ document.addEventListener("DOMContentLoaded", () => {
       pageSize: companiesPerPage,
       onPageChange: (newPage) => {
         companiesCurrentPage = newPage;
-        renderCompanies(currentFilteredCompanies);
+        fetchCompanies(true);
         if (companiesContainer) {
           companiesContainer.scrollIntoView({ behavior: "smooth", block: "start" });
         }
@@ -1575,7 +2202,7 @@ document.addEventListener("DOMContentLoaded", () => {
     companiesPerPageSelect.addEventListener("change", (e) => {
       companiesPerPage = parseInt(e.target.value, 10);
       companiesCurrentPage = 1;
-      renderCompanies(currentFilteredCompanies);
+      fetchCompanies(false);
     });
   }
 
@@ -1647,17 +2274,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function switchCmodalTab(tab) {
     if (tab === "overview") {
-      cmodalTabBtnOverview?.classList.add("active", "bg-indigo-600", "text-white", "shadow-sm");
-      cmodalTabBtnOverview?.classList.remove("text-slate-400", "hover:text-white", "hover:bg-slate-900");
-      cmodalTabBtnAi?.classList.remove("active", "bg-indigo-600", "text-white", "shadow-sm");
-      cmodalTabBtnAi?.classList.add("text-slate-400", "hover:text-white", "hover:bg-slate-900");
+      cmodalTabBtnOverview?.classList.add("active", "bg-surface-container-highest", "text-on-surface", "shadow-sm");
+      cmodalTabBtnOverview?.classList.remove("text-on-surface-variant", "hover:bg-surface-container", "bg-primary-container", "text-white", "bg-primary-container", "text-on-primary-container");
+      cmodalTabBtnAi?.classList.remove("active", "bg-surface-container-highest", "text-on-surface", "shadow-sm", "bg-primary-container", "text-white", "bg-primary-container", "text-on-primary-container");
+      cmodalTabBtnAi?.classList.add("text-on-surface-variant", "hover:bg-surface-container");
       cmodalPanelOverview?.classList.remove("hidden");
       cmodalPanelAi?.classList.add("hidden");
     } else {
-      cmodalTabBtnAi?.classList.add("active", "bg-indigo-600", "text-white", "shadow-sm");
-      cmodalTabBtnAi?.classList.remove("text-slate-400", "hover:text-white", "hover:bg-slate-900");
-      cmodalTabBtnOverview?.classList.remove("active", "bg-indigo-600", "text-white", "shadow-sm");
-      cmodalTabBtnOverview?.classList.add("text-slate-400", "hover:text-white", "hover:bg-slate-900");
+      cmodalTabBtnAi?.classList.add("active", "bg-surface-container-highest", "text-on-surface", "shadow-sm");
+      cmodalTabBtnAi?.classList.remove("text-on-surface-variant", "hover:bg-surface-container", "bg-primary-container", "text-white", "bg-primary-container", "text-on-primary-container");
+      cmodalTabBtnOverview?.classList.remove("active", "bg-surface-container-highest", "text-on-surface", "shadow-sm", "bg-primary-container", "text-white", "bg-primary-container", "text-on-primary-container");
+      cmodalTabBtnOverview?.classList.add("text-on-surface-variant", "hover:bg-surface-container");
       cmodalPanelAi?.classList.remove("hidden");
       cmodalPanelOverview?.classList.add("hidden");
     }
@@ -1702,20 +2329,23 @@ document.addEventListener("DOMContentLoaded", () => {
       cmodalAddress.textContent = modalCleanAddr || "Open in Google Maps";
     }
 
-    // Master Admin Invalidate / Restore Button in Modal
-    if (isMasterAdmin && adminViewMode === "admin") {
-      cmodalBtnAdminAction?.classList.remove("hidden");
-      if (company.is_invalid) {
-        cmodalBtnAdminAction.className = "px-3 py-2 rounded-lg text-xs font-semibold transition flex items-center space-x-1.5 cursor-pointer bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm";
-        cmodalBtnAdminAction.innerHTML = `<i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i><span>Restore Lead</span>`;
-        cmodalBtnAdminAction.onclick = () => handleRestoreCompany(company.id, company.name);
+    const canManageLeads = Boolean((isMasterAdmin && currentUser && currentUser.is_logged_in) || isDevMode);
+    // Exclude / Restore Button in Modal
+    if (cmodalBtnAdminAction) {
+      if (canManageLeads) {
+        cmodalBtnAdminAction.classList.remove("hidden");
+        if (company.is_invalid) {
+          cmodalBtnAdminAction.className = "px-3.5 py-2 rounded-lg text-label-sm font-label-sm font-semibold transition flex items-center gap-1.5 cursor-pointer bg-secondary/15 hover:bg-secondary/25 text-secondary border border-secondary/30";
+          cmodalBtnAdminAction.innerHTML = `<span class="material-symbols-outlined text-[16px]">restore</span><span>Restore Lead</span>`;
+          cmodalBtnAdminAction.onclick = () => handleRestoreCompany(company.id, company.name);
+        } else {
+          cmodalBtnAdminAction.className = "px-3.5 py-2 rounded-lg text-label-sm font-label-sm font-semibold transition flex items-center gap-1.5 cursor-pointer bg-error/10 hover:bg-error/20 border border-error/30 text-error";
+          cmodalBtnAdminAction.innerHTML = `<span class="material-symbols-outlined text-[16px]">block</span><span>Mark as Excluded</span>`;
+          cmodalBtnAdminAction.onclick = () => handleInvalidateCompany(company.id, company.name);
+        }
       } else {
-        cmodalBtnAdminAction.className = "px-3 py-2 rounded-lg text-xs font-semibold transition flex items-center space-x-1.5 cursor-pointer bg-rose-950 hover:bg-rose-900 border border-rose-800 text-rose-300";
-        cmodalBtnAdminAction.innerHTML = `<i data-lucide="trash-2" class="w-3.5 h-3.5 text-rose-400"></i><span>Mark as Invalid</span>`;
-        cmodalBtnAdminAction.onclick = () => handleInvalidateCompany(company.id, company.name);
+        cmodalBtnAdminAction.classList.add("hidden");
       }
-    } else {
-      cmodalBtnAdminAction?.classList.add("hidden");
     }
 
     // Status Badge
@@ -1730,10 +2360,10 @@ document.addEventListener("DOMContentLoaded", () => {
       cmodalBadge.innerHTML = `<i data-lucide="check" class="w-3 h-3 text-sky-400"></i><span>Contacted ${company.contacted_at || ''}</span>`;
       cmodalBadge.onclick = () => window.viewSentEmailForCompany(company.id);
     } else if (company.is_enriched) {
-      cmodalBadge.className = "px-2 py-0.5 rounded bg-indigo-950 text-indigo-400 border border-indigo-800 text-[10px] font-semibold flex items-center space-x-1";
-      cmodalBadge.innerHTML = `<i data-lucide="zap" class="w-3 h-3 text-indigo-400"></i><span>AI Enriched</span>`;
+      cmodalBadge.className = "px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/30 text-[10px] font-semibold flex items-center space-x-1";
+      cmodalBadge.innerHTML = `<i data-lucide="zap" class="w-3 h-3 text-primary"></i><span>AI Enriched</span>`;
     } else {
-      cmodalBadge.className = "px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700 text-[10px]";
+      cmodalBadge.className = "px-2.5 py-0.5 rounded bg-surface-container text-on-surface-variant border border-outline-variant/60 text-[10px] font-mono";
       cmodalBadge.textContent = "Verified Lead";
     }
 
@@ -1742,11 +2372,11 @@ document.addEventListener("DOMContentLoaded", () => {
     cmodalEmailsCount.textContent = `${emails.length} discovered`;
     if (emails.length > 0) {
       cmodalEmailsContainer.innerHTML = emails.map(em => `
-        <div class="flex items-center space-x-2 px-2.5 py-1 bg-slate-900 border border-slate-700 rounded-lg text-emerald-400 font-mono text-xs">
-          <i data-lucide="mail" class="w-3.5 h-3.5 text-emerald-400 shrink-0"></i>
+        <div class="flex items-center space-x-2 px-2.5 py-1 bg-surface-container border border-outline-variant/40 rounded-lg text-secondary font-mono text-xs">
+          <span class="material-symbols-outlined text-[16px] text-secondary shrink-0">mail</span>
           <span class="break-all">${escapeHTML(em)}</span>
-          <button class="text-slate-400 hover:text-white copy-em-btn text-xs ml-1 p-0.5 rounded hover:bg-slate-800 flex items-center" data-email="${escapeHTML(em)}" title="Copy email">
-            <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+          <button class="text-on-surface-variant hover:text-on-surface copy-em-btn text-xs ml-1 p-0.5 rounded hover:bg-surface-container-high flex items-center cursor-pointer" data-email="${escapeHTML(em)}" title="Copy email">
+            <span class="material-symbols-outlined text-[14px]">content_copy</span>
           </button>
         </div>
       `).join("");
@@ -1754,16 +2384,14 @@ document.addEventListener("DOMContentLoaded", () => {
       cmodalEmailsContainer.querySelectorAll(".copy-em-btn").forEach(b => {
         b.addEventListener("click", () => {
           navigator.clipboard.writeText(b.dataset.email);
-          b.innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5 text-emerald-400"></i>`;
-          refreshIcons();
+          b.innerHTML = `<span class="material-symbols-outlined text-[14px] text-secondary">check</span>`;
           setTimeout(() => {
-            b.innerHTML = `<i data-lucide="copy" class="w-3.5 h-3.5"></i>`;
-            refreshIcons();
+            b.innerHTML = `<span class="material-symbols-outlined text-[14px]">content_copy</span>`;
           }, 1500);
         });
       });
     } else {
-      cmodalEmailsContainer.innerHTML = `<span class="text-slate-500 italic">No direct emails discovered yet. Click "Enrich with AI" below.</span>`;
+      cmodalEmailsContainer.innerHTML = `<span class="text-on-surface-variant italic text-caption">No direct emails discovered yet. Click "Enrich with AI" below.</span>`;
     }
 
     // AI Intelligence Profile
@@ -1776,26 +2404,88 @@ document.addEventListener("DOMContentLoaded", () => {
       const stack = company.profile.tech_stack || [];
       if (stack.length > 0) {
         cmodalTechstack.innerHTML = stack.map(tech => `
-          <span class="px-2.5 py-1 rounded bg-slate-800 border border-slate-700 text-indigo-300 text-xs font-medium">${escapeHTML(tech)}</span>
+          <span class="px-2.5 py-1 rounded bg-surface-container-high border border-outline-variant/40 text-on-surface text-xs font-mono font-medium">${escapeHTML(tech)}</span>
         `).join("");
       } else {
-        cmodalTechstack.innerHTML = `<span class="text-slate-500 italic text-[11px]">General modern web stack</span>`;
-      }
-
-      if (company.profile.detailed_analysis) {
-        cmodalDetailedAnalysis.dataset.rawText = company.profile.detailed_analysis;
-        cmodalDetailedAnalysis.innerHTML = formatMarkdown(company.profile.detailed_analysis);
-      } else {
-        cmodalDetailedAnalysis.dataset.rawText = "";
-        cmodalDetailedAnalysis.innerHTML = `<span class="text-slate-400 italic">Click 'Enrich with AI' below to generate comprehensive intelligence report.</span>`;
+        cmodalTechstack.innerHTML = `<span class="text-on-surface-variant italic text-[11px]">General modern web stack</span>`;
       }
     } else {
-      cmodalSummary.textContent = "Not enriched yet. Click 'Enrich with AI' below to analyze company details and detect tech stack.";
+      cmodalSummary.textContent = "Analyzing company footprint...";
       cmodalIndustry.textContent = "Pending Analysis";
-      cmodalTone.textContent = "Pending Analysis";
-      cmodalTechstack.innerHTML = `<span class="text-slate-500 italic text-[11px]">Run enrichment to identify tech stack.</span>`;
+      cmodalTone.textContent = "Professional";
+      cmodalTechstack.innerHTML = `<span class="text-on-surface-variant italic text-[11px]">Detecting tech stack...</span>`;
+    }
+
+    // Check if detailed analysis is already loaded or in local memory cache
+    const cachedDetail = companyDetailCache.get(company.id);
+    if (cachedDetail && cachedDetail.profile && cachedDetail.profile.detailed_analysis) {
+      cmodalDetailedAnalysis.dataset.rawText = cachedDetail.profile.detailed_analysis;
+      cmodalDetailedAnalysis.innerHTML = formatMarkdown(cachedDetail.profile.detailed_analysis);
+      if (cachedDetail.profile.industry) cmodalIndustry.textContent = cachedDetail.profile.industry;
+      if (cachedDetail.profile.tone) cmodalTone.textContent = cachedDetail.profile.tone;
+    } else if (company.profile && company.profile.detailed_analysis) {
+      cmodalDetailedAnalysis.dataset.rawText = company.profile.detailed_analysis;
+      cmodalDetailedAnalysis.innerHTML = formatMarkdown(company.profile.detailed_analysis);
+    } else {
+      // Show tactile skeleton shimmer and fetch on-demand via AJAX
       cmodalDetailedAnalysis.dataset.rawText = "";
-      cmodalDetailedAnalysis.innerHTML = `<span class="text-slate-400 italic">Not enriched yet. Click 'Enrich with AI' below to generate comprehensive intelligence report.</span>`;
+      cmodalDetailedAnalysis.innerHTML = `
+        <div class="space-y-3 py-4 animate-pulse">
+          <div class="h-4 bg-surface-container-high rounded w-3/4"></div>
+          <div class="h-3.5 bg-surface-container rounded w-full"></div>
+          <div class="h-3.5 bg-surface-container rounded w-5/6"></div>
+          <div class="h-3.5 bg-surface-container rounded w-2/3"></div>
+        </div>
+      `;
+
+      fetch(`/api/companies/${company.id}`)
+        .then(res => res.ok ? res.json() : null)
+        .then(detailData => {
+          if (!detailData) return;
+          companyDetailCache.set(company.id, detailData);
+          if (activeModalCompany && activeModalCompany.id === company.id) {
+            if (detailData.profile) {
+              company.profile = Object.assign({}, company.profile, detailData.profile);
+              if (detailData.profile.summary) cmodalSummary.textContent = detailData.profile.summary;
+              if (detailData.profile.industry) cmodalIndustry.textContent = detailData.profile.industry;
+              if (detailData.profile.tone) cmodalTone.textContent = detailData.profile.tone;
+              if (detailData.profile.detailed_analysis) {
+                cmodalDetailedAnalysis.dataset.rawText = detailData.profile.detailed_analysis;
+                cmodalDetailedAnalysis.innerHTML = formatMarkdown(detailData.profile.detailed_analysis);
+              } else {
+                cmodalDetailedAnalysis.innerHTML = `<span class="text-on-surface-variant italic">Click 'Enrich with AI' below to generate comprehensive intelligence report.</span>`;
+              }
+              const stack = detailData.profile.tech_stack || [];
+              if (stack.length > 0) {
+                cmodalTechstack.innerHTML = stack.map(tech => `
+                  <span class="px-2.5 py-1 rounded bg-surface-container-high border border-outline-variant/40 text-on-surface text-xs font-mono font-medium">${escapeHTML(tech)}</span>
+                `).join("");
+              }
+            } else {
+              cmodalDetailedAnalysis.innerHTML = `<span class="text-on-surface-variant italic">Not enriched yet. Click 'Enrich with AI' below to generate comprehensive intelligence report.</span>`;
+            }
+
+            if (detailData.emails && detailData.emails.length > 0) {
+              company.emails = detailData.emails;
+              cmodalEmailsCount.textContent = `${detailData.emails.length} discovered`;
+              cmodalEmailsContainer.innerHTML = detailData.emails.map(em => `
+                <div class="flex items-center space-x-2 px-2.5 py-1 bg-surface-container border border-outline-variant/40 rounded-lg text-secondary font-mono text-xs">
+                  <span class="material-symbols-outlined text-[16px] text-secondary shrink-0">mail</span>
+                  <span class="break-all">${escapeHTML(em)}</span>
+                  <button class="text-on-surface-variant hover:text-on-surface copy-em-btn text-xs ml-1 p-0.5 rounded hover:bg-surface-container-high flex items-center cursor-pointer" data-email="${escapeHTML(em)}" title="Copy email">
+                    <span class="material-symbols-outlined text-[14px]">content_copy</span>
+                  </button>
+                </div>
+              `).join("");
+            }
+          }
+        })
+        .catch(err => {
+          console.warn("Failed to fetch on-demand company intel:", err);
+          if (activeModalCompany && activeModalCompany.id === company.id) {
+            cmodalDetailedAnalysis.innerHTML = `<span class="text-on-surface-variant italic">Click 'Enrich with AI' below to generate comprehensive intelligence report.</span>`;
+          }
+        });
     }
 
     cmodal.classList.remove("hidden");
@@ -1809,6 +2499,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   cmodalBtnEnrich.addEventListener("click", async () => {
     if (!activeModalCompany) return;
+    companyDetailCache.delete(activeModalCompany.id);
     requireLogin(async () => {
       const oldHtml = cmodalBtnEnrich.innerHTML;
       cmodalBtnEnrich.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i><span>Analyzing with AI...</span>`;
@@ -1849,6 +2540,109 @@ document.addEventListener("DOMContentLoaded", () => {
     filterInput.addEventListener("input", applyCompanyFiltersAndRender);
   }
 
+  const filterTabAll = document.getElementById("filter-tab-all");
+  const filterTabUncontacted = document.getElementById("filter-tab-uncontacted");
+  const filterTabResearched = document.getElementById("filter-tab-researched");
+  const filterTabPitched = document.getElementById("filter-tab-pitched");
+  const filterTabExcludedBtn = document.getElementById("filter-tab-excluded");
+
+  function setSegmentedFilterTab(tab) {
+    [filterTabAll, filterTabUncontacted, filterTabResearched, filterTabPitched, filterTabExcludedBtn].forEach(b => {
+      if (!b) return;
+      b.classList.remove("active", "bg-surface-container-highest", "text-on-surface", "bg-error/20", "text-error");
+      b.classList.add("text-on-surface-variant");
+    });
+    if (tab === "all" && filterTabAll) {
+      filterTabAll.classList.add("active", "bg-surface-container-highest", "text-on-surface");
+      filterTabAll.classList.remove("text-on-surface-variant");
+      activeMetricFilter = "";
+    } else if (tab === "uncontacted" && filterTabUncontacted) {
+      filterTabUncontacted.classList.add("active", "bg-surface-container-highest", "text-on-surface");
+      filterTabUncontacted.classList.remove("text-on-surface-variant");
+      activeMetricFilter = "uncontacted";
+    } else if (tab === "researched" && filterTabResearched) {
+      filterTabResearched.classList.add("active", "bg-surface-container-highest", "text-on-surface");
+      filterTabResearched.classList.remove("text-on-surface-variant");
+      activeMetricFilter = "enriched";
+    } else if (tab === "pitched" && filterTabPitched) {
+      filterTabPitched.classList.add("active", "bg-surface-container-highest", "text-on-surface");
+      filterTabPitched.classList.remove("text-on-surface-variant");
+      activeMetricFilter = "contacted";
+    } else if (tab === "excluded" && filterTabExcludedBtn) {
+      filterTabExcludedBtn.classList.add("active", "bg-error/20", "text-error");
+      filterTabExcludedBtn.classList.remove("text-on-surface-variant");
+      activeMetricFilter = "invalid";
+    }
+    applyCompanyFiltersAndRender(true);
+  }
+
+  filterTabAll?.addEventListener("click", () => setSegmentedFilterTab("all"));
+  filterTabUncontacted?.addEventListener("click", () => setSegmentedFilterTab("uncontacted"));
+  filterTabResearched?.addEventListener("click", () => setSegmentedFilterTab("researched"));
+  filterTabPitched?.addEventListener("click", () => setSegmentedFilterTab("pitched"));
+  filterTabExcludedBtn?.addEventListener("click", () => setSegmentedFilterTab("excluded"));
+
+  // ⌘K / Ctrl+K keyboard shortcut to focus search
+  document.addEventListener("keydown", (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") {
+      e.preventDefault();
+      filterInput?.focus();
+    }
+  });
+
+  const btnViewOptions = document.getElementById("btn-view-options");
+  if (btnViewOptions) {
+    btnViewOptions.addEventListener("click", () => {
+      filterInput?.focus();
+      filterInput?.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+  }
+
+  const btnQuickRefreshBtn = document.getElementById("btn-quick-refresh-btn");
+  if (btnQuickRefreshBtn) {
+    btnQuickRefreshBtn.addEventListener("click", () => {
+      fetchCompanies();
+      showToast("Directory refreshed", "info");
+    });
+  }
+
+  const btnBulkEnrich = document.getElementById("btn-bulk-enrich");
+  const btnBulkPitch = document.getElementById("btn-bulk-pitch");
+  const btnBulkExport = document.getElementById("btn-bulk-export");
+
+  if (btnBulkEnrich) {
+    btnBulkEnrich.addEventListener("click", () => {
+      const selected = Array.from(selectedCompanyIds);
+      if (selected.length === 0) {
+        showToast("Please select at least 1 company to research", "warning");
+        return;
+      }
+      handleBulkEnrich(btnBulkEnrich);
+    });
+  }
+
+  if (btnBulkPitch) {
+    btnBulkPitch.addEventListener("click", () => {
+      const selected = Array.from(selectedCompanyIds);
+      if (selected.length === 0) {
+        showToast("Please select at least 1 company to draft pitches", "warning");
+        return;
+      }
+      handleGeneratePitch(selected[0]);
+    });
+  }
+
+  if (btnBulkExport) {
+    btnBulkExport.addEventListener("click", () => {
+      const btnExport = document.getElementById("btn-export-csv");
+      if (btnExport) {
+        btnExport.click();
+      } else {
+        exportCompaniesToCSV(companies.filter(c => selectedCompanyIds.has(c.id)));
+      }
+    });
+  }
+
   if (sortSelect) {
     sortSelect.addEventListener("change", applyCompanyFiltersAndRender);
   }
@@ -1870,20 +2664,53 @@ document.addEventListener("DOMContentLoaded", () => {
       e.preventDefault();
       e.stopPropagation();
     }
+
+    const inputKwEl = document.getElementById("input-keyword");
+    const inputCityEl = document.getElementById("input-city");
+    const inputUrlEl = document.getElementById("input-url");
+
+    const keyword = (inputKwEl?.value || "").trim();
+    const city = (inputCityEl?.value || "").trim();
+    const direct_url = (inputUrlEl?.value || "").trim();
+
+    // Required Field Validations
+    if (!direct_url) {
+      if (!keyword && !city) {
+        highlightFieldWarning(inputKwEl, "Please enter a Target Keyword / Industry and City / Location to find leads.");
+        inputCityEl?.classList.add("input-warning-highlight");
+        setTimeout(() => inputCityEl?.classList.remove("input-warning-highlight"), 3200);
+        return;
+      }
+      if (!keyword) {
+        highlightFieldWarning(inputKwEl, "Target Keyword / Industry is required (e.g. IT Companies, Software Agencies).");
+        return;
+      }
+      if (!city) {
+        highlightFieldWarning(inputCityEl, "City / Location is required (e.g. Surat, Austin, London).");
+        return;
+      }
+    } else {
+      if (!/^https?:\/\//i.test(direct_url)) {
+        highlightFieldWarning(inputUrlEl, "Direct Google Search URL must start with http:// or https://");
+        return;
+      }
+    }
+
     scoutCurrentPage = 1;
     liveScrapedResults = [];
-    const keyword = (document.getElementById("input-keyword")?.value || "").trim();
-    const city = (document.getElementById("input-city")?.value || "").trim();
-    const direct_url = (document.getElementById("input-url")?.value || "").trim();
     const max_pages = parseInt(document.getElementById("input-pages")?.value || "2", 10);
     const gl = document.getElementById("input-gl")?.value || "in";
     const hl = document.getElementById("input-hl")?.value || "en";
 
-    renderScoutResults([], `Searching: "${keyword || 'Companies'}" in "${city || 'Location'}"`);
+    const searchTag = (keyword && city)
+      ? `"${keyword}" in "${city}"`
+      : (keyword ? `"${keyword}"` : (city ? `in "${city}"` : (direct_url || "Search")));
+
+    renderScoutResults([], `Searching: ${searchTag}`);
 
     scoutMonitor.classList.remove("hidden");
     monitorProgressBar.style.width = "8%";
-    monitorStatus.textContent = `Initializing browser engine for "${keyword || 'Companies'} ${city}"...`;
+    monitorStatus.textContent = `Initializing browser engine for ${searchTag}...`;
     monitorCount.textContent = "Starting...";
     btnStartScout.disabled = true;
     btnStartScout.classList.add("opacity-50");
@@ -1917,6 +2744,99 @@ document.addEventListener("DOMContentLoaded", () => {
     btnStartScout.addEventListener("click", handleScoutStart);
   }
 
+  function formatUserFriendlyLog(rawLog) {
+    if (!rawLog || typeof rawLog !== "string") return "";
+
+    const lower = rawLog.toLowerCase();
+    // Suppress technical debug noise (ChromeDriver, devtools, websocket, curl, session headers)
+    if (
+      lower.includes("devtools") ||
+      lower.includes("chromedriver") ||
+      lower.includes("selenium") ||
+      lower.includes("ws://") ||
+      lower.includes("post /session") ||
+      lower.includes("caps=") ||
+      lower.includes("error: device or resource busy") ||
+      lower.includes("insecure-requests") ||
+      lower.includes("sec-ch-ua") ||
+      lower.includes("python ") ||
+      lower.includes("traceback") ||
+      lower.includes("exit code")
+    ) {
+      return "";
+    }
+
+    // Extract optional timestamp [HH:MM:SS]
+    let timeStr = "";
+    let cleanMsg = rawLog;
+    const timeMatch = rawLog.match(/^\[(\d{1,2}:\d{2}(?::\d{2})?)\]\s*(.*)$/);
+    if (timeMatch) {
+      timeStr = timeMatch[1];
+      cleanMsg = timeMatch[2];
+    }
+
+    // Map system/cloud logs into clear, human-understandable operational messages
+    let icon = "info";
+    let iconColor = "text-secondary";
+    let friendlyText = cleanMsg;
+
+    if (/github\s*actions|cloud\s*runner|job\s*registered|dispatching/i.test(cleanMsg)) {
+      icon = "rocket_launch";
+      iconColor = "text-tertiary";
+      friendlyText = "Initializing cloud search engine...";
+    } else if (/chromium|headless|browser\s*engine|connecting/i.test(cleanMsg)) {
+      icon = "travel_explore";
+      iconColor = "text-secondary";
+      friendlyText = "Connecting to Google Local & Maps directory...";
+    } else if (/fetching\s*listings.*page\s*(\d+)/i.test(cleanMsg)) {
+      const pageNum = cleanMsg.match(/page\s*(\d+)/i)?.[1] || "1";
+      icon = "search";
+      iconColor = "text-primary";
+      friendlyText = `Scanning Google Local listings (Page ${pageNum})...`;
+    } else if (/extracted\s*(\d+)\s*genuine/i.test(cleanMsg)) {
+      const count = cleanMsg.match(/extracted\s*(\d+)/i)?.[1] || "several";
+      icon = "verified";
+      iconColor = "text-secondary";
+      friendlyText = `Verified ${count} authentic company websites with active domains.`;
+    } else if (/discovered\s*(\d+)\s*potential/i.test(cleanMsg)) {
+      const count = cleanMsg.match(/discovered\s*(\d+)/i)?.[1] || "several";
+      icon = "place";
+      iconColor = "text-tertiary";
+      friendlyText = `Located ${count} candidate businesses in Google Maps.`;
+    } else if (/discovered\s*(\d+)\s*genuine/i.test(cleanMsg)) {
+      const count = cleanMsg.match(/discovered\s*(\d+)/i)?.[1] || "several";
+      icon = "domain_verification";
+      iconColor = "text-secondary";
+      friendlyText = `Identified ${count} verified businesses with working official websites.`;
+    } else if (/saving.*companies|registered.*neon\s*db|successfully\s*saved/i.test(cleanMsg)) {
+      const countMatch = cleanMsg.match(/(\d+)/);
+      const count = countMatch ? countMatch[1] : "";
+      icon = "save";
+      iconColor = "text-tertiary";
+      friendlyText = count ? `Saved ${count} verified companies to your outreach directory.` : "Saved verified companies to directory.";
+    } else if (/cloud_enrich|ai\s*enrichment|ai\s*worker|enriching/i.test(cleanMsg)) {
+      icon = "auto_awesome";
+      iconColor = "text-secondary";
+      friendlyText = "Initiated AI analysis: inspecting websites, tech stacks, and recruiter contacts.";
+    } else if (/completed|finished/i.test(cleanMsg)) {
+      icon = "check_circle";
+      iconColor = "text-secondary";
+      friendlyText = "Search complete! Companies are ready to browse below.";
+    } else if (/error|failed/i.test(cleanMsg)) {
+      icon = "warning";
+      iconColor = "text-amber-500";
+      friendlyText = cleanMsg.replace(/\[Fast-Path HTTP Error\]/i, "Notice:").replace(/Traceback.*/i, "");
+    }
+
+    return `
+      <div class="flex items-center gap-2.5 py-1 px-2 rounded hover:bg-surface-container/60 transition text-xs font-mono text-on-surface-variant border-b border-outline-variant/20 last:border-0">
+        ${timeStr ? `<span class="text-on-surface-variant/70 text-[10px] shrink-0 font-mono">${escapeHTML(timeStr)}</span>` : ""}
+        <span class="material-symbols-outlined text-[15px] ${iconColor} shrink-0">${icon}</span>
+        <span class="text-on-surface leading-snug">${escapeHTML(friendlyText)}</span>
+      </div>
+    `;
+  }
+
   function startPolling(jobId = null) {
     if (pollInterval) clearInterval(pollInterval);
     let polls = 0;
@@ -1933,24 +2853,40 @@ document.addEventListener("DOMContentLoaded", () => {
           hasStartedRunning = true;
         }
 
-        monitorStatus.textContent = data.status_message || "Scraping & AI Enriching...";
+        // Clean user-friendly status message
+        let friendlyStatus = data.status_message || "Searching for verified business leads...";
+        if (/cloud_enrich|ai\s*enrichment|ai\s*worker/i.test(friendlyStatus)) {
+          friendlyStatus = "AI analyzing company tech stacks & contacts...";
+        } else if (/saving.*companies|registered.*neon/i.test(friendlyStatus)) {
+          friendlyStatus = "Saving verified leads to outreach directory...";
+        } else if (/fetching listings from page\s*(\d+)/i.test(friendlyStatus)) {
+          const p = friendlyStatus.match(/page\s*(\d+)/i)?.[1] || "1";
+          friendlyStatus = `Scanning Google Local listings (Page ${p})...`;
+        }
+        monitorStatus.textContent = friendlyStatus;
         monitorCount.textContent = `${data.total_results || 0} Found`;
         monitorProgressBar.style.width = `${Math.min(100, Math.max(8, data.progress || 0))}%`;
 
-        // Real-time terminal log console stream
+        // Real-time user-friendly terminal log console stream
         if (scoutTerminalLogs && Array.isArray(data.logs) && data.logs.length > 0) {
-          scoutTerminalLogs.innerHTML = data.logs.map(l => `<div class="break-all font-mono leading-relaxed">${escapeHTML(l)}</div>`).join('');
-          scoutTerminalLogs.scrollTop = scoutTerminalLogs.scrollHeight;
+          const formatted = data.logs.map(formatUserFriendlyLog).filter(Boolean);
+          if (formatted.length > 0) {
+            scoutTerminalLogs.innerHTML = formatted.join('');
+            scoutTerminalLogs.scrollTop = scoutTerminalLogs.scrollHeight;
+          }
         }
 
         // Real-time stream of live scraped cards while browser is discovering them
         if (Array.isArray(data.results) && data.results.length > 0) {
           liveScrapedResults = data.results;
-          const activeKw = inputKeyword?.value?.trim() || "IT Companies";
-          const activeCity = inputCity?.value?.trim() || "Surat";
+          const activeKw = inputKeyword?.value?.trim() || "";
+          const activeCity = inputCity?.value?.trim() || "";
+          const queryTag = (activeKw && activeCity)
+            ? `"${activeKw}" in "${activeCity}"`
+            : (activeKw ? `"${activeKw}"` : (activeCity ? `in "${activeCity}"` : ""));
           renderScoutResults(liveScrapedResults, data.is_running 
-            ? `Live Cloud Scouting: "${activeKw}" in "${activeCity}"`
-            : `Discovered Leads: "${activeKw}" in "${activeCity}"`);
+            ? (queryTag ? `Live Cloud Scouting: ${queryTag}` : `Live Cloud Scouting`)
+            : (queryTag ? `Discovered Leads: ${queryTag}` : `Discovered Leads`));
         }
 
         if (data.error) {
@@ -1970,10 +2906,15 @@ document.addEventListener("DOMContentLoaded", () => {
           btnStartScout.classList.remove("opacity-50");
           // Automatically refresh the companies list in the UI for directory & badges
           await fetchCompanies();
-          const activeKw = inputKeyword?.value?.trim() || "IT Companies";
-          const activeCity = inputCity?.value?.trim() || "Surat";
+          const activeKw = inputKeyword?.value?.trim() || "";
+          const activeCity = inputCity?.value?.trim() || "";
+          const queryTag = (activeKw && activeCity)
+            ? `"${activeKw}" in "${activeCity}"`
+            : (activeKw ? `"${activeKw}"` : (activeCity ? `in "${activeCity}"` : ""));
           if (liveScrapedResults && liveScrapedResults.length > 0) {
-            renderScoutResults(liveScrapedResults, `Discovered ${liveScrapedResults.length} Leads for "${activeKw}" in "${activeCity}"`);
+            renderScoutResults(liveScrapedResults, queryTag
+              ? `Discovered ${liveScrapedResults.length} Leads for ${queryTag}`
+              : `Discovered ${liveScrapedResults.length} Leads`);
           }
         }
       } catch (err) {
@@ -1988,9 +2929,9 @@ document.addEventListener("DOMContentLoaded", () => {
   // ==========================================
   // AUTHENTICATION & LOGIN GATE CONTROLLER
   // ==========================================
-  let currentUser = (window.__INITIAL_AUTH__ && typeof window.__INITIAL_AUTH__.is_logged_in === "boolean")
-    ? window.__INITIAL_AUTH__
-    : { is_logged_in: false, email: null };
+  currentUser = (window.__INITIAL_AUTH__ && typeof window.__INITIAL_AUTH__.is_logged_in === "boolean")
+    ? { ...window.__INITIAL_AUTH__ }
+    : { is_logged_in: false, email: null, is_master_admin: false, dev_mode: false };
   const loginModal = document.getElementById("login-modal");
   const loginModalClose = document.getElementById("login-modal-close");
   const btnModalDemoLogin = document.getElementById("btn-modal-demo-login");
@@ -2043,11 +2984,22 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await res.json();
       currentUser = data;
       isMasterAdmin = !!data.is_master_admin;
+      if (typeof data.dev_mode === "boolean") {
+        isDevMode = data.dev_mode;
+      }
 
       if (currentUser.is_logged_in) {
         authBoxLoggedIn?.classList.remove("hidden");
         authBoxLoggedOut?.classList.add("hidden");
         if (userDisplayEmail) userDisplayEmail.textContent = currentUser.email || "Verified User";
+        const avatarEl = document.getElementById("user-avatar-initials");
+        if (avatarEl) {
+          const raw = (currentUser.name || currentUser.email || "U").trim();
+          const initials = raw.includes("@")
+            ? raw.slice(0, 2).toUpperCase()
+            : raw.split(/\s+/).map(p => p[0]).join("").slice(0, 2).toUpperCase();
+          avatarEl.textContent = initials || "U";
+        }
         if (isMasterAdmin) {
           sidebarAdminBadge?.classList.remove("hidden");
           setAdminViewMode(adminViewMode || "admin");
@@ -2068,6 +3020,7 @@ document.addEventListener("DOMContentLoaded", () => {
         statCardInvalid?.classList.add("hidden");
       }
       refreshIcons();
+      fetchCompaniesFilters();
     } catch (err) {
       console.warn("Auth status fetch error:", err);
     }
@@ -2091,7 +3044,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
       const data = await res.json();
       if (data.success) {
-        document.cookie = `pilot_user_email=${data.email}; path=/; max-age=2592000; SameSite=Lax`;
+        document.cookie = `pilot_user_email=${data.email}; path=/; max-age=86400; SameSite=Lax`;
         loginModal?.classList.add("hidden");
         await checkAuthStatus();
         await fetchCompanies();
@@ -2104,13 +3057,13 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   if (btnModalAdminLogin) {
-    btnModalAdminLogin.addEventListener("click", () => performDemoLogin({ as_admin: true, email: "vorarahul111@gmail.com" }));
+    btnModalAdminLogin.addEventListener("click", () => performDemoLogin({ as_admin: true }));
   }
   if (btnSidebarAdminLogin) {
-    btnSidebarAdminLogin.addEventListener("click", () => performDemoLogin({ as_admin: true, email: "vorarahul111@gmail.com" }));
+    btnSidebarAdminLogin.addEventListener("click", () => performDemoLogin({ as_admin: true }));
   }
   if (btnHeaderAdminLogin) {
-    btnHeaderAdminLogin.addEventListener("click", () => performDemoLogin({ as_admin: true, email: "vorarahul111@gmail.com" }));
+    btnHeaderAdminLogin.addEventListener("click", () => performDemoLogin({ as_admin: true }));
   }
   if (btnModalDemoLogin) {
     btnModalDemoLogin.addEventListener("click", () => performDemoLogin({ as_admin: false, email: "demo_user@outreachpilot.ai" }));
@@ -2240,31 +3193,54 @@ document.addEventListener("DOMContentLoaded", () => {
         showToast("No companies found to generate pitches for.", "warning");
         return;
       }
-      const oldText = btnGenAllPitches.innerHTML;
-      btnGenAllPitches.disabled = true;
 
-      for (let i = 0; i < companies.length; i++) {
-        const comp = companies[i];
-        btnGenAllPitches.innerHTML = `<i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-300 animate-pulse"></i><span>Generating (${i + 1}/${companies.length})...</span>`;
-        refreshIcons();
-        try {
-          await fetch("/api/pitch/generate", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ company_id: comp.id })
-          });
-        } catch (err) {
-          console.error("Pitch error for", comp.name, err);
+      requireLogin(async () => {
+        const oldText = btnGenAllPitches.innerHTML;
+        btnGenAllPitches.disabled = true;
+
+        let authFailed = false;
+        let generatedCount = 0;
+
+        for (let i = 0; i < companies.length; i++) {
+          if (authFailed) break;
+          const comp = companies[i];
+          btnGenAllPitches.innerHTML = `<i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-300 animate-pulse"></i><span>Generating (${i + 1}/${companies.length})...</span>`;
+          refreshIcons();
+          try {
+            const res = await fetch("/api/pitch/generate", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ company_id: comp.id })
+            });
+
+            if (res.status === 401) {
+              authFailed = true;
+              currentUser.is_logged_in = false;
+              showToast("Authentication required. Please connect your Google account to generate personalized pitches.", "warning");
+              showLoginModal("Authentication required. Please connect your Google account to generate personalized pitches.");
+              break;
+            }
+
+            if (res.ok) {
+              generatedCount++;
+            }
+          } catch (err) {
+            console.error("Pitch error for", comp.name, err);
+          }
         }
-      }
-      btnGenAllPitches.innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5 text-emerald-400"></i><span>Pitches Generated!</span>`;
-      refreshIcons();
-      renderPitchesList();
-      setTimeout(() => {
-        btnGenAllPitches.innerHTML = oldText;
-        btnGenAllPitches.disabled = false;
-        refreshIcons();
-      }, 2500);
+
+        if (!authFailed) {
+          btnGenAllPitches.innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5 text-emerald-400"></i><span>${generatedCount} Pitches Generated!</span>`;
+          refreshIcons();
+          renderPitchesList();
+        }
+
+        setTimeout(() => {
+          btnGenAllPitches.innerHTML = oldText;
+          btnGenAllPitches.disabled = false;
+          refreshIcons();
+        }, 2500);
+      }, "Authentication required. Please connect your Google account to generate personalized pitches.");
     });
   }
 
@@ -2306,7 +3282,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const skillsContainer = document.getElementById("profile-skills");
         if (skillsContainer && data.profile.top_skills) {
           skillsContainer.innerHTML = data.profile.top_skills.map(s => `
-            <span class="px-2.5 py-1 rounded bg-indigo-950/80 text-indigo-300 border border-indigo-800 text-xs font-medium">${escapeHTML(s)}</span>
+            <span class="px-2.5 py-1 rounded bg-primary/10 text-primary border border-primary/30 text-xs font-medium">${escapeHTML(s)}</span>
           `).join("");
         }
 
@@ -2331,12 +3307,22 @@ document.addEventListener("DOMContentLoaded", () => {
   resumeForm.addEventListener("submit", async (e) => {
     e.preventDefault();
     requireLogin(async () => {
+      const inputTargetRole = document.getElementById("input-target-role");
+      const inputResumeLink = document.getElementById("input-resume-link");
+      const dropzoneEl = document.getElementById("dropzone");
       const hasFile = fileInput.files && fileInput.files.length > 0;
-      const resumeLink = (document.getElementById("input-resume-link")?.value || "").trim();
-      const targetRole = document.getElementById("input-target-role").value.trim();
+      const resumeLink = (inputResumeLink?.value || "").trim();
+      const targetRole = (inputTargetRole?.value || "").trim();
+
+      if (!targetRole) {
+        highlightFieldWarning(inputTargetRole, "Target Job Role is required (e.g. Senior Full-Stack Engineer, B2B Growth Lead).");
+        return;
+      }
 
       if (!hasFile && !resumeLink) {
-        showToast("Please select a resume file (PDF or TXT) or enter a portfolio/resume link.", "warning");
+        highlightFieldWarning(inputResumeLink, "Please select a resume file (PDF or TXT) or enter a portfolio/resume link.");
+        dropzoneEl?.classList.add("input-warning-highlight");
+        setTimeout(() => dropzoneEl?.classList.remove("input-warning-highlight"), 3200);
         return;
       }
 
@@ -2368,7 +3354,7 @@ document.addEventListener("DOMContentLoaded", () => {
           
           const skillsContainer = document.getElementById("profile-skills");
           skillsContainer.innerHTML = (data.profile.top_skills || []).map(s => `
-            <span class="px-2.5 py-1 rounded bg-indigo-950/80 text-indigo-300 border border-indigo-800 text-xs font-medium">${escapeHTML(s)}</span>
+            <span class="px-2.5 py-1 rounded bg-primary/10 text-primary border border-primary/30 text-xs font-medium">${escapeHTML(s)}</span>
           `).join("");
 
           const achContainer = document.getElementById("profile-achievements");
@@ -2410,7 +3396,7 @@ document.addEventListener("DOMContentLoaded", () => {
         btnCopyProfileAnalysis.innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5 text-emerald-400"></i><span class="text-emerald-400">Copied!</span>`;
         refreshIcons();
         setTimeout(() => {
-          btnCopyProfileAnalysis.innerHTML = `<i data-lucide="copy" class="w-3.5 h-3.5 text-indigo-400"></i><span>Copy Analysis</span>`;
+          btnCopyProfileAnalysis.innerHTML = `<i data-lucide="copy" class="w-3.5 h-3.5 text-primary"></i><span>Copy Analysis</span>`;
           refreshIcons();
         }, 2000);
       }).catch(err => {
@@ -2600,13 +3586,25 @@ document.addEventListener("DOMContentLoaded", () => {
     btnSendDirectOauth.addEventListener("click", async () => {
       if (!currentPitchId) return;
 
+      const subject = (modalSubject.value || "").trim();
+      const body = (modalBody.value || "").trim();
+
+      if (!subject) {
+        highlightFieldWarning(modalSubject, "Email Subject is required before sending.");
+        return;
+      }
+      if (!body) {
+        highlightFieldWarning(modalBody, "Email Message Body is required before sending.");
+        return;
+      }
+
       btnSendDirectOauth.disabled = true;
       btnSendDirectOauth.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i><span>Sending via Gmail...</span>`;
       refreshIcons();
 
       const formData = new FormData();
-      formData.append("subject", modalSubject.value || "");
-      formData.append("body", modalBody.value || "");
+      formData.append("subject", subject);
+      formData.append("body", body);
       formData.append("attach_resume", attachResumeInEmail ? "true" : "false");
       if (attachResumeInEmail && sessionResumeFile) {
         formData.append("resume_file", sessionResumeFile);
@@ -2666,16 +3664,28 @@ document.addEventListener("DOMContentLoaded", () => {
   // ==========================================
   // OUTREACH HUB CONTROLS & PIPELINE
   // ==========================================
+  // ==========================================
+  // OUTREACH HUB CONTROLS & PIPELINE
+  // ==========================================
   let outreachCurrentPage = 1;
-  let outreachPerPage = 10;
+  let outreachPerPage = 15;
   let outreachActiveFilter = "all"; // "all" | "emails" | "ready" | "sent"
   let outreachSearchQuery = "";
+  let outreachSelectedTech = "";
+  let outreachSelectedCity = "";
+  let outreachViewMode = "grid"; // "grid" | "list"
 
   const outreachSearchInput = document.getElementById("outreach-search-input");
   const outreachFilterAll = document.getElementById("outreach-filter-all");
   const outreachFilterEmails = document.getElementById("outreach-filter-emails");
   const outreachFilterReady = document.getElementById("outreach-filter-ready");
   const outreachFilterSent = document.getElementById("outreach-filter-sent");
+
+  const outreachTechSelect = document.getElementById("outreach-tech-select");
+  const outreachCitySelect = document.getElementById("outreach-city-select");
+  const btnOutreachReset = document.getElementById("btn-outreach-reset");
+  const btnOutreachViewGrid = document.getElementById("btn-outreach-view-grid");
+  const btnOutreachViewList = document.getElementById("btn-outreach-view-list");
 
   const outreachStatAll = document.getElementById("outreach-stat-all");
   const outreachStatEmails = document.getElementById("outreach-stat-emails");
@@ -2693,19 +3703,49 @@ document.addEventListener("DOMContentLoaded", () => {
   const outreachPerPageSelect = document.getElementById("outreach-per-page");
   const outreachPageButtons = document.getElementById("outreach-page-buttons");
 
+  const btnToggleActivity = document.getElementById("btn-toggle-activity");
+  const btnCloseActivity = document.getElementById("btn-close-activity");
+  const outreachActivityDrawer = document.getElementById("outreach-activity-drawer");
+  const outreachActivityBackdrop = document.getElementById("outreach-activity-backdrop");
+  const activityBadgeCount = document.getElementById("activity-badge-count");
+
+  function openActivityDrawer() {
+    if (outreachActivityDrawer) outreachActivityDrawer.classList.remove("translate-x-full");
+    if (outreachActivityBackdrop) {
+      outreachActivityBackdrop.classList.remove("opacity-0", "pointer-events-none");
+      outreachActivityBackdrop.classList.add("opacity-100", "pointer-events-auto");
+    }
+  }
+
+  function closeActivityDrawer() {
+    if (outreachActivityDrawer) outreachActivityDrawer.classList.add("translate-x-full");
+    if (outreachActivityBackdrop) {
+      outreachActivityBackdrop.classList.add("opacity-0", "pointer-events-none");
+      outreachActivityBackdrop.classList.remove("opacity-100", "pointer-events-auto");
+    }
+  }
+
+  if (btnToggleActivity) btnToggleActivity.addEventListener("click", openActivityDrawer);
+  if (btnCloseActivity) btnCloseActivity.addEventListener("click", closeActivityDrawer);
+  if (outreachActivityBackdrop) outreachActivityBackdrop.addEventListener("click", closeActivityDrawer);
+
   function updateOutreachPillStyles() {
-    const pills = [
-      { id: "all", el: outreachFilterAll },
-      { id: "emails", el: outreachFilterEmails },
-      { id: "ready", el: outreachFilterReady },
-      { id: "sent", el: outreachFilterSent }
+    // Update Quick Metric Cards ring highlight as primary filters
+    const statCards = [
+      { id: "all", el: outreachStatAll },
+      { id: "emails", el: outreachStatEmails },
+      { id: "ready", el: outreachStatReady },
+      { id: "sent", el: outreachStatSent }
     ];
-    pills.forEach(p => {
-      if (!p.el) return;
-      if (p.id === outreachActiveFilter) {
-        p.el.className = "outreach-pill active px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white transition cursor-pointer shadow-sm whitespace-nowrap shrink-0 focus:outline-none";
+    statCards.forEach(s => {
+      if (!s.el) return;
+      const isActive = (s.id === outreachActiveFilter);
+      if (isActive) {
+        s.el.classList.add("ring-2", "ring-primary/25", "border-primary", "bg-surface-container-high", "shadow-sm");
+        s.el.classList.remove("border-outline-variant/30", "bg-surface-container-low", "opacity-80");
       } else {
-        p.el.className = "outreach-pill px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white bg-slate-950 border border-slate-800 transition cursor-pointer whitespace-nowrap shrink-0 focus:outline-none";
+        s.el.classList.remove("ring-2", "ring-primary/25", "border-primary", "bg-surface-container-high", "shadow-sm");
+        s.el.classList.add("border-outline-variant/30", "bg-surface-container-low", "opacity-80");
       }
     });
   }
@@ -2729,6 +3769,56 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  if (outreachTechSelect) {
+    outreachTechSelect.addEventListener("change", (e) => {
+      outreachSelectedTech = (e.target.value || "").trim().toLowerCase();
+      outreachCurrentPage = 1;
+      renderPitchesList();
+    });
+  }
+
+  if (outreachCitySelect) {
+    outreachCitySelect.addEventListener("change", (e) => {
+      outreachSelectedCity = (e.target.value || "").trim().toLowerCase();
+      outreachCurrentPage = 1;
+      renderPitchesList();
+    });
+  }
+
+  if (btnOutreachReset) {
+    btnOutreachReset.addEventListener("click", () => {
+      if (outreachSearchInput) outreachSearchInput.value = "";
+      if (outreachTechSelect) outreachTechSelect.value = "";
+      if (outreachCitySelect) outreachCitySelect.value = "";
+      outreachSearchQuery = "";
+      outreachSelectedTech = "";
+      outreachSelectedCity = "";
+      outreachActiveFilter = "all";
+      outreachCurrentPage = 1;
+      updateOutreachPillStyles();
+      renderPitchesList();
+      showToast("Outreach filters reset to default", "info");
+    });
+  }
+
+  if (btnOutreachViewGrid) {
+    btnOutreachViewGrid.addEventListener("click", () => {
+      outreachViewMode = "grid";
+      btnOutreachViewGrid.className = "h-9 px-2.5 rounded-md text-xs font-mono flex items-center gap-1 bg-surface-container-highest text-on-surface cursor-pointer transition";
+      btnOutreachViewList.className = "h-9 px-2.5 rounded-md text-xs font-mono flex items-center gap-1 text-on-surface-variant hover:text-on-surface cursor-pointer transition";
+      renderPitchesList();
+    });
+  }
+
+  if (btnOutreachViewList) {
+    btnOutreachViewList.addEventListener("click", () => {
+      outreachViewMode = "list";
+      btnOutreachViewList.className = "h-9 px-2.5 rounded-md text-xs font-mono flex items-center gap-1 bg-surface-container-highest text-on-surface cursor-pointer transition";
+      btnOutreachViewGrid.className = "h-9 px-2.5 rounded-md text-xs font-mono flex items-center gap-1 text-on-surface-variant hover:text-on-surface cursor-pointer transition";
+      renderPitchesList();
+    });
+  }
+
   if (outreachFilterAll) outreachFilterAll.addEventListener("click", () => setOutreachFilter("all"));
   if (outreachFilterEmails) outreachFilterEmails.addEventListener("click", () => setOutreachFilter("emails"));
   if (outreachFilterReady) outreachFilterReady.addEventListener("click", () => setOutreachFilter("ready"));
@@ -2747,11 +3837,21 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  window.openCompanyModalById = function(companyId) {
+    const target = (companies || []).find(c => c.id === companyId);
+    if (target) openCompanyDetailsModal(target);
+  };
+
   function renderPitchesList() {
     const container = document.getElementById("pitches-container");
     const countSpan = document.getElementById("pitches-count");
     if (!container) return;
     container.innerHTML = "";
+
+    // Set responsive grid vs compact stream layout class
+    container.className = (outreachViewMode === "grid")
+      ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5"
+      : "space-y-3";
 
     // Base genuine leads
     const validCompanies = (companies || []).filter(c => !c.is_invalid);
@@ -2759,28 +3859,33 @@ document.addEventListener("DOMContentLoaded", () => {
     // Compute metric counts
     const totalCount = validCompanies.length;
     const emailsCount = validCompanies.filter(c => c.emails && c.emails.length > 0).length;
+    const isLoggedIn = Boolean(currentUser && currentUser.is_logged_in);
     const readyCount = validCompanies.filter(c => !c.already_contacted).length;
-    const sentCount = validCompanies.filter(c => c.already_contacted).length;
+    const sentCount = isLoggedIn ? validCompanies.filter(c => c.already_contacted).length : null;
 
     // Update Quick Metric Strip
     if (outreachCountTotal) outreachCountTotal.textContent = totalCount.toLocaleString();
     if (outreachCountEmails) outreachCountEmails.textContent = emailsCount.toLocaleString();
     if (outreachCountReady) outreachCountReady.textContent = readyCount.toLocaleString();
-    if (outreachCountSent) outreachCountSent.textContent = sentCount.toLocaleString();
+    if (outreachCountSent) {
+      outreachCountSent.textContent = isLoggedIn ? sentCount.toLocaleString() : "0";
+    }
 
     // Update filter badge counts
     document.querySelectorAll(".outreach-badge-all").forEach(el => el.textContent = totalCount);
     document.querySelectorAll(".outreach-badge-emails").forEach(el => el.textContent = emailsCount);
     document.querySelectorAll(".outreach-badge-ready").forEach(el => el.textContent = readyCount);
-    document.querySelectorAll(".outreach-badge-sent").forEach(el => el.textContent = sentCount);
+    document.querySelectorAll(".outreach-badge-sent").forEach(el => {
+      el.textContent = isLoggedIn ? sentCount : "—";
+    });
 
     if (totalCount === 0) {
       if (countSpan) countSpan.textContent = "0";
       container.innerHTML = `
-        <div class="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center space-y-2">
-          <i data-lucide="building" class="w-8 h-8 text-slate-500 mx-auto"></i>
-          <p class="text-xs font-semibold text-slate-300">No companies available for outreach</p>
-          <p class="text-[11px] text-slate-500">Scout verified businesses in Step 1 or check your All Companies directory first.</p>
+        <div class="col-span-full bg-surface-container-low border border-outline-variant/50 rounded-xl p-10 text-center space-y-3">
+          <span class="material-symbols-outlined text-[36px] text-on-surface-variant">domain</span>
+          <p class="text-sm font-semibold text-on-surface">No companies available for outreach</p>
+          <p class="text-xs text-on-surface-variant max-w-sm mx-auto">Scout verified businesses in Step 1 or browse your directory first.</p>
         </div>
       `;
       if (outreachPagination) outreachPagination.classList.add("hidden");
@@ -2798,6 +3903,34 @@ document.addEventListener("DOMContentLoaded", () => {
       filtered = filtered.filter(c => c.already_contacted);
     }
 
+    // Filter by Tech Stack Dropdown (supports multi-select comma-separated)
+    if (outreachSelectedTech) {
+      const selectedTechs = outreachSelectedTech.split(",").map(s => s.trim().toLowerCase()).filter(Boolean);
+      if (selectedTechs.length > 0) {
+        filtered = filtered.filter(c => {
+          const stack = (c.profile && Array.isArray(c.profile.tech_stack)) ? c.profile.tech_stack : [];
+          return selectedTechs.some(sel =>
+            stack.some(t => typeof t === "string" && t.toLowerCase().includes(sel))
+          );
+        });
+      }
+    }
+
+    // Filter by City Dropdown (supports multi-select comma-separated)
+    if (outreachSelectedCity) {
+      const selectedCities = outreachSelectedCity.split(",").map(c => c.trim().toLowerCase()).filter(Boolean);
+      if (selectedCities.length > 0) {
+        filtered = filtered.filter(c => {
+          const compCity = (c.city || "").toLowerCase();
+          const addr = (c.address || "").toLowerCase();
+          const srcQuery = (c.source_query || "").toLowerCase();
+          return selectedCities.some(sel =>
+            compCity.includes(sel) || addr.includes(sel) || srcQuery.includes(sel)
+          );
+        });
+      }
+    }
+
     // Filter by Search Query
     if (outreachSearchQuery) {
       filtered = filtered.filter(c => {
@@ -2805,7 +3938,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const domainMatch = c.domain && c.domain.toLowerCase().includes(outreachSearchQuery);
         const emailMatch = c.emails && c.emails.some(e => e.toLowerCase().includes(outreachSearchQuery));
         const cityMatch = c.city && c.city.toLowerCase().includes(outreachSearchQuery);
-        return nameMatch || domainMatch || emailMatch || cityMatch;
+        const techMatch = c.profile && c.profile.tech_stack && c.profile.tech_stack.some(t => typeof t === "string" && t.toLowerCase().includes(outreachSearchQuery));
+        return nameMatch || domainMatch || emailMatch || cityMatch || techMatch;
       });
     }
 
@@ -2813,10 +3947,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (filtered.length === 0) {
       container.innerHTML = `
-        <div class="bg-slate-900 border border-slate-800 rounded-xl p-8 text-center space-y-2">
-          <i data-lucide="mail-search" class="w-8 h-8 text-slate-500 mx-auto"></i>
-          <p class="text-xs font-semibold text-slate-300">No matching outreach targets</p>
-          <p class="text-[11px] text-slate-500">Try adjusting your search query or switching filter tabs.</p>
+        <div class="col-span-full bg-surface-container-low border border-outline-variant/50 rounded-xl p-10 text-center space-y-3">
+          <span class="material-symbols-outlined text-[36px] text-on-surface-variant">search_off</span>
+          <p class="text-sm font-semibold text-on-surface">No matching outreach targets</p>
+          <p class="text-xs text-on-surface-variant max-w-sm mx-auto">Try adjusting your search query or clearing dropdown filters.</p>
         </div>
       `;
       if (outreachPagination) outreachPagination.classList.add("hidden");
@@ -2835,55 +3969,191 @@ document.addEventListener("DOMContentLoaded", () => {
       pageItems = filtered.slice(startIndex, startIndex + outreachPerPage);
     }
 
+    const monoThemes = [
+      { bg: "bg-surface-container-high text-on-surface border-outline-variant/60" },
+      { bg: "bg-secondary/15 text-secondary border-secondary/30" },
+      { bg: "bg-tertiary/15 text-tertiary border-tertiary/30" },
+      { bg: "bg-surface-container-highest text-on-surface-variant border-outline-variant/60" }
+    ];
+
     pageItems.forEach(c => {
       const card = document.createElement("div");
-      card.className = "bg-slate-900 border border-slate-800 hover:border-slate-700/80 rounded-xl p-3 sm:p-3.5 transition shadow-sm";
-      
-      const hasDirectEmail = c.emails && c.emails.length > 0;
-      const targetDisplay = hasDirectEmail ? escapeHTML(c.emails[0]) : ('contact@' + escapeHTML(c.domain));
+      const monogram = getCompanyMonogram(c.name);
+      const monoIdx = Math.abs((c.name || "C").split("").reduce((acc, ch) => acc + ch.charCodeAt(0), 0)) % monoThemes.length;
+      const monoTheme = monoThemes[monoIdx];
 
-      const emailBadge = hasDirectEmail 
-        ? `<span class="px-2 py-0.5 rounded bg-emerald-950/80 text-emerald-400 border border-emerald-800 text-[10px] font-semibold flex items-center space-x-1 shrink-0"><i data-lucide="at-sign" class="w-3 h-3 text-emerald-400"></i><span>Direct Email</span></span>`
-        : `<span class="px-2 py-0.5 rounded bg-slate-950 text-slate-500 border border-slate-800 text-[10px] flex items-center space-x-1 shrink-0"><i data-lucide="globe" class="w-3 h-3 text-slate-500"></i><span>Company Domain</span></span>`;
+      const hasDirectEmail = Boolean(c.emails && c.emails.length > 0);
+      const targetDisplay = hasDirectEmail ? escapeHTML(c.emails[0]) : ('contact@' + escapeHTML(c.domain || 'domain.com'));
 
-      const statusBadge = c.already_contacted 
-        ? `<button onclick="window.viewSentEmailForCompany(${c.id})" class="px-2 py-0.5 rounded bg-sky-950 hover:bg-sky-900 text-sky-400 border border-sky-800 text-[10px] font-semibold flex items-center space-x-1 shrink-0 cursor-pointer transition shadow-sm" title="Click to view message sent"><i data-lucide="check" class="w-3 h-3 text-sky-400"></i><span>Sent ${c.contacted_at ? escapeHTML(c.contacted_at) : ''}</span></button>`
-        : `<span class="px-2 py-0.5 rounded bg-slate-800 text-slate-400 text-[10px] font-medium border border-slate-700 shrink-0">Not Contacted</span>`;
+      const ratingVal = (c.rating && c.rating > 0) ? Number(c.rating).toFixed(1) : null;
+      const ratingDisplay = ratingVal
+        ? `<span class="text-tertiary font-semibold flex items-center gap-1 font-mono text-[11px]"><span class="material-symbols-outlined text-[13px] text-tertiary">star</span><span>${ratingVal}</span><span class="text-on-surface-variant font-normal text-[10px]">(${c.reviews_count || 0})</span></span>`
+        : `<span class="text-on-surface-variant text-[10px] font-mono">No reviews</span>`;
 
-      card.innerHTML = `
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-          <div class="min-w-0 flex-1 space-y-1">
-            <div class="flex items-center space-x-2 flex-wrap gap-y-1">
-              <h4 class="font-bold text-xs sm:text-sm text-white break-words">${escapeHTML(c.name)}</h4>
-              <div class="flex items-center space-x-1 shrink-0">
+      const statusBadge = c.already_contacted
+        ? `<button type="button" onclick="window.viewSentEmailForCompany(${c.id})" class="px-2 py-0.5 rounded text-[10px] font-mono bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 font-semibold flex items-center gap-1 shrink-0 cursor-pointer transition shadow-sm" title="Click to view message sent"><span class="material-symbols-outlined text-[12px]">check_circle</span><span>Sent</span></button>`
+        : `<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-surface-container text-on-surface-variant border border-outline-variant/60 shrink-0">Queue</span>`;
+
+      let techStack = (c.profile && c.profile.tech_stack && c.profile.tech_stack.length > 0)
+        ? c.profile.tech_stack.slice(0, 4)
+        : ["Next.js", "Python", "AWS"];
+      const techPillsHtml = techStack.map(t => `<span class="px-2 py-0.5 rounded text-[10px] font-mono tracking-wide bg-surface-container-lowest text-on-surface-variant border border-outline-variant/40">${escapeHTML(t)}</span>`).join('');
+
+      if (outreachViewMode === "grid") {
+        // Mode A: Executive Dispatch Bento Card
+        card.className = "company-card group bg-surface-container-low border border-outline-variant/50 hover:border-outline hover:bg-surface-container rounded-xl p-5 flex flex-col justify-between transition-all duration-200 shadow-sm hover:shadow-lg relative min-w-0";
+        card.innerHTML = `
+          <div>
+            <!-- Part 1: Top Monogram + Name + Domain + Status -->
+            <div class="flex items-start justify-between gap-3 mb-3">
+              <div class="flex items-start gap-2.5 min-w-0 flex-1">
+                <div class="w-10 h-10 rounded-lg flex items-center justify-center font-bold text-label-md ${monoTheme.bg} border shrink-0 font-mono shadow-sm">
+                  ${monogram}
+                </div>
+                <div class="min-w-0 flex-1">
+                  <div class="flex items-start justify-between gap-1.5">
+                    <h3 class="text-headline-sm font-headline-sm text-on-surface font-semibold break-words line-clamp-2 leading-snug cursor-pointer hover:text-primary" onclick="window.openCompanyModalById(${c.id})" title="${escapeHTML(c.name)}">${escapeHTML(c.name)}</h3>
+                    <a class="text-on-surface-variant hover:text-primary transition-colors shrink-0 mt-0.5" href="${c.website_url || 'https://' + c.domain}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();" title="Visit website">
+                      <span class="material-symbols-outlined text-[14px]">open_in_new</span>
+                    </a>
+                  </div>
+                  <div class="flex items-center gap-2 mt-1">
+                    <span class="text-caption font-mono text-on-surface-variant truncate block">${escapeHTML(c.domain || '')}</span>
+                    ${c.city ? `<span class="text-on-surface-variant font-mono text-[11px] flex items-center gap-0.5 shrink-0"><span class="material-symbols-outlined text-[12px]">location_on</span>${escapeHTML(c.city)}</span>` : ''}
+                  </div>
+                </div>
+              </div>
+              <div class="shrink-0 pt-0.5">
                 ${statusBadge}
-                ${emailBadge}
               </div>
             </div>
-            <div class="flex items-center space-x-1.5 text-[11px] sm:text-xs text-slate-400 font-mono flex-wrap">
-              <i data-lucide="mail" class="w-3 h-3 text-indigo-400 shrink-0"></i>
-              <span class="text-slate-500 shrink-0">Recipient:</span>
-              <span class="${hasDirectEmail ? 'text-emerald-400 font-medium' : 'text-slate-300'} break-all">${targetDisplay}</span>
-              ${c.domain ? `<span class="text-slate-600 hidden md:inline">|</span><span class="text-slate-500 hidden md:inline break-all">${escapeHTML(c.domain)}</span>` : ''}
+
+            <!-- Part 2: Recipient Email Well -->
+            <div class="bg-surface-container-lowest border border-outline-variant/40 rounded-lg p-2.5 mb-3 flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2 min-w-0">
+                <span class="material-symbols-outlined text-[15px] ${hasDirectEmail ? 'text-secondary' : 'text-on-surface-variant'} shrink-0">
+                  ${hasDirectEmail ? 'alternate_email' : 'mail'}
+                </span>
+                <div class="min-w-0">
+                  <span class="text-[10px] font-mono uppercase tracking-wider block ${hasDirectEmail ? 'text-secondary font-semibold' : 'text-on-surface-variant'}">
+                    ${hasDirectEmail ? 'Verified Direct Email' : 'Domain Fallback'}
+                  </span>
+                  <span class="font-mono text-xs ${hasDirectEmail ? 'text-on-surface font-semibold' : 'text-on-surface-variant'} truncate block">
+                    ${targetDisplay}
+                  </span>
+                </div>
+              </div>
+              <button type="button" class="btn-copy-email p-1.5 rounded hover:bg-surface-container text-on-surface-variant hover:text-on-surface transition shrink-0 cursor-pointer" data-email="${targetDisplay}" title="Copy email address">
+                <span class="material-symbols-outlined text-[15px]">content_copy</span>
+              </button>
+            </div>
+
+            <!-- Part 3: Detected Tech Stack Chips & Rating -->
+            <div class="space-y-1.5 mb-4">
+              <div class="flex items-center justify-between text-[10px] font-mono text-on-surface-variant">
+                <span>DETECTED TECH STACK</span>
+                ${ratingDisplay}
+              </div>
+              <div class="flex flex-wrap gap-1.5">
+                ${techPillsHtml}
+              </div>
             </div>
           </div>
 
-          <div class="flex items-center space-x-2 shrink-0 pt-1 sm:pt-0">
+          <!-- Part 4: Bottom Tactile Actions -->
+          <div class="pt-3 border-t border-outline-variant/40 flex items-center justify-between gap-2">
+            <button type="button" class="btn-view-intel-row btn-tactile-slate px-3 py-1.5 rounded-lg text-xs font-mono font-medium flex items-center gap-1.5 transition cursor-pointer shadow-sm text-on-surface" data-id="${c.id}" title="Inspect full intelligence profile">
+              <span class="material-symbols-outlined text-[15px]">visibility</span>
+              <span>View Intel</span>
+            </button>
+            <div class="flex items-center gap-2">
+              ${c.already_contacted ? `
+                <button type="button" onclick="window.viewSentEmailForCompany(${c.id})" class="btn-tactile-slate px-3 py-1.5 rounded text-xs font-mono font-medium transition flex items-center gap-1 cursor-pointer">
+                  <span class="material-symbols-outlined text-[14px]">history</span>
+                  <span>Sent Log</span>
+                </button>
+              ` : ''}
+              <button type="button" class="btn-gen-pitch-row btn-card-pitch px-3.5 py-1.5 rounded text-xs font-headline font-semibold transition flex items-center gap-1.5 cursor-pointer shadow-sm" data-id="${c.id}">
+                <span class="material-symbols-outlined text-[15px]">send</span>
+                <span>${c.already_contacted ? 'Send Follow-up' : 'Review & Send'}</span>
+              </button>
+            </div>
+          </div>
+        `;
+      } else {
+        // Mode B: Streamlined Compact Row
+        card.className = "company-card group bg-surface-container-low border border-outline-variant/50 hover:border-outline hover:bg-surface-container rounded-xl p-4 transition-all duration-150 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-sm min-w-0";
+        card.innerHTML = `
+          <div class="flex items-center gap-3 min-w-0 flex-1">
+            <div class="w-9 h-9 rounded-md flex items-center justify-center font-bold text-xs ${monoTheme.bg} border shrink-0 font-mono shadow-sm">
+              ${monogram}
+            </div>
+            <div class="min-w-0 flex-1">
+              <div class="flex items-center gap-2 flex-wrap">
+                <h4 class="font-semibold text-sm text-on-surface break-words cursor-pointer hover:text-primary" onclick="window.openCompanyModalById(${c.id})">${escapeHTML(c.name)}</h4>
+                ${statusBadge}
+                <span class="text-[10px] font-mono px-2 py-0.5 rounded ${hasDirectEmail ? 'bg-secondary/15 text-secondary border border-secondary/30' : 'bg-surface-container text-on-surface-variant border border-outline-variant/60'}">
+                  ${hasDirectEmail ? '@ Direct Recruiter' : '@ Domain Fallback'}
+                </span>
+              </div>
+              <div class="flex items-center gap-2 text-xs font-mono text-on-surface-variant mt-0.5 flex-wrap">
+                <span class="text-on-surface font-medium">${targetDisplay}</span>
+                <span class="text-outline-variant">|</span>
+                <span class="text-on-surface-variant">${escapeHTML(c.domain || '')}</span>
+                ${c.city ? `<span class="text-outline-variant">|</span><span class="text-on-surface-variant flex items-center gap-0.5"><span class="material-symbols-outlined text-[12px]">location_on</span>${escapeHTML(c.city)}</span>` : ''}
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-2 shrink-0 pt-2 md:pt-0">
+            <button type="button" class="btn-view-intel-row text-xs font-mono text-on-surface-variant hover:text-on-surface flex items-center gap-1 transition cursor-pointer px-2.5 py-1.5 rounded hover:bg-surface-container" data-id="${c.id}">
+              <span class="material-symbols-outlined text-[15px]">visibility</span>
+              <span class="hidden sm:inline">Intel</span>
+            </button>
             ${c.already_contacted ? `
-              <button onclick="window.viewSentEmailForCompany(${c.id})" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-sky-400 rounded-lg text-xs font-semibold transition flex items-center justify-center space-x-1.5 cursor-pointer shadow-sm" title="View email sent to this company">
-                <i data-lucide="eye" class="w-3.5 h-3.5"></i>
-                <span>View Sent</span>
+              <button type="button" onclick="window.viewSentEmailForCompany(${c.id})" class="btn-tactile-slate px-3 py-1.5 rounded text-xs font-mono font-medium transition flex items-center gap-1 cursor-pointer">
+                <span class="material-symbols-outlined text-[14px]">history</span>
+                <span>Sent</span>
               </button>
             ` : ''}
-            <button class="btn-gen-pitch-row w-full sm:w-auto px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-semibold transition flex items-center justify-center space-x-1.5 cursor-pointer shadow-sm active:scale-95" data-id="${c.id}">
-              <i data-lucide="send" class="w-3.5 h-3.5"></i>
-              <span>${c.already_contacted ? 'Send Follow-up' : 'Review & Send Email'}</span>
+            <button type="button" class="btn-gen-pitch-row btn-card-pitch px-3.5 py-1.5 rounded text-xs font-headline font-semibold transition flex items-center gap-1.5 cursor-pointer shadow-sm" data-id="${c.id}">
+              <span class="material-symbols-outlined text-[15px]">send</span>
+              <span>${c.already_contacted ? 'Send Follow-up' : 'Review & Send'}</span>
             </button>
           </div>
-        </div>
-      `;
+        `;
+      }
 
-      card.querySelector(".btn-gen-pitch-row").addEventListener("click", () => handleGeneratePitch(c.id));
+      // Event listeners for card buttons
+      const btnPitch = card.querySelector(".btn-gen-pitch-row");
+      if (btnPitch) {
+        btnPitch.addEventListener("click", (e) => {
+          e.stopPropagation();
+          handleGeneratePitch(c.id);
+        });
+      }
+
+      const btnIntel = card.querySelector(".btn-view-intel-row");
+      if (btnIntel) {
+        btnIntel.addEventListener("click", (e) => {
+          e.stopPropagation();
+          openCompanyDetailsModal(c);
+        });
+      }
+
+      const btnCopy = card.querySelector(".btn-copy-email");
+      if (btnCopy) {
+        btnCopy.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const em = btnCopy.dataset.email;
+          navigator.clipboard.writeText(em);
+          btnCopy.innerHTML = `<span class="material-symbols-outlined text-[15px] text-[#86B29B]">check</span>`;
+          setTimeout(() => {
+            btnCopy.innerHTML = `<span class="material-symbols-outlined text-[15px]">content_copy</span>`;
+          }, 1500);
+        });
+      }
+
       container.appendChild(card);
     });
 
@@ -2899,8 +4169,7 @@ document.addEventListener("DOMContentLoaded", () => {
       onPageChange: (newPage) => {
         outreachCurrentPage = newPage;
         renderPitchesList();
-        const pipelineHeader = document.getElementById("outreach-pipeline-header");
-        if (pipelineHeader) pipelineHeader.scrollIntoView({ behavior: "smooth", block: "start" });
+        if (container) container.scrollIntoView({ behavior: "smooth", block: "start" });
       }
     });
 
@@ -2985,7 +4254,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (res.status === 401) {
         const logsContainer = document.getElementById("audit-logs");
         if (logsContainer) {
-          logsContainer.innerHTML = `<p class="text-slate-500 italic">Sign in to view your sent outreach history.</p>`;
+          logsContainer.innerHTML = `<p class="text-outline italic text-caption py-4 text-center">Sign in to view your sent outreach history.</p>`;
         }
         return;
       }
@@ -2993,22 +4262,22 @@ document.addEventListener("DOMContentLoaded", () => {
       const logsContainer = document.getElementById("audit-logs");
       if (!logsContainer) return;
       if (!data.logs || data.logs.length === 0) {
-        logsContainer.innerHTML = `<p class="text-slate-500 italic">No emails sent yet today.</p>`;
+        logsContainer.innerHTML = `<p class="text-outline italic text-caption py-4 text-center">No emails sent yet today.</p>`;
         return;
       }
 
       window._cachedAuditLogs = data.logs;
 
       logsContainer.innerHTML = data.logs.map((l, idx) => `
-        <div onclick="window._openCachedLog(${idx})" class="bg-slate-950 border border-slate-800 hover:border-sky-500/60 rounded-lg p-2.5 space-y-1 transition cursor-pointer group shadow-sm select-none" title="Click to view message sent">
-          <div class="flex items-center justify-between">
-            <span class="font-bold text-slate-200 group-hover:text-sky-300 transition truncate">${escapeHTML(l.company_name)}</span>
-            <span class="text-[10px] text-sky-400 font-semibold uppercase bg-sky-950/60 border border-sky-800/80 px-1.5 py-0.2 rounded shrink-0">${escapeHTML(l.delivery_method)}</span>
+        <div onclick="window._openCachedLog(${idx})" class="bg-surface-container border border-outline-variant/40 hover:border-outline-variant/80 rounded-lg p-3 space-y-1.5 transition cursor-pointer group shadow-sm" title="Click to view message sent">
+          <div class="flex items-center justify-between gap-2">
+            <span class="font-bold text-on-surface group-hover:text-primary transition truncate text-body-sm">${escapeHTML(l.company_name)}</span>
+            <span class="text-[10px] font-mono text-secondary font-semibold uppercase bg-secondary/15 border border-secondary/30 px-1.5 py-0.5 rounded shrink-0">${escapeHTML(l.delivery_method)}</span>
           </div>
-          <p class="text-[11px] font-mono text-slate-400 truncate">To: ${escapeHTML(l.recipient_email)}</p>
-          <div class="flex items-center justify-between text-[10px] text-slate-500 pt-0.5">
+          <p class="text-caption font-mono text-on-surface-variant truncate">To: ${escapeHTML(l.recipient_email)}</p>
+          <div class="flex items-center justify-between text-[11px] font-mono text-outline pt-0.5">
             <span>${escapeHTML(l.sent_at)}</span>
-            <span class="text-indigo-400 group-hover:text-indigo-300 font-medium flex items-center space-x-0.5">
+            <span class="text-primary group-hover:underline font-medium flex items-center space-x-0.5 text-caption">
               <span>View message</span>
               <i data-lucide="chevron-right" class="w-3 h-3"></i>
             </span>
@@ -3027,6 +4296,67 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
+  // --- Dark / Light Theme Mode Toggle (Sun / Moon icon only) ---
+  function updateThemeIcons(theme) {
+    const isLight = theme === "light";
+    const iconName = isLight ? "dark_mode" : "light_mode";
+    const titleText = isLight ? "Switch to Dark Mode" : "Switch to Light Mode";
+    const toggleIcon = document.getElementById("theme-toggle-icon");
+    if (toggleIcon) toggleIcon.textContent = iconName;
+    document.querySelectorAll(".theme-toggle-icon-mobile").forEach(el => {
+      el.textContent = iconName;
+    });
+    document.querySelectorAll("#btn-theme-toggle, #btn-theme-toggle-mobile").forEach(el => {
+      el.setAttribute("title", titleText);
+      el.setAttribute("aria-label", titleText);
+    });
+  }
+
+  function toggleThemeMode() {
+    const isCurrentlyLight = document.documentElement.classList.contains("light");
+    const newTheme = isCurrentlyLight ? "dark" : "light";
+    if (newTheme === "light") {
+      document.documentElement.classList.remove("dark");
+      document.documentElement.classList.add("light");
+    } else {
+      document.documentElement.classList.remove("light");
+      document.documentElement.classList.add("dark");
+    }
+    try {
+      localStorage.setItem("pilot_theme", newTheme);
+    } catch (_) {}
+    updateThemeIcons(newTheme);
+    refreshIcons();
+  }
+
+  document.querySelectorAll("#btn-theme-toggle, #btn-theme-toggle-mobile").forEach(btn => {
+    btn.addEventListener("click", toggleThemeMode);
+  });
+
+  // Sync initial theme icons based on current html class
+  const initialTheme = document.documentElement.classList.contains("light") ? "light" : "dark";
+  updateThemeIcons(initialTheme);
+
+  // Dynamic system theme listener (auto-switches if user has not set an explicit override in localStorage)
+  const systemPrefersDark = window.matchMedia("(prefers-color-scheme: dark)");
+  if (systemPrefersDark && systemPrefersDark.addEventListener) {
+    systemPrefersDark.addEventListener("change", (e) => {
+      const savedTheme = localStorage.getItem("pilot_theme");
+      if (!savedTheme) {
+        const autoTheme = e.matches ? "dark" : "light";
+        if (autoTheme === "light") {
+          document.documentElement.classList.remove("dark");
+          document.documentElement.classList.add("light");
+        } else {
+          document.documentElement.classList.remove("light");
+          document.documentElement.classList.add("dark");
+        }
+        updateThemeIcons(autoTheme);
+        refreshIcons();
+      }
+    });
+  }
+
   // Initial Data Load & Render Lucide Icons
   refreshIcons();
   checkAuthStatus();
@@ -3034,3 +4364,4 @@ document.addEventListener("DOMContentLoaded", () => {
   fetchCompanies();
   fetchAuditLogs();
 });
+
