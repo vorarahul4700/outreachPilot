@@ -1,5 +1,7 @@
 import asyncio
+import copy
 import io
+import json
 import os
 import secrets
 import time
@@ -11,18 +13,56 @@ from typing import Any
 
 import requests
 import uvicorn
-from fastapi import Depends, FastAPI, File, Form, HTTPException, Request, UploadFile, status
-from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
+from fastapi import (
+    Depends,
+    FastAPI,
+    File,
+    Form,
+    HTTPException,
+    Request,
+    UploadFile,
+    status,
+)
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from google_auth_oauthlib.flow import Flow
 from pydantic import BaseModel
 from pypdf import PdfReader
+from sqlalchemy import String, func, or_
 from sqlalchemy.orm import Session
+from starlette.exceptions import HTTPException as StarletteHTTPException
+
+# In-memory cached filter metadata (60s TTL)
+_filter_cache = {
+    "timestamp": 0.0,
+    "data": None
+}
+
+def invalidate_filter_cache():
+    global _filter_cache
+    _filter_cache["timestamp"] = 0.0
+    _filter_cache["data"] = None
+
 
 import config
-from ai_agent import generate_personalized_pitch, normalize_single_keyword, parse_resume_text
-from db import ColdPitch, Company, OutreachLog, ScoutJob, SessionLocal, User, get_db, init_db
+from ai_agent import (
+    generate_personalized_pitch,
+    normalize_single_keyword,
+    parse_resume_text,
+)
+from db import (
+    ColdPitch,
+    Company,
+    CompanyEmail,
+    CompanyProfile,
+    OutreachLog,
+    ScoutJob,
+    SessionLocal,
+    User,
+    get_db,
+    init_db,
+)
 from enricher import deep_enrich_company, is_recruitment_email
 from outreach import (
     dispatch_batch_outreach,
@@ -63,6 +103,140 @@ app = FastAPI(
 # Mount static and templates
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
+
+
+# --- Maintenance Mode Middleware ---
+@app.middleware("http")
+async def maintenance_mode_middleware(request: Request, call_next):
+    if config.is_maintenance_mode():
+        path = request.url.path
+        # Allowed routes: only landing page, maintenance page, static assets, and favicon
+        is_allowed = (
+            path in ("/", "/home", "/landing", "/maintenance", "/privacy", "/terms", "/favicon.ico")
+            or path.startswith("/static/")
+        )
+        if not is_allowed:
+            # Handle API endpoints and JSON requests
+            is_api = (
+                path.startswith("/api/")
+                or path.startswith("/auth/")
+                or "application/json" in request.headers.get("accept", "").lower()
+            )
+            if is_api:
+                return JSONResponse(
+                    status_code=503,
+                    content={
+                        "success": False,
+                        "maintenance": True,
+                        "error": "Service Unavailable",
+                        "message": "OutreachPilot is currently undergoing scheduled platform maintenance. Please check back shortly."
+                    }
+                )
+            # Browser routes (e.g. /app, /workspace, or others) redirect to /maintenance
+            return RedirectResponse(url="/maintenance", status_code=307)
+
+    response = await call_next(request)
+    return response
+
+
+# --- Global Exception Handlers for 4xx and 5xx Status Codes ---
+@app.exception_handler(StarletteHTTPException)
+async def custom_http_exception_handler(request: Request, exc: StarletteHTTPException):
+    is_api = (
+        request.url.path.startswith("/api/")
+        or request.url.path.startswith("/auth/")
+        or "application/json" in request.headers.get("accept", "").lower()
+    )
+    if is_api:
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={
+                "success": False,
+                "status_code": exc.status_code,
+                "error": exc.detail if isinstance(exc.detail, str) else "HTTP Error",
+                "detail": exc.detail,
+                "path": request.url.path,
+            },
+        )
+
+    status_code = exc.status_code
+    template_name = "404.html" if status_code == 404 else "error.html"
+    title = (
+        "Page Not Found"
+        if status_code == 404
+        else (
+            "Access Restricted"
+            if status_code == 403
+            else (
+                "Authentication Required"
+                if status_code == 401
+                else ("Rate Limit Exceeded" if status_code == 429 else f"HTTP {status_code} Error")
+            )
+        )
+    )
+    message = (
+        "The route you are trying to reach does not exist in OutreachPilot."
+        if status_code == 404
+        else (
+            "Master Admin authorization is required to access this area."
+            if status_code == 403
+            else (
+                "You must be authenticated to view this resource."
+                if status_code == 401
+                else (
+                    "Too many requests. Please pause a moment before trying again."
+                    if status_code == 429
+                    else str(exc.detail)
+                )
+            )
+        )
+    )
+    return templates.TemplateResponse(
+        request=request,
+        name=template_name,
+        context={
+            "project_name": config.PROJECT_NAME,
+            "status_code": status_code,
+            "title": title,
+            "message": message,
+            "path": request.url.path,
+        },
+        status_code=status_code,
+    )
+
+
+@app.exception_handler(Exception)
+async def custom_general_exception_handler(request: Request, exc: Exception):
+    print(f"[Internal Server Error] Uncaught exception on {request.method} {request.url.path}: {exc}")
+    is_api = (
+        request.url.path.startswith("/api/")
+        or request.url.path.startswith("/auth/")
+        or "application/json" in request.headers.get("accept", "").lower()
+    )
+    if is_api:
+        return JSONResponse(
+            status_code=500,
+            content={
+                "success": False,
+                "status_code": 500,
+                "error": "Internal Server Error",
+                "detail": "An unexpected error occurred while processing your request.",
+                "path": request.url.path,
+            },
+        )
+    return templates.TemplateResponse(
+        request=request,
+        name="error.html",
+        context={
+            "project_name": config.PROJECT_NAME,
+            "status_code": 500,
+            "title": "Internal Server Error",
+            "message": "Our telemetry detected an internal system issue while processing this request.",
+            "path": request.url.path,
+        },
+        status_code=500,
+    )
+
 
 # Global scraper state
 current_scraper: GoogleScraper | None = None
@@ -148,22 +322,61 @@ def get_current_user(db: Session, request: Request | None = None) -> User | None
     if not user:
         if not config.DEV_MODE:
             return None
-        is_admin = config.is_master_admin(email)
-        user = User(
-            email=email,
-            name="Master Admin (Rahul Vora)" if is_admin else "Pilot User",
-            target_role="Full-Stack Engineer",
-            daily_send_limit=100 if is_admin else 50
-        )
-        db.add(user)
-        db.commit()
-        db.refresh(user)
+        try:
+            is_admin = config.is_master_admin(email)
+            user = User(
+                email=email,
+                name="Master Admin" if is_admin else "Pilot User",
+                target_role="",
+                daily_send_limit=100 if is_admin else 50
+            )
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+        except Exception:
+            db.rollback()
+            user = db.query(User).filter(User.email == email).first()
     return user
+
+
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    return FileResponse("static/favicon.ico")
 
 
 # --- UI Routes ---
 @app.get("/", response_class=HTMLResponse)
-async def index_page(request: Request, db: Session = Depends(get_db)):
+@app.get("/home", response_class=HTMLResponse)
+async def landing_page(request: Request, db: Session = Depends(get_db)):
+    """Dedicated craft-first Landing Home Page for OutreachPilot"""
+    user = get_current_user(db, request)
+    is_logged_in = bool(user and user.oauth_tokens)
+    return templates.TemplateResponse(
+        request=request,
+        name="landing.html",
+        context={
+            "project_name": config.PROJECT_NAME,
+            "tagline": config.TAGLINE,
+            "app_descriptor": config.APP_DESCRIPTOR,
+            "user": user,
+            "is_logged_in": is_logged_in,
+            "google_client_id": config.GOOGLE_CLIENT_ID,
+            "dev_mode": config.DEV_MODE,
+        }
+    )
+
+
+@app.get("/landing")
+async def redirect_landing_to_home():
+    return RedirectResponse(url="/", status_code=301)
+
+
+@app.get("/app", response_class=HTMLResponse)
+@app.get("/workspace", response_class=HTMLResponse)
+async def workspace_page(request: Request, db: Session = Depends(get_db)):
+    """Original Scraping Logic & Outreach Workspace Directory"""
+    if config.is_maintenance_mode():
+        return RedirectResponse(url="/maintenance", status_code=307)
     user = get_current_user(db, request)
     is_logged_in = bool(user and user.oauth_tokens)
     is_master_admin = bool(is_logged_in and config.is_master_admin(user.email))
@@ -174,14 +387,28 @@ async def index_page(request: Request, db: Session = Depends(get_db)):
             "project_name": config.PROJECT_NAME,
             "tagline": config.TAGLINE,
             "app_descriptor": config.APP_DESCRIPTOR,
-            "user": user,
+            "user": user if is_logged_in else None,
             "is_logged_in": is_logged_in,
             "is_master_admin": is_master_admin,
-            "master_admin_emails": config.MASTER_ADMIN_EMAILS,
             "google_client_id": config.GOOGLE_CLIENT_ID,
             "dev_mode": config.DEV_MODE,
-            "dev_override_email": config.DEV_OVERRIDE_EMAIL
         }
+    )
+
+
+@app.get("/maintenance", response_class=HTMLResponse)
+async def maintenance_page(request: Request):
+    """Dedicated maintenance page displayed when maintenance mode is active"""
+    if not config.is_maintenance_mode():
+        return RedirectResponse(url="/app")
+    return templates.TemplateResponse(
+        request=request,
+        name="maintenance.html",
+        context={
+            "project_name": config.PROJECT_NAME,
+            "title": "Under Scheduled Maintenance",
+        },
+        status_code=503
     )
 
 
@@ -295,8 +522,17 @@ def run_scraper_sync(keyword: str, city: str, direct_url: str, max_pages: int, g
 async def start_scrape(req: ScrapeRequest, db: Session = Depends(get_db)):
     global active_task, current_scraper
 
-    clean_keyword = req.keyword.strip() if req.keyword else "IT Companies"
+    clean_keyword = req.keyword.strip() if req.keyword else ""
     clean_city = req.city.strip() if req.city else ""
+    clean_url = req.direct_url.strip() if req.direct_url else ""
+
+    if not clean_url:
+        if not clean_keyword:
+            return {"status": "error", "message": "Target Keyword / Industry is required."}
+        if not clean_city:
+            return {"status": "error", "message": "City / Location is required."}
+    else:
+        clean_keyword = clean_keyword or "Direct URL"
 
     # Register ScoutJob in Neon DB
     job = ScoutJob(
@@ -305,8 +541,8 @@ async def start_scrape(req: ScrapeRequest, db: Session = Depends(get_db)):
         max_pages=req.max_pages,
         status="QUEUED",
         progress=5,
-        status_message=f"Dispatching Cloud Scout & AI Worker for '{clean_keyword}' in '{clean_city}'...",
-        logs=[f"[{datetime.utcnow().strftime('%H:%M:%S')}] Job registered in Neon DB. Dispatching GitHub Actions Cloud Runner (7 GB RAM)..."],
+        status_message=f"Starting search for verified businesses: '{clean_keyword}' in '{clean_city}'...",
+        logs=[f"[{datetime.utcnow().strftime('%H:%M:%S')}] Search requested. Initializing cloud search engine..."],
         results=[]
     )
     db.add(job)
@@ -431,87 +667,447 @@ async def stop_scrape():
     return {"status": "idle", "message": "No active scrape job."}
 
 
-@app.get("/api/companies")
-async def get_companies(request: Request, db: Session = Depends(get_db)):
-    user = get_current_user(db, request)
-    is_admin = bool(user and user.oauth_tokens and config.is_master_admin(user.email))
+@app.get("/api/companies/filters")
+async def get_companies_filters(request: Request, db: Session = Depends(get_db)):
+    """Cached filter metadata (tech stacks, cities, and aggregate metric counts)"""
+    global _filter_cache
+    now = time.time()
+    try:
+        user = get_current_user(db, request)
+        is_admin = bool(user and config.is_master_admin(user.email))
 
-    base_query = (
-        db.query(Company)
-        .filter(~Company.domain.like("%.local"))
-        .filter(Company.domain.contains("."))
-    )
+        base_query = (
+            db.query(Company)
+            .filter(~Company.domain.like("%.local"))
+            .filter(Company.domain.contains("."))
+        )
 
-    invalid_count = base_query.filter(Company.is_invalid.is_(True)).count()
+        # Pitched / contacted count is strictly PER-USER and ONLY available when logged in
+        user_contacted_count = None
+        if user:
+            sent_subq = db.query(OutreachLog.company_id).filter(
+                OutreachLog.status == "SENT",
+                OutreachLog.user_id == user.id
+            ).distinct()
+            user_contacted_count = base_query.filter(Company.is_invalid.is_(False), Company.id.in_(sent_subq)).count()
 
-    # If NOT master admin, NEVER expose invalid companies to regular users
-    if not is_admin:
-        query = base_query.filter(Company.is_invalid.is_(False))
-    else:
-        # Master Admin receives all genuine companies with is_invalid flag
-        query = base_query
+        if _filter_cache.get("data") and (now - _filter_cache.get("timestamp", 0) < 60):
+            cached = copy.deepcopy(_filter_cache["data"])
+            cached["is_master_admin"] = is_admin
+            if "stats" in cached and isinstance(cached["stats"], dict):
+                cached["stats"]["contacted"] = user_contacted_count
+                cached["stats"]["is_logged_in"] = bool(user)
+            return cached
 
-    companies = query.order_by(Company.id.desc()).all()
-    if user and user.oauth_tokens:
-        sent_logs = {
-            log.company_id: log.sent_at
-            for log in db.query(OutreachLog)
-            .filter(OutreachLog.status == "SENT", OutreachLog.user_id == user.id)
-            .all()
+        total_valid = base_query.filter(Company.is_invalid.is_(False)).count()
+        invalid_count = base_query.filter(Company.is_invalid.is_(True)).count()
+        enriched_count = base_query.filter(Company.is_invalid.is_(False), Company.is_enriched.is_(True)).count()
+
+        emails_subq = db.query(CompanyEmail.company_id).distinct()
+        with_emails_count = base_query.filter(Company.is_invalid.is_(False), Company.id.in_(emails_subq)).count()
+
+        # Cities aggregation
+        cities_map = defaultdict(int)
+        for (c_city,) in db.query(Company.city).filter(Company.is_invalid.is_(False), Company.city.isnot(None), Company.city != "").all():
+            if c_city:
+                clean = c_city.strip()
+                if clean:
+                    norm = clean.title()
+                    cities_map[norm] += 1
+
+        sorted_cities = [
+            {"name": city_name, "count": count}
+            for city_name, count in sorted(cities_map.items(), key=lambda x: x[0])
+        ]
+
+        # Tech stack aggregation
+        tech_map = defaultdict(int)
+        for (stack,) in db.query(CompanyProfile.tech_stack).filter(CompanyProfile.tech_stack.isnot(None)).all():
+            items = []
+            if isinstance(stack, list):
+                items = stack
+            elif isinstance(stack, str):
+                try:
+                    parsed = json.loads(stack)
+                    if isinstance(parsed, list):
+                        items = parsed
+                    else:
+                        items = [s.strip() for s in stack.split(",") if s.strip()]
+                except Exception:
+                    items = [s.strip() for s in stack.split(",") if s.strip()]
+            for t in items:
+                if t and isinstance(t, str):
+                    clean = t.strip()
+                    if clean:
+                        key = clean.lower()
+                        if key == ".net" or key.startswith(".net "):
+                            display = ".NET" + clean[4:]
+                        elif key in ["aws", "php", "html", "css", "sql", "api", "seo", "crm", "erp"]:
+                            display = clean.upper()
+                        elif key == "javascript":
+                            display = "JavaScript"
+                        elif key == "typescript":
+                            display = "TypeScript"
+                        else:
+                            display = clean.title() if len(clean) > 3 else clean.upper()
+                        tech_map[display] += 1
+
+        sorted_tech = [
+            {"name": tech_name, "count": count}
+            for tech_name, count in sorted(tech_map.items(), key=lambda x: x[0].lower())
+        ]
+
+        result = {
+            "cities": sorted_cities,
+            "tech_stacks": sorted_tech,
+            "stats": {
+                "total": total_valid,
+                "enriched": enriched_count,
+                "emails": with_emails_count,
+                "invalid": invalid_count,
+                "contacted": user_contacted_count,
+                "is_logged_in": bool(user)
+            },
+            "is_master_admin": is_admin
         }
-    else:
+
+        _filter_cache["timestamp"] = now
+        _filter_cache["data"] = result
+        return result
+    except Exception as e:
+        print(f"[API Error] /api/companies/filters failed: {e}")
+        try:
+            db.rollback()
+        except Exception:
+            pass
+        if _filter_cache.get("data"):
+            fallback = copy.deepcopy(_filter_cache["data"])
+            fallback["error"] = str(e)
+            return fallback
+        return {
+            "cities": [],
+            "tech_stacks": [],
+            "stats": {
+                "total": 0,
+                "enriched": 0,
+                "emails": 0,
+                "invalid": 0,
+                "contacted": None,
+                "is_logged_in": False
+            },
+            "is_master_admin": False,
+            "error": str(e)
+        }
+
+
+@app.get("/api/companies")
+async def get_companies(
+    request: Request,
+    page: int = 1,
+    page_size: int = 15,
+    search: str = "",
+    tech: str = "",
+    city: str = "",
+    status: str = "all",
+    sort: str = "newest",
+    db: Session = Depends(get_db)
+):
+    """
+    Lightweight, high-performance paginated companies endpoint.
+    Excludes massive markdown dossiers (detailed_analysis) from batch loads.
+    Full intel is queried on-demand via GET /api/companies/{id}.
+    """
+    try:
+        user = get_current_user(db, request)
+        is_admin = bool(user and config.is_master_admin(user.email))
+
+        base_query = (
+            db.query(Company)
+            .filter(~Company.domain.like("%.local"))
+            .filter(Company.domain.contains("."))
+        )
+
+        invalid_count = base_query.filter(Company.is_invalid.is_(True)).count()
+
+        # 1. Base genuine vs excluded filtering
+        if status == "invalid":
+            if not is_admin:
+                return {
+                    "companies": [],
+                    "total_count": 0,
+                    "total_pages": 0,
+                    "current_page": page,
+                    "page_size": page_size,
+                    "invalid_count": 0,
+                    "is_master_admin": False,
+                    "dev_mode": config.DEV_MODE
+                }
+            query = base_query.filter(Company.is_invalid.is_(True))
+        else:
+            if not is_admin:
+                query = base_query.filter(Company.is_invalid.is_(False))
+            else:
+                query = base_query
+
+        # 2. Metric / Status filter
+        if status == "enriched":
+            query = query.filter(Company.is_enriched.is_(True))
+        elif status == "emails":
+            emails_sub = db.query(CompanyEmail.company_id).distinct().subquery()
+            query = query.filter(Company.id.in_(emails_sub))
+        elif status == "contacted":
+            if user:
+                sent_sub = db.query(OutreachLog.company_id).filter(
+                    OutreachLog.status == "SENT",
+                    OutreachLog.user_id == user.id
+                ).distinct().subquery()
+                query = query.filter(Company.id.in_(sent_sub))
+            else:
+                query = query.filter(Company.id == -1)
+        elif status == "uncontacted":
+            if user:
+                sent_sub = db.query(OutreachLog.company_id).filter(
+                    OutreachLog.status == "SENT",
+                    OutreachLog.user_id == user.id
+                ).distinct().subquery()
+                query = query.filter(~Company.id.in_(sent_sub))
+
+        # 3. Search query filter
+        if search and search.strip():
+            s = f"%{search.strip().lower()}%"
+            query = query.filter(
+                (Company.name.ilike(s)) |
+                (Company.domain.ilike(s)) |
+                (Company.city.ilike(s)) |
+                (Company.address.ilike(s)) |
+                (Company.source_query.ilike(s)) |
+                (Company.normalized_keyword.ilike(s))
+            )
+
+        # 4. City filter (multi-select supported via comma-separated string or multiple query params)
+        raw_cities = request.query_params.getlist("city")
+        city_terms = []
+        for c_val in raw_cities:
+            city_terms.extend([x.strip().lower() for x in c_val.split(",") if x.strip()])
+        if not city_terms and city and city.strip():
+            city_terms = [x.strip().lower() for x in city.split(",") if x.strip()]
+
+        if city_terms:
+            city_conds = []
+            for c_term in city_terms:
+                c_pat = f"%{c_term}%"
+                city_conds.append(Company.city.ilike(c_pat))
+                city_conds.append(Company.address.ilike(c_pat))
+            query = query.filter(or_(*city_conds))
+
+        # 5. Tech stack filter (multi-select supported via comma-separated string or multiple query params)
+        raw_techs = request.query_params.getlist("tech") or request.query_params.getlist("tech_stack")
+        tech_terms = []
+        for t_val in raw_techs:
+            tech_terms.extend([x.strip().lower() for x in t_val.split(",") if x.strip()])
+        if not tech_terms and tech and tech.strip():
+            tech_terms = [x.strip().lower() for x in tech.split(",") if x.strip()]
+
+        if tech_terms:
+            tech_conds = [
+                CompanyProfile.tech_stack.cast(String).ilike(f"%{t_term}%")
+                for t_term in tech_terms
+            ]
+            query = query.join(CompanyProfile, Company.id == CompanyProfile.company_id).filter(
+                or_(*tech_conds)
+            ).distinct()
+
+        # 6. Sorting
+        if sort == "rating_desc":
+            query = query.order_by(Company.rating.desc().nullslast(), Company.reviews_count.desc(), Company.id.desc())
+        elif sort == "reviews_desc":
+            query = query.order_by(Company.reviews_count.desc(), Company.rating.desc().nullslast(), Company.id.desc())
+        elif sort == "name_asc":
+            query = query.order_by(Company.name.asc())
+        else:
+            query = query.order_by(Company.id.desc())
+
+        total_count = query.count()
+
+        # 7. Server-side pagination strictly enforcing defined list: [15, 30, 45, 75, 150]
+        ALLOWED_PAGE_SIZES = {15, 30, 45, 75, 150}
+        if page_size not in ALLOWED_PAGE_SIZES:
+            page_size = 15
+
+        if page_size > 0:
+            total_pages = max(1, (total_count + page_size - 1) // page_size) if total_count > 0 else 1
+            cur_page = max(1, min(page, total_pages)) if total_count > 0 else 1
+            companies = query.offset((cur_page - 1) * page_size).limit(page_size).all()
+        else:
+            total_pages = 1
+            cur_page = 1
+            companies = query.all()
+
+        company_ids = [c.id for c in companies]
+
+        # Batch load emails for page items only
+        emails_by_company = defaultdict(list)
+        if company_ids:
+            for cid, em in db.query(CompanyEmail.company_id, CompanyEmail.email_address).filter(CompanyEmail.company_id.in_(company_ids)).all():
+                emails_by_company[cid].append(em)
+
+        # Batch load lightweight profile card info (omits heavy detailed_analysis!)
+        profiles_by_company = {}
+        if company_ids:
+            for prof in db.query(
+                CompanyProfile.company_id,
+                CompanyProfile.summary_short,
+                CompanyProfile.industry,
+                CompanyProfile.tech_stack
+            ).filter(CompanyProfile.company_id.in_(company_ids)).all():
+                profiles_by_company[prof[0]] = {
+                    "summary": prof[1] or "",
+                    "industry": prof[2] or "",
+                    "tech_stack": prof[3] or []
+                }
+
         sent_logs = {}
+        if user and company_ids:
+            sent_logs = {
+                log.company_id: log.sent_at
+                for log in db.query(OutreachLog)
+                .filter(OutreachLog.status == "SENT", OutreachLog.user_id == user.id, OutreachLog.company_id.in_(company_ids))
+                .all()
+            }
 
-    out = []
-    for c in companies:
-        emails = [e.email_address for e in c.emails]
-        profile = {
-            "summary": c.profile.summary_short if c.profile else "",
-            "detailed_analysis": c.profile.detailed_analysis if c.profile else "",
-            "industry": c.profile.industry if c.profile else "",
-            "tech_stack": c.profile.tech_stack if c.profile else [],
-            "services": c.profile.services if c.profile else [],
-            "tone": c.profile.tone if c.profile else "Professional"
-        } if c.profile else None
+        out = []
+        for c in companies:
+            emails = emails_by_company.get(c.id, [])
+            profile = profiles_by_company.get(c.id)
+            sent_time = sent_logs.get(c.id)
+            maps_query = f"{c.name} {c.address or c.source_query or ''}".strip()
+            maps_url = c.location_url or f"https://www.google.com/maps/search/?api=1&query={urllib.parse.quote_plus(maps_query)}"
 
-        sent_time = sent_logs.get(c.id)
+            out.append({
+                "id": c.id,
+                "name": c.name,
+                "domain": c.domain,
+                "website_url": c.website_url,
+                "location_url": maps_url,
+                "phone": c.phone,
+                "address": c.address or "",
+                "source_query": c.source_query or "General Leads",
+                "search_keyword": c.search_keyword or c.source_query or "General Leads",
+                "city": c.city or "",
+                "normalized_keyword": c.normalized_keyword or c.search_keyword or "General Leads",
+                "rating": c.rating,
+                "reviews_count": c.reviews_count,
+                "is_enriched": c.is_enriched,
+                "is_invalid": bool(c.is_invalid),
+                "invalid_reason": c.invalid_reason or "",
+                "invalid_at": c.invalid_at.strftime("%b %d, %Y %I:%M %p") if c.invalid_at else None,
+                "emails": emails,
+                "profile": profile,
+                "already_contacted": bool(sent_time),
+                "contacted_at": sent_time.strftime("%b %d, %Y %I:%M %p") if sent_time else None
+            })
 
-        maps_query = f"{c.name} {c.address or c.source_query or ''}".strip()
-        maps_url = c.location_url or f"https://www.google.com/maps/search/?api=1&query={urllib.parse.quote_plus(maps_query)}"
+        return {
+            "companies": out,
+            "total_count": total_count,
+            "total_pages": total_pages,
+            "current_page": cur_page,
+            "page_size": page_size,
+            "invalid_count": invalid_count if is_admin else 0,
+            "is_master_admin": is_admin,
+            "dev_mode": config.DEV_MODE
+        }
+    except Exception as e:
+        print(f"[API Error] /api/companies failed: {e}")
+        try:
+            db.rollback()
+        except Exception:
+            pass
+        return {
+            "companies": [],
+            "total_count": 0,
+            "total_pages": 0,
+            "current_page": 1,
+            "page_size": page_size,
+            "invalid_count": 0,
+            "is_master_admin": False,
+            "dev_mode": config.DEV_MODE
+        }
 
-        out.append({
-            "id": c.id,
-            "name": c.name,
-            "domain": c.domain,
-            "website_url": c.website_url,
-            "location_url": maps_url,
-            "phone": c.phone,
-            "address": c.address or "",
-            "source_query": c.source_query or "General Leads",
-            "search_keyword": c.search_keyword or c.source_query or "General Leads",
-            "city": c.city or "",
-            "normalized_keyword": c.normalized_keyword or c.search_keyword or "General Leads",
-            "rating": c.rating,
-            "reviews_count": c.reviews_count,
-            "is_enriched": c.is_enriched,
-            "is_invalid": bool(c.is_invalid),
-            "invalid_reason": c.invalid_reason or "",
-            "invalid_at": c.invalid_at.strftime("%b %d, %Y %I:%M %p") if c.invalid_at else None,
-            "emails": emails,
-            "profile": profile,
-            "already_contacted": bool(sent_time),
-            "contacted_at": sent_time.strftime("%b %d, %Y %I:%M %p") if sent_time else None
-        })
 
-    canonical_keywords = sorted(list(set(c.normalized_keyword for c in companies if c.normalized_keyword and c.normalized_keyword.strip())))
-    cities = sorted(list(set(c.city for c in companies if c.city and c.city.strip())))
+@app.get("/api/companies/{company_id}")
+async def get_company_detail(company_id: int, request: Request, db: Session = Depends(get_db)):
+    """On-demand deep intelligence dossier and verified records for a single company modal"""
+    user = get_current_user(db, request)
+    is_admin = bool(user and config.is_master_admin(user.email))
+
+    query = db.query(Company).filter(Company.id == company_id)
+    if not is_admin:
+        query = query.filter(Company.is_invalid.is_(False))
+    company = query.first()
+    if not company:
+        raise HTTPException(status_code=404, detail="Company not found or access denied.")
+
+    emails = [em.email_address for em in db.query(CompanyEmail).filter(CompanyEmail.company_id == company.id).all()]
+    profile_record = db.query(CompanyProfile).filter(CompanyProfile.company_id == company.id).first()
+
+    profile_data = None
+    if profile_record:
+        profile_data = {
+            "summary": profile_record.summary_short or "",
+            "detailed_analysis": profile_record.detailed_analysis or "",
+            "industry": profile_record.industry or "",
+            "tech_stack": profile_record.tech_stack or [],
+            "services": profile_record.services or [],
+            "tone": profile_record.tone or "Professional",
+            "analyzed_at": profile_record.analyzed_at.strftime("%b %d, %Y %I:%M %p") if profile_record.analyzed_at else None
+        }
+
+    sent_log = None
+    if user:
+        sent_log = db.query(OutreachLog).filter(
+            OutreachLog.company_id == company.id,
+            OutreachLog.status == "SENT",
+            OutreachLog.user_id == user.id
+        ).order_by(OutreachLog.sent_at.desc()).first()
+
+    maps_query = f"{company.name} {company.address or company.source_query or ''}".strip()
+    maps_url = company.location_url or f"https://www.google.com/maps/search/?api=1&query={urllib.parse.quote_plus(maps_query)}"
+
+    pitch_data = None
+    if user:
+        latest_pitch = db.query(ColdPitch).filter(
+            ColdPitch.company_id == company.id,
+            ColdPitch.user_id == user.id
+        ).order_by(ColdPitch.created_at.desc()).first()
+        if latest_pitch:
+            pitch_data = {
+                "id": latest_pitch.id,
+                "subject": latest_pitch.subject,
+                "body": latest_pitch.pitch_body,
+                "created_at": latest_pitch.created_at.strftime("%b %d, %Y %I:%M %p") if latest_pitch.created_at else None
+            }
+
     return {
-        "companies": out,
-        "total_count": len(out),
-        "invalid_count": invalid_count if is_admin else 0,
-        "is_master_admin": is_admin,
-        "available_keywords": canonical_keywords,
-        "available_cities": cities
+        "id": company.id,
+        "name": company.name,
+        "domain": company.domain,
+        "website_url": company.website_url,
+        "location_url": maps_url,
+        "phone": company.phone,
+        "address": company.address or "",
+        "city": company.city or "",
+        "rating": company.rating,
+        "reviews_count": company.reviews_count,
+        "is_enriched": company.is_enriched,
+        "is_invalid": bool(company.is_invalid),
+        "invalid_reason": company.invalid_reason or "",
+        "invalid_at": company.invalid_at.strftime("%b %d, %Y %I:%M %p") if company.invalid_at else None,
+        "emails": emails,
+        "profile": profile_data,
+        "pitch": pitch_data,
+        "already_contacted": bool(sent_log),
+        "contacted_at": sent_log.sent_at.strftime("%b %d, %Y %I:%M %p") if sent_log else None
     }
 
 
@@ -527,7 +1123,6 @@ async def auth_status(request: Request, db: Session = Depends(get_db)):
         "name": user.name if is_logged_in else None,
         "picture": user.picture if is_logged_in else None,
         "is_master_admin": is_master,
-        "master_admin_emails": config.MASTER_ADMIN_EMAILS,
         "dev_mode": config.DEV_MODE
     }
 
@@ -544,12 +1139,11 @@ async def demo_login(
             detail="Demo sandbox login is strictly disabled in production mode."
         )
 
-    is_admin_req = payload.as_admin if payload else False
     req_email = (payload.email.strip().lower() if payload and payload.email else None)
 
-    if is_admin_req or (req_email and config.is_master_admin(req_email)):
-        target_email = req_email if (req_email and config.is_master_admin(req_email)) else "vorarahul111@gmail.com"
-        name = "Master Admin (Rahul Vora)"
+    if req_email and config.is_master_admin(req_email):
+        target_email = req_email
+        name = "Master Admin"
     elif req_email:
         target_email = req_email
         name = "Verified User"
@@ -563,7 +1157,7 @@ async def demo_login(
         user = User(
             email=target_email,
             name=name,
-            target_role="Full-Stack Engineer",
+            target_role="",
             daily_send_limit=100 if is_admin else 50
         )
         db.add(user)
@@ -586,17 +1180,21 @@ async def demo_login(
         "is_master_admin": config.is_master_admin(user.email)
     })
     signed_cookie = config.sign_user_email(user.email)
-    resp.set_cookie(key="pilot_user_email", value=signed_cookie, path="/", httponly=True, samesite="lax", max_age=86400 * 30)
+    resp.set_cookie(key="pilot_user_email", value=signed_cookie, path="/", httponly=True, samesite="lax", max_age=config.SESSION_COOKIE_MAX_AGE)
     return resp
 
 
+@app.get("/auth/logout")
 @app.post("/auth/logout")
 async def logout(request: Request, db: Session = Depends(get_db)):
     user = get_current_user(db, request)
     if user:
         user.oauth_tokens = None
         db.commit()
-    resp = JSONResponse(content={"success": True, "is_logged_in": False})
+    if request.method == "GET":
+        resp = RedirectResponse(url="/", status_code=303)
+    else:
+        resp = JSONResponse(content={"success": True, "is_logged_in": False})
     resp.delete_cookie(key="pilot_user_email", path="/")
     return resp
 
@@ -609,10 +1207,11 @@ async def invalidate_company(
     db: Session = Depends(get_db)
 ):
     user = get_current_user(db, request)
-    if not (user and config.is_master_admin(user.email)):
+    is_authorized = bool(user and config.is_master_admin(user.email))
+    if not is_authorized:
         raise HTTPException(
             status_code=403,
-            detail="Forbidden: Only Master Admin can invalidate/delete companies."
+            detail="Forbidden: Master Admin privileges required to exclude companies."
         )
 
     company = db.query(Company).filter(Company.id == company_id).first()
@@ -621,8 +1220,9 @@ async def invalidate_company(
 
     company.is_invalid = True
     company.invalid_at = datetime.utcnow()
-    company.invalid_reason = (req_body.reason if req_body and req_body.reason else "Excluded by Master Admin")
+    company.invalid_reason = (req_body.reason if req_body and req_body.reason else "Excluded by Admin")
     db.commit()
+    invalidate_filter_cache()
 
     return {
         "success": True,
@@ -639,10 +1239,11 @@ async def restore_company(
     db: Session = Depends(get_db)
 ):
     user = get_current_user(db, request)
-    if not (user and config.is_master_admin(user.email)):
+    is_authorized = bool(user and config.is_master_admin(user.email))
+    if not is_authorized:
         raise HTTPException(
             status_code=403,
-            detail="Forbidden: Only Master Admin can restore companies."
+            detail="Forbidden: Master Admin privileges required to restore companies."
         )
 
     company = db.query(Company).filter(Company.id == company_id).first()
@@ -653,6 +1254,7 @@ async def restore_company(
     company.invalid_at = None
     company.invalid_reason = None
     db.commit()
+    invalidate_filter_cache()
 
     return {
         "success": True,
@@ -669,17 +1271,18 @@ async def bulk_invalidate_companies(
     db: Session = Depends(get_db)
 ):
     user = get_current_user(db, request)
-    if not (user and config.is_master_admin(user.email)):
+    is_authorized = bool(user and config.is_master_admin(user.email))
+    if not is_authorized:
         raise HTTPException(
             status_code=403,
-            detail="Forbidden: Only Master Admin can invalidate/delete companies."
+            detail="Forbidden: Master Admin privileges required to exclude companies."
         )
 
     if not req_body.company_ids:
         return {"success": True, "count": 0, "message": "No companies selected."}
 
     now = datetime.utcnow()
-    reason = req_body.reason or "Excluded by Master Admin"
+    reason = req_body.reason or "Excluded by Admin"
 
     updated = (
         db.query(Company)
@@ -694,6 +1297,7 @@ async def bulk_invalidate_companies(
         )
     )
     db.commit()
+    invalidate_filter_cache()
 
     return {
         "success": True,
@@ -709,10 +1313,11 @@ async def bulk_restore_companies(
     db: Session = Depends(get_db)
 ):
     user = get_current_user(db, request)
-    if not (user and config.is_master_admin(user.email)):
+    is_authorized = bool(user and config.is_master_admin(user.email))
+    if not is_authorized:
         raise HTTPException(
             status_code=403,
-            detail="Forbidden: Only Master Admin can restore companies."
+            detail="Forbidden: Master Admin privileges required to restore companies."
         )
 
     if not req_body.company_ids:
@@ -731,6 +1336,7 @@ async def bulk_restore_companies(
         )
     )
     db.commit()
+    invalidate_filter_cache()
 
     return {
         "success": True,
@@ -758,6 +1364,7 @@ async def enrich_single_company(
     enforce_rate_limit(f"enrich_single_{client_id}", max_calls=20, window_seconds=60)
 
     result = await deep_enrich_company(company_id=company_id, db=db, force_refresh=force_refresh)
+    invalidate_filter_cache()
     return result
 
 
@@ -831,9 +1438,25 @@ async def upload_resume(
     client_id = f"{user.id}_{request.client.host if request and request.client else 'unknown'}"
     enforce_rate_limit(f"resume_upload_{client_id}", max_calls=15, window_seconds=60)
 
+    target_role_clean = (target_role or "").strip()
+    resume_link_clean = (resume_link or "").strip()
+    has_file = bool(file and file.filename)
+
+    if not target_role_clean:
+        raise HTTPException(
+            status_code=400,
+            detail="Target Job Role is required before analyzing your resume."
+        )
+
+    if not has_file and not resume_link_clean and not (user.resume_summary and user.resume_summary.get("elevator_pitch")):
+        raise HTTPException(
+            status_code=400,
+            detail="Please select a resume file (PDF or TXT) or enter a portfolio link."
+        )
+
     # Save portfolio/resume link if provided
     if resume_link is not None:
-        user.resume_link = resume_link.strip()
+        user.resume_link = resume_link_clean
 
     parsed_profile = user.resume_summary or {}
 
@@ -925,7 +1548,7 @@ async def generate_single_pitch(
     enforce_rate_limit(f"pitch_gen_{client_id}", max_calls=30, window_seconds=60)
     cand_profile = req.candidate_profile or user.resume_summary or {
         "full_name": user.name or "Candidate",
-        "target_role": req.target_role or user.target_role or "Software Engineer",
+        "target_role": req.target_role or user.target_role or "",
         "top_skills": ["Python", "FastAPI", "React", "PostgreSQL"],
         "key_achievements": ["Built scalable web services and automated data workflows"]
     }
@@ -963,8 +1586,8 @@ async def generate_single_pitch(
 
     subj = (pitch_data.get("subject_line") or "").strip()
     body = (pitch_data.get("email_body") or "").strip()
-    c_name = cand_profile.get("full_name") or "Rahul Vora"
-    t_role = cand_profile.get("target_role") or "Backend Developer"
+    c_name = cand_profile.get("full_name") or (user.name if user and user.name else "Candidate")
+    t_role = cand_profile.get("target_role") or (user.target_role if user and user.target_role else "Professional")
     if not subj:
         subj = f"{t_role} inquiry - {c_name}"
     if not body:
@@ -1379,7 +2002,7 @@ async def google_callback(code: str, request: Request, db: Session = Depends(get
             user = User(
                 email=user_email_clean,
                 name="Master Admin (Rahul Vora)" if is_admin else "Pilot User",
-                target_role="Full-Stack Engineer",
+                target_role="",
                 daily_send_limit=100 if is_admin else 50
             )
             db.add(user)
@@ -1405,7 +2028,7 @@ async def google_callback(code: str, request: Request, db: Session = Depends(get
         })
         db.commit()
 
-        response = RedirectResponse(url="/?auth_success=1")
+        response = RedirectResponse(url="/app?auth_success=1")
         signed_cookie = config.sign_user_email(user.email)
         response.set_cookie(
             key="pilot_user_email",
@@ -1413,7 +2036,7 @@ async def google_callback(code: str, request: Request, db: Session = Depends(get
             path="/",
             httponly=True,
             samesite="lax",
-            max_age=86400 * 30
+            max_age=config.SESSION_COOKIE_MAX_AGE
         )
         response.delete_cookie(key="oauth_state", path="/")
         return response
