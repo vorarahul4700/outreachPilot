@@ -1575,8 +1575,8 @@ async def generate_single_pitch(
                     break
             if not target_email:
                 target_email = company.emails[0].email_address
-    if not target_email:
-        target_email = f"contact@{company.domain}"
+    # Strict anti-hallucination: Never synthesize fake or blind contact@domain fallback emails.
+    # If no discovered or verified email exists, keep target_email as None.
 
     pitch_data = generate_personalized_pitch(
         candidate_profile=cand_profile,
@@ -1623,12 +1623,12 @@ async def generate_single_pitch(
         db.refresh(pitch_obj)
 
     gmail_web_url = generate_gmail_web_link(
-        to_email=target_email,
+        to_email=target_email or "",
         subject=pitch_obj.subject_line,
         body=pitch_obj.email_body
     )
     mailto_url = generate_mailto_link(
-        to_email=target_email,
+        to_email=target_email or "",
         subject=pitch_obj.subject_line,
         body=pitch_obj.email_body
     )
@@ -1692,7 +1692,12 @@ async def send_single_pitch_direct(
         except Exception:
             pass
 
-    target = pitch.target_email or f"contact@{pitch.company.domain if pitch.company else 'example.com'}"
+    target = (pitch.target_email or "").strip()
+    if not target:
+        return {
+            "success": False,
+            "error": "No verified recipient email found for this lead. Enrich company data to discover verified contacts before sending."
+        }
     effective_subject = custom_subject.strip() if custom_subject and custom_subject.strip() else pitch.subject_line
     effective_body = custom_body.strip() if custom_body and custom_body.strip() else pitch.email_body
 

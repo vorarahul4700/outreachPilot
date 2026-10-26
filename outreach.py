@@ -208,7 +208,24 @@ async def dispatch_batch_outreach(
 
     for idx, pitch_id in enumerate(pitch_ids):
         pitch = db.query(ColdPitch).filter(ColdPitch.id == pitch_id).first()
-        if not pitch or not pitch.target_email:
+        if not pitch:
+            failed_count += 1
+            results.append({
+                "pitch_id": pitch_id,
+                "email": None,
+                "status": "FAILED",
+                "error": "Pitch record not found"
+            })
+            continue
+
+        if not pitch.target_email:
+            failed_count += 1
+            results.append({
+                "pitch_id": pitch_id,
+                "email": None,
+                "status": "FAILED",
+                "error": "No verified recipient email found for this lead"
+            })
             continue
 
         # IDOR Protection: verify user ownership unless Master Admin
