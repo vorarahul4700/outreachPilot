@@ -241,33 +241,36 @@ h1, h2, h3, h4, .font-headline {
 /* ============================================================
    TACTILE MECHANICAL BUTTONS (Teenage Engineering Hardware)
    ============================================================ */
+/* Default / Dark Mode: Tactile Amber Gold Hardware Accent */
 .btn-tactile-ecru,
 .btn-primary {
-  background-color: var(--accent) !important;
-  color: var(--accent-dark) !important;
+  background-color: #F59E0B !important;
+  color: #090A0D !important;
   font-family: var(--font-headline);
   font-weight: 600 !important;
   border-radius: var(--radius-sm) !important;
-  border: 1px solid transparent !important;
-  box-shadow: var(--shadow-key) !important;
+  border: 1px solid rgba(245, 158, 11, 0.45) !important;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.22) !important;
   transition: all var(--dur-fast) ease !important;
   cursor: pointer;
 }
 
 .btn-tactile-ecru *,
 .btn-primary * {
-  color: inherit;
+  color: #090A0D !important;
 }
 
 .btn-tactile-ecru:hover,
 .btn-primary:hover {
-  background-color: var(--accent-hover) !important;
-  color: var(--accent-dark) !important;
+  background-color: #FBBF24 !important;
+  color: #090A0D !important;
+  border-color: #FBBF24 !important;
+  box-shadow: 0 4px 16px rgba(251, 191, 36, 0.35) !important;
 }
 
 .btn-tactile-ecru:hover *,
 .btn-primary:hover * {
-  color: var(--accent-dark) !important;
+  color: #090A0D !important;
 }
 
 .btn-tactile-ecru:active,
@@ -276,28 +279,48 @@ h1, h2, h3, h4, .font-headline {
   box-shadow: 0 0 0 transparent !important;
 }
 
-/* Light Mode: Tactile Ecru Button stays warm ecru with dark text, NEVER black */
+/* Light Mode: Tactile Ecru / Primary Button retains signature high-contrast amber gold */
 html.light .btn-tactile-ecru,
 body.light .btn-tactile-ecru,
-.light .btn-tactile-ecru {
-  background-color: #EDEAE2 !important;
-  color: #14161A !important;
-  border-color: #D4D0C7 !important;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06) !important;
+.light .btn-tactile-ecru,
+html.light .btn-primary,
+body.light .btn-primary,
+.light .btn-primary {
+  background-color: #F59E0B !important;
+  color: #090A0D !important;
+  border-color: #D97706 !important;
+  box-shadow: 0 1px 3px rgba(217, 119, 6, 0.25), 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+  font-weight: 600 !important;
 }
 
 html.light .btn-tactile-ecru:hover,
 body.light .btn-tactile-ecru:hover,
-.light .btn-tactile-ecru:hover {
-  background-color: #E2DDD3 !important;
-  color: #14161A !important;
-  border-color: #BDB8AD !important;
+.light .btn-tactile-ecru:hover,
+html.light .btn-primary:hover,
+body.light .btn-primary:hover,
+.light .btn-primary:hover {
+  background-color: #D97706 !important;
+  color: #FFFFFF !important;
+  border-color: #B45309 !important;
+  box-shadow: 0 3px 8px rgba(217, 119, 6, 0.35) !important;
 }
 
 html.light .btn-tactile-ecru *,
 body.light .btn-tactile-ecru *,
-.light .btn-tactile-ecru * {
-  color: #14161A !important;
+.light .btn-tactile-ecru *,
+html.light .btn-primary *,
+body.light .btn-primary *,
+.light .btn-primary * {
+  color: #090A0D !important;
+}
+
+html.light .btn-tactile-ecru:hover *,
+body.light .btn-tactile-ecru:hover *,
+.light .btn-tactile-ecru:hover *,
+html.light .btn-primary:hover *,
+body.light .btn-primary:hover *,
+.light .btn-primary:hover * {
+  color: #FFFFFF !important;
 }
 
 .btn-tactile-slate,
@@ -485,8 +508,8 @@ body.light .btn-card-pitch:hover *,
    SIDEBAR — Collapsible Left Navigation (Artisanal Loom Style)
    ============================================================ */
 #app-sidebar {
-  background: #111317;
-  border-right: 1px solid var(--border-muted);
+  background-color: rgb(var(--color-surface-container-low)) !important;
+  border-right: 1px solid rgb(var(--color-outline-variant) / 0.4) !important;
   transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1),
               transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -546,11 +569,15 @@ body.light .btn-card-pitch:hover *,
     z-index: 50 !important;
     width: 17rem !important;
     transform: translateX(-100%);
-    box-shadow: 4px 0 40px rgba(0,0,0,0.85);
+    box-shadow: none !important;
+    visibility: hidden;
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), visibility 0.25s ease;
   }
 
   #app-sidebar.mobile-open {
+    visibility: visible !important;
     transform: translateX(0) !important;
+    box-shadow: 4px 0 40px rgba(0,0,0,0.85) !important;
   }
 
   #main-content-wrap {
@@ -558,6 +585,14 @@ body.light .btn-card-pitch:hover *,
     width: 100% !important;
     max-width: 100% !important;
   }
+}
+
+#mobile-sidebar-overlay {
+  display: none;
+}
+
+#mobile-sidebar-overlay.active {
+  display: block !important;
 }
 
 /* Tablet Layout (768px - 1023px) */
@@ -836,10 +871,6 @@ body.light .btn-card-pitch:hover *,
    FLOATING BULK SELECTION ACTION DOCK
    ============================================================ */
 #bulk-action-bar {
-  background: rgba(22, 24, 29, 0.95);
-  backdrop-filter: blur(12px);
-  border: 1px solid var(--border-default);
-  box-shadow: 0 16px 48px rgba(0,0,0,0.7), 0 0 0 1px var(--border-subtle);
   border-radius: var(--radius-lg);
 }
 

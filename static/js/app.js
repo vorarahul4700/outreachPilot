@@ -69,9 +69,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     let html = escapeHTML(text);
     html = html.replace(/^### (.*$)/gim, '<h4 class="text-primary font-bold text-xs mt-3 mb-1 uppercase tracking-wider">$1</h4>');
-    html = html.replace(/^## (.*$)/gim, '<h3 class="text-white font-bold text-sm mt-3 mb-1.5">$1</h3>');
-    html = html.replace(/\*\*(.*?)\*\*/gim, '<strong class="text-white font-semibold">$1</strong>');
-    html = html.replace(/^\- (.*$)/gim, '<div class="flex items-start space-x-1.5 my-1 ml-2"><span class="text-primary font-bold">•</span><span class="text-slate-200">$1</span></div>');
+    html = html.replace(/^## (.*$)/gim, '<h3 class="text-on-surface font-bold text-sm mt-3 mb-1.5">$1</h3>');
+    html = html.replace(/\*\*(.*?)\*\*/gim, '<strong class="text-on-surface font-semibold">$1</strong>');
+    html = html.replace(/^\- (.*$)/gim, '<div class="flex items-start space-x-1.5 my-1 ml-2"><span class="text-primary font-bold">•</span><span class="text-on-surface-variant">$1</span></div>');
     html = html.replace(/\n\n/gim, '<div class="h-2"></div>');
     html = html.replace(/\n/gim, '<br>');
     return html;
@@ -250,7 +250,11 @@ document.addEventListener("DOMContentLoaded", () => {
     } else if (tabId === "companies") {
       applyCompanyFiltersAndRender();
     } else if (tabId === "outreach") {
-      renderPitchesList();
+      if (!outreachLoaded || outreachCompanies.length === 0) {
+        fetchOutreachCompanies(false);
+      } else {
+        renderPitchesList();
+      }
       fetchAuditLogs();
     }
     activeTab = tabId;
@@ -605,8 +609,12 @@ document.addEventListener("DOMContentLoaded", () => {
   const companiesPageTotal = document.getElementById("companies-page-total");
   const companiesPerPageSelect = document.getElementById("companies-per-page");
   const companiesPageButtons = document.getElementById("companies-page-buttons");
+  const companiesPaginationBottom = document.getElementById("companies-pagination-bottom");
+  const companiesPageRangeBottom = document.getElementById("companies-page-range-bottom");
+  const companiesPageTotalBottom = document.getElementById("companies-page-total-bottom");
+  const companiesPageButtonsBottom = document.getElementById("companies-page-buttons-bottom");
   let companiesCurrentPage = 1;
-  let companiesPerPage = 15;
+  let companiesPerPage = 20;
   let currentFilteredCompanies = [];
   const companyDetailCache = new Map();
 
@@ -617,7 +625,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const scoutPerPageSelect = document.getElementById("scout-per-page");
   const scoutPageButtons = document.getElementById("scout-page-buttons");
   let scoutCurrentPage = 1;
-  let scoutPerPage = 15;
+  let scoutPerPage = 20;
   let currentScoutList = [];
   let currentScoutQueryLabel = "";
   let liveScrapedResults = [];
@@ -651,19 +659,15 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!buttonsEl) return;
     buttonsEl.innerHTML = "";
 
-    if (totalPages <= 1) {
-      return;
-    }
-
     // Mobile View (< 640px): Prev, Page X of Y, Next
     const mobileWrapper = document.createElement("div");
     mobileWrapper.className = "flex sm:hidden items-center space-x-1.5";
 
     const prevBtnMobile = document.createElement("button");
     prevBtnMobile.type = "button";
-    prevBtnMobile.className = `p-1.5 rounded-lg text-xs font-medium border ${safeCurrentPage === 1 ? 'opacity-40 cursor-not-allowed text-on-surface-variant/40 border-outline-variant/30 bg-surface-container' : 'btn-tactile-slate text-on-surface hover:bg-surface-container-high cursor-pointer'}`;
+    prevBtnMobile.className = `p-1.5 rounded-lg text-xs font-medium border ${safeCurrentPage <= 1 ? 'opacity-40 cursor-not-allowed text-on-surface-variant/40 border-outline-variant/30 bg-surface-container' : 'btn-tactile-slate text-on-surface hover:bg-surface-container-high cursor-pointer'}`;
     prevBtnMobile.innerHTML = `<i data-lucide="chevron-left" class="w-3.5 h-3.5"></i>`;
-    prevBtnMobile.disabled = safeCurrentPage === 1;
+    prevBtnMobile.disabled = safeCurrentPage <= 1;
     prevBtnMobile.addEventListener("click", () => {
       if (safeCurrentPage > 1) onPageChange(safeCurrentPage - 1);
     });
@@ -674,9 +678,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const nextBtnMobile = document.createElement("button");
     nextBtnMobile.type = "button";
-    nextBtnMobile.className = `p-1.5 rounded-lg text-xs font-medium border ${safeCurrentPage === totalPages ? 'opacity-40 cursor-not-allowed text-on-surface-variant/40 border-outline-variant/30 bg-surface-container' : 'btn-tactile-slate text-on-surface hover:bg-surface-container-high cursor-pointer'}`;
+    nextBtnMobile.className = `p-1.5 rounded-lg text-xs font-medium border ${safeCurrentPage >= totalPages ? 'opacity-40 cursor-not-allowed text-on-surface-variant/40 border-outline-variant/30 bg-surface-container' : 'btn-tactile-slate text-on-surface hover:bg-surface-container-high cursor-pointer'}`;
     nextBtnMobile.innerHTML = `<i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>`;
-    nextBtnMobile.disabled = safeCurrentPage === totalPages;
+    nextBtnMobile.disabled = safeCurrentPage >= totalPages;
     nextBtnMobile.addEventListener("click", () => {
       if (safeCurrentPage < totalPages) onPageChange(safeCurrentPage + 1);
     });
@@ -692,9 +696,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const prevBtnDesktop = document.createElement("button");
     prevBtnDesktop.type = "button";
-    prevBtnDesktop.className = `px-2.5 py-1 rounded-lg text-xs font-medium border flex items-center space-x-1 ${safeCurrentPage === 1 ? 'opacity-40 cursor-not-allowed text-on-surface-variant/40 border-outline-variant/30 bg-surface-container' : 'btn-tactile-slate text-on-surface hover:bg-surface-container-high cursor-pointer'}`;
+    prevBtnDesktop.className = `px-2.5 py-1 rounded-lg text-xs font-medium border flex items-center space-x-1 ${safeCurrentPage <= 1 ? 'opacity-40 cursor-not-allowed text-on-surface-variant/40 border-outline-variant/30 bg-surface-container' : 'btn-tactile-slate text-on-surface hover:bg-surface-container-high cursor-pointer'}`;
     prevBtnDesktop.innerHTML = `<i data-lucide="chevron-left" class="w-3.5 h-3.5"></i><span>Prev</span>`;
-    prevBtnDesktop.disabled = safeCurrentPage === 1;
+    prevBtnDesktop.disabled = safeCurrentPage <= 1;
     prevBtnDesktop.addEventListener("click", () => {
       if (safeCurrentPage > 1) onPageChange(safeCurrentPage - 1);
     });
@@ -702,7 +706,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const pageNumbers = [];
     if (totalPages <= 7) {
-      for (let i = 1; i <= totalPages; i++) pageNumbers.push(i);
+      for (let i = 1; i <= Math.max(1, totalPages); i++) pageNumbers.push(i);
     } else {
       pageNumbers.push(1);
       if (safeCurrentPage > 3) pageNumbers.push("...");
@@ -724,8 +728,10 @@ document.addEventListener("DOMContentLoaded", () => {
       } else {
         const btn = document.createElement("button");
         btn.type = "button";
-        btn.className = `min-w-[32px] px-2.5 py-1 rounded-lg text-xs font-mono font-medium transition cursor-pointer ${p === safeCurrentPage ? 'bg-primary text-on-primary font-bold shadow-sm' : 'btn-tactile-slate text-on-surface-variant hover:text-on-surface'}`;
+        const isActive = (p === safeCurrentPage);
+        btn.className = `min-w-[32px] px-2.5 py-1 rounded-lg text-xs font-mono font-medium transition ${isActive ? 'bg-primary text-on-primary font-bold shadow-sm cursor-default' : 'btn-tactile-slate text-on-surface-variant hover:text-on-surface cursor-pointer'}`;
         btn.textContent = p;
+        btn.disabled = isActive;
         btn.addEventListener("click", () => {
           if (p !== safeCurrentPage) onPageChange(p);
         });
@@ -735,9 +741,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const nextBtnDesktop = document.createElement("button");
     nextBtnDesktop.type = "button";
-    nextBtnDesktop.className = `px-2.5 py-1 rounded-lg text-xs font-medium border flex items-center space-x-1 ${safeCurrentPage === totalPages ? 'opacity-40 cursor-not-allowed text-on-surface-variant/40 border-outline-variant/30 bg-surface-container' : 'btn-tactile-slate text-on-surface hover:bg-surface-container-high cursor-pointer'}`;
+    nextBtnDesktop.className = `px-2.5 py-1 rounded-lg text-xs font-medium border flex items-center space-x-1 ${safeCurrentPage >= totalPages ? 'opacity-40 cursor-not-allowed text-on-surface-variant/40 border-outline-variant/30 bg-surface-container' : 'btn-tactile-slate text-on-surface hover:bg-surface-container-high cursor-pointer'}`;
     nextBtnDesktop.innerHTML = `<span>Next</span><i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>`;
-    nextBtnDesktop.disabled = safeCurrentPage === totalPages;
+    nextBtnDesktop.disabled = safeCurrentPage >= totalPages;
     nextBtnDesktop.addEventListener("click", () => {
       if (safeCurrentPage < totalPages) onPageChange(safeCurrentPage + 1);
     });
@@ -1087,17 +1093,17 @@ document.addEventListener("DOMContentLoaded", () => {
   function setAdminViewMode(mode) {
     adminViewMode = mode;
     if (mode === "admin") {
-      btnModeAdmin?.classList.add("bg-primary-container", "text-white");
-      btnModeAdmin?.classList.remove("text-slate-400");
+      btnModeAdmin?.classList.add("bg-primary-container", "text-on-primary-container");
+      btnModeAdmin?.classList.remove("text-on-surface-variant");
       btnModePreview?.classList.remove("bg-amber-600", "text-white");
-      btnModePreview?.classList.add("text-slate-400");
+      btnModePreview?.classList.add("text-on-surface-variant");
       adminPreviewBanner?.classList.add("hidden");
       statCardInvalid?.classList.remove("hidden");
     } else {
       btnModePreview?.classList.add("bg-amber-600", "text-white");
-      btnModePreview?.classList.remove("text-slate-400");
-      btnModeAdmin?.classList.remove("bg-primary-container", "text-white");
-      btnModeAdmin?.classList.add("text-slate-400");
+      btnModePreview?.classList.remove("text-on-surface-variant");
+      btnModeAdmin?.classList.remove("bg-primary-container", "text-on-primary-container");
+      btnModeAdmin?.classList.add("text-on-surface-variant");
       adminPreviewBanner?.classList.remove("hidden");
       statCardInvalid?.classList.add("hidden");
       if (activeMetricFilter === "invalid") {
@@ -1128,6 +1134,8 @@ document.addEventListener("DOMContentLoaded", () => {
   if (statCardInvalid) statCardInvalid.addEventListener("click", () => setActiveMetricFilter("invalid"));
 
   async function handleInvalidateCompany(id, companyName) {
+    selectedCompanyIds.delete(id);
+    updateBulkActionBar();
     try {
       const res = await fetch(`/api/companies/${id}/invalidate`, {
         method: "POST",
@@ -1142,6 +1150,8 @@ document.addEventListener("DOMContentLoaded", () => {
           target.is_invalid = true;
           target.invalid_reason = "Excluded by Master Admin";
         }
+        selectedCompanyIds.delete(id);
+        updateBulkActionBar();
         await fetchCompanies(true);
         if (activeModalCompany && activeModalCompany.id === id) {
           cmodal?.classList.add("hidden");
@@ -1156,6 +1166,8 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function handleRestoreCompany(id, companyName) {
+    selectedCompanyIds.delete(id);
+    updateBulkActionBar();
     try {
       const res = await fetch(`/api/companies/${id}/restore`, {
         method: "POST"
@@ -1168,6 +1180,8 @@ document.addEventListener("DOMContentLoaded", () => {
           target.is_invalid = false;
           target.invalid_reason = null;
         }
+        selectedCompanyIds.delete(id);
+        updateBulkActionBar();
         await fetchCompanies(true);
         if (activeModalCompany && activeModalCompany.id === id) {
           cmodal?.classList.add("hidden");
@@ -1262,6 +1276,27 @@ document.addEventListener("DOMContentLoaded", () => {
       if (pillExcluded) pillExcluded.textContent = invalid;
 
       if (statInvalidCount) statInvalidCount.textContent = invalid;
+
+      // Outreach Hub Quick Metric Strip & Badges (Globally synchronized from server stats)
+      const outreachTotalEl = document.getElementById("outreach-count-total");
+      if (outreachTotalEl) outreachTotalEl.textContent = total.toLocaleString();
+
+      const outreachEmailsEl = document.getElementById("outreach-count-emails");
+      if (outreachEmailsEl) outreachEmailsEl.textContent = withEmails.toLocaleString();
+
+      const userContactedCount = (isLoggedIn && contacted !== null) ? contacted : 0;
+      const outreachReadyEl = document.getElementById("outreach-count-ready");
+      if (outreachReadyEl) outreachReadyEl.textContent = Math.max(0, total - userContactedCount).toLocaleString();
+
+      const outreachSentEl = document.getElementById("outreach-count-sent");
+      if (outreachSentEl) outreachSentEl.textContent = isLoggedIn ? userContactedCount.toLocaleString() : "0";
+
+      document.querySelectorAll(".outreach-badge-all").forEach(el => el.textContent = total);
+      document.querySelectorAll(".outreach-badge-emails").forEach(el => el.textContent = withEmails);
+      document.querySelectorAll(".outreach-badge-ready").forEach(el => el.textContent = Math.max(0, total - userContactedCount));
+      document.querySelectorAll(".outreach-badge-sent").forEach(el => {
+        el.textContent = isLoggedIn ? userContactedCount : "—";
+      });
     } else if (Array.isArray(statsOrList)) {
       const validList = statsOrList.filter(c => !c.is_invalid);
       const total = validList.length;
@@ -1719,7 +1754,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const ddCompaniesPerPage = initCustomDropdown({
     containerId: "dropdown-companies-per-page",
     inputId: "companies-per-page",
-    defaultLabel: "15",
+    defaultLabel: "20",
     onSelect: (val) => {
       companiesPerPage = parseInt(val, 10);
       companiesCurrentPage = 1;
@@ -1728,38 +1763,38 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   if (ddCompaniesPerPage) {
     ddCompaniesPerPage.setOptions([
-      { value: "15", label: "15" },
-      { value: "30", label: "30" },
-      { value: "45", label: "45" },
-      { value: "75", label: "75" },
-      { value: "150", label: "150" }
+      { value: "10", label: "10" },
+      { value: "20", label: "20" },
+      { value: "50", label: "50" },
+      { value: "100", label: "100" },
+      { value: "200", label: "200" }
     ]);
   }
 
   const ddOutreachPerPage = initCustomDropdown({
     containerId: "dropdown-outreach-per-page",
     inputId: "outreach-per-page",
-    defaultLabel: "15",
+    defaultLabel: "20",
     onSelect: (val) => {
       outreachPerPage = parseInt(val, 10);
       outreachCurrentPage = 1;
-      renderPitchesList();
+      fetchOutreachCompanies(false);
     }
   });
   if (ddOutreachPerPage) {
     ddOutreachPerPage.setOptions([
-      { value: "15", label: "15" },
-      { value: "30", label: "30" },
-      { value: "45", label: "45" },
-      { value: "75", label: "75" },
-      { value: "150", label: "150" }
+      { value: "10", label: "10" },
+      { value: "20", label: "20" },
+      { value: "50", label: "50" },
+      { value: "100", label: "100" },
+      { value: "200", label: "200" }
     ]);
   }
 
   const ddScoutPerPage = initCustomDropdown({
     containerId: "dropdown-scout-per-page",
     inputId: "scout-per-page",
-    defaultLabel: "15",
+    defaultLabel: "20",
     onSelect: (val) => {
       scoutPerPage = parseInt(val, 10);
       scoutCurrentPage = 1;
@@ -1768,11 +1803,11 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   if (ddScoutPerPage) {
     ddScoutPerPage.setOptions([
-      { value: "15", label: "15" },
-      { value: "30", label: "30" },
-      { value: "45", label: "45" },
-      { value: "75", label: "75" },
-      { value: "150", label: "150" }
+      { value: "10", label: "10" },
+      { value: "20", label: "20" },
+      { value: "50", label: "50" },
+      { value: "100", label: "100" },
+      { value: "200", label: "200" }
     ]);
   }
 
@@ -1842,7 +1877,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const selectedCity = (filterCitySelect?.value || "").trim();
       const selectedSort = (sortSelect?.value || "newest").trim();
       const statusParam = activeMetricFilter || "all";
-      const pageSize = (companiesPerPage !== undefined && companiesPerPage !== null) ? companiesPerPage : 12;
+      const pageSize = (companiesPerPage !== undefined && companiesPerPage !== null) ? companiesPerPage : 20;
 
       const params = new URLSearchParams({
         page: companiesCurrentPage,
@@ -1879,11 +1914,14 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       updateMetricCardStyles();
+      // Purge any invalid company IDs from multi-selection if viewing active leads
+      if (activeMetricFilter !== "invalid") {
+        companies.forEach(c => {
+          if (c.is_invalid) selectedCompanyIds.delete(c.id);
+        });
+      }
       renderCompanies(companies);
       updateScoutViewFromInputs();
-      if (activeTab === "outreach") {
-        renderPitchesList();
-      }
     } catch (err) {
       console.error("Failed to load companies:", err);
     }
@@ -1896,6 +1934,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!list || list.length === 0) {
       if (companiesPagination) companiesPagination.classList.add("hidden");
+      if (companiesPaginationBottom) companiesPaginationBottom.classList.add("hidden");
       let emptyTitle = "No leads saved yet";
       let emptyMsg = "No leads available. Scout companies in Step 1 first.";
       if (activeMetricFilter === "invalid") {
@@ -1940,32 +1979,36 @@ document.addEventListener("DOMContentLoaded", () => {
         const canManageLeads = Boolean((isMasterAdmin && currentUser && currentUser.is_logged_in) || isDevMode);
 
         if (c.is_invalid) {
+          // If viewing general leads, invalid companies should never be selected
+          if (activeMetricFilter !== "invalid") {
+            selectedCompanyIds.delete(c.id);
+          }
           // Invalid Lead Grid Card Styling
-          card.className = `company-card-invalid bg-[#111827] border ${isSelected ? 'border-rose-500 ring-2 ring-rose-500/80 bg-rose-500/10' : 'border-rose-500/20 hover:border-rose-500/40'} rounded-2xl p-4 sm:p-5 flex flex-col justify-between transition-all duration-200 group shadow-lg cursor-pointer relative min-w-0`;
+          card.className = `company-card-invalid bg-surface-container-low border ${isSelected && activeMetricFilter === "invalid" ? 'border-rose-500 ring-2 ring-rose-500/80 bg-rose-500/10' : 'border-rose-500/30 hover:border-rose-500/50'} rounded-2xl p-4 sm:p-5 flex flex-col justify-between transition-all duration-200 group shadow-sm cursor-pointer relative min-w-0`;
           card.innerHTML = `
             <div class="space-y-2 pointer-events-none">
               <div class="flex items-start justify-between gap-1.5 pointer-events-auto">
                 <div class="flex items-center space-x-2 flex-1 min-w-0">
-                  ${canManageLeads ? `<input type="checkbox" class="company-checkbox w-4 h-4 rounded bg-[#0d1117] border-rose-800 text-rose-600 focus:ring-rose-500 cursor-pointer shrink-0 transition" data-id="${c.id}" ${isSelected ? 'checked' : ''} title="Select lead">` : ''}
-                  <h4 class="font-bold text-xs sm:text-sm text-white group-hover:text-rose-400 transition flex items-center space-x-1.5 break-words flex-1">
+                  ${(canManageLeads && activeMetricFilter === "invalid") ? `<input type="checkbox" class="company-checkbox w-4 h-4 rounded bg-surface-container-lowest border-rose-600 text-rose-600 focus:ring-rose-500 cursor-pointer shrink-0 transition" data-id="${c.id}" ${isSelected ? 'checked' : ''} title="Select lead">` : ''}
+                  <h4 class="font-bold text-xs sm:text-sm text-on-surface group-hover:text-rose-500 transition flex items-center space-x-1.5 break-words flex-1">
                     <span>${escapeHTML(c.name)}</span>
                   </h4>
                 </div>
-                <span class="px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-300 border border-rose-500/20 text-[9px] sm:text-[10px] font-bold flex items-center space-x-1 shrink-0">
-                  <i data-lucide="shield-alert" class="w-2.5 h-2.5 sm:w-3 sm:h-3 text-rose-400"></i>
+                <span class="px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/30 text-[9px] sm:text-[10px] font-bold flex items-center space-x-1 shrink-0">
+                  <i data-lucide="shield-alert" class="w-2.5 h-2.5 sm:w-3 sm:h-3 text-rose-500"></i>
                   <span>INVALID</span>
                 </span>
               </div>
-              <div class="text-[10px] sm:text-[11px] text-rose-300/90 bg-rose-500/10 p-2.5 rounded-xl border border-rose-500/20 space-y-0.5">
-                <div class="flex items-center space-x-1 font-semibold text-rose-400 text-[9px] sm:text-[10px] uppercase tracking-wider">
+              <div class="text-[10px] sm:text-[11px] text-rose-800 dark:text-rose-200 bg-rose-500/10 p-2.5 rounded-xl border border-rose-500/25 space-y-0.5">
+                <div class="flex items-center space-x-1 font-semibold text-rose-700 dark:text-rose-400 text-[9px] sm:text-[10px] uppercase tracking-wider">
                   <i data-lucide="alert-circle" class="w-3 h-3"></i>
                   <span>Excluded</span>
                 </div>
                 <p class="break-words leading-tight">${escapeHTML(c.invalid_reason || 'Excluded by Admin')}</p>
-                ${c.invalid_at ? `<p class="text-[9px] sm:text-[10px] text-slate-400 font-mono">Date: ${escapeHTML(c.invalid_at)}</p>` : ''}
+                ${c.invalid_at ? `<p class="text-[9px] sm:text-[10px] text-on-surface-variant font-mono">Date: ${escapeHTML(c.invalid_at)}</p>` : ''}
               </div>
-              <div class="text-[10px] sm:text-[11px] font-mono text-slate-400 flex items-center space-x-1 break-all">
-                <i data-lucide="globe" class="w-3 h-3 text-slate-500 shrink-0"></i>
+              <div class="text-[10px] sm:text-[11px] font-mono text-on-surface-variant flex items-center space-x-1 break-all">
+                <i data-lucide="globe" class="w-3 h-3 text-outline shrink-0"></i>
                 <span>${escapeHTML(c.domain)}</span>
               </div>
             </div>
@@ -2178,6 +2221,14 @@ document.addEventListener("DOMContentLoaded", () => {
     updateBulkActionBar();
     updateSelectAllCheckboxState(pagedList);
 
+    const handleCompaniesPageChange = (newPage) => {
+      companiesCurrentPage = newPage;
+      fetchCompanies(true);
+      if (companiesContainer) {
+        companiesContainer.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    };
+
     renderPaginationControls({
       paginationEl: companiesPagination,
       rangeEl: companiesPageRange,
@@ -2186,13 +2237,18 @@ document.addEventListener("DOMContentLoaded", () => {
       totalItems: totalItems,
       currentPage: companiesCurrentPage,
       pageSize: companiesPerPage,
-      onPageChange: (newPage) => {
-        companiesCurrentPage = newPage;
-        fetchCompanies(true);
-        if (companiesContainer) {
-          companiesContainer.scrollIntoView({ behavior: "smooth", block: "start" });
-        }
-      }
+      onPageChange: handleCompaniesPageChange
+    });
+
+    renderPaginationControls({
+      paginationEl: companiesPaginationBottom,
+      rangeEl: companiesPageRangeBottom,
+      totalEl: companiesPageTotalBottom,
+      buttonsEl: companiesPageButtonsBottom,
+      totalItems: totalItems,
+      currentPage: companiesCurrentPage,
+      pageSize: companiesPerPage,
+      onPageChange: handleCompaniesPageChange
     });
 
     refreshIcons();
@@ -2653,7 +2709,7 @@ document.addEventListener("DOMContentLoaded", () => {
       btnLoadCompanies.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i><span>Loading...</span>`;
       refreshIcons();
       fetchCompanies().finally(() => {
-        btnLoadCompanies.innerHTML = `<i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-slate-300"></i><span>Refresh</span>`;
+        btnLoadCompanies.innerHTML = `<i data-lucide="refresh-cw" class="w-3.5 h-3.5 text-on-surface-variant"></i><span>Refresh</span>`;
         refreshIcons();
       });
     });
@@ -3702,6 +3758,31 @@ document.addEventListener("DOMContentLoaded", () => {
   const outreachPageTotal = document.getElementById("outreach-page-total");
   const outreachPerPageSelect = document.getElementById("outreach-per-page");
   const outreachPageButtons = document.getElementById("outreach-page-buttons");
+  const outreachPaginationBottom = document.getElementById("outreach-pagination-bottom");
+  const outreachPageRangeBottom = document.getElementById("outreach-page-range-bottom");
+  const outreachPageTotalBottom = document.getElementById("outreach-page-total-bottom");
+  const outreachPageButtonsBottom = document.getElementById("outreach-page-buttons-bottom");
+
+  let allOutreachCompanies = [];
+  let isOutreachLoading = false;
+
+  async function fetchOutreachCompanies(preservePage = false) {
+    if (isOutreachLoading) return;
+    isOutreachLoading = true;
+    try {
+      const res = await fetch("/api/companies?page_size=0&status=all");
+      if (res.ok) {
+        const data = await res.json();
+        allOutreachCompanies = data.companies || [];
+      }
+    } catch (err) {
+      console.warn("Failed to fetch all outreach companies:", err);
+    } finally {
+      isOutreachLoading = false;
+      if (!preservePage) outreachCurrentPage = 1;
+      renderPitchesList();
+    }
+  }
 
   const btnToggleActivity = document.getElementById("btn-toggle-activity");
   const btnCloseActivity = document.getElementById("btn-close-activity");
@@ -3853,8 +3934,9 @@ document.addEventListener("DOMContentLoaded", () => {
       ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5"
       : "space-y-3";
 
-    // Base genuine leads
-    const validCompanies = (companies || []).filter(c => !c.is_invalid);
+    // Base genuine leads from dedicated allOutreachCompanies pool or fallback to companies
+    const sourceCompanies = (allOutreachCompanies && allOutreachCompanies.length > 0) ? allOutreachCompanies : (companies || []);
+    const validCompanies = sourceCompanies.filter(c => !c.is_invalid);
 
     // Compute metric counts
     const totalCount = validCompanies.length;
@@ -3889,6 +3971,7 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
       `;
       if (outreachPagination) outreachPagination.classList.add("hidden");
+      if (outreachPaginationBottom) outreachPaginationBottom.classList.add("hidden");
       refreshIcons();
       return;
     }
@@ -3954,6 +4037,7 @@ document.addEventListener("DOMContentLoaded", () => {
         </div>
       `;
       if (outreachPagination) outreachPagination.classList.add("hidden");
+      if (outreachPaginationBottom) outreachPaginationBottom.classList.add("hidden");
       refreshIcons();
       return;
     }
@@ -4157,7 +4241,13 @@ document.addEventListener("DOMContentLoaded", () => {
       container.appendChild(card);
     });
 
-    // Render pagination controls
+    // Render pagination controls (top and bottom)
+    const handleOutreachPageChange = (newPage) => {
+      outreachCurrentPage = newPage;
+      renderPitchesList();
+      if (container) container.scrollIntoView({ behavior: "smooth", block: "start" });
+    };
+
     renderPaginationControls({
       paginationEl: outreachPagination,
       rangeEl: outreachPageRange,
@@ -4166,11 +4256,18 @@ document.addEventListener("DOMContentLoaded", () => {
       totalItems: filtered.length,
       currentPage: outreachCurrentPage,
       pageSize: outreachPerPage,
-      onPageChange: (newPage) => {
-        outreachCurrentPage = newPage;
-        renderPitchesList();
-        if (container) container.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
+      onPageChange: handleOutreachPageChange
+    });
+
+    renderPaginationControls({
+      paginationEl: outreachPaginationBottom,
+      rangeEl: outreachPageRangeBottom,
+      totalEl: outreachPageTotalBottom,
+      buttonsEl: outreachPageButtonsBottom,
+      totalItems: filtered.length,
+      currentPage: outreachCurrentPage,
+      pageSize: outreachPerPage,
+      onPageChange: handleOutreachPageChange
     });
 
     refreshIcons();

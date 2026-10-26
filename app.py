@@ -804,7 +804,7 @@ async def get_companies_filters(request: Request, db: Session = Depends(get_db))
 async def get_companies(
     request: Request,
     page: int = 1,
-    page_size: int = 15,
+    page_size: int = 20,
     search: str = "",
     tech: str = "",
     city: str = "",
@@ -855,7 +855,7 @@ async def get_companies(
         elif status == "emails":
             emails_sub = db.query(CompanyEmail.company_id).distinct().subquery()
             query = query.filter(Company.id.in_(emails_sub))
-        elif status == "contacted":
+        elif status in ("contacted", "sent"):
             if user:
                 sent_sub = db.query(OutreachLog.company_id).filter(
                     OutreachLog.status == "SENT",
@@ -864,7 +864,7 @@ async def get_companies(
                 query = query.filter(Company.id.in_(sent_sub))
             else:
                 query = query.filter(Company.id == -1)
-        elif status == "uncontacted":
+        elif status in ("uncontacted", "ready"):
             if user:
                 sent_sub = db.query(OutreachLog.company_id).filter(
                     OutreachLog.status == "SENT",
@@ -929,10 +929,10 @@ async def get_companies(
 
         total_count = query.count()
 
-        # 7. Server-side pagination strictly enforcing defined list: [15, 30, 45, 75, 150]
-        ALLOWED_PAGE_SIZES = {15, 30, 45, 75, 150}
+        # 7. Server-side pagination strictly enforcing defined list: [10, 20, 50, 100, 200]
+        ALLOWED_PAGE_SIZES = {10, 20, 50, 100, 200, 0}
         if page_size not in ALLOWED_PAGE_SIZES:
-            page_size = 15
+            page_size = 20
 
         if page_size > 0:
             total_pages = max(1, (total_count + page_size - 1) // page_size) if total_count > 0 else 1

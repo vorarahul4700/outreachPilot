@@ -129,16 +129,16 @@
       <!-- Brand Header (Redirects to Home) -->
       <div class="flex items-center justify-between px-2 pt-1">
         <a href="/" class="flex items-center gap-3 hover:opacity-85 transition cursor-pointer" title="{{ project_name }} — Home">
-          <div class="w-8 h-8 rounded-lg bg-primary-container flex items-center justify-center text-on-primary-container shadow-inner">
+          <div class="w-8 h-8 rounded-lg bg-primary-container flex items-center justify-center text-on-primary-container shadow-inner shrink-0">
             <span class="material-symbols-outlined text-[20px]" data-icon="rocket_launch">rocket_launch</span>
           </div>
-          <div class="flex flex-col">
+          <div class="flex flex-col sidebar-text">
             <div class="flex items-center gap-2">
               <span class="text-headline-sm font-headline-sm font-bold text-on-surface tracking-tight">{{ project_name }}</span>
             </div>
           </div>
         </a>
-        <div class="flex items-center gap-1.5">
+        <div class="flex items-center gap-1.5 sidebar-full-only">
           <!-- Dark / Light Theme Toggle Button (Sun / Moon icon only - Desktop only in sidebar, mobile top bar has its own) -->
           <button id="btn-theme-toggle" type="button" aria-label="Toggle Light / Dark Mode" class="hidden md:flex w-8 h-8 rounded-lg items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container border border-outline-variant/40 transition cursor-pointer" title="Toggle Light / Dark Mode">
             <span id="theme-toggle-icon" class="material-symbols-outlined text-[19px]">light_mode</span>
@@ -153,37 +153,37 @@
       <nav class="flex flex-col gap-1">
         <!-- Tab 1: Companies (Active) -->
         <button id="tab-companies" class="tab-btn sidebar-nav-item active flex items-center gap-3 px-3 py-2 rounded-lg bg-surface-container-highest/60 text-primary font-medium transition-all duration-150 ease-in-out cursor-pointer text-left w-full" title="Companies Directory">
-          <span class="material-symbols-outlined text-[18px]" data-icon="domain">domain</span>
-          <span class="text-label-md font-label-md">Companies</span>
-          <span class="active-dot ml-auto w-1.5 h-1.5 rounded-full bg-primary"></span>
+          <span class="material-symbols-outlined text-[18px] shrink-0" data-icon="domain">domain</span>
+          <span class="text-label-md font-label-md sidebar-text">Companies</span>
+          <span class="active-dot ml-auto w-1.5 h-1.5 rounded-full bg-primary sidebar-badge"></span>
         </button>
 
         <!-- Tab 2: Scout Leads (Inactive) -->
         <button id="tab-scout" class="tab-btn sidebar-nav-item flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all duration-150 ease-in-out cursor-pointer text-left w-full" title="Scout Leads">
-          <span class="material-symbols-outlined text-[18px]" data-icon="person_search">person_search</span>
-          <span class="text-label-md font-label-md">Scout Leads</span>
-          <span class="active-dot hidden ml-auto w-1.5 h-1.5 rounded-full bg-primary"></span>
+          <span class="material-symbols-outlined text-[18px] shrink-0" data-icon="person_search">person_search</span>
+          <span class="text-label-md font-label-md sidebar-text">Scout Leads</span>
+          <span class="active-dot hidden ml-auto w-1.5 h-1.5 rounded-full bg-primary sidebar-badge"></span>
         </button>
 
         <!-- Tab 3: Outreach Hub (Inactive) -->
         <button id="tab-outreach" class="tab-btn sidebar-nav-item flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all duration-150 ease-in-out cursor-pointer text-left w-full" title="Outreach Hub">
-          <span class="material-symbols-outlined text-[18px]" data-icon="send">send</span>
-          <span class="text-label-md font-label-md">Outreach Hub</span>
-          <span class="active-dot hidden ml-auto w-1.5 h-1.5 rounded-full bg-primary"></span>
+          <span class="material-symbols-outlined text-[18px] shrink-0" data-icon="send">send</span>
+          <span class="text-label-md font-label-md sidebar-text">Outreach Hub</span>
+          <span class="active-dot hidden ml-auto w-1.5 h-1.5 rounded-full bg-primary sidebar-badge"></span>
         </button>
 
         <!-- Tab 4: Candidate Profile (Inactive) -->
         <button id="tab-resume" class="tab-btn sidebar-nav-item flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all duration-150 ease-in-out cursor-pointer text-left w-full" title="Candidate Profile & Resume">
-          <span class="material-symbols-outlined text-[18px]" data-icon="account_circle">account_circle</span>
-          <span class="text-label-md font-label-md">Candidate Profile</span>
-          <span class="active-dot hidden ml-auto w-1.5 h-1.5 rounded-full bg-primary"></span>
+          <span class="material-symbols-outlined text-[18px] shrink-0" data-icon="account_circle">account_circle</span>
+          <span class="text-label-md font-label-md sidebar-text">Candidate Profile</span>
+          <span class="active-dot hidden ml-auto w-1.5 h-1.5 rounded-full bg-primary sidebar-badge"></span>
         </button>
 
       </nav>
     </div>
 
     <!-- Footer Profile & Connection Status -->
-    <div class="p-4 border-t border-outline-variant/30 flex flex-col gap-3">
+    <div class="sidebar-full-only p-4 border-t border-outline-variant/30 flex flex-col gap-3">
       {% if dev_mode %}
       <div class="px-2.5 py-1.5 rounded-lg bg-surface-container border border-outline-variant/40 text-on-surface-variant text-caption flex items-center justify-between">
         <span class="flex items-center gap-1.5 text-secondary">
@@ -232,6 +232,10 @@
           <span>Sign In with Google</span>
         </a>
       </div>
+    </div>
+    <!-- Compact profile icon when sidebar is collapsed -->
+    <div class="sidebar-icon-only hidden p-3 border-t border-outline-variant/30 items-center justify-center">
+      <span class="material-symbols-outlined text-on-surface-variant text-[20px]" title="Account / Profile">account_circle</span>
     </div>
   </aside>
 
@@ -291,14 +295,14 @@
               <div class="sm:col-span-2 lg:col-span-3">
                 <label for="input-keyword" class="block text-label-sm font-label-sm text-on-surface-variant mb-1.5 flex items-center justify-between">
                   <span>Target Keyword / Industry</span>
-                  <span class="text-amber-400 font-mono text-[10px] tracking-wider uppercase px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/25">Required</span>
+                  <span class="text-amber-700 dark:text-amber-400 font-mono text-[10px] tracking-wider uppercase px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-600/30 dark:border-amber-500/25 font-semibold">Required</span>
                 </label>
                 <input type="text" id="input-keyword" required placeholder="e.g. IT Companies, Software Agencies" value="" class="w-full h-10 px-3.5 text-body-sm font-body-sm text-on-surface placeholder:text-outline transition">
               </div>
               <div class="sm:col-span-1 lg:col-span-3">
                 <label for="input-city" class="block text-label-sm font-label-sm text-on-surface-variant mb-1.5 flex items-center justify-between">
                   <span>City / Location</span>
-                  <span class="text-amber-400 font-mono text-[10px] tracking-wider uppercase px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/25">Required</span>
+                  <span class="text-amber-700 dark:text-amber-400 font-mono text-[10px] tracking-wider uppercase px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-600/30 dark:border-amber-500/25 font-semibold">Required</span>
                 </label>
                 <input type="text" id="input-city" required placeholder="e.g. Surat, Austin, London" value="" class="w-full h-10 px-3.5 text-body-sm font-body-sm text-on-surface placeholder:text-outline transition">
               </div>
@@ -432,9 +436,9 @@
               <div class="flex items-center gap-2 text-caption font-caption text-on-surface-variant">
                 <span class="hidden sm:inline font-mono text-[11px]">Per page:</span>
                 <div class="custom-dropdown dropdown-compact relative" id="dropdown-scout-per-page">
-                  <input type="hidden" id="scout-per-page" value="15">
+                  <input type="hidden" id="scout-per-page" value="20">
                   <button type="button" class="custom-dropdown-btn" aria-haspopup="listbox" aria-expanded="false" title="Leads per page">
-                    <span class="custom-dropdown-label">15</span>
+                    <span class="custom-dropdown-label">20</span>
                     <span class="material-symbols-outlined dropdown-chevron text-[15px]">expand_more</span>
                   </button>
                   <div class="custom-dropdown-menu align-right">
@@ -592,9 +596,9 @@
             <div class="flex items-center gap-2 text-caption text-on-surface-variant">
               <span class="hidden sm:inline font-mono text-[11px]">Per page:</span>
               <div class="custom-dropdown dropdown-compact relative" id="dropdown-companies-per-page">
-                <input type="hidden" id="companies-per-page" value="15">
+                <input type="hidden" id="companies-per-page" value="20">
                 <button type="button" class="custom-dropdown-btn" aria-haspopup="listbox" aria-expanded="false" title="Leads per page">
-                  <span class="custom-dropdown-label">15</span>
+                  <span class="custom-dropdown-label">20</span>
                   <span class="material-symbols-outlined dropdown-chevron text-[15px]">expand_more</span>
                 </button>
                 <div class="custom-dropdown-menu align-right">
@@ -755,6 +759,14 @@
           </div>
         </div>
 
+        <!-- Bottom Directory Pagination Controls -->
+        <div id="companies-pagination-bottom" class="hidden bg-surface-container-low border border-outline-variant/30 rounded-xl px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm mt-5">
+          <div class="flex items-center space-x-2 text-caption text-on-surface-variant">
+            <span>Showing <strong id="companies-page-range-bottom" class="text-on-surface font-semibold">0-0</strong> of <strong id="companies-page-total-bottom" class="text-on-surface font-semibold">0</strong> leads</span>
+          </div>
+          <div id="companies-page-buttons-bottom" class="flex items-center space-x-1"></div>
+        </div>
+
         <!-- Floating Multi-Select Action Dock (Artisanal Hardware Transport) -->
         <aside id="bulk-action-bar" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50">
           <div class="bg-surface-container/95 backdrop-blur-md border border-outline-variant/40 px-5 py-2.5 rounded-xl flex items-center gap-4 shadow-2xl">
@@ -813,7 +825,7 @@
             <div>
               <label for="input-target-role" class="block text-label-sm font-label-sm text-on-surface-variant mb-1.5 flex items-center justify-between">
                 <span>Target Job Role</span>
-                <span class="text-amber-400 font-mono text-[10px] tracking-wider uppercase px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/25">Required</span>
+                <span class="text-amber-700 dark:text-amber-400 font-mono text-[10px] tracking-wider uppercase px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-600/30 dark:border-amber-500/25 font-semibold">Required</span>
               </label>
               <input type="text" id="input-target-role" required placeholder="e.g. Senior Full-Stack Engineer" value="" class="w-full recessed-well px-3.5 py-2 text-body-sm font-body-sm text-on-surface placeholder:text-outline focus:outline-none focus:border-primary-container transition">
             </div>
@@ -821,7 +833,7 @@
             <div>
               <label class="block text-label-sm font-label-sm text-on-surface-variant mb-1.5 flex items-center justify-between">
                 <span>Resume File (PDF or Plain Text)</span>
-                <span class="text-amber-400/90 font-mono text-[10px] tracking-wider uppercase px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-500/25">Required (File or Link)</span>
+                <span class="text-amber-700 dark:text-amber-400 font-mono text-[10px] tracking-wider uppercase px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-600/30 dark:border-amber-500/25 font-semibold">Required (File or Link)</span>
               </label>
               <div class="border-2 border-dashed border-outline-variant/40 hover:border-primary-container/80 rounded-xl p-6 text-center cursor-pointer bg-surface-container-lowest hover:bg-surface-container/60 transition group" id="dropzone">
                 <input type="file" id="input-resume-file" accept=".pdf,.txt,.docx" class="hidden">
@@ -924,9 +936,9 @@
         </div>
         <div class="flex items-center gap-2.5 flex-wrap">
           <button id="btn-toggle-activity" type="button" class="btn-tactile-slate px-3.5 py-2 rounded text-label-sm font-label-sm font-medium transition flex items-center gap-2 cursor-pointer" title="Toggle Live Activity & Sent History Feed">
-            <span class="w-2 h-2 rounded-full bg-[#86B29B] animate-pulse"></span>
+            <span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
             <span>Activity Stream</span>
-            <span id="activity-badge-count" class="px-1.5 py-0.2 rounded text-[10px] font-mono bg-[#86B29B]/20 text-[#86B29B]">0</span>
+            <span id="activity-badge-count" class="px-1.5 py-0.2 rounded text-[10px] font-mono bg-secondary/15 text-secondary font-semibold">0</span>
           </button>
           <button id="btn-gen-all-pitches" type="button" class="btn-tactile-ecru px-4 py-2 rounded font-label-md text-label-md font-semibold transition-colors flex items-center justify-center gap-1.5 shadow-sm cursor-pointer">
             <span class="material-symbols-outlined text-[18px]">auto_awesome</span>
@@ -1086,9 +1098,9 @@
           <div class="flex items-center gap-2 text-caption font-caption text-on-surface-variant">
             <span class="hidden sm:inline font-mono text-[11px]">Per page:</span>
             <div class="custom-dropdown dropdown-compact relative" id="dropdown-outreach-per-page">
-              <input type="hidden" id="outreach-per-page" value="15">
+              <input type="hidden" id="outreach-per-page" value="20">
               <button type="button" class="custom-dropdown-btn" aria-haspopup="listbox" aria-expanded="false" title="Targets per page">
-                <span class="custom-dropdown-label">15</span>
+                <span class="custom-dropdown-label">20</span>
                 <span class="material-symbols-outlined dropdown-chevron text-[15px]">expand_more</span>
               </button>
               <div class="custom-dropdown-menu align-right">
@@ -1106,6 +1118,14 @@
       <!-- Main Outreach Prospects Container (Grid by default, switches dynamically) -->
       <div id="pitches-container" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
         <!-- Rendered dynamically by app.js -->
+      </div>
+
+      <!-- Bottom Outreach Pagination Controls -->
+      <div id="outreach-pagination-bottom" class="hidden bg-surface-container-low border border-outline-variant/30 rounded-xl px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm mt-5">
+        <div class="flex items-center space-x-2 text-caption font-caption text-on-surface-variant">
+          <span>Showing <strong id="outreach-page-range-bottom" class="text-on-surface font-semibold">0-0</strong> of <strong id="outreach-page-total-bottom" class="text-on-surface font-semibold">0</strong> targets</span>
+        </div>
+        <div id="outreach-page-buttons-bottom" class="flex items-center space-x-1"></div>
       </div>
     </section>
 
@@ -1388,7 +1408,7 @@
   </div>
 
   <!-- SENT EMAIL DETAILS MODAL -->
-  <div id="sent-email-modal" class="fixed inset-0 z-[105] w-screen h-screen bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4 overflow-hidden">
+  <div id="sent-email-modal" class="fixed inset-0 z-[130] w-screen h-screen bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4 overflow-hidden">
     <div class="relative bg-surface-container-low border border-outline-variant/30 rounded-2xl max-w-2xl w-full p-6 space-y-4 shadow-2xl my-auto">
       <div class="flex items-center justify-between border-b border-outline-variant/20 pb-3">
         <div>
@@ -1434,7 +1454,7 @@
   </div>
 
   <!-- LOGIN REQUIRED MODAL -->
-  <div id="login-modal" class="fixed inset-0 z-[110] w-screen h-screen bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4 overflow-hidden">
+  <div id="login-modal" class="fixed inset-0 z-[140] w-screen h-screen bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4 overflow-hidden">
     <div class="relative bg-surface-container-low border border-outline-variant/30 rounded-2xl max-w-lg w-full p-6 sm:p-7 space-y-4 shadow-2xl my-auto text-center">
       <div class="mx-auto w-12 h-12 rounded-2xl bg-primary-container/20 border border-primary-container/30 flex items-center justify-center text-primary">
         <span class="material-symbols-outlined text-[24px]">lock</span>
@@ -1488,6 +1508,6 @@
       window.__INITIAL_AUTH__ = { is_logged_in: false, email: null, is_master_admin: false, dev_mode: false };
     }
   </script>
-  <script src="/static/js/app.js?v=8.3"></script>
+  <script src="/static/js/app.js?v=8.4"></script>
 </body>
 </html>
