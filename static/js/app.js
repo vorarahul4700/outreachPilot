@@ -250,7 +250,7 @@ document.addEventListener("DOMContentLoaded", () => {
     } else if (tabId === "companies") {
       applyCompanyFiltersAndRender();
     } else if (tabId === "outreach") {
-      if (!outreachLoaded || outreachCompanies.length === 0) {
+      if (!outreachLoaded || allOutreachCompanies.length === 0) {
         fetchOutreachCompanies(false);
       } else {
         renderPitchesList();
@@ -629,6 +629,13 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentScoutList = [];
   let currentScoutQueryLabel = "";
   let liveScrapedResults = [];
+
+  // Outreach Hub Pagination & Pipeline State
+  let outreachLoaded = false;
+  let allOutreachCompanies = [];
+  let isOutreachLoading = false;
+  let outreachCurrentPage = 1;
+  let outreachPerPage = 20;
 
   function renderPaginationControls({
     paginationEl,
@@ -3720,11 +3727,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // ==========================================
   // OUTREACH HUB CONTROLS & PIPELINE
   // ==========================================
-  // ==========================================
-  // OUTREACH HUB CONTROLS & PIPELINE
-  // ==========================================
-  let outreachCurrentPage = 1;
-  let outreachPerPage = 15;
   let outreachActiveFilter = "all"; // "all" | "emails" | "ready" | "sent"
   let outreachSearchQuery = "";
   let outreachSelectedTech = "";
@@ -3763,9 +3765,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const outreachPageTotalBottom = document.getElementById("outreach-page-total-bottom");
   const outreachPageButtonsBottom = document.getElementById("outreach-page-buttons-bottom");
 
-  let allOutreachCompanies = [];
-  let isOutreachLoading = false;
-
   async function fetchOutreachCompanies(preservePage = false) {
     if (isOutreachLoading) return;
     isOutreachLoading = true;
@@ -3774,6 +3773,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (res.ok) {
         const data = await res.json();
         allOutreachCompanies = data.companies || [];
+        outreachLoaded = true;
       }
     } catch (err) {
       console.warn("Failed to fetch all outreach companies:", err);
