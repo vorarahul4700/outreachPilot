@@ -73,6 +73,9 @@ async def send_via_google_oauth(
     if not user.oauth_tokens:
         return {"success": False, "error": "Google OAuth account not connected."}
 
+    if not to_email or not str(to_email).strip():
+        return {"success": False, "error": "Company email not found! Cannot send email."}
+
     effective_to = get_effective_recipient(to_email)
     effective_subject = f"[TEST -> {to_email}] {subject}" if config.DEV_MODE else subject
 
@@ -205,6 +208,7 @@ async def dispatch_batch_outreach(
     results = []
     sent_count = 0
     failed_count = 0
+    skipped_no_email = 0
 
     for idx, pitch_id in enumerate(pitch_ids):
         pitch = db.query(ColdPitch).filter(ColdPitch.id == pitch_id).first()
@@ -218,13 +222,13 @@ async def dispatch_batch_outreach(
             })
             continue
 
-        if not pitch.target_email:
-            failed_count += 1
+        if not pitch.target_email or not str(pitch.target_email).strip():
+            skipped_no_email += 1
             results.append({
                 "pitch_id": pitch_id,
                 "email": None,
-                "status": "FAILED",
-                "error": "No verified recipient email found for this lead"
+                "status": "SKIPPED",
+                "error": "Company email not found! Skipped sending."
             })
             continue
 
@@ -275,5 +279,6 @@ async def dispatch_batch_outreach(
         "total": len(pitch_ids),
         "sent": sent_count,
         "failed": failed_count,
+        "skipped_no_email": skipped_no_email,
         "details": results
     }

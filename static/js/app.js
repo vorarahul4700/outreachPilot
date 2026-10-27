@@ -2086,14 +2086,12 @@ document.addEventListener("DOMContentLoaded", () => {
           }
           const descText = rawDesc;
 
-          // Contact & Location
-          const primaryEmail = (c.emails && c.emails.length > 0)
-            ? c.emails[0]
-            : (c.contact_email || (c.domain ? `contact@${c.domain}` : 'contact@company.com'));
+          // Contact & Location (Strict: Never guess contact@ or domain fallbacks)
           const hasEmail = Boolean(c.emails && c.emails.length > 0);
-          const emailIcon = hasEmail ? 'mark_email_read' : 'mail';
-          const emailColor = hasEmail ? 'text-secondary' : 'text-on-surface-variant';
-          const emailTextClass = hasEmail ? 'text-secondary font-medium' : 'text-on-surface-variant';
+          const primaryEmail = hasEmail ? c.emails[0] : null;
+          const emailIcon = hasEmail ? 'mark_email_read' : 'mail_off';
+          const emailColor = hasEmail ? 'text-secondary' : 'text-amber-500/80';
+          const emailTextClass = hasEmail ? 'text-secondary font-medium' : 'text-amber-500/80 font-normal';
           const locationText = c.city ? `${c.city}, IN` : (cleanAddressText(c.address) || 'San Francisco, CA');
 
           // Tech stack pills in quiet micro-chip style
@@ -2148,7 +2146,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 <div class="flex items-center justify-between text-caption font-caption gap-2">
                   <div class="flex items-center gap-1.5 ${emailTextClass} truncate min-w-0 font-mono text-caption">
                     <span class="material-symbols-outlined text-[15px] ${emailColor} shrink-0">${emailIcon}</span>
-                    <span class="truncate">${escapeHTML(primaryEmail)}</span>
+                    <span class="truncate">${hasEmail ? escapeHTML(primaryEmail) : '<span class="text-amber-500 font-medium not-italic">Email not found</span>'}</span>
                   </div>
                   <div class="flex items-center gap-1 text-on-surface-variant shrink-0 font-mono text-[11px]">
                     <span class="material-symbols-outlined text-[14px]">location_on</span>
@@ -2454,7 +2452,12 @@ document.addEventListener("DOMContentLoaded", () => {
         });
       });
     } else {
-      cmodalEmailsContainer.innerHTML = `<span class="text-on-surface-variant italic text-caption">No direct emails discovered yet. Click "Enrich with AI" below.</span>`;
+      cmodalEmailsContainer.innerHTML = `
+        <div class="flex items-center gap-2 p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-500 text-xs font-mono">
+          <span class="material-symbols-outlined text-[16px]">mail_off</span>
+          <span>Email not found -- Click "Enrich with AI" below to scan company website for verified contacts.</span>
+        </div>
+      `;
     }
 
     // AI Intelligence Profile
@@ -3252,7 +3255,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (btnGenAllPitches) {
     btnGenAllPitches.addEventListener("click", async () => {
-      if (!companies || companies.length === 0) {
+      const targets = (allOutreachCompanies && allOutreachCompanies.length > 0) ? allOutreachCompanies : (companies || []);
+      const eligible = targets.filter(c => !c.is_invalid);
+
+      if (eligible.length === 0) {
         showToast("No companies found to generate pitches for.", "warning");
         return;
       }
@@ -3264,11 +3270,10 @@ document.addEventListener("DOMContentLoaded", () => {
         let authFailed = false;
         let generatedCount = 0;
 
-        for (let i = 0; i < companies.length; i++) {
+        for (let i = 0; i < eligible.length; i++) {
           if (authFailed) break;
-          const comp = companies[i];
-          btnGenAllPitches.innerHTML = `<i data-lucide="sparkles" class="w-3.5 h-3.5 text-amber-300 animate-pulse"></i><span>Generating (${i + 1}/${companies.length})...</span>`;
-          refreshIcons();
+          const comp = eligible[i];
+          btnGenAllPitches.innerHTML = `<span class="material-symbols-outlined text-[16px] animate-spin text-amber-300">progress_activity</span><span>Preparing (${i + 1}/${eligible.length})...</span>`;
           try {
             const res = await fetch("/api/pitch/generate", {
               method: "POST",
@@ -3293,17 +3298,139 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         if (!authFailed) {
-          btnGenAllPitches.innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5 text-emerald-400"></i><span>${generatedCount} Pitches Generated!</span>`;
-          refreshIcons();
+          btnGenAllPitches.innerHTML = `<span class="material-symbols-outlined text-[16px] text-emerald-400">check</span><span>${generatedCount} Pitches Prepared!</span>`;
           renderPitchesList();
         }
 
         setTimeout(() => {
           btnGenAllPitches.innerHTML = oldText;
           btnGenAllPitches.disabled = false;
-          refreshIcons();
         }, 2500);
       }, "Authentication required. Please connect your Google account to generate personalized pitches.");
+    });
+  }
+
+  // --- Send All Outreach Emails (Strict: Never sends to companies without discovered emails) ---
+  const btnSendAllOutreach = document.getElementById("btn-send-all-outreach");
+  if (btnSendAllOutreach) {
+    btnSendAllOutreach.addEventListener("click", async () => {
+      const targets = (allOutreachCompanies && allOutreachCompanies.length > 0) ? allOutreachCompanies : (companies || []);
+      const eligible = targets.filter(c => !c.is_invalid);
+
+      if (eligible.length === 0) {
+        showToast("No companies available for outreach.", "warning");
+        return;
+      }
+
+      requireLogin(async () => {
+        // Strictly filter to companies with at least one discovered email
+        const withEmail = eligible.filter(c => c.emails && c.emails.length > 0 && !c.already_contacted);
+        const alreadySentCount = eligible.filter(c => c.emails && c.emails.length > 0 && c.already_contacted).length;
+        const noEmailCompanies = eligible.filter(c => !c.emails || c.emails.length === 0);
+        const noEmailCount = noEmailCompanies.length;
+
+        if (withEmail.length === 0) {
+          if (alreadySentCount > 0 && noEmailCount > 0) {
+            showToast(`All ${alreadySentCount} companies with verified emails have already been contacted. Skipped ${noEmailCount} companies with no email.`, "info");
+          } else if (noEmailCount > 0) {
+            showToast(`Company email not found! All ${noEmailCount} companies have no discovered email address. Enrich companies first.`, "error");
+          } else {
+            showToast("No pending outreach targets with email addresses.", "info");
+          }
+          return;
+        }
+
+        const confirmMsg = `Ready to send personalized cold emails via Gmail to ${withEmail.length} companies with discovered emails?\n\n(${noEmailCount} companies with no email address will be strictly skipped and will NOT receive any email).`;
+        if (!confirm(confirmMsg)) {
+          return;
+        }
+
+        const oldText = btnSendAllOutreach.innerHTML;
+        btnSendAllOutreach.disabled = true;
+        btnSendAllOutreach.innerHTML = `<span class="material-symbols-outlined text-[16px] animate-spin">progress_activity</span><span>Preparing (${withEmail.length})...</span>`;
+
+        let pitchIdsToSend = [];
+        let authFailed = false;
+
+        // Generate / retrieve pitch IDs for each eligible company with discovered email
+        for (let i = 0; i < withEmail.length; i++) {
+          if (authFailed) break;
+          const comp = withEmail[i];
+          btnSendAllOutreach.innerHTML = `<span class="material-symbols-outlined text-[16px] animate-spin">progress_activity</span><span>Preparing (${i + 1}/${withEmail.length})...</span>`;
+          try {
+            const res = await fetch("/api/pitch/generate", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ company_id: comp.id })
+            });
+
+            if (res.status === 401) {
+              authFailed = true;
+              currentUser.is_logged_in = false;
+              showToast("Session expired. Please reconnect your Google account to send emails.", "warning");
+              showLoginModal("Session expired. Please reconnect your Google account to send emails.");
+              break;
+            }
+
+            if (res.ok) {
+              const data = await res.json();
+              if (data.success && data.pitch_id && data.target_email) {
+                pitchIdsToSend.push(data.pitch_id);
+              }
+            }
+          } catch (err) {
+            console.error("Failed to prepare pitch for", comp.name, err);
+          }
+        }
+
+        if (authFailed || pitchIdsToSend.length === 0) {
+          btnSendAllOutreach.disabled = false;
+          btnSendAllOutreach.innerHTML = oldText;
+          if (!authFailed && pitchIdsToSend.length === 0) {
+            showToast("Could not prepare email pitches. Please try again.", "error");
+          }
+          return;
+        }
+
+        // Dispatch bulk send via API strictly with valid pitch IDs
+        btnSendAllOutreach.innerHTML = `<span class="material-symbols-outlined text-[16px] animate-spin text-primary">progress_activity</span><span>Dispatching (${pitchIdsToSend.length})...</span>`;
+
+        try {
+          const bulkRes = await fetch("/api/pitch/bulk-send", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              pitch_ids: pitchIdsToSend,
+              delay_min: 2.0,
+              delay_max: 3.5
+            })
+          });
+
+          if (bulkRes.status === 401) {
+            showToast("Session expired. Please reconnect your Google account.", "warning");
+            showLoginModal("Session expired. Please reconnect your Google account.");
+            return;
+          }
+
+          const bulkData = await bulkRes.json();
+          const sent = bulkData.sent || 0;
+          const skipped = (bulkData.skipped_no_email || 0) + noEmailCount;
+
+          showToast(`Success: Dispatched ${sent} emails via Gmail! (${skipped} companies without email were skipped).`, "success");
+          btnSendAllOutreach.innerHTML = `<span class="material-symbols-outlined text-[16px] text-emerald-400">check</span><span>${sent} Dispatched!</span>`;
+
+          await fetchCompanies();
+          fetchAuditLogs();
+          renderPitchesList();
+        } catch (err) {
+          showToast("Batch dispatch error: " + err.message, "error");
+        } finally {
+          setTimeout(() => {
+            btnSendAllOutreach.innerHTML = oldText;
+            btnSendAllOutreach.disabled = false;
+          }, 3000);
+        }
+      }, "connect your Google account to perform automated outreach.");
     });
   }
 
@@ -3482,6 +3609,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnSendDirectText = document.getElementById("btn-send-direct-text");
   const btnCopyPitch = document.getElementById("btn-copy-pitch");
   let currentPitchId = null;
+  let currentPitchTargetEmail = null;
 
   // Temporary session resume attachment state (cleared upon tab/session close)
   let sessionResumeFile = null;
@@ -3622,11 +3750,16 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await res.json();
       if (data.success) {
         currentPitchId = data.pitch_id;
+        currentPitchTargetEmail = (data.target_email || "").trim();
         modalCompanyName.textContent = `Personalized Outreach for ${data.company_name}`;
-        modalTargetEmail.textContent = `To: ${data.target_email}`;
+        if (currentPitchTargetEmail) {
+          modalTargetEmail.innerHTML = `<span class="material-symbols-outlined text-[14px] text-secondary">alternate_email</span> <span class="font-mono text-secondary font-semibold">${escapeHTML(currentPitchTargetEmail)}</span>`;
+        } else {
+          modalTargetEmail.innerHTML = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-mono bg-amber-500/10 text-amber-500 border border-amber-500/20 font-semibold"><span class="material-symbols-outlined text-[13px]">mail_off</span><span>Email not found (Sending disabled)</span></span>`;
+        }
         modalSubject.value = data.subject_line || "";
         modalBody.value = data.email_body || "";
-        btnLaunchGmail.href = data.gmail_web_url;
+        btnLaunchGmail.href = data.gmail_web_url || "#";
 
         updateResumeAttachmentUI();
         modal.classList.remove("hidden");
@@ -3648,6 +3781,11 @@ document.addEventListener("DOMContentLoaded", () => {
   if (btnSendDirectOauth) {
     btnSendDirectOauth.addEventListener("click", async () => {
       if (!currentPitchId) return;
+
+      if (!currentPitchTargetEmail || !currentPitchTargetEmail.trim()) {
+        showToast("Company email not found! Cannot send email.", "error");
+        return;
+      }
 
       const subject = (modalSubject.value || "").trim();
       const body = (modalBody.value || "").trim();
@@ -3688,7 +3826,7 @@ document.addEventListener("DOMContentLoaded", () => {
           await fetchCompanies();
           fetchAuditLogs();
         } else {
-          const errMsg = data.detail || data.error || "Failed to send email via Google OAuth.";
+          const errMsg = data.detail || data.error || "Company email not found! Cannot send email.";
           showToast(errMsg, "error");
           if (errMsg.toLowerCase().includes("session expired") || errMsg.toLowerCase().includes("reconnect") || errMsg.toLowerCase().includes("sign in with google")) {
             showLoginModal(errMsg);
@@ -3704,7 +3842,12 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  btnLaunchGmail.addEventListener("click", async () => {
+  btnLaunchGmail.addEventListener("click", async (e) => {
+    if (!currentPitchTargetEmail || !currentPitchTargetEmail.trim()) {
+      e.preventDefault();
+      showToast("Company email not found! Cannot send email.", "error");
+      return;
+    }
     if (currentPitchId) {
       await fetch(`/api/pitch/${currentPitchId}/log-sent?method=GMAIL_WEB`, { method: "POST" });
       await fetchCompanies();
@@ -4067,7 +4210,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const monoTheme = monoThemes[monoIdx];
 
       const hasDirectEmail = Boolean(c.emails && c.emails.length > 0);
-      const targetDisplay = hasDirectEmail ? escapeHTML(c.emails[0]) : ('contact@' + escapeHTML(c.domain || 'domain.com'));
+      const directEmail = hasDirectEmail ? c.emails[0] : null;
 
       const ratingVal = (c.rating && c.rating > 0) ? Number(c.rating).toFixed(1) : null;
       const ratingDisplay = ratingVal
@@ -4113,24 +4256,43 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>
 
             <!-- Part 2: Recipient Email Well -->
-            <div class="bg-surface-container-lowest border border-outline-variant/40 rounded-lg p-2.5 mb-3 flex items-center justify-between gap-2">
-              <div class="flex items-center gap-2 min-w-0">
-                <span class="material-symbols-outlined text-[15px] ${hasDirectEmail ? 'text-secondary' : 'text-on-surface-variant'} shrink-0">
-                  ${hasDirectEmail ? 'alternate_email' : 'mail'}
-                </span>
-                <div class="min-w-0">
-                  <span class="text-[10px] font-mono uppercase tracking-wider block ${hasDirectEmail ? 'text-secondary font-semibold' : 'text-on-surface-variant'}">
-                    ${hasDirectEmail ? 'Verified Direct Email' : 'Domain Fallback'}
+            ${hasDirectEmail ? `
+              <div class="bg-surface-container-lowest border border-outline-variant/40 rounded-lg p-2.5 mb-3 flex items-center justify-between gap-2">
+                <div class="flex items-center gap-2 min-w-0">
+                  <span class="material-symbols-outlined text-[15px] text-secondary shrink-0">
+                    alternate_email
                   </span>
-                  <span class="font-mono text-xs ${hasDirectEmail ? 'text-on-surface font-semibold' : 'text-on-surface-variant'} truncate block">
-                    ${targetDisplay}
-                  </span>
+                  <div class="min-w-0">
+                    <span class="text-[10px] font-mono uppercase tracking-wider block text-secondary font-semibold">
+                      Verified Direct Email
+                    </span>
+                    <span class="font-mono text-xs text-on-surface font-semibold truncate block">
+                      ${escapeHTML(directEmail)}
+                    </span>
+                  </div>
                 </div>
+                <button type="button" class="btn-copy-email p-1.5 rounded hover:bg-surface-container text-on-surface-variant hover:text-on-surface transition shrink-0 cursor-pointer" data-email="${escapeHTML(directEmail)}" title="Copy email address">
+                  <span class="material-symbols-outlined text-[15px]">content_copy</span>
+                </button>
               </div>
-              <button type="button" class="btn-copy-email p-1.5 rounded hover:bg-surface-container text-on-surface-variant hover:text-on-surface transition shrink-0 cursor-pointer" data-email="${targetDisplay}" title="Copy email address">
-                <span class="material-symbols-outlined text-[15px]">content_copy</span>
-              </button>
-            </div>
+            ` : `
+              <div class="bg-surface-container-lowest/70 border border-dashed border-amber-500/30 rounded-lg p-2.5 mb-3 flex items-center justify-between gap-2">
+                <div class="flex items-center gap-2 min-w-0">
+                  <span class="material-symbols-outlined text-[15px] text-amber-500 shrink-0">
+                    mail_off
+                  </span>
+                  <div class="min-w-0">
+                    <span class="text-[10px] font-mono uppercase tracking-wider block text-amber-500 font-semibold">
+                      Email Not Found
+                    </span>
+                    <span class="font-mono text-xs text-on-surface-variant italic truncate block">
+                      No verified recruiter email discovered
+                    </span>
+                  </div>
+                </div>
+                <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-amber-500/10 text-amber-500 border border-amber-500/20 font-medium">Unreachable</span>
+              </div>
+            `}
 
             <!-- Part 3: Detected Tech Stack Chips & Rating -->
             <div class="space-y-1.5 mb-4">
@@ -4176,12 +4338,23 @@ document.addEventListener("DOMContentLoaded", () => {
               <div class="flex items-center gap-2 flex-wrap">
                 <h4 class="font-semibold text-sm text-on-surface break-words cursor-pointer hover:text-primary" onclick="window.openCompanyModalById(${c.id})">${escapeHTML(c.name)}</h4>
                 ${statusBadge}
-                <span class="text-[10px] font-mono px-2 py-0.5 rounded ${hasDirectEmail ? 'bg-secondary/15 text-secondary border border-secondary/30' : 'bg-surface-container text-on-surface-variant border border-outline-variant/60'}">
-                  ${hasDirectEmail ? '@ Direct Recruiter' : '@ Domain Fallback'}
-                </span>
+                ${hasDirectEmail ? `
+                  <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-secondary/15 text-secondary border border-secondary/30 font-semibold">
+                    @ Direct Recruiter
+                  </span>
+                ` : `
+                  <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/10 text-amber-500 border border-amber-500/20 font-semibold flex items-center gap-1">
+                    <span class="material-symbols-outlined text-[12px]">mail_off</span>
+                    <span>Email Not Found</span>
+                  </span>
+                `}
               </div>
               <div class="flex items-center gap-2 text-xs font-mono text-on-surface-variant mt-0.5 flex-wrap">
-                <span class="text-on-surface font-medium">${targetDisplay}</span>
+                ${hasDirectEmail ? `
+                  <span class="text-on-surface font-medium">${escapeHTML(directEmail)}</span>
+                ` : `
+                  <span class="text-amber-500 font-medium italic">Email not found</span>
+                `}
                 <span class="text-outline-variant">|</span>
                 <span class="text-on-surface-variant">${escapeHTML(c.domain || '')}</span>
                 ${c.city ? `<span class="text-outline-variant">|</span><span class="text-on-surface-variant flex items-center gap-0.5"><span class="material-symbols-outlined text-[12px]">location_on</span>${escapeHTML(c.city)}</span>` : ''}

@@ -1696,7 +1696,7 @@ async def send_single_pitch_direct(
     if not target:
         return {
             "success": False,
-            "error": "No verified recipient email found for this lead. Enrich company data to discover verified contacts before sending."
+            "error": "Company email not found! Cannot send email."
         }
     effective_subject = custom_subject.strip() if custom_subject and custom_subject.strip() else pitch.subject_line
     effective_body = custom_body.strip() if custom_body and custom_body.strip() else pitch.email_body
@@ -1754,6 +1754,13 @@ async def log_sent_manual(
             detail="Forbidden: You do not own this cold pitch record."
         )
 
+    target = (pitch.target_email or "").strip()
+    if not target:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Company email not found! Cannot send or log email without recipient."
+        )
+
     pitch.status = "SENT"
     pitch.sent_at = datetime.utcnow()
     pitch.delivery_method = method
@@ -1761,7 +1768,7 @@ async def log_sent_manual(
     log_entry = OutreachLog(
         company_id=pitch.company_id,
         user_id=pitch.user_id,
-        recipient_email=pitch.target_email or "unknown",
+        recipient_email=target,
         subject=pitch.subject_line,
         email_body=pitch.email_body,
         delivery_method=method,
