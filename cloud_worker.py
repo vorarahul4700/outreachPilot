@@ -63,15 +63,28 @@ def log_job(db, job_id: int, msg: str, progress: int = None, live_card: dict = N
         db.rollback()
 
 
-def run_worker(job_id: int, keyword: str, city: str, max_pages: int):
+def run_worker(job_id: int, keyword: str, city: str, max_pages: int, auto_enrich: bool = False):
     """Main execution function for cloud scouting and AI enrichment"""
     db = SessionLocal()
     init_db()
 
-    job = db.query(ScoutJob).filter(ScoutJob.id == job_id).first()
+    job = db.query(ScoutJob).filter(ScoutJob.id == job_id).first() if (job_id and job_id > 0) else None
     if not job:
-        print(f"[Error] ScoutJob #{job_id} not found in database.")
-        sys.exit(1)
+        print(f"[Notice] ScoutJob #{job_id} not found or not provided. Auto-creating ScoutJob in database...")
+        job = ScoutJob(
+            keyword=keyword,
+            city=city,
+            max_pages=max_pages,
+            status="RUNNING",
+            progress=5,
+            status_message=f"Scouting verified companies for '{keyword}' in '{city}'...",
+            logs=[f"[{datetime.utcnow().strftime('%H:%M:%S')}] Manual cloud scout triggered. Initializing search engine..."],
+            results=[]
+        )
+        db.add(job)
+        db.commit()
+        db.refresh(job)
+        job_id = job.id
 
     job.status = "RUNNING"
     job.progress = 5
@@ -184,26 +197,27 @@ def run_worker(job_id: int, keyword: str, city: str, max_pages: int):
 
         log_job(db, job_id, f"Scouting finished! Saved {len(registered_cards)} verified companies to directory.", 100)
 
-        # Trigger decoupled cloud_enrich.yml workflow via GitHub Actions API
-        gh_token = os.environ.get("GITHUB_TOKEN")
-        gh_repo = os.environ.get("GITHUB_REPOSITORY", "vorarahul4700/outreachPilot")
-        if gh_token:
-            try:
-                import httpx
-                dispatch_url = f"https://api.github.com/repos/{gh_repo}/actions/workflows/cloud_enrich.yml/dispatches"
-                headers = {
-                    "Authorization": f"Bearer {gh_token}",
-                    "Accept": "application/vnd.github.v3+json"
-                }
-                resp = httpx.post(dispatch_url, json={"ref": "main"}, headers=headers, timeout=10)
-                if resp.status_code in (200, 204):
-                    log_job(db, job_id, "Initiated AI analysis: inspecting websites, tech stacks, and recruiter contacts.")
-                else:
-                    log_job(db, job_id, f"Dispatched cloud_enrich trigger (Status {resp.status_code}).")
-            except Exception as trig_err:
-                log_job(db, job_id, f"Note: cloud_enrich will trigger via workflow_run/cron ({trig_err}).")
+        # Trigger decoupled cloud_enrich.yml workflow via GitHub Actions API only if requested
+        if auto_enrich:
+            gh_token = os.environ.get("GITHUB_TOKEN")
+            gh_repo = os.environ.get("GITHUB_REPOSITORY", "vorarahul4700/outreachPilot")
+            if gh_token:
+                try:
+                    import httpx
+                    dispatch_url = f"https://api.github.com/repos/{gh_repo}/actions/workflows/cloud_enrich.yml/dispatches"
+                    headers = {
+                        "Authorization": f"Bearer {gh_token}",
+                        "Accept": "application/vnd.github.v3+json"
+                    }
+                    resp = httpx.post(dispatch_url, json={"ref": "main"}, headers=headers, timeout=10)
+                    if resp.status_code in (200, 204):
+                        log_job(db, job_id, "Initiated AI analysis: inspecting websites, tech stacks, and recruiter contacts.")
+                    else:
+                        log_job(db, job_id, f"Dispatched cloud_enrich trigger (Status {resp.status_code}).")
+                except Exception as trig_err:
+                    log_job(db, job_id, f"Note: could not auto-dispatch cloud_enrich ({trig_err}).")
         else:
-            log_job(db, job_id, "Scout finished! cloud_enrich will run automatically on workflow_run completion and 30-min cron.")
+            log_job(db, job_id, "Scout complete! Companies queued for AI enrichment after all scraping concludes.", 100)
 
     except Exception as e:
         print(f"[Error] Cloud runner failure: {e}")
@@ -231,15 +245,17 @@ def run_worker(job_id: int, keyword: str, city: str, max_pages: int):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="OutreachPilot Cloud Worker")
-    parser.add_argument("--job-id", type=int, required=True, help="Job ID in Neon DB")
+    parser.add_argument("--job-id", type=int, default=0, help="Job ID in Neon DB (optional, 0 to auto-create)")
     parser.add_argument("--keyword", type=str, default="IT Companies", help="Search keyword")
     parser.add_argument("--city", type=str, default="", help="Target city")
     parser.add_argument("--max-pages", type=int, default=2, help="Max pages to scrape")
+    parser.add_argument("--auto-enrich", action="store_true", default=False, help="Automatically trigger cloud_enrich after scout")
     args = parser.parse_args()
 
     run_worker(
         job_id=args.job_id,
         keyword=args.keyword,
         city=args.city,
-        max_pages=args.max_pages
+        max_pages=args.max_pages,
+        auto_enrich=args.auto_enrich
     )

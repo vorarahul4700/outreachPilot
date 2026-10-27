@@ -4,8 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       job_id:
-        description: "ScoutJob ID from Neon DB"
-        required: true
+        description: "ScoutJob ID from Neon DB (Optional - leave 0 to auto-create)"
+        required: false
+        default: "0"
       keyword:
         description: "Search Keyword (e.g. IT Companies)"
         required: true

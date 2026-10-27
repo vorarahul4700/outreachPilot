@@ -11,12 +11,6 @@ on:
         description: "Max attempts before marking INCOMPLETE"
         required: false
         default: "3"
-  workflow_run:
-    workflows: ["Cloud Scout & Automatic AI Enrichment Worker"]
-    types:
-      - completed
-  schedule:
-    - cron: "*/30 * * * *"
 
 jobs:
   enrich_job:
