@@ -967,11 +967,18 @@ async def get_companies(
                 }
 
         sent_logs = {}
+        user_pitches = {}
         if user and company_ids:
             sent_logs = {
                 log.company_id: log.sent_at
                 for log in db.query(OutreachLog)
                 .filter(OutreachLog.status == "SENT", OutreachLog.user_id == user.id, OutreachLog.company_id.in_(company_ids))
+                .all()
+            }
+            user_pitches = {
+                p.company_id: p.id
+                for p in db.query(ColdPitch.company_id, ColdPitch.id)
+                .filter(ColdPitch.user_id == user.id, ColdPitch.company_id.in_(company_ids))
                 .all()
             }
 
@@ -1003,6 +1010,7 @@ async def get_companies(
                 "invalid_at": c.invalid_at.strftime("%b %d, %Y %I:%M %p") if c.invalid_at else None,
                 "emails": emails,
                 "profile": profile,
+                "pitch_id": user_pitches.get(c.id),
                 "already_contacted": bool(sent_time),
                 "contacted_at": sent_time.strftime("%b %d, %Y %I:%M %p") if sent_time else None
             })
@@ -1644,6 +1652,154 @@ async def generate_single_pitch(
         "matched_skills": pitch_obj.matched_skills,
         "gmail_web_url": gmail_web_url,
         "mailto_url": mailto_url
+    }
+
+
+@app.post("/api/pitch/bulk-generate")
+async def generate_bulk_pitches(
+    req: BulkPitchRequest,
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """
+    High-throughput concurrent batch pitch generator.
+    Replaces slow 1-by-1 sequential AJAX calls with parallel multi-worker execution.
+    """
+    user = get_current_user(db, request)
+    if not user or not user.oauth_tokens:
+        raise HTTPException(
+            status_code=401,
+            detail="Authentication required. Please connect your Google account to generate personalized pitches."
+        )
+
+    client_id = f"{user.id}_{request.client.host if request and request.client else 'unknown'}"
+    enforce_rate_limit(f"bulk_pitch_gen_{client_id}", max_calls=30, window_seconds=60)
+
+    if not req.company_ids:
+        return {"success": True, "generated_count": 0, "total": 0, "pitches": []}
+
+    cand_profile = req.candidate_profile or user.resume_summary or {
+        "full_name": user.name or "Candidate",
+        "target_role": req.target_role or user.target_role or "Software Engineer",
+        "top_skills": ["Python", "FastAPI", "React", "PostgreSQL"],
+        "key_achievements": ["Built scalable web services and automated data workflows"]
+    }
+    if user.resume_link and not cand_profile.get("resume_link"):
+        cand_profile["resume_link"] = user.resume_link
+
+    # Batch load all requested companies in a single SQL query
+    companies = db.query(Company).filter(Company.id.in_(req.company_ids)).all()
+    if not companies:
+        return {"success": True, "generated_count": 0, "total": 0, "pitches": []}
+
+    # Pre-fetch existing pitches to update rather than duplicate
+    existing_pitches = {
+        p.company_id: p
+        for p in db.query(ColdPitch).filter(
+            ColdPitch.company_id.in_(req.company_ids),
+            ColdPitch.user_id == user.id
+        ).all()
+    }
+
+    # Extract plain dicts in main thread for complete thread safety
+    tasks = []
+    for comp in companies:
+        target_email = None
+        if comp.emails:
+            primary_emails = [e.email_address for e in comp.emails if getattr(e, "is_primary", False)]
+            if primary_emails:
+                target_email = primary_emails[0]
+            else:
+                for e in comp.emails:
+                    if is_recruitment_email(e.email_address):
+                        target_email = e.email_address
+                        break
+                if not target_email:
+                    target_email = comp.emails[0].email_address
+
+        comp_profile_data = {
+            "summary": comp.profile.summary_short if comp.profile else "",
+            "detailed_analysis": comp.profile.detailed_analysis if comp.profile else "",
+            "industry": comp.profile.industry if comp.profile else "Tech",
+            "tech_stack": comp.profile.tech_stack if comp.profile else [],
+            "tone": comp.profile.tone if comp.profile else "Professional"
+        }
+        tasks.append({
+            "company_id": comp.id,
+            "company_name": comp.name,
+            "target_email": target_email,
+            "profile": comp_profile_data
+        })
+
+    def process_task(task):
+        pitch_data = generate_personalized_pitch(
+            candidate_profile=cand_profile,
+            company_name=task["company_name"],
+            company_profile=task["profile"]
+        )
+
+        subj = (pitch_data.get("subject_line") or "").strip()
+        body = (pitch_data.get("email_body") or "").strip()
+        c_name = cand_profile.get("full_name") or (user.name if user and user.name else "Candidate")
+        t_role = cand_profile.get("target_role") or (user.target_role if user and user.target_role else "Professional")
+        if not subj:
+            subj = f"{t_role} inquiry - {c_name}"
+        if not body:
+            skills_str = ", ".join(cand_profile.get("top_skills", [])[:4]) or "PHP, Python, SQL, REST APIs"
+            body = f"Hi {task['company_name']} team,\n\nI’ve been following {task['company_name']} and wanted to reach out directly. As a {t_role} specializing in {skills_str}, I build scalable backend architectures, high-throughput APIs, and optimized databases.\n\nI'm exploring new {t_role} roles and would love to know if {task['company_name']} has open or upcoming engineering positions. Would you be open to a brief chat regarding how my experience could help your product roadmap?\n\nBest regards,\n{c_name}"
+
+        return {
+            "company_id": task["company_id"],
+            "company_name": task["company_name"],
+            "target_email": task["target_email"],
+            "subject_line": subj,
+            "email_body": body,
+            "cover_letter": pitch_data.get("cover_letter", ""),
+            "matched_skills": pitch_data.get("matched_skills", [])
+        }
+
+    # Parallelize generation across threadpool workers (up to 8 concurrent threads)
+    from concurrent.futures import ThreadPoolExecutor
+    max_workers = min(8, max(2, len(tasks)))
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        results = list(executor.map(process_task, tasks))
+
+    saved_pitches = []
+    for res in results:
+        cid = res["company_id"]
+        if cid in existing_pitches:
+            pitch_obj = existing_pitches[cid]
+            pitch_obj.subject_line = res["subject_line"]
+            pitch_obj.email_body = res["email_body"]
+            pitch_obj.cover_letter = res["cover_letter"]
+            pitch_obj.matched_skills = res["matched_skills"]
+            pitch_obj.target_email = res["target_email"]
+        else:
+            pitch_obj = ColdPitch(
+                company_id=cid,
+                user_id=user.id,
+                target_email=res["target_email"],
+                subject_line=res["subject_line"],
+                email_body=res["email_body"],
+                cover_letter=res["cover_letter"],
+                matched_skills=res["matched_skills"],
+                status="DRAFT"
+            )
+            db.add(pitch_obj)
+        db.flush()
+        saved_pitches.append({
+            "pitch_id": pitch_obj.id,
+            "company_id": cid,
+            "company_name": res["company_name"],
+            "target_email": res["target_email"]
+        })
+
+    db.commit()
+    return {
+        "success": True,
+        "generated_count": len(saved_pitches),
+        "total": len(companies),
+        "pitches": saved_pitches
     }
 
 

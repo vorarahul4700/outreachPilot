@@ -3269,16 +3269,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
         let authFailed = false;
         let generatedCount = 0;
+        const BATCH_SIZE = 20;
 
-        for (let i = 0; i < eligible.length; i++) {
+        for (let i = 0; i < eligible.length; i += BATCH_SIZE) {
           if (authFailed) break;
-          const comp = eligible[i];
-          btnGenAllPitches.innerHTML = `<span class="material-symbols-outlined text-[16px] animate-spin text-amber-300">progress_activity</span><span>Preparing (${i + 1}/${eligible.length})...</span>`;
+          const chunk = eligible.slice(i, i + BATCH_SIZE);
+          const chunkIds = chunk.map(c => c.id);
+          const currentEnd = Math.min(i + chunk.length, eligible.length);
+
+          btnGenAllPitches.innerHTML = `<span class="material-symbols-outlined text-[16px] animate-spin text-amber-300">progress_activity</span><span>Preparing (${currentEnd}/${eligible.length})...</span>`;
           try {
-            const res = await fetch("/api/pitch/generate", {
+            const res = await fetch("/api/pitch/bulk-generate", {
               method: "POST",
               headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ company_id: comp.id })
+              body: JSON.stringify({ company_ids: chunkIds })
             });
 
             if (res.status === 401) {
@@ -3290,10 +3294,22 @@ document.addEventListener("DOMContentLoaded", () => {
             }
 
             if (res.ok) {
-              generatedCount++;
+              const data = await res.json();
+              if (data.success && data.generated_count) {
+                generatedCount += data.generated_count;
+                if (data.pitches) {
+                  data.pitches.forEach(p => {
+                    const comp = eligible.find(c => c.id === p.company_id);
+                    if (comp) comp.pitch_id = p.pitch_id;
+                  });
+                }
+              }
+            } else {
+              const errData = await res.json().catch(() => ({}));
+              showToast(errData.detail || "Failed to generate pitches for batch.", "error");
             }
           } catch (err) {
-            console.error("Pitch error for", comp.name, err);
+            console.error("Bulk pitch error:", err);
           }
         }
 
@@ -3347,39 +3363,56 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const oldText = btnSendAllOutreach.innerHTML;
         btnSendAllOutreach.disabled = true;
-        btnSendAllOutreach.innerHTML = `<span class="material-symbols-outlined text-[16px] animate-spin">progress_activity</span><span>Preparing (${withEmail.length})...</span>`;
 
-        let pitchIdsToSend = [];
+        // Check which companies already have prepared pitches and which still need generation
+        const alreadyPrepared = withEmail.filter(c => c.pitch_id);
+        const needPreparation = withEmail.filter(c => !c.pitch_id);
+
+        let pitchIdsToSend = alreadyPrepared.map(c => c.pitch_id);
         let authFailed = false;
+        const BATCH_SIZE = 20;
 
-        // Generate / retrieve pitch IDs for each eligible company with discovered email
-        for (let i = 0; i < withEmail.length; i++) {
-          if (authFailed) break;
-          const comp = withEmail[i];
-          btnSendAllOutreach.innerHTML = `<span class="material-symbols-outlined text-[16px] animate-spin">progress_activity</span><span>Preparing (${i + 1}/${withEmail.length})...</span>`;
-          try {
-            const res = await fetch("/api/pitch/generate", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ company_id: comp.id })
-            });
+        // ONLY generate pitches for companies that don't have a prepared draft yet!
+        if (needPreparation.length > 0) {
+          btnSendAllOutreach.innerHTML = `<span class="material-symbols-outlined text-[16px] animate-spin">progress_activity</span><span>Preparing (${needPreparation.length})...</span>`;
 
-            if (res.status === 401) {
-              authFailed = true;
-              currentUser.is_logged_in = false;
-              showToast("Session expired. Please reconnect your Google account to send emails.", "warning");
-              showLoginModal("Session expired. Please reconnect your Google account to send emails.");
-              break;
-            }
+          for (let i = 0; i < needPreparation.length; i += BATCH_SIZE) {
+            if (authFailed) break;
+            const chunk = needPreparation.slice(i, i + BATCH_SIZE);
+            const chunkIds = chunk.map(c => c.id);
+            const currentEnd = Math.min(i + chunk.length, needPreparation.length);
 
-            if (res.ok) {
-              const data = await res.json();
-              if (data.success && data.pitch_id && data.target_email) {
-                pitchIdsToSend.push(data.pitch_id);
+            btnSendAllOutreach.innerHTML = `<span class="material-symbols-outlined text-[16px] animate-spin">progress_activity</span><span>Preparing (${currentEnd}/${needPreparation.length})...</span>`;
+            try {
+              const res = await fetch("/api/pitch/bulk-generate", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ company_ids: chunkIds })
+              });
+
+              if (res.status === 401) {
+                authFailed = true;
+                currentUser.is_logged_in = false;
+                showToast("Session expired. Please reconnect your Google account to send emails.", "warning");
+                showLoginModal("Session expired. Please reconnect your Google account to send emails.");
+                break;
               }
+
+              if (res.ok) {
+                const data = await res.json();
+                if (data.success && data.pitches) {
+                  data.pitches.forEach(p => {
+                    if (p.pitch_id && p.target_email) {
+                      pitchIdsToSend.push(p.pitch_id);
+                    }
+                    const comp = withEmail.find(c => c.id === p.company_id);
+                    if (comp) comp.pitch_id = p.pitch_id;
+                  });
+                }
+              }
+            } catch (err) {
+              console.error("Failed to bulk prepare pitches for send:", err);
             }
-          } catch (err) {
-            console.error("Failed to prepare pitch for", comp.name, err);
           }
         }
 
