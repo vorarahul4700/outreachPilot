@@ -1514,7 +1514,14 @@ async def upload_resume(
         else:
             raw_text = contents.decode("utf-8", errors="ignore")
 
-        parsed_profile = parse_resume_text(resume_text=raw_text, target_role=target_role)
+        try:
+            parsed_profile = parse_resume_text(resume_text=raw_text, target_role=target_role)
+        except Exception as e:
+            print(f"[Resume Analysis Error] {e}")
+            raise HTTPException(
+                status_code=500,
+                detail=f"Failed to analyze resume with AI: {e!s}. Please try again."
+            )
 
     if target_role:
         user.target_role = target_role
