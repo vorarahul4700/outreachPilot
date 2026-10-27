@@ -19,18 +19,41 @@ _ROTATING_MODELS = ["qwen/qwen3.8-27b", "openai/gpt-oss-20b", "openai/gpt-oss-12
 _model_counter = itertools.count()
 
 
-def call_groq_with_fallback(messages: list[dict], temperature: float = 0.3, max_tokens: int = 1200, response_format: dict = None):
+_EXHAUSTED_CLIENTS: dict[int, float] = {}
+
+def is_client_cooling_down(client_idx: int) -> bool:
+    exp = _EXHAUSTED_CLIENTS.get(client_idx)
+    if not exp:
+        return False
+    if time.time() < exp:
+        return True
+    _EXHAUSTED_CLIENTS.pop(client_idx, None)
+    return False
+
+def mark_client_cooldown(client_idx: int, cooldown_seconds: int = 180):
+    _EXHAUSTED_CLIENTS[client_idx] = time.time() + cooldown_seconds
+
+
+def call_groq_with_fallback(messages: list[dict], temperature: float = 0.3, max_tokens: int = 450, response_format: dict = None):
     """
     Calls Groq with automatic multi-account round-robin and model fallback cascade:
     Distributes parallel queries across multiple independent Groq accounts and models
-    to maximize throughput (up to 32,000+ TPM) and completely prevent rate-limit throttling.
+    to maximize throughput and completely prevent rate-limit throttling.
     """
     if not _CLIENT_POOL:
         raise RuntimeError("No active Groq API keys available.")
 
-    # Pick next starting client in rotation
-    client_start_idx = next(_client_counter) % len(_CLIENT_POOL)
-    candidate_clients = _CLIENT_POOL[client_start_idx:] + _CLIENT_POOL[:client_start_idx]
+    # Filter out accounts currently cooling down from daily token limits
+    available_indices = [
+        i for i in range(len(_CLIENT_POOL))
+        if not is_client_cooling_down(i)
+    ]
+    if not available_indices:
+        raise RuntimeError("All Groq accounts are temporarily at daily token limit capacity.")
+
+    # Pick next starting client in rotation among available clients
+    start_rot = next(_client_counter) % len(available_indices)
+    ordered_indices = available_indices[start_rot:] + available_indices[:start_rot]
 
     # Pick next primary model in rotation
     next_idx = next(_model_counter)
@@ -38,8 +61,12 @@ def call_groq_with_fallback(messages: list[dict], temperature: float = 0.3, max_
     candidate_models = [primary] + [m for m in _ROTATING_MODELS if m != primary]
 
     last_exc = None
-    for active_client in candidate_clients:
+    for c_idx in ordered_indices:
+        active_client = _CLIENT_POOL[c_idx]
+        client_rate_limited = False
         for model_name in candidate_models:
+            if client_rate_limited:
+                break
             for rf in [response_format, None]:  # Try with json_object format first, fallback to raw text parsing
                 try:
                     kwargs = {
@@ -55,9 +82,13 @@ def call_groq_with_fallback(messages: list[dict], temperature: float = 0.3, max_
                 except Exception as e:
                     last_exc = e
                     err_str = str(e).lower()
-                    if "429" in err_str or "rate limit" in err_str:
-                        # Account-level rate limit hit: immediately try the next account client
-                        time.sleep(0.3)
+                    if "tpd" in err_str or "tokens per day" in err_str:
+                        # Account-level daily token cap hit: mark account on cooldown
+                        mark_client_cooldown(c_idx, cooldown_seconds=180)
+                        client_rate_limited = True
+                        break
+                    elif "429" in err_str or "rate limit" in err_str:
+                        client_rate_limited = True
                         break
                     continue
     raise last_exc
@@ -287,64 +318,46 @@ def generate_personalized_pitch(
     """
     Synthesizes company intelligence with candidate technical assessment
     to create a laser-targeted 1-to-1 cold application email.
-    Guarantees zero robotic bracket placeholders and authentic engineering tone.
+    Guarantees zero robotic bracket placeholders, authentic engineering tone,
+    and ultra-fast execution.
     """
     candidate_name = candidate_profile.get("full_name", "Rahul Vora")
     target_role = candidate_profile.get("target_role", "Backend Developer")
-    skills = ", ".join(candidate_profile.get("top_skills", []) or ["PHP", "Python", "MySQL", "PostgreSQL", "REST APIs"])
-    achievements = "\n".join([f"- {a}" for a in candidate_profile.get("key_achievements", [])])
-    candidate_deep_analysis = candidate_profile.get("detailed_profile_analysis", "")
+    skills = ", ".join(candidate_profile.get("top_skills", [])[:4] or ["Python", "FastAPI", "PostgreSQL", "REST APIs"])
+    raw_achievements = candidate_profile.get("key_achievements", [])[:2]
+    achievements = "\n".join([f"- {a}" for a in raw_achievements]) if raw_achievements else "Built performant backend APIs and scalable data pipelines."
     resume_link = (candidate_profile.get("resume_link") or "").strip()
 
-    company_summary = company_profile.get("summary", "")
-    company_deep_analysis = company_profile.get("detailed_analysis", "")
-    company_tech = ", ".join(company_profile.get("tech_stack", []))
-    company_industry = company_profile.get("industry", "Technology")
+    company_summary = (company_profile.get("summary") or "")[:300]
+    company_tech = ", ".join(company_profile.get("tech_stack", [])[:5]) or "Modern Web Architecture"
+    company_industry = company_profile.get("industry") or "Technology"
 
-    resume_link_instruction = f"Candidate Resume/Portfolio Link: {resume_link}\nInclude this live link naturally in the email closing/CTA so the hiring team can review candidate's work directly." if resume_link else "Mention that candidate is ready to share complete resume and code samples upon reply."
+    resume_link_instruction = f"Candidate Portfolio/Resume: {resume_link} (Mention naturally in closing CTA)" if resume_link else ""
 
-    prompt = f"""You are an expert engineering talent strategist and cold email copywriter.
-You are helping an engineer ({candidate_name}) send a direct, high-impact cold application / talent inquiry email to {company_name}.
-This email is strictly a JOB OPPORTUNITY / TALENT APPLICATION outreach, NOT a sales pitch or agency inquiry.
+    prompt = f"""You are an expert technical talent copywriter crafting a direct cold application email for {candidate_name} to {company_name}.
+Target Company: {company_name} ({company_industry})
+Tech Stack: {company_tech}
+About Company: {company_summary}
 
-Target Company: {company_name}
-Industry: {company_industry}
-Active Tech Stack: {company_tech or 'Modern Web & Backend Architecture'}
-Company Overview: {company_summary}
-In-Depth Company Intelligence:
----
-{company_deep_analysis[:3500]}
----
-
-Candidate: {candidate_name} (Target Role: {target_role})
-Candidate Core Skills: {skills}
-Key Achievements:
+Candidate: {candidate_name} (Role: {target_role})
+Core Skills: {skills}
+Key Work:
 {achievements}
-Candidate In-Depth Profile:
----
-{candidate_deep_analysis[:3500]}
----
 {resume_link_instruction}
 
-STRICT WRITING RULES:
-1. GREETING: NEVER use bracketed placeholders like "[Hiring Manager Name]", "[Name]", "[Founder]", or "[Recipient]". These destroy response rates.
-   Greet naturally as: "Hi {company_name} team," or "Hi there,".
-2. SUBJECT LINE: 4 to 7 words. Natural, direct, professional. Zero marketing buzzwords.
-   Examples: "{target_role} inquiry - {candidate_name}" or "Quick question regarding {target_role} at {company_name}".
-3. BODY: 110-150 words. Authentic, concise, engineering-focused.
-   - Genuine Hook: Specifically reference what {company_name} builds.
-   - Value Bridge: Connect candidate's hands-on experience and metrics to how candidate can help {company_name} scale or ship.
-   - Clear CTA: Inquire about current or upcoming {target_role} opportunities.
-4. SIGN-OFF: Professional with candidate's name ({candidate_name}).
+STRICT RULES:
+1. GREETING: "Hi {company_name} team," (NEVER use bracket placeholders like [Name] or [Hiring Manager]).
+2. SUBJECT: 4-6 words (e.g., "{target_role} inquiry - {candidate_name}").
+3. BODY: 90-120 words. Authentic, concise engineering tone. Connect candidate's skills to company tech. Clear call-to-action inquiring about open roles.
+4. SIGN-OFF: Professional with {candidate_name}.
 
-Return ONLY a valid JSON object matching this schema:
+Return ONLY valid JSON:
 {{
   "subject_line": "Direct job inquiry subject line",
-  "email_body": "Full body of cold email (with natural line breaks)",
-  "cover_letter": "A 200-250 word tailored cover letter aligning candidate experience with company mission",
+  "email_body": "Full body of cold email",
+  "cover_letter": "Short 150-word tailored cover letter",
   "matched_skills": ["Skill 1", "Skill 2", "Skill 3"]
-}}
-"""
+}}"""
 
     def make_fallback():
         resume_mention = f"\n\nYou can also view my complete resume and projects here: {resume_link}" if resume_link else ""
@@ -366,7 +379,7 @@ Return ONLY a valid JSON object matching this schema:
                 {"role": "user", "content": prompt}
             ],
             temperature=0.3,
-            max_tokens=800,
+            max_tokens=400,
             response_format={"type": "json_object"}
         )
         parsed = clean_json_response(response.choices[0].message.content)

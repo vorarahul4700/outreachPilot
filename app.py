@@ -1758,9 +1758,9 @@ async def generate_bulk_pitches(
             "matched_skills": pitch_data.get("matched_skills", [])
         }
 
-    # Parallelize generation across threadpool workers (up to 8 concurrent threads)
+    # Parallelize generation across threadpool workers (up to 10 concurrent threads)
     from concurrent.futures import ThreadPoolExecutor
-    max_workers = min(8, max(2, len(tasks)))
+    max_workers = min(10, max(2, len(tasks)))
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         results = list(executor.map(process_task, tasks))
 
