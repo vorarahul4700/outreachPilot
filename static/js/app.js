@@ -3497,33 +3497,77 @@ document.addEventListener("DOMContentLoaded", () => {
         if (roleEl) roleEl.value = data.target_role;
       }
       if (data.profile) {
-        const pitchEl = document.getElementById("profile-pitch");
-        if (pitchEl && data.profile.elevator_pitch) {
-          pitchEl.textContent = data.profile.elevator_pitch;
-        }
-
-        const skillsContainer = document.getElementById("profile-skills");
-        if (skillsContainer && data.profile.top_skills) {
-          skillsContainer.innerHTML = data.profile.top_skills.map(s => `
-            <span class="px-2.5 py-1 rounded bg-primary/10 text-primary border border-primary/30 text-xs font-medium">${escapeHTML(s)}</span>
-          `).join("");
-        }
-
-        const achContainer = document.getElementById("profile-achievements");
-        if (achContainer && data.profile.key_achievements) {
-          achContainer.innerHTML = data.profile.key_achievements.map(a => `
-            <li>${escapeHTML(a)}</li>
-          `).join("");
-        }
-
-        const detailedAnalysisEl = document.getElementById("profile-detailed-analysis");
-        if (detailedAnalysisEl && data.profile.detailed_profile_analysis) {
-          detailedAnalysisEl.dataset.rawText = data.profile.detailed_profile_analysis;
-          detailedAnalysisEl.innerHTML = formatMarkdown(data.profile.detailed_profile_analysis);
-        }
+        renderCandidateProfile(data.profile);
       }
     } catch (err) {
       console.warn("Could not load candidate profile:", err);
+    }
+  }
+
+  function renderCandidateProfile(profile) {
+    if (!profile) return;
+    const pitchEl = document.getElementById("profile-pitch");
+    if (pitchEl && profile.elevator_pitch) {
+      pitchEl.textContent = profile.elevator_pitch;
+    }
+
+    const archetypeBadge = document.getElementById("profile-archetype-badge");
+    if (archetypeBadge) {
+      if (profile.archetype) {
+        archetypeBadge.textContent = profile.archetype;
+        archetypeBadge.classList.remove("hidden");
+      } else {
+        archetypeBadge.classList.add("hidden");
+      }
+    }
+
+    const skillsContainer = document.getElementById("profile-skills");
+    if (skillsContainer && profile.top_skills) {
+      skillsContainer.innerHTML = profile.top_skills.map(s => `
+        <span class="px-2.5 py-1 rounded bg-primary/10 text-primary border border-primary/30 text-xs font-medium">${escapeHTML(s)}</span>
+      `).join("");
+    }
+
+    const achContainer = document.getElementById("profile-achievements");
+    if (achContainer) {
+      const achievements = profile.strong_points || profile.key_achievements;
+      if (achievements && achievements.length > 0) {
+        achContainer.innerHTML = achievements.map(a => `
+          <li>${escapeHTML(a)}</li>
+        `).join("");
+      }
+    }
+
+    const rolesSec = document.getElementById("profile-roles-section");
+    const rolesContainer = document.getElementById("profile-best-fit-roles");
+    if (rolesSec && rolesContainer) {
+      if (profile.best_fit_roles && profile.best_fit_roles.length > 0) {
+        rolesContainer.innerHTML = profile.best_fit_roles.map(r => `
+          <span class="px-2.5 py-0.5 rounded bg-surface-container text-on-surface border border-outline-variant/40 text-xs font-medium">${escapeHTML(r)}</span>
+        `).join("");
+        rolesSec.classList.remove("hidden");
+      } else {
+        rolesSec.classList.add("hidden");
+      }
+    }
+
+    const atsSec = document.getElementById("profile-ats-section");
+    const atsContainer = document.getElementById("profile-ats-keywords");
+    if (atsSec && atsContainer) {
+      if (profile.ats_keywords && profile.ats_keywords.length > 0) {
+        atsContainer.innerHTML = profile.ats_keywords.map(k => `
+          <span class="px-2 py-0.5 rounded bg-surface-container-high/60 text-on-surface-variant border border-outline-variant/30 text-[11px] font-mono">${escapeHTML(k)}</span>
+        `).join("");
+        atsSec.classList.remove("hidden");
+      } else {
+        atsSec.classList.add("hidden");
+      }
+    }
+
+    const detailedAnalysisEl = document.getElementById("profile-detailed-analysis");
+    if (detailedAnalysisEl && profile.detailed_profile_analysis) {
+      detailedAnalysisEl.dataset.rawText = profile.detailed_profile_analysis;
+      detailedAnalysisEl.innerHTML = formatMarkdown(profile.detailed_profile_analysis);
     }
   }
 
@@ -3573,24 +3617,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         const data = await res.json();
         if (data.success && data.profile) {
-          document.getElementById("profile-pitch").textContent = data.profile.elevator_pitch || "Candidate Profile Active";
-          
-          const skillsContainer = document.getElementById("profile-skills");
-          skillsContainer.innerHTML = (data.profile.top_skills || []).map(s => `
-            <span class="px-2.5 py-1 rounded bg-primary/10 text-primary border border-primary/30 text-xs font-medium">${escapeHTML(s)}</span>
-          `).join("");
-
-          const achContainer = document.getElementById("profile-achievements");
-          achContainer.innerHTML = (data.profile.key_achievements || []).map(a => `
-            <li>${escapeHTML(a)}</li>
-          `).join("");
-
-          const detailedAnalysisEl = document.getElementById("profile-detailed-analysis");
-          if (detailedAnalysisEl && data.profile.detailed_profile_analysis) {
-            detailedAnalysisEl.dataset.rawText = data.profile.detailed_profile_analysis;
-            detailedAnalysisEl.innerHTML = formatMarkdown(data.profile.detailed_profile_analysis);
-          }
-
+          renderCandidateProfile(data.profile);
           showToast("Candidate Profile updated successfully!", "success");
         } else {
           showToast(data.detail || data.message || "Failed to update profile.", "error");
@@ -3760,7 +3787,174 @@ document.addEventListener("DOMContentLoaded", () => {
 
   modalClose.addEventListener("click", () => modal.classList.add("hidden"));
 
-  async function handleGeneratePitch(companyId) {
+  // State for pitch deliverables
+  let currentPitchCompanyId = null;
+  let currentPitchData = null;
+  let activeVariant = "primary";
+  let activeSubjectAngle = "specificity";
+
+  const btnModalRegenerate = document.getElementById("btn-modal-regenerate");
+  const pitchWordCount = document.getElementById("pitch-word-count");
+  const pitchStrategyToggle = document.getElementById("pitch-strategy-toggle");
+  const pitchStrategyContent = document.getElementById("pitch-strategy-content");
+  const pitchStrategyChevron = document.getElementById("pitch-strategy-chevron");
+  const pitchPersonalizationFacts = document.getElementById("pitch-personalization-facts");
+  const pitchStratNotHiring = document.getElementById("pitch-strat-not-hiring");
+  const pitchStratRecruiter = document.getElementById("pitch-strat-recruiter");
+
+  function updatePitchWordCount() {
+    if (!modalBody || !pitchWordCount) return;
+    const text = (modalBody.value || "").trim();
+    const count = text ? text.split(/\s+/).length : 0;
+    let limitLabel = "(<120w)";
+    let isOver = false;
+
+    if (activeVariant === "linkedin") {
+      limitLabel = "(<80w)";
+      isOver = count > 80;
+    } else if (activeVariant === "referral") {
+      limitLabel = "(<140w)";
+      isOver = count > 140;
+    } else {
+      isOver = count > 120;
+    }
+
+    pitchWordCount.textContent = `${count} words ${limitLabel}`;
+    if (isOver) {
+      pitchWordCount.className = "text-caption font-mono text-amber-500 font-semibold";
+    } else {
+      pitchWordCount.className = "text-caption font-mono text-outline";
+    }
+  }
+
+  function updateGmailComposeUrls() {
+    if (!btnLaunchGmail) return;
+    const to = currentPitchTargetEmail || "";
+    const subj = (modalSubject?.value || "").trim();
+    const body = (modalBody?.value || "").trim();
+    btnLaunchGmail.href = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(to)}&su=${encodeURIComponent(subj)}&body=${encodeURIComponent(body)}`;
+  }
+
+  if (modalBody) {
+    modalBody.addEventListener("input", () => {
+      updatePitchWordCount();
+      updateGmailComposeUrls();
+    });
+  }
+
+  if (modalSubject) {
+    modalSubject.addEventListener("input", updateGmailComposeUrls);
+  }
+
+  function setupSubjectAngleButtons(subjs, initialActive = "specificity") {
+    activeSubjectAngle = initialActive;
+    const angleMap = [
+      { id: "btn-subj-specificity", key: "specificity" },
+      { id: "btn-subj-curiosity", key: "curiosity" },
+      { id: "btn-subj-benefit", key: "benefit_led" }
+    ];
+
+    angleMap.forEach(item => {
+      const btn = document.getElementById(item.id);
+      if (!btn) return;
+      const angleVal = (subjs && subjs[item.key]) || "";
+      const previewSpan = btn.querySelector(".subject-preview");
+      if (previewSpan) {
+        previewSpan.textContent = angleVal || "N/A";
+      }
+
+      if (item.key === activeSubjectAngle) {
+        btn.className = "pitch-subject-btn active px-2.5 py-1 rounded-lg text-caption font-medium border border-primary/40 bg-primary/10 text-primary transition cursor-pointer flex items-center gap-1 shadow-xs";
+      } else {
+        btn.className = "pitch-subject-btn px-2.5 py-1 rounded-lg text-caption font-medium border border-outline-variant/40 bg-surface-container text-on-surface-variant hover:text-on-surface transition cursor-pointer flex items-center gap-1";
+      }
+
+      btn.onclick = (e) => {
+        e.preventDefault();
+        activeSubjectAngle = item.key;
+        if (angleVal) {
+          modalSubject.value = angleVal;
+          updateGmailComposeUrls();
+        }
+        setupSubjectAngleButtons(subjs, item.key);
+      };
+    });
+  }
+
+  function switchPitchVariant(variantKey) {
+    activeVariant = variantKey;
+    const tabsContainer = document.getElementById("pitch-variant-tabs");
+    if (tabsContainer) {
+      tabsContainer.querySelectorAll(".pitch-tab-btn").forEach(btn => {
+        if (btn.dataset.variant === variantKey) {
+          btn.className = "pitch-tab-btn active px-2.5 py-1 rounded text-caption font-semibold transition cursor-pointer bg-primary-container text-on-primary shadow-xs";
+        } else {
+          btn.className = "pitch-tab-btn px-2.5 py-1 rounded text-caption font-medium transition cursor-pointer text-on-surface-variant hover:text-on-surface";
+        }
+      });
+    }
+
+    if (!currentPitchData) return;
+    if (variantKey === "primary") {
+      modalBody.value = currentPitchData.primary_email || currentPitchData.email_body || "";
+    } else if (variantKey === "linkedin") {
+      modalBody.value = currentPitchData.variant_a_linkedin || "";
+    } else if (variantKey === "referral") {
+      modalBody.value = currentPitchData.variant_b_referral || currentPitchData.cover_letter || "";
+    }
+
+    updatePitchWordCount();
+    updateGmailComposeUrls();
+  }
+
+  const pitchVariantTabs = document.getElementById("pitch-variant-tabs");
+  if (pitchVariantTabs) {
+    pitchVariantTabs.querySelectorAll(".pitch-tab-btn").forEach(btn => {
+      btn.addEventListener("click", () => switchPitchVariant(btn.dataset.variant));
+    });
+  }
+
+  function populateStrategyNotes(notes, whatToChange) {
+    if (pitchPersonalizationFacts) {
+      if (notes && notes.length > 0) {
+        pitchPersonalizationFacts.innerHTML = notes.map(n => `<li>${escapeHTML(n)}</li>`).join("");
+      } else {
+        pitchPersonalizationFacts.innerHTML = `<li class="italic text-outline">Tailored to company tech stack and industry scope.</li>`;
+      }
+    }
+
+    if (pitchStratNotHiring) {
+      pitchStratNotHiring.textContent = (whatToChange && whatToChange.if_not_hiring) || "Shift focus to peer knowledge sharing or ad-hoc contract engineering.";
+    }
+
+    if (pitchStratRecruiter) {
+      pitchStratRecruiter.textContent = (whatToChange && whatToChange.if_recruiter) || "State target role, immediate availability, and core tech stack match directly.";
+    }
+  }
+
+  if (pitchStrategyToggle && pitchStrategyContent) {
+    pitchStrategyToggle.addEventListener("click", () => {
+      const isHidden = pitchStrategyContent.classList.contains("hidden");
+      if (isHidden) {
+        pitchStrategyContent.classList.remove("hidden");
+        if (pitchStrategyChevron) pitchStrategyChevron.style.transform = "rotate(180deg)";
+      } else {
+        pitchStrategyContent.classList.add("hidden");
+        if (pitchStrategyChevron) pitchStrategyChevron.style.transform = "rotate(0deg)";
+      }
+    });
+  }
+
+  if (btnModalRegenerate) {
+    btnModalRegenerate.addEventListener("click", () => {
+      if (currentPitchCompanyId) {
+        handleGeneratePitch(currentPitchCompanyId, true);
+      }
+    });
+  }
+
+  async function handleGeneratePitch(companyId, forceRegenerate = false) {
+    currentPitchCompanyId = companyId;
     const triggerBtn = document.querySelector(`.btn-gen-pitch-row[data-id="${companyId}"]`);
     const origHtml = triggerBtn ? triggerBtn.innerHTML : "";
     if (triggerBtn) {
@@ -3768,11 +3962,17 @@ document.addEventListener("DOMContentLoaded", () => {
       triggerBtn.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i><span>Preparing...</span>`;
       refreshIcons();
     }
+    if (btnModalRegenerate) {
+      btnModalRegenerate.disabled = true;
+      btnModalRegenerate.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i><span>Regenerating...</span>`;
+      refreshIcons();
+    }
+
     try {
       const res = await fetch("/api/pitch/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ company_id: companyId })
+        body: JSON.stringify({ company_id: companyId, force_regenerate: forceRegenerate })
       });
       if (res.status === 401) {
         currentUser.is_logged_in = false;
@@ -3782,6 +3982,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       const data = await res.json();
       if (data.success) {
+        currentPitchData = data;
         currentPitchId = data.pitch_id;
         currentPitchTargetEmail = (data.target_email || "").trim();
         modalCompanyName.textContent = `Personalized Outreach for ${data.company_name}`;
@@ -3790,10 +3991,26 @@ document.addEventListener("DOMContentLoaded", () => {
         } else {
           modalTargetEmail.innerHTML = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-mono bg-amber-500/10 text-amber-500 border border-amber-500/20 font-semibold"><span class="material-symbols-outlined text-[13px]">mail_off</span><span>Email not found (Sending disabled)</span></span>`;
         }
-        modalSubject.value = data.subject_line || "";
-        modalBody.value = data.email_body || "";
-        btnLaunchGmail.href = data.gmail_web_url || "#";
 
+        // Setup subject lines and default selection
+        const subjs = data.subject_lines || {
+          specificity: data.subject_line || "Engineering inquiry",
+          curiosity: "Quick question on your tech stack",
+          benefit_led: "Scaling backend pipelines"
+        };
+        modalSubject.value = data.subject_line || subjs.specificity || "";
+        setupSubjectAngleButtons(subjs, "specificity");
+
+        // Set primary email as active variant
+        activeVariant = "primary";
+        modalBody.value = data.primary_email || data.email_body || "";
+        switchPitchVariant("primary");
+
+        // Populate strategy notes
+        populateStrategyNotes(data.personalization_notes, data.what_to_change_if);
+
+        // Update URLs and attachment UI
+        updateGmailComposeUrls();
         updateResumeAttachmentUI();
         modal.classList.remove("hidden");
         refreshIcons();
@@ -3806,6 +4023,11 @@ document.addEventListener("DOMContentLoaded", () => {
       if (triggerBtn) {
         triggerBtn.disabled = false;
         triggerBtn.innerHTML = origHtml;
+        refreshIcons();
+      }
+      if (btnModalRegenerate) {
+        btnModalRegenerate.disabled = false;
+        btnModalRegenerate.innerHTML = `<span class="material-symbols-outlined text-[15px] text-amber-400">autorenew</span><span class="hidden sm:inline">Regenerate</span>`;
         refreshIcons();
       }
     }

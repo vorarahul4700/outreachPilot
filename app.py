@@ -261,6 +261,7 @@ class PitchGenRequest(BaseModel):
     company_id: int
     target_role: str | None = ""
     candidate_profile: dict[str, Any] | None = None
+    force_regenerate: bool = False
 
 
 class BulkPitchRequest(BaseModel):
@@ -1607,11 +1608,74 @@ async def generate_single_pitch(
         ColdPitch.user_id == user.id
     ).first()
 
+    # If existing pitch has already been generated with rich deliverables, return immediately unless force_regenerate is requested
+    if existing_pitch and not getattr(req, "force_regenerate", False):
+        raw_meta = existing_pitch.matched_skills if isinstance(existing_pitch.matched_skills, dict) else {}
+        if existing_pitch.email_body and raw_meta.get("variant_a_linkedin"):
+            gmail_web_url = generate_gmail_web_link(
+                to_email=target_email or existing_pitch.target_email or "",
+                subject=existing_pitch.subject_line,
+                body=existing_pitch.email_body
+            )
+            mailto_url = generate_mailto_link(
+                to_email=target_email or existing_pitch.target_email or "",
+                subject=existing_pitch.subject_line,
+                body=existing_pitch.email_body
+            )
+            return {
+                "success": True,
+                "pitch_id": existing_pitch.id,
+                "company_name": company.name,
+                "target_email": target_email or existing_pitch.target_email,
+                "subject_line": existing_pitch.subject_line,
+                "subject_lines": raw_meta.get("subject_lines") or {
+                    "specificity": existing_pitch.subject_line,
+                    "curiosity": f"Engineering inquiry - {cand_profile.get('full_name', 'Candidate')}",
+                    "benefit_led": f"Scalable systems for {company.name}"
+                },
+                "email_body": existing_pitch.email_body,
+                "primary_email": raw_meta.get("primary_email", existing_pitch.email_body),
+                "variant_a_linkedin": raw_meta.get("variant_a_linkedin", ""),
+                "variant_b_referral": raw_meta.get("variant_b_referral", existing_pitch.cover_letter or ""),
+                "cover_letter": existing_pitch.cover_letter or "",
+                "personalization_notes": raw_meta.get("personalization_notes", []),
+                "what_to_change_if": raw_meta.get("what_to_change_if", {}),
+                "matched_skills": raw_meta.get("skills") if isinstance(raw_meta.get("skills"), list) else (existing_pitch.matched_skills if isinstance(existing_pitch.matched_skills, list) else []),
+                "gmail_web_url": gmail_web_url,
+                "mailto_url": mailto_url
+            }
+
+    pitch_data = generate_personalized_pitch(
+        candidate_profile=cand_profile,
+        company_name=company.name,
+        company_profile=comp_profile_data
+    )
+
+    subj = (pitch_data.get("subject_line") or "").strip()
+    body = (pitch_data.get("primary_email") or pitch_data.get("email_body") or "").strip()
+    c_name = cand_profile.get("full_name") or (user.name if user and user.name else "Candidate")
+    t_role = cand_profile.get("target_role") or (user.target_role if user and user.target_role else "Professional")
+    if not subj:
+        subj = f"{t_role} inquiry - {c_name}"
+    if not body:
+        skills_str = ", ".join(cand_profile.get("top_skills", [])[:4]) or "PHP, Python, SQL, REST APIs"
+        body = f"Hi {company.name} team,\n\nI’ve been following {company.name} and wanted to reach out directly. As a {t_role} specializing in {skills_str}, I build scalable backend architectures, high-throughput APIs, and optimized databases.\n\nI'm exploring new {t_role} roles and would love to know if {company.name} has open or upcoming engineering positions. Would you be open to a brief chat regarding how my experience could help your product roadmap?\n\nBest regards,\n{c_name}"
+
+    matched_meta = {
+        "skills": pitch_data.get("matched_skills", []),
+        "subject_lines": pitch_data.get("subject_lines", {}),
+        "primary_email": body,
+        "variant_a_linkedin": pitch_data.get("variant_a_linkedin", ""),
+        "variant_b_referral": pitch_data.get("variant_b_referral", ""),
+        "personalization_notes": pitch_data.get("personalization_notes", []),
+        "what_to_change_if": pitch_data.get("what_to_change_if", {})
+    }
+
     if existing_pitch:
         existing_pitch.subject_line = subj
         existing_pitch.email_body = body
         existing_pitch.cover_letter = pitch_data.get("cover_letter", "")
-        existing_pitch.matched_skills = pitch_data.get("matched_skills", [])
+        existing_pitch.matched_skills = matched_meta
         existing_pitch.target_email = target_email
         db.commit()
         pitch_obj = existing_pitch
@@ -1623,7 +1687,7 @@ async def generate_single_pitch(
             subject_line=subj,
             email_body=body,
             cover_letter=pitch_data.get("cover_letter", ""),
-            matched_skills=pitch_data.get("matched_skills", []),
+            matched_skills=matched_meta,
             status="DRAFT"
         )
         db.add(pitch_obj)
@@ -1647,9 +1711,15 @@ async def generate_single_pitch(
         "company_name": company.name,
         "target_email": target_email,
         "subject_line": pitch_obj.subject_line,
+        "subject_lines": pitch_data.get("subject_lines", {}),
         "email_body": pitch_obj.email_body,
+        "primary_email": pitch_data.get("primary_email", pitch_obj.email_body),
+        "variant_a_linkedin": pitch_data.get("variant_a_linkedin", ""),
+        "variant_b_referral": pitch_data.get("variant_b_referral", ""),
         "cover_letter": pitch_obj.cover_letter,
-        "matched_skills": pitch_obj.matched_skills,
+        "personalization_notes": pitch_data.get("personalization_notes", []),
+        "what_to_change_if": pitch_data.get("what_to_change_if", {}),
+        "matched_skills": pitch_data.get("matched_skills", []),
         "gmail_web_url": gmail_web_url,
         "mailto_url": mailto_url
     }
@@ -1739,7 +1809,7 @@ async def generate_bulk_pitches(
         )
 
         subj = (pitch_data.get("subject_line") or "").strip()
-        body = (pitch_data.get("email_body") or "").strip()
+        body = (pitch_data.get("primary_email") or pitch_data.get("email_body") or "").strip()
         c_name = cand_profile.get("full_name") or (user.name if user and user.name else "Candidate")
         t_role = cand_profile.get("target_role") or (user.target_role if user and user.target_role else "Professional")
         if not subj:
@@ -1748,6 +1818,16 @@ async def generate_bulk_pitches(
             skills_str = ", ".join(cand_profile.get("top_skills", [])[:4]) or "PHP, Python, SQL, REST APIs"
             body = f"Hi {task['company_name']} team,\n\nI’ve been following {task['company_name']} and wanted to reach out directly. As a {t_role} specializing in {skills_str}, I build scalable backend architectures, high-throughput APIs, and optimized databases.\n\nI'm exploring new {t_role} roles and would love to know if {task['company_name']} has open or upcoming engineering positions. Would you be open to a brief chat regarding how my experience could help your product roadmap?\n\nBest regards,\n{c_name}"
 
+        matched_meta = {
+            "skills": pitch_data.get("matched_skills", []),
+            "subject_lines": pitch_data.get("subject_lines", {}),
+            "primary_email": body,
+            "variant_a_linkedin": pitch_data.get("variant_a_linkedin", ""),
+            "variant_b_referral": pitch_data.get("variant_b_referral", ""),
+            "personalization_notes": pitch_data.get("personalization_notes", []),
+            "what_to_change_if": pitch_data.get("what_to_change_if", {})
+        }
+
         return {
             "company_id": task["company_id"],
             "company_name": task["company_name"],
@@ -1755,7 +1835,7 @@ async def generate_bulk_pitches(
             "subject_line": subj,
             "email_body": body,
             "cover_letter": pitch_data.get("cover_letter", ""),
-            "matched_skills": pitch_data.get("matched_skills", [])
+            "matched_skills": matched_meta
         }
 
     # Parallelize generation across threadpool workers (up to 10 concurrent threads)
