@@ -18,7 +18,7 @@ on:
       max_pages:
         description: "Max pages to scrape"
         required: false
-        default: "25"
+        default: "50"
 
 jobs:
   cloud_scout_job:
