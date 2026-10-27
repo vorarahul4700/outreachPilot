@@ -4351,11 +4351,12 @@ document.addEventListener("DOMContentLoaded", () => {
                   <span class="material-symbols-outlined text-[14px]">history</span>
                   <span>Sent Log</span>
                 </button>
-              ` : ''}
-              <button type="button" class="btn-gen-pitch-row btn-card-pitch px-3.5 py-1.5 rounded text-xs font-headline font-semibold transition flex items-center gap-1.5 cursor-pointer shadow-sm" data-id="${c.id}">
-                <span class="material-symbols-outlined text-[15px]">send</span>
-                <span>${c.already_contacted ? 'Send Follow-up' : 'Review & Send'}</span>
-              </button>
+              ` : `
+                <button type="button" class="btn-gen-pitch-row btn-card-pitch px-3.5 py-1.5 rounded text-xs font-headline font-semibold transition flex items-center gap-1.5 cursor-pointer shadow-sm" data-id="${c.id}">
+                  <span class="material-symbols-outlined text-[15px]">send</span>
+                  <span>Review & Send</span>
+                </button>
+              `}
             </div>
           </div>
         `;
@@ -4405,11 +4406,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 <span class="material-symbols-outlined text-[14px]">history</span>
                 <span>Sent</span>
               </button>
-            ` : ''}
-            <button type="button" class="btn-gen-pitch-row btn-card-pitch px-3.5 py-1.5 rounded text-xs font-headline font-semibold transition flex items-center gap-1.5 cursor-pointer shadow-sm" data-id="${c.id}">
-              <span class="material-symbols-outlined text-[15px]">send</span>
-              <span>${c.already_contacted ? 'Send Follow-up' : 'Review & Send'}</span>
-            </button>
+            ` : `
+              <button type="button" class="btn-gen-pitch-row btn-card-pitch px-3.5 py-1.5 rounded text-xs font-headline font-semibold transition flex items-center gap-1.5 cursor-pointer shadow-sm" data-id="${c.id}">
+                <span class="material-symbols-outlined text-[15px]">send</span>
+                <span>Review & Send</span>
+              </button>
+            `}
           </div>
         `;
       }
