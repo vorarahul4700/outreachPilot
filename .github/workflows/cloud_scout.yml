@@ -18,12 +18,12 @@ on:
       max_pages:
         description: "Max pages to scrape"
         required: false
-        default: "10"
+        default: "25"
 
 jobs:
   cloud_scout_job:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 45
 
     permissions:
       contents: read

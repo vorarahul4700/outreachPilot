@@ -248,7 +248,7 @@ if __name__ == "__main__":
     parser.add_argument("--job-id", type=int, default=0, help="Job ID in Neon DB (optional, 0 to auto-create)")
     parser.add_argument("--keyword", type=str, default="IT Companies", help="Search keyword")
     parser.add_argument("--city", type=str, default="", help="Target city")
-    parser.add_argument("--max-pages", type=int, default=2, help="Max pages to scrape")
+    parser.add_argument("--max-pages", type=int, default=25, help="Max pages to scrape")
     parser.add_argument("--auto-enrich", action="store_true", default=False, help="Automatically trigger cloud_enrich after scout")
     args = parser.parse_args()
 
