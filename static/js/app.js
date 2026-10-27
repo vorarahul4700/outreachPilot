@@ -2413,19 +2413,19 @@ document.addEventListener("DOMContentLoaded", () => {
     cmodalBadge.onclick = null;
     cmodalBadge.removeAttribute("title");
     if (company.is_invalid) {
-      cmodalBadge.className = "px-2 py-0.5 rounded bg-rose-950 text-rose-300 border border-rose-700 text-[10px] font-bold flex items-center space-x-1";
-      cmodalBadge.innerHTML = `<i data-lucide="shield-alert" class="w-3 h-3 text-rose-400"></i><span>INVALID LEAD</span>`;
+      cmodalBadge.className = "px-2.5 py-0.5 rounded-full text-caption font-bold bg-error/10 hover:bg-error/20 text-error border border-error/30 flex items-center gap-1 shadow-xs";
+      cmodalBadge.innerHTML = `<span class="material-symbols-outlined text-[13px]">shield</span><span>INVALID LEAD</span>`;
     } else if (company.already_contacted) {
-      cmodalBadge.className = "px-2 py-0.5 rounded bg-sky-950 hover:bg-sky-900 text-sky-400 border border-sky-800 text-[10px] font-semibold flex items-center space-x-1 cursor-pointer transition shadow-sm";
+      cmodalBadge.className = "px-2.5 py-0.5 rounded-full text-caption font-semibold bg-secondary/15 hover:bg-secondary/25 text-secondary border border-secondary/30 flex items-center gap-1 cursor-pointer transition shadow-xs";
       cmodalBadge.title = "Click to view message sent";
-      cmodalBadge.innerHTML = `<i data-lucide="check" class="w-3 h-3 text-sky-400"></i><span>Contacted ${company.contacted_at || ''}</span>`;
+      cmodalBadge.innerHTML = `<span class="material-symbols-outlined text-[13px]">check_circle</span><span>Contacted ${company.contacted_at || ''}</span>`;
       cmodalBadge.onclick = () => window.viewSentEmailForCompany(company.id);
     } else if (company.is_enriched) {
-      cmodalBadge.className = "px-2 py-0.5 rounded bg-primary/10 text-primary border border-primary/30 text-[10px] font-semibold flex items-center space-x-1";
-      cmodalBadge.innerHTML = `<i data-lucide="zap" class="w-3 h-3 text-primary"></i><span>AI Enriched</span>`;
+      cmodalBadge.className = "px-2.5 py-0.5 rounded-full text-caption font-semibold bg-primary/10 text-primary border border-primary/30 flex items-center gap-1 shadow-xs";
+      cmodalBadge.innerHTML = `<span class="material-symbols-outlined text-[13px]">auto_awesome</span><span>AI Enriched</span>`;
     } else {
-      cmodalBadge.className = "px-2.5 py-0.5 rounded bg-surface-container text-on-surface-variant border border-outline-variant/60 text-[10px] font-mono";
-      cmodalBadge.textContent = "Verified Lead";
+      cmodalBadge.className = "px-2.5 py-0.5 rounded-full bg-surface-container text-on-surface-variant border border-outline-variant/60 text-caption font-mono flex items-center gap-1";
+      cmodalBadge.innerHTML = `<span class="material-symbols-outlined text-[13px]">verified</span><span>Verified Lead</span>`;
     }
 
     // Discovered Emails
