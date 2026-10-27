@@ -2070,9 +2070,11 @@ document.addEventListener("DOMContentLoaded", () => {
           }
 
           // Description (2-line clamp with JSON cleanup)
+          const rawKeyword = c.normalized_keyword || c.search_keyword || '';
+          const cleanKeyword = rawKeyword.replace(/\s+(companies|firms|agencies)$/i, '').trim();
           let rawDesc = (c.profile && c.profile.summary)
             ? c.profile.summary
-            : (c.description || (c.normalized_keyword ? `${c.normalized_keyword} engineering and enterprise solutions.` : 'Enterprise technology solutions automating operational pipelines.'));
+            : (c.description || (cleanKeyword ? `${cleanKeyword} engineering and enterprise solutions.` : 'Technology solutions and services provider.'));
           if (typeof rawDesc === 'string') {
             const trimmed = rawDesc.trim();
             if (trimmed.startsWith('{') || trimmed.includes('"summary"')) {
@@ -2092,13 +2094,17 @@ document.addEventListener("DOMContentLoaded", () => {
           const emailIcon = hasEmail ? 'mark_email_read' : 'mail_off';
           const emailColor = hasEmail ? 'text-secondary' : 'text-amber-500/80';
           const emailTextClass = hasEmail ? 'text-secondary font-medium' : 'text-amber-500/80 font-normal';
-          const locationText = c.city ? `${c.city}, IN` : (cleanAddressText(c.address) || 'San Francisco, CA');
+          const locationText = c.city ? `${c.city}, IN` : (cleanAddressText(c.address) || 'India');
 
-          // Tech stack pills in quiet micro-chip style
-          let techStack = (c.profile && c.profile.tech_stack && c.profile.tech_stack.length > 0)
-            ? c.profile.tech_stack.slice(0, 4)
-            : ["Next.js", "PyTorch", "AWS", "PostgreSQL"];
-          const techPillsHtml = techStack.map(t => `<span class="px-2 py-0.5 rounded text-[11px] font-mono tracking-wide bg-surface-container text-on-surface-variant border border-outline-variant/30">${escapeHTML(t)}</span>`).join('');
+          // Tech stack pills (Only show verified AI-enriched tech stack; never misleading placeholders)
+          let techPillsHtml = '';
+          if (c.profile && Array.isArray(c.profile.tech_stack) && c.profile.tech_stack.length > 0) {
+            techPillsHtml = c.profile.tech_stack.slice(0, 4).map(t => `<span class="px-2 py-0.5 rounded text-[11px] font-mono tracking-wide bg-surface-container text-on-surface-variant border border-outline-variant/30">${escapeHTML(t)}</span>`).join('');
+          } else if (c.is_enriched) {
+            techPillsHtml = `<span class="px-2 py-0.5 rounded text-[11px] font-mono tracking-wide text-on-surface-variant/60 bg-surface-container/40 border border-outline-variant/20 italic">No frameworks detected</span>`;
+          } else {
+            techPillsHtml = `<span class="px-2 py-0.5 rounded text-[11px] font-mono tracking-wide text-on-surface-variant/60 bg-surface-container/40 border border-outline-variant/20 italic flex items-center gap-1.5"><span class="material-symbols-outlined text-[13px] text-amber-500/70">hourglass_top</span><span>Stack pending AI enrichment</span></span>`;
+          }
 
           const excludeBtn = canManageLeads
             ? `<button class="btn-single-invalidate text-on-surface-variant hover:text-error p-1 rounded transition cursor-pointer" data-id="${c.id}" title="Exclude lead from outreach"><span class="material-symbols-outlined text-[16px]">block</span></button>`
@@ -2473,13 +2479,13 @@ document.addEventListener("DOMContentLoaded", () => {
           <span class="px-2.5 py-1 rounded bg-surface-container-high border border-outline-variant/40 text-on-surface text-xs font-mono font-medium">${escapeHTML(tech)}</span>
         `).join("");
       } else {
-        cmodalTechstack.innerHTML = `<span class="text-on-surface-variant italic text-[11px]">General modern web stack</span>`;
+        cmodalTechstack.innerHTML = `<span class="text-on-surface-variant italic text-[11px]">No tech stack detected</span>`;
       }
     } else {
-      cmodalSummary.textContent = "Analyzing company footprint...";
+      cmodalSummary.textContent = "Awaiting AI enrichment...";
       cmodalIndustry.textContent = "Pending Analysis";
       cmodalTone.textContent = "Professional";
-      cmodalTechstack.innerHTML = `<span class="text-on-surface-variant italic text-[11px]">Detecting tech stack...</span>`;
+      cmodalTechstack.innerHTML = `<span class="text-on-surface-variant italic text-[11px]">Pending AI enrichment</span>`;
     }
 
     // Check if detailed analysis is already loaded or in local memory cache
@@ -2526,6 +2532,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 cmodalTechstack.innerHTML = stack.map(tech => `
                   <span class="px-2.5 py-1 rounded bg-surface-container-high border border-outline-variant/40 text-on-surface text-xs font-mono font-medium">${escapeHTML(tech)}</span>
                 `).join("");
+              } else {
+                cmodalTechstack.innerHTML = `<span class="text-on-surface-variant italic text-[11px]">No tech stack detected</span>`;
               }
             } else {
               cmodalDetailedAnalysis.innerHTML = `<span class="text-on-surface-variant italic">Not enriched yet. Click 'Enrich with AI' below to generate comprehensive intelligence report.</span>`;
@@ -4476,10 +4484,15 @@ document.addEventListener("DOMContentLoaded", () => {
         ? `<button type="button" onclick="window.viewSentEmailForCompany(${c.id})" class="px-2 py-0.5 rounded text-[10px] font-mono bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 font-semibold flex items-center gap-1 shrink-0 cursor-pointer transition shadow-sm" title="Click to view message sent"><span class="material-symbols-outlined text-[12px]">check_circle</span><span>Sent</span></button>`
         : `<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-surface-container text-on-surface-variant border border-outline-variant/60 shrink-0">Queue</span>`;
 
-      let techStack = (c.profile && c.profile.tech_stack && c.profile.tech_stack.length > 0)
-        ? c.profile.tech_stack.slice(0, 4)
-        : ["Next.js", "Python", "AWS"];
-      const techPillsHtml = techStack.map(t => `<span class="px-2 py-0.5 rounded text-[10px] font-mono tracking-wide bg-surface-container-lowest text-on-surface-variant border border-outline-variant/40">${escapeHTML(t)}</span>`).join('');
+      // Tech stack pills (Strict: only verified AI-enriched tech stack)
+      let techPillsHtml = '';
+      if (c.profile && Array.isArray(c.profile.tech_stack) && c.profile.tech_stack.length > 0) {
+        techPillsHtml = c.profile.tech_stack.slice(0, 4).map(t => `<span class="px-2 py-0.5 rounded text-[10px] font-mono tracking-wide bg-surface-container-lowest text-on-surface-variant border border-outline-variant/40">${escapeHTML(t)}</span>`).join('');
+      } else if (c.is_enriched) {
+        techPillsHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-mono tracking-wide text-on-surface-variant/60 bg-surface-container-lowest/50 border border-outline-variant/30 italic">No frameworks detected</span>`;
+      } else {
+        techPillsHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-mono tracking-wide text-on-surface-variant/60 bg-surface-container-lowest/50 border border-outline-variant/30 italic flex items-center gap-1"><span class="material-symbols-outlined text-[12px] text-amber-500/70">hourglass_top</span><span>Stack pending AI enrichment</span></span>`;
+      }
 
       if (outreachViewMode === "grid") {
         // Mode A: Executive Dispatch Bento Card
@@ -4552,7 +4565,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <!-- Part 3: Detected Tech Stack Chips & Rating -->
             <div class="space-y-1.5 mb-4">
               <div class="flex items-center justify-between text-[10px] font-mono text-on-surface-variant">
-                <span>DETECTED TECH STACK</span>
+                <span>${(c.profile && Array.isArray(c.profile.tech_stack) && c.profile.tech_stack.length > 0) ? 'DETECTED TECH STACK' : 'INTELLIGENCE STATUS'}</span>
                 ${ratingDisplay}
               </div>
               <div class="flex flex-wrap gap-1.5">

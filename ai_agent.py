@@ -123,8 +123,8 @@ def analyze_company(company_name: str, domain: str, scraped_text: str) -> dict[s
             "summary": f"{company_name} is a technology company operating on {domain}.",
             "detailed_analysis": f"### 1. Company Overview & Identity\n- **Name:** {company_name}\n- **Domain:** {domain}\n- **Core Focus:** Digital technology and software development solutions.\n\n### 2. Services & Expertise\n- Web & Mobile Application Development\n- Custom Enterprise Solutions\n\n### 3. Technology Stack & Languages\n- **Languages & Frameworks:** Modern web and mobile engineering technologies.\n\n### 4. Industries & Client Portfolio\n- Cross-industry software consulting.\n\n### 5. Development Process & Engagement Model\n- Agile discovery, iterative development, and ongoing support.\n\n### 6. Additional Insights\n- Client-first engineering and continuous maintenance.",
             "industry": "Software & Services",
-            "tech_stack": ["Web Technologies", "APIs"],
-            "services": ["Software Development", "IT Services"],
+            "tech_stack": [],
+            "services": [],
             "hiring_signals": "General engineering expansion",
             "tone": "Professional"
         }
@@ -203,8 +203,8 @@ Your response MUST be a valid JSON object matching this schema:
             "summary": f"{company_name} is an active technology provider on {domain}.",
             "detailed_analysis": f"### 1. Company Overview & Identity\n- **Official Name:** {company_name}\n- **Domain:** {domain}\n\n### 2. Services & Expertise\n- Software Engineering & Digital Services\n\n### 3. Technology Stack & Languages\n- Web & Cloud Technologies\n\n### 4. Industries & Client Portfolio\n- Commercial & Enterprise Clients\n\n### 5. Development Process & Engagement Model\n- Consultative Agile Delivery\n\n### 6. Additional Insights\n- Client-oriented technology partner.",
             "industry": "Information Technology",
-            "tech_stack": ["PHP", "JavaScript", "MySQL"],
-            "services": ["Custom Software Development"],
+            "tech_stack": [],
+            "services": [],
             "hiring_signals": "Open to talented engineers",
             "tone": "Professional"
         }
