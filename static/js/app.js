@@ -987,13 +987,25 @@ document.addEventListener("DOMContentLoaded", () => {
   if (inputKeyword) {
     inputKeyword.addEventListener("input", () => {
       clearTimeout(scoutInputTimer);
-      scoutInputTimer = setTimeout(updateScoutViewFromInputs, 200);
+      scoutInputTimer = setTimeout(updateScoutViewFromInputs, 350);
+    });
+    inputKeyword.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        clearTimeout(scoutInputTimer);
+        updateScoutViewFromInputs();
+      }
     });
   }
   if (inputCity) {
     inputCity.addEventListener("input", () => {
       clearTimeout(scoutInputTimer);
-      scoutInputTimer = setTimeout(updateScoutViewFromInputs, 200);
+      scoutInputTimer = setTimeout(updateScoutViewFromInputs, 350);
+    });
+    inputCity.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        clearTimeout(scoutInputTimer);
+        updateScoutViewFromInputs();
+      }
     });
   }
 
@@ -1003,6 +1015,7 @@ document.addEventListener("DOMContentLoaded", () => {
       cmodal?.classList.add("hidden");
       modal?.classList.add("hidden");
       loginModal?.classList.add("hidden");
+      document.getElementById("resume-confirm-modal")?.classList.add("hidden");
     }
   });
 
@@ -1376,13 +1389,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let filterDebounceTimer = null;
   function applyCompanyFiltersAndRender(resetPage = false) {
-    if (resetPage) {
+    const shouldReset = resetPage === true || (resetPage && typeof resetPage !== "object");
+    if (shouldReset) {
       companiesCurrentPage = 1;
     }
     clearTimeout(filterDebounceTimer);
     filterDebounceTimer = setTimeout(() => {
-      fetchCompanies(!resetPage);
-    }, 150);
+      fetchCompanies(!shouldReset);
+    }, 400);
   }
 
   const btnResetFilters = document.getElementById("btn-reset-filters");
@@ -1619,8 +1633,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (searchInput) {
+      let searchDebounce = null;
       searchInput.addEventListener("input", (e) => {
-        renderList(e.target.value);
+        clearTimeout(searchDebounce);
+        searchDebounce = setTimeout(() => {
+          renderList(e.target.value);
+        }, 120);
       });
       searchInput.addEventListener("keydown", (e) => {
         if (e.key === "Escape") {
@@ -1704,7 +1722,7 @@ document.addEventListener("DOMContentLoaded", () => {
     onSelect: (val) => {
       outreachSelectedTech = (val || "").trim().toLowerCase();
       outreachCurrentPage = 1;
-      renderPitchesList();
+      fetchOutreachCompanies(false);
     }
   });
 
@@ -1717,7 +1735,7 @@ document.addEventListener("DOMContentLoaded", () => {
     onSelect: (val) => {
       outreachSelectedCity = (val || "").trim().toLowerCase();
       outreachCurrentPage = 1;
-      renderPitchesList();
+      fetchOutreachCompanies(false);
     }
   });
 
@@ -2631,7 +2649,14 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   if (filterInput) {
-    filterInput.addEventListener("input", applyCompanyFiltersAndRender);
+    filterInput.addEventListener("input", () => applyCompanyFiltersAndRender(true));
+    filterInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        clearTimeout(filterDebounceTimer);
+        companiesCurrentPage = 1;
+        fetchCompanies(false);
+      }
+    });
   }
 
   const filterTabAll = document.getElementById("filter-tab-all");
@@ -3282,11 +3307,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (btnGenAllPitches) {
     btnGenAllPitches.addEventListener("click", async () => {
+      if (!selectedOutreachCompanyIds || selectedOutreachCompanyIds.size === 0) {
+        showToast("Please select at least one company using the checkboxes to prepare pitches.", "warning");
+        return;
+      }
+
       const targets = (allOutreachCompanies && allOutreachCompanies.length > 0) ? allOutreachCompanies : (companies || []);
-      const eligible = targets.filter(c => !c.is_invalid);
+      const eligible = targets.filter(c => selectedOutreachCompanyIds.has(c.id) && !c.is_invalid);
 
       if (eligible.length === 0) {
-        showToast("No companies found to generate pitches for.", "warning");
+        showToast("No valid companies selected to prepare pitches for.", "warning");
         return;
       }
 
@@ -3348,149 +3378,175 @@ document.addEventListener("DOMContentLoaded", () => {
         setTimeout(() => {
           btnGenAllPitches.innerHTML = oldText;
           btnGenAllPitches.disabled = false;
+          updateOutreachSelectionUI();
         }, 2500);
       }, "Authentication required. Please connect your Google account to generate personalized pitches.");
     });
   }
 
-  // --- Send All Outreach Emails (Strict: Never sends to companies without discovered emails) ---
+  // --- Send Outreach Emails (Strict: Operates only on user-selected companies with verified emails) ---
   const btnSendAllOutreach = document.getElementById("btn-send-all-outreach");
   if (btnSendAllOutreach) {
     btnSendAllOutreach.addEventListener("click", async () => {
-      const targets = (allOutreachCompanies && allOutreachCompanies.length > 0) ? allOutreachCompanies : (companies || []);
-      const eligible = targets.filter(c => !c.is_invalid);
-
-      if (eligible.length === 0) {
-        showToast("No companies available for outreach.", "warning");
+      if (!selectedOutreachCompanyIds || selectedOutreachCompanyIds.size === 0) {
+        showToast("Please select at least one company to send emails.", "warning");
         return;
       }
 
-      requireLogin(async () => {
-        // Strictly filter to companies with at least one discovered email
-        const withEmail = eligible.filter(c => c.emails && c.emails.length > 0 && !c.already_contacted);
-        const alreadySentCount = eligible.filter(c => c.emails && c.emails.length > 0 && c.already_contacted).length;
-        const noEmailCompanies = eligible.filter(c => !c.emails || c.emails.length === 0);
-        const noEmailCount = noEmailCompanies.length;
+      const targets = (allOutreachCompanies && allOutreachCompanies.length > 0) ? allOutreachCompanies : (companies || []);
+      const eligible = targets.filter(c => selectedOutreachCompanyIds.has(c.id) && !c.is_invalid);
 
-        if (withEmail.length === 0) {
-          if (alreadySentCount > 0 && noEmailCount > 0) {
-            showToast(`All ${alreadySentCount} companies with verified emails have already been contacted. Skipped ${noEmailCount} companies with no email.`, "info");
-          } else if (noEmailCount > 0) {
-            showToast(`Company email not found! All ${noEmailCount} companies have no discovered email address. Enrich companies first.`, "error");
-          } else {
-            showToast("No pending outreach targets with email addresses.", "info");
-          }
-          return;
-        }
+      if (eligible.length === 0) {
+        showToast("No valid companies selected for outreach.", "warning");
+        return;
+      }
 
-        const confirmMsg = `Ready to send personalized cold emails via Gmail to ${withEmail.length} companies with discovered emails?\n\n(${noEmailCount} companies with no email address will be strictly skipped and will NOT receive any email).`;
-        if (!confirm(confirmMsg)) {
-          return;
-        }
+      confirmResumeAttachmentIfNeeded(
+        `cold outreach emails to ${eligible.length} selected companies`,
+        () => {
+          requireLogin(async () => {
+            // Strictly filter to selected companies with at least one discovered email
+            const withEmail = eligible.filter(c => c.emails && c.emails.length > 0 && !c.already_contacted);
+            const alreadySentCount = eligible.filter(c => c.emails && c.emails.length > 0 && c.already_contacted).length;
+            const noEmailCompanies = eligible.filter(c => !c.emails || c.emails.length === 0);
+            const noEmailCount = noEmailCompanies.length;
 
-        const oldText = btnSendAllOutreach.innerHTML;
-        btnSendAllOutreach.disabled = true;
-
-        // Check which companies already have prepared pitches and which still need generation
-        const alreadyPrepared = withEmail.filter(c => c.pitch_id);
-        const needPreparation = withEmail.filter(c => !c.pitch_id);
-
-        let pitchIdsToSend = alreadyPrepared.map(c => c.pitch_id);
-        let authFailed = false;
-        const BATCH_SIZE = 20;
-
-        // ONLY generate pitches for companies that don't have a prepared draft yet!
-        if (needPreparation.length > 0) {
-          btnSendAllOutreach.innerHTML = `<span class="material-symbols-outlined text-[16px] animate-spin">progress_activity</span><span>Preparing (${needPreparation.length})...</span>`;
-
-          for (let i = 0; i < needPreparation.length; i += BATCH_SIZE) {
-            if (authFailed) break;
-            const chunk = needPreparation.slice(i, i + BATCH_SIZE);
-            const chunkIds = chunk.map(c => c.id);
-            const currentEnd = Math.min(i + chunk.length, needPreparation.length);
-
-            btnSendAllOutreach.innerHTML = `<span class="material-symbols-outlined text-[16px] animate-spin">progress_activity</span><span>Preparing (${currentEnd}/${needPreparation.length})...</span>`;
-            try {
-              const res = await fetch("/api/pitch/bulk-generate", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ company_ids: chunkIds })
-              });
-
-              if (res.status === 401) {
-                authFailed = true;
-                currentUser.is_logged_in = false;
-                showToast("Session expired. Please reconnect your Google account to send emails.", "warning");
-                showLoginModal("Session expired. Please reconnect your Google account to send emails.");
-                break;
+            if (withEmail.length === 0) {
+              if (alreadySentCount > 0 && noEmailCount > 0) {
+                showToast(`All ${alreadySentCount} selected companies with verified emails have already been contacted. Skipped ${noEmailCount} companies with no email.`, "info");
+              } else if (noEmailCount > 0) {
+                showToast(`Company email not found! All ${noEmailCount} selected companies have no discovered email address. Enrich companies first.`, "error");
+              } else {
+                showToast("No pending outreach targets with email addresses among selected companies.", "info");
               }
+              return;
+            }
 
-              if (res.ok) {
-                const data = await res.json();
-                if (data.success && data.pitches) {
-                  data.pitches.forEach(p => {
-                    if (p.pitch_id && p.target_email) {
-                      pitchIdsToSend.push(p.pitch_id);
-                    }
-                    const comp = withEmail.find(c => c.id === p.company_id);
-                    if (comp) comp.pitch_id = p.pitch_id;
+            const oldText = btnSendAllOutreach.innerHTML;
+            btnSendAllOutreach.disabled = true;
+
+            // Check which companies already have prepared pitches and which still need generation
+            const alreadyPrepared = withEmail.filter(c => c.pitch_id);
+            const needPreparation = withEmail.filter(c => !c.pitch_id);
+
+            let pitchIdsToSend = alreadyPrepared.map(c => c.pitch_id);
+            let authFailed = false;
+            const BATCH_SIZE = 20;
+
+            // ONLY generate pitches for companies that don't have a prepared draft yet!
+            if (needPreparation.length > 0) {
+              btnSendAllOutreach.innerHTML = `<span class="material-symbols-outlined text-[16px] animate-spin">progress_activity</span><span>Preparing (${needPreparation.length})...</span>`;
+
+              for (let i = 0; i < needPreparation.length; i += BATCH_SIZE) {
+                if (authFailed) break;
+                const chunk = needPreparation.slice(i, i + BATCH_SIZE);
+                const chunkIds = chunk.map(c => c.id);
+                const currentEnd = Math.min(i + chunk.length, needPreparation.length);
+
+                btnSendAllOutreach.innerHTML = `<span class="material-symbols-outlined text-[16px] animate-spin">progress_activity</span><span>Preparing (${currentEnd}/${needPreparation.length})...</span>`;
+                try {
+                  const res = await fetch("/api/pitch/bulk-generate", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ company_ids: chunkIds })
                   });
+
+                  if (res.status === 401) {
+                    authFailed = true;
+                    currentUser.is_logged_in = false;
+                    showToast("Session expired. Please reconnect your Google account to send emails.", "warning");
+                    showLoginModal("Session expired. Please reconnect your Google account to send emails.");
+                    break;
+                  }
+
+                  if (res.ok) {
+                    const data = await res.json();
+                    if (data.success && data.pitches) {
+                      data.pitches.forEach(p => {
+                        if (p.pitch_id && p.target_email) {
+                          pitchIdsToSend.push(p.pitch_id);
+                        }
+                        const comp = withEmail.find(c => c.id === p.company_id);
+                        if (comp) comp.pitch_id = p.pitch_id;
+                      });
+                    }
+                  }
+                } catch (err) {
+                  console.error("Failed to bulk prepare pitches for send:", err);
                 }
               }
-            } catch (err) {
-              console.error("Failed to bulk prepare pitches for send:", err);
             }
-          }
+
+            if (authFailed || pitchIdsToSend.length === 0) {
+              btnSendAllOutreach.disabled = false;
+              btnSendAllOutreach.innerHTML = oldText;
+              if (!authFailed && pitchIdsToSend.length === 0) {
+                showToast("Could not prepare email pitches. Please try again.", "error");
+              }
+              return;
+            }
+
+            // Dispatch bulk send via API strictly with valid pitch IDs
+            btnSendAllOutreach.innerHTML = `<span class="material-symbols-outlined text-[16px] animate-spin text-primary">progress_activity</span><span>Dispatching (${pitchIdsToSend.length})...</span>`;
+
+            try {
+              let bulkRes;
+              if (attachResumeInEmail && sessionResumeFile) {
+                const formData = new FormData();
+                formData.append("pitch_ids", JSON.stringify(pitchIdsToSend));
+                formData.append("delay_min", "2.0");
+                formData.append("delay_max", "3.5");
+                formData.append("resume_file", sessionResumeFile);
+                bulkRes = await fetch("/api/pitch/bulk-send", {
+                  method: "POST",
+                  body: formData
+                });
+              } else {
+                bulkRes = await fetch("/api/pitch/bulk-send", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({
+                    pitch_ids: pitchIdsToSend,
+                    delay_min: 2.0,
+                    delay_max: 3.5
+                  })
+                });
+              }
+
+              if (bulkRes.status === 401) {
+                showToast("Session expired. Please reconnect your Google account.", "warning");
+                showLoginModal("Session expired. Please reconnect your Google account.");
+                return;
+              }
+
+              const bulkData = await bulkRes.json();
+              const sent = bulkData.sent || 0;
+              const skipped = (bulkData.skipped_no_email || 0) + noEmailCount;
+
+              const resumeSuffix = (attachResumeInEmail && sessionResumeFile) ? " (with resume attached)" : " (without resume)";
+              showToast(`Success: Dispatched ${sent} emails via Gmail${resumeSuffix}! (${skipped} companies without email were skipped).`, "success");
+              btnSendAllOutreach.innerHTML = `<span class="material-symbols-outlined text-[16px] text-emerald-400">check</span><span>${sent} Dispatched!</span>`;
+
+              withEmail.forEach(c => {
+                c.already_contacted = true;
+                selectedOutreachCompanyIds.delete(c.id);
+              });
+
+              await fetchCompanies();
+              fetchAuditLogs();
+              renderPitchesList();
+            } catch (err) {
+              showToast("Batch dispatch error: " + err.message, "error");
+            } finally {
+              setTimeout(() => {
+                btnSendAllOutreach.innerHTML = oldText;
+                btnSendAllOutreach.disabled = false;
+                updateOutreachSelectionUI();
+              }, 3000);
+            }
+          }, "connect your Google account to perform automated outreach.");
         }
-
-        if (authFailed || pitchIdsToSend.length === 0) {
-          btnSendAllOutreach.disabled = false;
-          btnSendAllOutreach.innerHTML = oldText;
-          if (!authFailed && pitchIdsToSend.length === 0) {
-            showToast("Could not prepare email pitches. Please try again.", "error");
-          }
-          return;
-        }
-
-        // Dispatch bulk send via API strictly with valid pitch IDs
-        btnSendAllOutreach.innerHTML = `<span class="material-symbols-outlined text-[16px] animate-spin text-primary">progress_activity</span><span>Dispatching (${pitchIdsToSend.length})...</span>`;
-
-        try {
-          const bulkRes = await fetch("/api/pitch/bulk-send", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              pitch_ids: pitchIdsToSend,
-              delay_min: 2.0,
-              delay_max: 3.5
-            })
-          });
-
-          if (bulkRes.status === 401) {
-            showToast("Session expired. Please reconnect your Google account.", "warning");
-            showLoginModal("Session expired. Please reconnect your Google account.");
-            return;
-          }
-
-          const bulkData = await bulkRes.json();
-          const sent = bulkData.sent || 0;
-          const skipped = (bulkData.skipped_no_email || 0) + noEmailCount;
-
-          showToast(`Success: Dispatched ${sent} emails via Gmail! (${skipped} companies without email were skipped).`, "success");
-          btnSendAllOutreach.innerHTML = `<span class="material-symbols-outlined text-[16px] text-emerald-400">check</span><span>${sent} Dispatched!</span>`;
-
-          await fetchCompanies();
-          fetchAuditLogs();
-          renderPitchesList();
-        } catch (err) {
-          showToast("Batch dispatch error: " + err.message, "error");
-        } finally {
-          setTimeout(() => {
-            btnSendAllOutreach.innerHTML = oldText;
-            btnSendAllOutreach.disabled = false;
-          }, 3000);
-        }
-      }, "connect your Google account to perform automated outreach.");
+      );
     });
   }
 
@@ -3761,6 +3817,68 @@ document.addEventListener("DOMContentLoaded", () => {
     attachResumeInEmail = true;
     updateResumeAttachmentUI();
     showToast(`Resume attached for this session: ${file.name}`, "info");
+  }
+
+  function confirmResumeAttachmentIfNeeded(actionDescription, onProceed) {
+    const hasResume = Boolean(attachResumeInEmail && sessionResumeFile);
+    if (hasResume) {
+      onProceed();
+      return;
+    }
+
+    const modal = document.getElementById("resume-confirm-modal");
+    const btnAttach = document.getElementById("btn-resume-confirm-attach");
+    const btnProceed = document.getElementById("btn-resume-confirm-proceed");
+    const btnCancel = document.getElementById("btn-resume-confirm-cancel");
+    const descEl = document.getElementById("resume-confirm-desc");
+
+    if (!modal || !btnProceed || !btnCancel) {
+      if (confirm("No resume file is currently attached. Are you sure you want to send email without a resume attachment?")) {
+        onProceed();
+      }
+      return;
+    }
+
+    if (descEl && actionDescription) {
+      descEl.textContent = `No resume file is currently attached. Sending ${actionDescription} without your resume attached may lower response rates from hiring teams.`;
+    }
+
+    modal.classList.remove("hidden");
+
+    const cleanup = () => {
+      modal.classList.add("hidden");
+      btnAttach?.removeEventListener("click", onAttachClick);
+      btnProceed?.removeEventListener("click", onProceedClick);
+      btnCancel?.removeEventListener("click", onCancelClick);
+    };
+
+    const onAttachClick = () => {
+      cleanup();
+      if (outreachResumeFile) outreachResumeFile.click();
+      showToast("Please select your resume PDF file to attach.", "info");
+    };
+
+    const onProceedClick = () => {
+      cleanup();
+      onProceed();
+    };
+
+    const onCancelClick = () => {
+      cleanup();
+    };
+
+    btnAttach?.addEventListener("click", onAttachClick);
+    btnProceed?.addEventListener("click", onProceedClick);
+    btnCancel?.addEventListener("click", onCancelClick);
+  }
+
+  const resumeConfirmModalEl = document.getElementById("resume-confirm-modal");
+  if (resumeConfirmModalEl) {
+    resumeConfirmModalEl.addEventListener("click", (e) => {
+      if (e.target === resumeConfirmModalEl) {
+        resumeConfirmModalEl.classList.add("hidden");
+      }
+    });
   }
 
   if (btnChooseOutreachResume && outreachResumeFile) {
@@ -4081,46 +4199,48 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      btnSendDirectOauth.disabled = true;
-      btnSendDirectOauth.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i><span>Sending via Gmail...</span>`;
-      refreshIcons();
-
-      const formData = new FormData();
-      formData.append("subject", subject);
-      formData.append("body", body);
-      formData.append("attach_resume", attachResumeInEmail ? "true" : "false");
-      if (attachResumeInEmail && sessionResumeFile) {
-        formData.append("resume_file", sessionResumeFile);
-      }
-
-      try {
-        const res = await fetch(`/api/pitch/${currentPitchId}/send-direct`, {
-          method: "POST",
-          body: formData
-        });
-        const data = await res.json();
-        if (data.success) {
-          const successMsg = (attachResumeInEmail && sessionResumeFile)
-            ? `Email and resume attachment dispatched directly via Gmail!`
-            : "Email sent directly through your authorized Gmail account!";
-          showToast(successMsg, "success");
-          modal.classList.add("hidden");
-          await fetchCompanies();
-          fetchAuditLogs();
-        } else {
-          const errMsg = data.detail || data.error || "Company email not found! Cannot send email.";
-          showToast(errMsg, "error");
-          if (errMsg.toLowerCase().includes("session expired") || errMsg.toLowerCase().includes("reconnect") || errMsg.toLowerCase().includes("sign in with google")) {
-            showLoginModal(errMsg);
-          }
-        }
-      } catch (err) {
-        showToast("Email sending failed: " + err.message, "error");
-      } finally {
-        btnSendDirectOauth.disabled = false;
-        btnSendDirectOauth.innerHTML = `<i data-lucide="send" class="w-3.5 h-3.5"></i><span id="btn-send-direct-text">${attachResumeInEmail ? 'Send with Resume' : 'Send via Gmail'}</span>`;
+      confirmResumeAttachmentIfNeeded("this cold email", async () => {
+        btnSendDirectOauth.disabled = true;
+        btnSendDirectOauth.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i><span>Sending via Gmail...</span>`;
         refreshIcons();
-      }
+
+        const formData = new FormData();
+        formData.append("subject", subject);
+        formData.append("body", body);
+        formData.append("attach_resume", attachResumeInEmail ? "true" : "false");
+        if (attachResumeInEmail && sessionResumeFile) {
+          formData.append("resume_file", sessionResumeFile);
+        }
+
+        try {
+          const res = await fetch(`/api/pitch/${currentPitchId}/send-direct`, {
+            method: "POST",
+            body: formData
+          });
+          const data = await res.json();
+          if (data.success) {
+            const successMsg = (attachResumeInEmail && sessionResumeFile)
+              ? `Email and resume attachment dispatched directly via Gmail!`
+              : "Email sent directly through your authorized Gmail account!";
+            showToast(successMsg, "success");
+            modal.classList.add("hidden");
+            await fetchCompanies();
+            fetchAuditLogs();
+          } else {
+            const errMsg = data.detail || data.error || "Company email not found! Cannot send email.";
+            showToast(errMsg, "error");
+            if (errMsg.toLowerCase().includes("session expired") || errMsg.toLowerCase().includes("reconnect") || errMsg.toLowerCase().includes("sign in with google")) {
+              showLoginModal(errMsg);
+            }
+          }
+        } catch (err) {
+          showToast("Email sending failed: " + err.message, "error");
+        } finally {
+          btnSendDirectOauth.disabled = false;
+          btnSendDirectOauth.innerHTML = `<i data-lucide="send" class="w-3.5 h-3.5"></i><span id="btn-send-direct-text">${attachResumeInEmail ? 'Send with Resume' : 'Send via Gmail'}</span>`;
+          refreshIcons();
+        }
+      });
     });
   }
 
@@ -4157,6 +4277,61 @@ document.addEventListener("DOMContentLoaded", () => {
   let outreachSelectedTech = "";
   let outreachSelectedCity = "";
   let outreachViewMode = "grid"; // "grid" | "list"
+  const selectedOutreachCompanyIds = new Set();
+
+  function updateOutreachSelectionUI(currentPageItems = []) {
+    const badge = document.getElementById("outreach-selected-badge");
+    const countEl = document.getElementById("outreach-selected-count");
+    const clearBtn = document.getElementById("btn-outreach-clear-selection");
+    const selectAllChk = document.getElementById("outreach-select-all");
+    const btnGenText = document.getElementById("btn-gen-all-pitches-text");
+    const btnSendText = document.getElementById("btn-send-all-outreach-text");
+
+    const count = selectedOutreachCompanyIds.size;
+    if (countEl) countEl.textContent = count;
+
+    if (badge) {
+      if (count > 0) {
+        badge.classList.remove("hidden");
+      } else {
+        badge.classList.add("hidden");
+      }
+    }
+
+    if (clearBtn) {
+      if (count > 0) {
+        clearBtn.classList.remove("hidden");
+      } else {
+        clearBtn.classList.add("hidden");
+      }
+    }
+
+    if (btnGenText) {
+      btnGenText.textContent = count > 0 ? `Prepare Pitches (${count})` : "Prepare Pitches";
+    }
+    if (btnSendText) {
+      btnSendText.textContent = count > 0 ? `Send Emails (${count})` : "Send Emails";
+    }
+
+    if (selectAllChk) {
+      if (currentPageItems && currentPageItems.length > 0) {
+        const pageSelectedCount = currentPageItems.filter(c => selectedOutreachCompanyIds.has(c.id)).length;
+        if (pageSelectedCount === currentPageItems.length) {
+          selectAllChk.checked = true;
+          selectAllChk.indeterminate = false;
+        } else if (pageSelectedCount > 0) {
+          selectAllChk.checked = false;
+          selectAllChk.indeterminate = true;
+        } else {
+          selectAllChk.checked = false;
+          selectAllChk.indeterminate = false;
+        }
+      } else {
+        selectAllChk.checked = false;
+        selectAllChk.indeterminate = false;
+      }
+    }
+  }
 
   const outreachSearchInput = document.getElementById("outreach-search-input");
   const outreachFilterAll = document.getElementById("outreach-filter-all");
@@ -4190,21 +4365,50 @@ document.addEventListener("DOMContentLoaded", () => {
   const outreachPageTotalBottom = document.getElementById("outreach-page-total-bottom");
   const outreachPageButtonsBottom = document.getElementById("outreach-page-buttons-bottom");
 
+  let outreachAbortController = null;
+  let outreachTotalServerCount = 0;
+  let outreachTotalServerPages = 1;
+
   async function fetchOutreachCompanies(preservePage = false) {
-    if (isOutreachLoading) return;
-    isOutreachLoading = true;
+    if (outreachAbortController) {
+      try { outreachAbortController.abort(); } catch (_) {}
+    }
+    outreachAbortController = new AbortController();
+    const signal = outreachAbortController.signal;
+
+    if (!preservePage) {
+      outreachCurrentPage = 1;
+    }
+
     try {
-      const res = await fetch("/api/companies?page_size=50&status=all");
+      const q = (outreachSearchInput?.value || outreachSearchQuery || "").trim();
+      const selectedTech = (outreachTechSelect?.value || outreachSelectedTech || "").trim();
+      const selectedCity = (outreachCitySelect?.value || outreachSelectedCity || "").trim();
+      const pageSize = outreachPerPage > 0 ? outreachPerPage : 20;
+
+      const params = new URLSearchParams({
+        page: outreachCurrentPage,
+        page_size: pageSize,
+        search: q,
+        tech: selectedTech,
+        city: selectedCity,
+        status: outreachActiveFilter || "all"
+      });
+
+      const res = await fetch(`/api/companies?${params.toString()}`, { signal });
       if (res.ok) {
         const data = await res.json();
         allOutreachCompanies = data.companies || [];
+        outreachTotalServerCount = data.total_count || 0;
+        outreachTotalServerPages = data.total_pages || 1;
+        outreachCurrentPage = data.current_page || 1;
         outreachLoaded = true;
       }
     } catch (err) {
+      if (err.name === "AbortError") return;
       console.warn("Failed to fetch all outreach companies:", err);
     } finally {
       isOutreachLoading = false;
-      if (!preservePage) outreachCurrentPage = 1;
       renderPitchesList();
     }
   }
@@ -4260,7 +4464,7 @@ document.addEventListener("DOMContentLoaded", () => {
     outreachActiveFilter = filterName;
     outreachCurrentPage = 1;
     updateOutreachPillStyles();
-    renderPitchesList();
+    fetchOutreachCompanies(false);
   }
 
   if (outreachSearchInput) {
@@ -4270,8 +4474,40 @@ document.addEventListener("DOMContentLoaded", () => {
       outreachDebounce = setTimeout(() => {
         outreachSearchQuery = (e.target.value || "").trim().toLowerCase();
         outreachCurrentPage = 1;
-        renderPitchesList();
-      }, 200);
+        fetchOutreachCompanies(false);
+      }, 350);
+    });
+    outreachSearchInput.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        clearTimeout(outreachDebounce);
+        outreachSearchQuery = (e.target.value || "").trim().toLowerCase();
+        outreachCurrentPage = 1;
+        fetchOutreachCompanies(false);
+      }
+    });
+  }
+
+  const outreachSelectAll = document.getElementById("outreach-select-all");
+  if (outreachSelectAll) {
+    outreachSelectAll.addEventListener("change", (e) => {
+      const isChecked = e.target.checked;
+      (allOutreachCompanies || []).forEach(c => {
+        if (isChecked) {
+          selectedOutreachCompanyIds.add(c.id);
+        } else {
+          selectedOutreachCompanyIds.delete(c.id);
+        }
+      });
+      renderPitchesList();
+    });
+  }
+
+  const btnOutreachClear = document.getElementById("btn-outreach-clear-selection");
+  if (btnOutreachClear) {
+    btnOutreachClear.addEventListener("click", () => {
+      selectedOutreachCompanyIds.clear();
+      renderPitchesList();
+      showToast("Selection cleared.", "info");
     });
   }
 
@@ -4279,7 +4515,7 @@ document.addEventListener("DOMContentLoaded", () => {
     outreachTechSelect.addEventListener("change", (e) => {
       outreachSelectedTech = (e.target.value || "").trim().toLowerCase();
       outreachCurrentPage = 1;
-      renderPitchesList();
+      fetchOutreachCompanies(false);
     });
   }
 
@@ -4287,7 +4523,7 @@ document.addEventListener("DOMContentLoaded", () => {
     outreachCitySelect.addEventListener("change", (e) => {
       outreachSelectedCity = (e.target.value || "").trim().toLowerCase();
       outreachCurrentPage = 1;
-      renderPitchesList();
+      fetchOutreachCompanies(false);
     });
   }
 
@@ -4296,13 +4532,15 @@ document.addEventListener("DOMContentLoaded", () => {
       if (outreachSearchInput) outreachSearchInput.value = "";
       if (outreachTechSelect) outreachTechSelect.value = "";
       if (outreachCitySelect) outreachCitySelect.value = "";
+      if (ddOutreachTech) ddOutreachTech.reset();
+      if (ddOutreachCity) ddOutreachCity.reset();
       outreachSearchQuery = "";
       outreachSelectedTech = "";
       outreachSelectedCity = "";
       outreachActiveFilter = "all";
       outreachCurrentPage = 1;
       updateOutreachPillStyles();
-      renderPitchesList();
+      fetchOutreachCompanies(false);
       showToast("Outreach filters reset to default", "info");
     });
   }
@@ -4339,12 +4577,12 @@ document.addEventListener("DOMContentLoaded", () => {
     outreachPerPageSelect.addEventListener("change", (e) => {
       outreachPerPage = parseInt(e.target.value, 10);
       outreachCurrentPage = 1;
-      renderPitchesList();
+      fetchOutreachCompanies(false);
     });
   }
 
   window.openCompanyModalById = function(companyId) {
-    const target = (companies || []).find(c => c.id === companyId);
+    const target = (allOutreachCompanies || []).find(c => c.id === companyId) || (companies || []).find(c => c.id === companyId);
     if (target) openCompanyDetailsModal(target);
   };
 
@@ -4359,101 +4597,12 @@ document.addEventListener("DOMContentLoaded", () => {
       ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5"
       : "space-y-3";
 
-    // Base genuine leads from dedicated allOutreachCompanies pool or fallback to companies
-    const sourceCompanies = (allOutreachCompanies && allOutreachCompanies.length > 0) ? allOutreachCompanies : (companies || []);
-    const validCompanies = sourceCompanies.filter(c => !c.is_invalid);
+    const totalCount = outreachTotalServerCount || (allOutreachCompanies ? allOutreachCompanies.length : 0);
+    if (countSpan) countSpan.textContent = totalCount.toLocaleString();
 
-    // Compute metric counts
-    const totalCount = validCompanies.length;
-    const emailsCount = validCompanies.filter(c => c.emails && c.emails.length > 0).length;
-    const isLoggedIn = Boolean(currentUser && currentUser.is_logged_in);
-    const readyCount = validCompanies.filter(c => !c.already_contacted).length;
-    const sentCount = isLoggedIn ? validCompanies.filter(c => c.already_contacted).length : null;
-
-    // Update Quick Metric Strip
-    if (outreachCountTotal) outreachCountTotal.textContent = totalCount.toLocaleString();
-    if (outreachCountEmails) outreachCountEmails.textContent = emailsCount.toLocaleString();
-    if (outreachCountReady) outreachCountReady.textContent = readyCount.toLocaleString();
-    if (outreachCountSent) {
-      outreachCountSent.textContent = isLoggedIn ? sentCount.toLocaleString() : "0";
-    }
-
-    // Update filter badge counts
-    document.querySelectorAll(".outreach-badge-all").forEach(el => el.textContent = totalCount);
-    document.querySelectorAll(".outreach-badge-emails").forEach(el => el.textContent = emailsCount);
-    document.querySelectorAll(".outreach-badge-ready").forEach(el => el.textContent = readyCount);
-    document.querySelectorAll(".outreach-badge-sent").forEach(el => {
-      el.textContent = isLoggedIn ? sentCount : "-";
-    });
-
-    if (totalCount === 0) {
-      if (countSpan) countSpan.textContent = "0";
-      container.innerHTML = `
-        <div class="col-span-full bg-surface-container-low border border-outline-variant/50 rounded-xl p-10 text-center space-y-3">
-          <span class="material-symbols-outlined text-[36px] text-on-surface-variant">domain</span>
-          <p class="text-sm font-semibold text-on-surface">No companies available for outreach</p>
-          <p class="text-xs text-on-surface-variant max-w-sm mx-auto">Scout verified businesses in Step 1 or browse your directory first.</p>
-        </div>
-      `;
+    if (!allOutreachCompanies || allOutreachCompanies.length === 0) {
       if (outreachPagination) outreachPagination.classList.add("hidden");
       if (outreachPaginationBottom) outreachPaginationBottom.classList.add("hidden");
-      refreshIcons();
-      return;
-    }
-
-    // Filter by Active Filter Tab
-    let filtered = validCompanies;
-    if (outreachActiveFilter === "emails") {
-      filtered = filtered.filter(c => c.emails && c.emails.length > 0);
-    } else if (outreachActiveFilter === "ready") {
-      filtered = filtered.filter(c => !c.already_contacted);
-    } else if (outreachActiveFilter === "sent") {
-      filtered = filtered.filter(c => c.already_contacted);
-    }
-
-    // Filter by Tech Stack Dropdown (supports multi-select comma-separated)
-    if (outreachSelectedTech) {
-      const selectedTechs = outreachSelectedTech.split(",").map(s => s.trim().toLowerCase()).filter(Boolean);
-      if (selectedTechs.length > 0) {
-        filtered = filtered.filter(c => {
-          const stack = (c.profile && Array.isArray(c.profile.tech_stack)) ? c.profile.tech_stack : [];
-          return selectedTechs.some(sel =>
-            stack.some(t => typeof t === "string" && t.toLowerCase().includes(sel))
-          );
-        });
-      }
-    }
-
-    // Filter by City Dropdown (supports multi-select comma-separated)
-    if (outreachSelectedCity) {
-      const selectedCities = outreachSelectedCity.split(",").map(c => c.trim().toLowerCase()).filter(Boolean);
-      if (selectedCities.length > 0) {
-        filtered = filtered.filter(c => {
-          const compCity = (c.city || "").toLowerCase();
-          const addr = (c.address || "").toLowerCase();
-          const srcQuery = (c.source_query || "").toLowerCase();
-          return selectedCities.some(sel =>
-            compCity.includes(sel) || addr.includes(sel) || srcQuery.includes(sel)
-          );
-        });
-      }
-    }
-
-    // Filter by Search Query
-    if (outreachSearchQuery) {
-      filtered = filtered.filter(c => {
-        const nameMatch = c.name && c.name.toLowerCase().includes(outreachSearchQuery);
-        const domainMatch = c.domain && c.domain.toLowerCase().includes(outreachSearchQuery);
-        const emailMatch = c.emails && c.emails.some(e => e.toLowerCase().includes(outreachSearchQuery));
-        const cityMatch = c.city && c.city.toLowerCase().includes(outreachSearchQuery);
-        const techMatch = c.profile && c.profile.tech_stack && c.profile.tech_stack.some(t => typeof t === "string" && t.toLowerCase().includes(outreachSearchQuery));
-        return nameMatch || domainMatch || emailMatch || cityMatch || techMatch;
-      });
-    }
-
-    if (countSpan) countSpan.textContent = filtered.length.toLocaleString();
-
-    if (filtered.length === 0) {
       container.innerHTML = `
         <div class="col-span-full bg-surface-container-low border border-outline-variant/50 rounded-xl p-10 text-center space-y-3">
           <span class="material-symbols-outlined text-[36px] text-on-surface-variant">search_off</span>
@@ -4461,22 +4610,12 @@ document.addEventListener("DOMContentLoaded", () => {
           <p class="text-xs text-on-surface-variant max-w-sm mx-auto">Try adjusting your search query or clearing dropdown filters.</p>
         </div>
       `;
-      if (outreachPagination) outreachPagination.classList.add("hidden");
-      if (outreachPaginationBottom) outreachPaginationBottom.classList.add("hidden");
+      updateOutreachSelectionUI([]);
       refreshIcons();
       return;
     }
 
-    // Pagination calculations
-    const totalPages = outreachPerPage > 0 ? Math.ceil(filtered.length / outreachPerPage) : 1;
-    if (outreachCurrentPage > totalPages) outreachCurrentPage = totalPages;
-    if (outreachCurrentPage < 1) outreachCurrentPage = 1;
-
-    let pageItems = filtered;
-    if (outreachPerPage > 0) {
-      const startIndex = (outreachCurrentPage - 1) * outreachPerPage;
-      pageItems = filtered.slice(startIndex, startIndex + outreachPerPage);
-    }
+    const pageItems = allOutreachCompanies;
 
     const monoThemes = [
       { bg: "bg-surface-container-high text-on-surface border-outline-variant/60" },
@@ -4513,14 +4652,19 @@ document.addEventListener("DOMContentLoaded", () => {
         techPillsHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-mono tracking-wide text-on-surface-variant/60 bg-surface-container-lowest/50 border border-outline-variant/30 italic flex items-center gap-1"><span class="material-symbols-outlined text-[12px] text-amber-500/70">hourglass_top</span><span>Stack pending AI enrichment</span></span>`;
       }
 
+      const isSelected = selectedOutreachCompanyIds.has(c.id);
+
       if (outreachViewMode === "grid") {
         // Mode A: Executive Dispatch Bento Card
-        card.className = "company-card group bg-surface-container-low border border-outline-variant/50 hover:border-outline hover:bg-surface-container rounded-xl p-5 flex flex-col justify-between transition-all duration-200 shadow-sm hover:shadow-lg relative min-w-0";
+        card.className = `company-card group border rounded-xl p-5 flex flex-col justify-between transition-all duration-200 shadow-sm hover:shadow-lg relative min-w-0 ${isSelected ? 'ring-2 ring-primary/50 bg-surface-container-high border-primary/60' : 'bg-surface-container-low border-outline-variant/50 hover:border-outline hover:bg-surface-container'}`;
         card.innerHTML = `
           <div>
-            <!-- Part 1: Top Monogram + Name + Domain + Status -->
+            <!-- Part 1: Top Checkbox + Monogram + Name + Domain + Status -->
             <div class="flex items-start justify-between gap-3 mb-3">
               <div class="flex items-start gap-2.5 min-w-0 flex-1">
+                <label class="flex items-center justify-center p-0.5 cursor-pointer select-none shrink-0 mt-2" onclick="event.stopPropagation();" title="Select company">
+                  <input type="checkbox" class="outreach-card-checkbox w-4 h-4 rounded border-outline-variant/60 bg-surface-container-lowest text-primary focus:ring-0 cursor-pointer transition" data-id="${c.id}" ${isSelected ? 'checked' : ''}>
+                </label>
                 <div class="w-10 h-10 rounded-lg flex items-center justify-center font-bold text-label-md ${monoTheme.bg} border shrink-0 font-mono shadow-sm">
                   ${monogram}
                 </div>
@@ -4616,9 +4760,12 @@ document.addEventListener("DOMContentLoaded", () => {
         `;
       } else {
         // Mode B: Streamlined Compact Row
-        card.className = "company-card group bg-surface-container-low border border-outline-variant/50 hover:border-outline hover:bg-surface-container rounded-xl p-4 transition-all duration-150 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-sm min-w-0";
+        card.className = `company-card group border rounded-xl p-4 transition-all duration-150 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-sm min-w-0 ${isSelected ? 'ring-2 ring-primary/50 bg-surface-container-high border-primary/60' : 'bg-surface-container-low border-outline-variant/50 hover:border-outline hover:bg-surface-container'}`;
         card.innerHTML = `
           <div class="flex items-center gap-3 min-w-0 flex-1">
+            <label class="flex items-center justify-center p-0.5 cursor-pointer select-none shrink-0" onclick="event.stopPropagation();" title="Select company">
+              <input type="checkbox" class="outreach-card-checkbox w-4 h-4 rounded border-outline-variant/60 bg-surface-container-lowest text-primary focus:ring-0 cursor-pointer transition" data-id="${c.id}" ${isSelected ? 'checked' : ''}>
+            </label>
             <div class="w-9 h-9 rounded-md flex items-center justify-center font-bold text-xs ${monoTheme.bg} border shrink-0 font-mono shadow-sm">
               ${monogram}
             </div>
@@ -4670,6 +4817,25 @@ document.addEventListener("DOMContentLoaded", () => {
         `;
       }
 
+      // Selection Checkbox change listener
+      const chk = card.querySelector(".outreach-card-checkbox");
+      if (chk) {
+        chk.addEventListener("click", (e) => e.stopPropagation());
+        chk.addEventListener("change", (e) => {
+          e.stopPropagation();
+          if (chk.checked) {
+            selectedOutreachCompanyIds.add(c.id);
+            card.classList.add("ring-2", "ring-primary/50", "bg-surface-container-high", "border-primary/60");
+            card.classList.remove("bg-surface-container-low", "border-outline-variant/50");
+          } else {
+            selectedOutreachCompanyIds.delete(c.id);
+            card.classList.remove("ring-2", "ring-primary/50", "bg-surface-container-high", "border-primary/60");
+            card.classList.add("bg-surface-container-low", "border-outline-variant/50");
+          }
+          updateOutreachSelectionUI(pageItems);
+        });
+      }
+
       // Event listeners for card buttons
       const btnPitch = card.querySelector(".btn-gen-pitch-row");
       if (btnPitch) {
@@ -4703,10 +4869,12 @@ document.addEventListener("DOMContentLoaded", () => {
       container.appendChild(card);
     });
 
+    updateOutreachSelectionUI(pageItems);
+
     // Render pagination controls (top and bottom)
     const handleOutreachPageChange = (newPage) => {
       outreachCurrentPage = newPage;
-      renderPitchesList();
+      fetchOutreachCompanies(true);
       if (container) container.scrollIntoView({ behavior: "smooth", block: "start" });
     };
 
@@ -4715,7 +4883,7 @@ document.addEventListener("DOMContentLoaded", () => {
       rangeEl: outreachPageRange,
       totalEl: outreachPageTotal,
       buttonsEl: outreachPageButtons,
-      totalItems: filtered.length,
+      totalItems: totalCount,
       currentPage: outreachCurrentPage,
       pageSize: outreachPerPage,
       onPageChange: handleOutreachPageChange
@@ -4726,7 +4894,7 @@ document.addEventListener("DOMContentLoaded", () => {
       rangeEl: outreachPageRangeBottom,
       totalEl: outreachPageTotalBottom,
       buttonsEl: outreachPageButtonsBottom,
-      totalItems: filtered.length,
+      totalItems: totalCount,
       currentPage: outreachCurrentPage,
       pageSize: outreachPerPage,
       onPageChange: handleOutreachPageChange

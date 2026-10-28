@@ -1068,14 +1068,22 @@ def get_companies(
         else:
             total_count = query.count()
 
-        # 7. Server-side pagination strictly enforcing defined list: [10, 20, 50, 100, 200]
-        ALLOWED_PAGE_SIZES = {10, 20, 50, 100, 200}
-        if page_size not in ALLOWED_PAGE_SIZES:
-            page_size = 20
+        # 7. Server-side pagination
+        # If page_size is 0, -1, or all=true, return all matching companies
+        is_all_requested = (page_size == 0 or page_size == -1 or request.query_params.get("all") == "true")
+        if is_all_requested:
+            companies = query.all()
+            total_pages = 1
+            cur_page = 1
+            page_size = total_count
+        else:
+            ALLOWED_PAGE_SIZES = {10, 20, 50, 100, 200, 500, 1000}
+            if page_size not in ALLOWED_PAGE_SIZES:
+                page_size = 20
 
-        total_pages = max(1, (total_count + page_size - 1) // page_size) if total_count > 0 else 1
-        cur_page = max(1, min(page, total_pages)) if total_count > 0 else 1
-        companies = query.offset((cur_page - 1) * page_size).limit(page_size).all()
+            total_pages = max(1, (total_count + page_size - 1) // page_size) if total_count > 0 else 1
+            cur_page = max(1, min(page, total_pages)) if total_count > 0 else 1
+            companies = query.offset((cur_page - 1) * page_size).limit(page_size).all()
 
         company_ids = [c.id for c in companies]
 
@@ -2185,8 +2193,7 @@ async def log_sent_manual(
 
 @app.post("/api/pitch/bulk-send")
 async def bulk_send_outreach(
-    req: BatchSendRequest,
-    request: Request = None,
+    request: Request,
     db: Session = Depends(get_db)
 ):
     user = get_current_user(db, request)
@@ -2196,12 +2203,51 @@ async def bulk_send_outreach(
             detail="Authentication required. Please connect your Google account to perform direct outreach."
         )
 
+    content_type = request.headers.get("content-type", "")
+    resume_bytes = None
+    resume_name = None
+    pitch_ids = []
+    delay_min = 2.0
+    delay_max = 3.5
+
+    if "multipart/form-data" in content_type:
+        form = await request.form()
+        raw_pitch_ids = form.get("pitch_ids", "")
+        if isinstance(raw_pitch_ids, str):
+            try:
+                pitch_ids = json.loads(raw_pitch_ids)
+            except Exception:
+                pitch_ids = [int(x.strip()) for x in raw_pitch_ids.split(",") if x.strip().isdigit()]
+        elif isinstance(raw_pitch_ids, list):
+            pitch_ids = [int(x) for x in raw_pitch_ids if str(x).isdigit()]
+
+        try:
+            delay_min = float(form.get("delay_min", 2.0))
+            delay_max = float(form.get("delay_max", 3.5))
+        except (ValueError, TypeError):
+            delay_min, delay_max = 2.0, 3.5
+
+        resume_file = form.get("resume_file")
+        if resume_file and hasattr(resume_file, "read"):
+            resume_bytes = await resume_file.read()
+            resume_name = getattr(resume_file, "filename", "resume.pdf")
+    else:
+        body = await request.json()
+        pitch_ids = body.get("pitch_ids", [])
+        try:
+            delay_min = float(body.get("delay_min", 2.0))
+            delay_max = float(body.get("delay_max", 3.5))
+        except (ValueError, TypeError):
+            delay_min, delay_max = 2.0, 3.5
+
     result = await dispatch_batch_outreach(
-        pitch_ids=req.pitch_ids,
+        pitch_ids=pitch_ids,
         user=user,
         db=db,
-        delay_min=req.delay_min,
-        delay_max=req.delay_max
+        delay_min=delay_min,
+        delay_max=delay_max,
+        resume_attachment_bytes=resume_bytes,
+        resume_attachment_name=resume_name
     )
     return result
 

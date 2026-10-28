@@ -954,13 +954,13 @@
             <span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
             <span>Activity Stream</span>
           </button>
-          <button id="btn-gen-all-pitches" type="button" class="btn-tactile-ecru px-4 py-2 rounded font-label-md text-label-md font-semibold transition-colors flex items-center justify-center gap-1.5 shadow-sm cursor-pointer" title="Generate personalized email pitch for all companies">
+          <button id="btn-gen-all-pitches" type="button" class="btn-tactile-ecru px-4 py-2 rounded font-label-md text-label-md font-semibold transition-colors flex items-center justify-center gap-1.5 shadow-sm cursor-pointer" title="Generate personalized email pitch for selected companies">
             <span class="material-symbols-outlined text-[18px]">auto_awesome</span>
-            <span>Prepare All Emails</span>
+            <span id="btn-gen-all-pitches-text">Prepare Pitches</span>
           </button>
-          <button id="btn-send-all-outreach" type="button" class="btn-tactile-slate hover:border-primary/60 text-on-surface px-4 py-2 rounded font-label-md text-label-md font-semibold transition-colors flex items-center justify-center gap-1.5 shadow-sm cursor-pointer" title="Send cold emails to all companies with discovered email addresses (skips companies without email)">
+          <button id="btn-send-all-outreach" type="button" class="btn-tactile-slate hover:border-primary/60 text-on-surface px-4 py-2 rounded font-label-md text-label-md font-semibold transition-colors flex items-center justify-center gap-1.5 shadow-sm cursor-pointer" title="Send cold emails to selected companies with discovered email addresses">
             <span class="material-symbols-outlined text-[18px] text-primary">send</span>
-            <span>Send All Emails</span>
+            <span id="btn-send-all-outreach-text">Send Emails</span>
           </button>
         </div>
       </header>
@@ -1106,10 +1106,26 @@
         </div>
       </section>
 
-      <!-- Outreach Pipeline Pagination Controls (Positioned directly above cards grid) -->
+      <!-- Outreach Pipeline Pagination & Multi-Selection Controls -->
       <div id="outreach-pagination" class="hidden bg-surface-container-low border border-outline-variant/30 rounded-xl px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm">
-        <div class="flex items-center space-x-2 text-caption font-caption text-on-surface-variant">
-          <span>Showing <strong id="outreach-page-range" class="text-on-surface font-semibold">0-0</strong> of <strong id="outreach-page-total" class="text-on-surface font-semibold">0</strong> targets</span>
+        <div class="flex items-center gap-3 sm:gap-4 flex-wrap">
+          <div class="flex items-center space-x-2 text-caption font-caption text-on-surface-variant">
+            <span>Showing <strong id="outreach-page-range" class="text-on-surface font-semibold">0-0</strong> of <strong id="outreach-page-total" class="text-on-surface font-semibold">0</strong> targets</span>
+          </div>
+          <div class="h-4 w-px bg-outline-variant/30 hidden sm:block"></div>
+          <!-- Multi-Select Controller -->
+          <div class="flex items-center gap-2.5 flex-wrap">
+            <label class="flex items-center gap-2 cursor-pointer select-none" title="Select all targets on this page">
+              <input type="checkbox" id="outreach-select-all" class="w-4 h-4 rounded border-outline-variant/60 bg-surface-container-lowest text-primary focus:ring-0 cursor-pointer transition">
+              <span class="text-caption font-medium text-on-surface" id="outreach-select-all-label">Select Page</span>
+            </label>
+            <span id="outreach-selected-badge" class="hidden px-2.5 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/30 text-[11px] font-mono font-semibold">
+              <span id="outreach-selected-count">0</span> selected
+            </span>
+            <button type="button" id="btn-outreach-clear-selection" class="hidden text-[11px] font-mono text-on-surface-variant hover:text-error transition cursor-pointer">
+              Clear
+            </button>
+          </div>
         </div>
 
         <div class="flex items-center space-x-2 sm:space-x-3 flex-wrap justify-center">
@@ -1571,6 +1587,35 @@
         {% endif %}
 
         <button id="login-modal-close" type="button" class="w-full py-1.5 text-label-sm font-label-sm text-outline hover:text-on-surface transition cursor-pointer">
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESUME ATTACHMENT CONFIRMATION MODAL -->
+  <div id="resume-confirm-modal" class="fixed inset-0 z-[145] w-screen h-screen bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4 overflow-hidden">
+    <div class="relative bg-surface-container-low border border-outline-variant/30 rounded-2xl max-w-md w-full p-6 sm:p-7 space-y-4 shadow-2xl my-auto text-center">
+      <div class="mx-auto w-12 h-12 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-500">
+        <span class="material-symbols-outlined text-[24px]">attach_file</span>
+      </div>
+      <div>
+        <h3 id="resume-confirm-title" class="text-headline-sm font-headline-sm font-bold text-on-surface">Send Without Resume Attachment?</h3>
+        <p id="resume-confirm-desc" class="text-body-sm font-body-sm text-on-surface-variant mt-2 leading-relaxed">
+          No resume file is currently attached. Sending cold outreach without your resume attached may lower response rates from hiring teams.
+        </p>
+      </div>
+
+      <div class="space-y-2 pt-2">
+        <button id="btn-resume-confirm-attach" type="button" class="btn-tactile-ecru flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-lg text-label-md font-label-md font-semibold transition shadow-sm cursor-pointer">
+          <span class="material-symbols-outlined text-[17px]">upload_file</span>
+          <span>Attach Resume First</span>
+        </button>
+        <button id="btn-resume-confirm-proceed" type="button" class="btn-tactile-slate flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-lg text-label-md font-label-md font-semibold transition shadow-sm cursor-pointer text-on-surface hover:text-amber-400">
+          <span class="material-symbols-outlined text-[17px]">send</span>
+          <span>Send Without Resume</span>
+        </button>
+        <button id="btn-resume-confirm-cancel" type="button" class="w-full py-1.5 text-label-sm font-label-sm text-outline hover:text-on-surface transition cursor-pointer">
           Cancel
         </button>
       </div>

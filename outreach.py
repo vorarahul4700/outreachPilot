@@ -199,7 +199,9 @@ async def dispatch_batch_outreach(
     user: User,
     db: Session,
     delay_min: float = 2.0,
-    delay_max: float = 4.0
+    delay_max: float = 4.0,
+    resume_attachment_bytes: bytes = None,
+    resume_attachment_name: str = None
 ) -> dict[str, Any]:
     """
     Strict 1-to-1 sequential outreach batch dispatcher.
@@ -254,7 +256,9 @@ async def dispatch_batch_outreach(
             body=pitch.email_body,
             db=db,
             company_id=pitch.company_id,
-            resume_attachment_path=resume_att
+            resume_attachment_bytes=resume_attachment_bytes,
+            resume_attachment_name=resume_attachment_name,
+            resume_attachment_path=resume_att if not resume_attachment_bytes else None
         )
 
         if res.get("success"):

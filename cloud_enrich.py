@@ -53,7 +53,7 @@ def run_enrichment_pipeline(batch_size: int = 60, max_attempts: int = 3, target_
             query = query.filter(
                 Company.enrichment_status.in_(["PENDING", "FAILED"]),
                 Company.enrichment_attempts < max_attempts
-            ).order_by(Company.created_at.desc())
+            ).order_by(Company.id.asc()).with_for_update(skip_locked=True)
 
         pending_companies = query.limit(batch_size).all()
         total_items = len(pending_companies)
@@ -105,9 +105,17 @@ def run_enrichment_pipeline(batch_size: int = 60, max_attempts: int = 3, target_
                     log(f"[{idx}/{total_items}] Enriching (Attempt {attempts}/{max_attempts}): {c_name} ({c_domain})...")
                     res = await deep_enrich_company(c_id, worker_db, force_refresh=True)
 
-                    has_intel = bool(isinstance(res, dict) and res.get("profile") and (
-                        res["profile"].get("detailed_analysis") or res["profile"].get("summary")
-                    ))
+                    prof = res.get("profile", {}) if isinstance(res, dict) else {}
+                    detailed = str(prof.get("detailed_analysis", "") or "")
+                    summary = str(prof.get("summary", "") or "")
+                    
+                    # Strictly verify actual technical intelligence exists
+                    has_intel = bool(
+                        isinstance(res, dict) and prof and (
+                            (len(detailed.strip()) > 50 and "No Readable Website Content Detected" not in detailed) or
+                            len(summary.strip()) > 30
+                        )
+                    )
                     c_obj = worker_db.query(Company).filter(Company.id == c_id).first()
                     if c_obj:
                         c_obj.is_enriched = has_intel
@@ -116,17 +124,26 @@ def run_enrichment_pipeline(batch_size: int = 60, max_attempts: int = 3, target_
                         worker_db.commit()
 
                     async with lock:
-                        success_count += 1
+                        if has_intel:
+                            success_count += 1
+                        else:
+                            incomplete_count += 1
                     emails_count = len(res.get("emails", [])) if isinstance(res, dict) else 0
-                    log(f"[{idx}/{total_items}] [OK] Completed: {c_name} ({c_domain}) - {emails_count} verified emails")
+                    log(f"[{idx}/{total_items}] [{'OK' if has_intel else 'INCOMPLETE'}] Processed: {c_name} ({c_domain}) - {emails_count} verified emails, Intel: {has_intel}")
                     return True
                 except Exception as err:
+                    err_msg = str(err)
                     log(f"[{idx}/{total_items}] [FAIL] Failed {c_domain}: {err}")
                     try:
                         worker_db.rollback()
                         c_obj = worker_db.query(Company).filter(Company.id == c_id).first()
                         if c_obj:
-                            if attempts >= max_attempts:
+                            c_obj.is_enriched = False
+                            # If failure is rate-limit/token exhaustion, keep as PENDING for future retry
+                            if "429" in err_msg or "rate_limit" in err_msg.lower() or "token" in err_msg.lower():
+                                c_obj.enrichment_status = "PENDING"
+                                log(f"[{idx}/{total_items}] [RATE LIMITED] Reset {c_domain} to PENDING for retry.")
+                            elif attempts >= max_attempts:
                                 c_obj.enrichment_status = "INCOMPLETE"
                                 async with lock:
                                     incomplete_count += 1
