@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🚀 OutreachPilot
+# OutreachPilot
 ### **Autonomous B2B Lead Scraping, AI Intelligence & 1-Click Outreach Engine**
 
 [![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-blue.svg?logo=python&logoColor=white)](https://www.python.org/)
@@ -12,26 +12,26 @@
 
 **Find verified local businesses. Profile company tech stacks with AI. Match with candidate resumes. Reach out in 1 click.**
 
-[Features](#-key-features) • [Architecture](#-system-architecture) • [Quick Start](#-quick-start) • [Security](#-security--privacy-safeguards) • [API Reference](#-api-endpoints)
+[Features](#key-features) | [Architecture](#system-architecture) | [Quick Start](#quick-start) | [Security](#security--privacy-safeguards) | [API Reference](#api-endpoints)
 
 </div>
 
 ---
 
-## 💡 Executive Overview
+## Executive Overview
 
-**OutreachPilot** is an autonomous, privacy-first technical job outreach and B2B lead generation platform. It automates what normally takes 10+ hours of tedious daily prospecting into a seamless, 3-tab workflow:
+**OutreachPilot** is an autonomous, privacy-first technical job outreach and B2B lead generation platform. It automates what normally takes 10+ hours of tedious daily prospecting into a structured, 3-tab workflow:
 
 1. **Precision Scouting:** Discovers live, verified business leads from Google Local / Google Maps across any query and location, filtering out aggregator directories (Yelp, Justdial, YellowPages) and dummy local domains.
 2. **Deep Subpage Crawling:** Crawls company websites across `/contact`, `/about`, `/careers`, and `/jobs` in parallel, discovering verified contact emails.
-3. **Exclusive HR / Recruitment Email Prioritization:** When talent acquisition emails (`hr@`, `careers@`, `jobs@`, `recruit@`) are detected, OutreachPilot automatically excludes all generic addresses (`info@`, `sales@`, `support@`) and locks in the recruiter as the primary contact.
+3. **Exclusive HR / Recruitment Email Prioritization:** When talent acquisition emails (`hr@`, `careers@`, `jobs@`, `recruit@`) are detected, OutreachPilot automatically excludes all generic departmental addresses (`info@`, `sales@`, `support@`) and locks in the recruiter as the primary contact.
 4. **AI Company Profiling:** Analyzes crawled website copy using **Groq AI** to extract active tech stacks, primary services, and strategic company challenges.
-5. **Resume Parsing & Cold Pitch Engine:** Parses uploaded candidate resumes in-memory (zero disk storage) and drafts hyper-personalized cold outreach emails and custom cover letters matching candidate achievements to company tech stacks.
+5. **Resume Parsing & Cold Pitch Engine:** Parses uploaded candidate resumes in-memory (zero disk storage) and drafts tailored cold outreach emails and custom cover letters matching candidate achievements to company tech stacks.
 6. **Multi-Channel Anti-Spam Dispatch:** Sends emails via **1-Click Gmail Web**, native `mailto:`, or official **Google OAuth 2.0 (Gmail API)** with strict database deduplication to ensure no business is ever emailed twice.
 
 ---
 
-## 🗺️ System Architecture
+## System Architecture
 
 ```mermaid
 graph TD
@@ -39,60 +39,59 @@ graph TD
     B -->|SeleniumBase Engine| C[Google Maps udm=local]
     C -->|Genuine Domain Filter| D[(PostgreSQL Leads DB)]
     
-    D --> E[Subpage Crawler /contact, /careers, /jobs]
-    E --> F{HR / Recruit Email Found?}
-    F -->|Yes| G[Lock HR Email as Primary & Exclude Generic Emails]
-    F -->|No| H[Retain Best Verified Contact Email]
+    D --> E[Subpage Email Crawler]
+    E --> F{HR / Recruiter Email Found?}
+    F -->|Yes| G[Lock Priority HR Contact & Drop Generic Info/Sales]
+    F -->|No| H[Retain Best Verified Department Address]
     
-    E --> I[AI Company Profiler Groq]
-    I --> J[Structured Company Intelligence: Tech Stack, Services, Tone]
+    G & H --> I[Groq AI Tech Intelligence Engine]
+    I --> J[Technical Stack & Services Dossier]
     
-    K[Candidate Resume PDF/Text] --> L[In-Memory Resume Parser]
-    L --> M[AI Technical Assessment & Core Skills]
+    K[Candidate Resume PDF] --> L[In-Memory Text Extractor]
+    L --> M[AI Resume Intelligence Engine]
+    M --> N[Candidate Strengths & Superpowers]
     
-    J & M --> N[AI Outreach Pitch Generator]
-    N --> O[Personalized Cold Pitch & Cover Letter]
+    J & N --> P[Contextual Cold Pitch Engine]
+    P --> Q[Tailored Direct Job Proposal]
     
-    O --> P{Dispatch Channel}
-    P -->|1-Click Web| Q[Gmail Web Pre-Filled Window]
-    P -->|OAuth 2.0| R[Direct Gmail API Dispatch with Anti-Spam Delays]
-    P -->|Native| S[Default Mail Client]
+    Q --> R[1-Click Personal Gmail Web]
+    Q --> S[Gmail OAuth 2.0 API Dispatch]
     
     R & Q --> T[(Outreach Audit Log & Deduplication)]
 ```
 
 ---
 
-## ✨ Key Features
+## Key Features
 
-### 🔍 1. Real-Time Google Local Lead Scout
+### 1. Real-Time Google Local Lead Scout
 * **Live Discovery:** Scrapes real-time Google Maps listings with anti-bot bypass.
 * **Stream Monitor:** Live terminal log activity console showing crawl progress, status messages, and discovered businesses in real time.
 * **Genuine Domain Protection:** Automatically rejects unverified `.local` or dummy placeholder domains.
 * **Clean Address Parser:** Cleans rating numbers, business hours ("Open 24 hours"), and creates direct Google Maps navigation links.
 
-### 🏢 2. Dual-View Directory & Multi-Dimensional Filters
+### 2. Dual-View Directory & Multi-Dimensional Filters
 * **Flexible Views:** Instantly toggle between **Responsive Cards Grid** (2-column on mobile, 3-column on laptop/desktop) and a compact **Table View**.
 * **Real-Time Filtering:** Filter instantly by keyword, city, domain, rating, and email availability.
 * **Pagination Controls:** Full numbered pagination with configurable page sizes (12, 24, 48, 96, All).
 * **CSV Export:** 1-click export of your verified leads to spreadsheet-compatible CSV files.
 
-### 🎯 3. HR & Recruitment Email Prioritization Engine
+### 3. HR & Recruitment Email Prioritization Engine
 * **Recruitment Keyword Matching:** Scans email prefixes for `hr@`, `recruit@`, `recruiting@`, `recruiter@`, `job@`, `jobs@`, `career@`, `careers@`, `talent@`, `hiring@`, `work@`, `join@`, and `people@`.
 * **Exclusive Exclusion Rule:** If any recruitment email is detected, the crawler excludes all generic departmental emails (`info@`, `contact@`, `sales@`, `support@`) to keep your outreach laser-focused on hiring managers.
 * **Smart Primary Assignment:** Automatically sets the HR email as `is_primary = True` for single-click outreach.
 
-### 🤖 4. Groq-Powered Deep AI Company Profiling
+### 4. Groq-Powered Deep AI Company Profiling
 * Analyzes crawled website content using ultra-fast Groq AI.
 * Generates an executive overview, categorized tech stack inventory, services breakdown, and strategic technical pain points candidates can solve.
 * Calibrated strictly to stay within Groq free-tier rate limits (OTPM token budget).
 
-### 📄 5. Privacy-First In-Memory Resume Ingestion
+### 5. Privacy-First In-Memory Resume Ingestion
 * Supports **PDF**, **TXT**, and **Markdown** resumes.
 * **Zero Disk Persistence:** Resumes are parsed in volatile memory and purged immediately after analysis.
 * Extracts core technical competencies, candidate superpowers, years of experience, and quantified achievements.
 
-### ✉️ 6. 1-on-1 Personalized Cold Pitch & Outreach Hub
+### 6. 1-on-1 Personalized Cold Pitch & Outreach Hub
 * **Authentic Talent Inquiry:** Generates personalized cold job opportunity emails and tailored cover letters matching candidate achievements to company tech stacks (zero corporate sales fluff).
 * **Multi-Channel Dispatch:**
   * **1-Click Gmail Web:** Opens Gmail with pre-filled recipient, subject, and body (requires zero passwords).
@@ -102,7 +101,7 @@ graph TD
 
 ---
 
-## 🛠️ Technology Stack
+## Technology Stack
 
 | Layer | Component | Description |
 | :--- | :--- | :--- |
@@ -117,7 +116,7 @@ graph TD
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### 1. Prerequisites
 * **Python 3.11+** installed.
@@ -131,51 +130,25 @@ git clone https://github.com/<your-username>/outreachPilot.git
 cd outreachPilot
 ```
 
-### 3. Set Up Virtual Environment & Dependencies
+### 3. Create a Virtual Environment & Install Dependencies
 ```bash
 python -m venv venv
-
-# On Windows:
+# Windows:
 venv\Scripts\activate
-
-# On macOS/Linux:
+# macOS/Linux:
 source venv/bin/activate
 
 pip install -r requirements.txt
 ```
 
 ### 4. Configure Environment Variables
-Copy `.env.example` to create your local `.env`:
+Copy `.env.example` to `.env`:
 ```bash
 cp .env.example .env
 ```
+Populate your `.env` with your PostgreSQL database URL, Groq API key, and optional Google OAuth credentials.
 
-Edit `.env` with your credentials:
-```env
-PROJECT_NAME=OutreachPilot
-TAGLINE=Find Leads. Personalize. Reach Out.
-
-# Safety Mode (redirects emails to your inbox for testing)
-DEV_MODE=true
-DEV_OVERRIDE_EMAIL=your_email@gmail.com
-
-# Groq AI Key
-GROQ_API_KEY=gsk_your_groq_api_key_here
-GROQ_MODEL=qwen/qwen3.8-27b
-
-# Google OAuth 2.0 (for Gmail sending)
-GOOGLE_CLIENT_ID=your_client_id.apps.googleusercontent.com
-GOOGLE_CLIENT_SECRET=your_client_secret
-GOOGLE_REDIRECT_URI=http://localhost:8000/auth/google/callback
-
-# PostgreSQL Database
-DATABASE_URL=postgresql+psycopg2://postgres:postgres@localhost:5432/outreachpilot
-
-# Master Admin Email
-MASTER_ADMIN_EMAILS=your_email@gmail.com
-```
-
-### 5. Launch the Server
+### 5. Launch the Application
 ```bash
 uvicorn app:app --host 127.0.0.1 --port 8000 --reload
 ```
@@ -184,19 +157,19 @@ Open your browser to: **[http://127.0.0.1:8000](http://127.0.0.1:8000)**
 
 ---
 
-## 🔒 Security & Privacy Safeguards
+## Security & Privacy Safeguards
 
 OutreachPilot includes built-in security features:
 
-- 🛡️ **Server-Side Request Forgery (SSRF) Protection:** The website crawler validates all URLs against private IP blocks (RFC 1918), loopback (`127.0.0.0/8`), link-local (`169.254.0.0/16`), and internal cloud metadata endpoints before issuing requests.
-- 🍪 **Encrypted Session Management:** Authentication cookies are cryptographically signed with `HMAC-SHA256` and set with `HttpOnly`, `SameSite=Lax`, and secure session handling.
-- ⚡ **Rate Limiting:** Sliding-window rate limiters protect AI endpoints, resume parsing, and email dispatches against automated abuse.
-- 🧪 **Safety Sandbox Mode (`DEV_MODE`):** When active, all outreach emails are redirected to `DEV_OVERRIDE_EMAIL` to prevent unintended emails during testing.
-- 🧹 **In-Memory Privacy:** Resumes are never stored on disk. Files are processed in memory and purged immediately after parsing.
+- **Server-Side Request Forgery (SSRF) Protection:** The website crawler validates all URLs against private IP blocks (RFC 1918), loopback (`127.0.0.0/8`), link-local (`169.254.0.0/16`), and internal cloud metadata endpoints before issuing requests.
+- **Encrypted Session Management:** Authentication cookies are cryptographically signed with `HMAC-SHA256` and set with `HttpOnly`, `SameSite=Lax`, and secure session handling.
+- **Rate Limiting:** Sliding-window rate limiters protect AI endpoints, resume parsing, and email dispatches against automated abuse.
+- **Safety Sandbox Mode (`DEV_MODE`):** When active, all outreach emails are redirected to `DEV_OVERRIDE_EMAIL` to prevent unintended emails during testing.
+- **In-Memory Privacy:** Resumes are never stored on disk. Files are processed in memory and purged immediately after parsing.
 
 ---
 
-## 📡 API Endpoints
+## API Endpoints
 
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
@@ -212,7 +185,7 @@ OutreachPilot includes built-in security features:
 
 ---
 
-## 📁 Repository Structure
+## Repository Structure
 
 ```
 outreachPilot/
@@ -239,6 +212,6 @@ outreachPilot/
 
 ---
 
-## 📄 License
+## License
 
-This project is licensed under the **MIT License** — feel free to use, modify, and distribute it for personal or commercial projects.
+This project is licensed under the **MIT License**: feel free to use, modify, and distribute it for personal or commercial projects.

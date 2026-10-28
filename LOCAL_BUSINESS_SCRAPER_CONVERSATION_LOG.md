@@ -16,12 +16,12 @@
 ## Executive Project Summary & Architecture
 
 ### What is OutreachPilot?
-**OutreachPilot** (originally initiated as `gScrapper`) is a comprehensive B2B lead generation, intelligence enrichment, and personalized cold email outreach automation engine.
+**OutreachPilot** (originally initiated as `gScrapper`) is a detailed B2B lead generation, intelligence enrichment, and personalized cold email outreach automation engine.
 
 ### Origin & Core Workflow:
 1. **Local Business Discovery (`scrapp.py` & `scraper_engine.py`)**:
    - Began with scraping local business data from Google Local Search / Google Maps for queries like `PHP based companies in surat`.
-   - Leveraged SeleniumBase UC (Undetected-Chromedriver) mode, curl_cffi, anti-fingerprinting stealth headers, automatic coordinate radius expansion, and robust pagination handling.
+   - Leveraged SeleniumBase UC (Undetected-Chromedriver) mode, curl_cffi, anti-fingerprinting stealth headers, automatic coordinate radius expansion, and reliable pagination handling.
 
 2. **Deep Company Intel & Technology Enrichment (`enricher.py`)**:
    - Crawls discovered company websites with concurrent asynchronous workers.
@@ -169,7 +169,7 @@ this is the original URL
 2. **Google Search Updates & Scraper Architecture**:
    - Google migrated local search queries from the older `tbm=lcl` to `udm=local` and enforces JavaScript verification for direct HTTP requests.
    - Outbound business websites on Google Local are formatted through `/goto?url=...` redirect paths.
-   - We implemented a robust scraper in [`scrapp.py`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/scrapp.py) utilizing `SeleniumBase` (Undetected Chrome mode) to render the Google Local interface and `curl_cffi` to quickly resolve original website URLs from `/goto?url=...` redirects.
+   - We implemented a reliable scraper in [`scrapp.py`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/scrapp.py) using `SeleniumBase` (Undetected Chrome mode) to render the Google Local interface and `curl_cffi` to quickly resolve original website URLs from `/goto?url=...` redirects.
 
 ---
 
@@ -245,7 +245,7 @@ Yes, **pagination is fully handled**!
 1. **Next-Page Button Detection (`id="pnnext"`)**:
    Instead of abruptly reloading random URL offsets that trigger anti-bot blocks, the scraper looks for Google Local's actual Next button (`a[id="pnnext"]`) and maintains the active browser session across page transitions.
 2. **Dynamic Page Navigation**:
-   The scraper navigates seamlessly to Page 2, Page 3, and beyond up to the configured `max_pages`.
+   The scraper navigates smoothly to Page 2, Page 3, and beyond up to the configured `max_pages`.
 3. **End-of-Results Detection**:
    When the last page is reached (or no `pnnext` button remains), it automatically finishes and exports the dataset.
 
@@ -311,8 +311,8 @@ The scraper in [`scrapp.py`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/s
 
 | Metric | Previous Speed | **Ultra-Fast Speed** |
 | :--- | :--- | :--- |
-| **Time per Page (20 companies)** | ~25–30s | **~1.1 – 1.5 seconds** |
-| **5 Pages (100 companies)** | ~180–220s | **~29.7 seconds total** |
+| **Time per Page (20 companies)** | ~25-30s | **~1.1 - 1.5 seconds** |
+| **5 Pages (100 companies)** | ~180-220s | **~29.7 seconds total** |
 
 ---
 
@@ -342,7 +342,7 @@ also i wnat you to create a fronpage as well in whihc i paste URLs add some para
 
 #### Assistant Implementation & Final Response
 
-### 🚀 G-Scraper Pro Web Application Created
+###  G-Scraper Pro Web Application Created
 
 We have built a frontpage web application for your Google Scraper with real-time streaming, interactive card/table grid structures, and one-click CSV/JSON export.
 
@@ -455,7 +455,7 @@ instead of monochrome theme is there any cool calm subdle theme with colors but 
 ### 1. Why Did Other Cities Not Scrape Before? (Resolved)
 
 **The Root Cause**:
-1. **Dynamic Render Timing**: Google loads business cards asynchronously. For some queries, the card container takes ~1.5–2 seconds to render. The earlier polling loop was checking the DOM too early and immediately concluding that no cards were present.
+1. **Dynamic Render Timing**: Google loads business cards asynchronously. For some queries, the card container takes ~1.5-2 seconds to render. The earlier polling loop was checking the DOM too early and immediately concluding that no cards were present.
 2. **Bot Verification Trigger**: Passing Chrome's `--block-images` preference flag caused Google's latest anti-bot protection to intercept requests on unfamiliar queries.
 3. **Selector Generalization**: Some cities returned variations of container wrappers (`div.VkpGBb` vs `div[jscontroller="AtSb"]`).
 
@@ -654,7 +654,7 @@ i would like you to improve this more as well
 
 Yes! I completely understand your workflow and vision. You are building an **Automated AI Cold Outreach & Job Application Agent**. 
 
-Instead of spending hours manually searching for companies, clicking around their websites, finding HR emails, tailoring your resume, drafting cover letters, and tracking who you've already emailed, this system will handle the entire lifecycle seamlessly.
+Instead of spending hours manually searching for companies, clicking around their websites, finding HR emails, tailoring your resume, drafting cover letters, and tracking who you've already emailed, this system will handle the entire lifecycle smoothly.
 
 ---
 
@@ -701,10 +701,10 @@ flowchart TD
 
 #### 5. Upgraded Frontend UI
 - **Pipeline Navigation**:
-  - 🔍 **Scraper Hub**: Scrape companies by keyword or URL.
-  - 🧠 **AI Enrichment**: View company overviews & extracted HR emails.
+  -  **Scraper Hub**: Scrape companies by keyword or URL.
+  -  **AI Enrichment**: View company overviews & extracted HR emails.
   - 📄 **Resume & Profile**: Save your resume once; persists forever.
-  - ✉️ **Outreach Studio**: Generate, review, edit, and send cold emails.
+  - ✉ **Outreach Studio**: Generate, review, edit, and send cold emails.
   - 📊 **Outreach History & CRM**: See all contacted companies with timestamps and status badges (`Draft`, `Sent`, `Skipped`).
 
 ---
@@ -911,13 +911,13 @@ Here are the best **100% Free Platforms** to deploy this full-stack application 
 | **1. Hugging Face Spaces (Docker)** | **2 vCPUs, 16 GB RAM** (100% Free) | SQLite (Persistent Storage) or Free Cloud Postgres | ⭐⭐⭐⭐⭐ **Best** (Huge RAM for Chrome) | **Top Recommended** |
 | **2. Render (render.com)** | 512 MB RAM, Free SSL | Free SQLite / Neon PostgreSQL | ⭐⭐⭐⭐ (Needs Dockerfile for Chrome) | Standard Web Apps |
 | **3. Koyeb (koyeb.com)** | 512 MB RAM, Micro instance | Free Neon/Supabase Postgres | ⭐⭐⭐⭐ (Docker-based) | Fast global deploys |
-| **4. Fly.io** | 256MB–1GB RAM, Persistent Volumes | Free SQLite on Persistent Volume | ⭐⭐⭐⭐ (Supports Docker & Volumes) | Full container control |
+| **4. Fly.io** | 256MB-1GB RAM, Persistent Volumes | Free SQLite on Persistent Volume | ⭐⭐⭐⭐ (Supports Docker & Volumes) | Full container control |
 
 ---
 
 ### Recommended Choice: **Hugging Face Spaces** *(Most Powerful & Completely Free)*
 
-Running a headless Chrome browser + AI scraper in the cloud requires **sufficient RAM** (minimum 1GB–2GB so Chrome doesn't crash from memory limits). 
+Running a headless Chrome browser + AI scraper in the cloud requires **sufficient RAM** (minimum 1GB-2GB so Chrome doesn't crash from memory limits). 
 
 Hugging Face Spaces gives you:
 - **16 GB RAM & 2 vCPUs for FREE** (no credit card required).
@@ -943,12 +943,12 @@ Hugging Face Spaces gives you:
 
 Whenever you're ready to deploy, we will include:REDACTED_PASSWORD@`, `careers@`, `jobs@`, `info@`, `contact@`, etc.).
   - Extracts core services and tech stack.
-  - Summarizes what the company builds into a concise 2–3 sentence overview.
+  - Summarizes what the company builds into a concise 2-3 sentence overview.
 
 #### Step 3: AI Personalized Pitch Engine (`pitch_generator.py`)
 - Merges **Your Resume & Key Strengths** with the **Company's Tech Stack & Overview**.
 - Generates high-converting, personalized cold email drafts:
-  - *Subject*: Catchy & role-specific (e.g., `Application: PHP / Laravel Developer – [Your Name]`).
+  - *Subject*: Catchy & role-specific (e.g., `Application: PHP / Laravel Developer - [Your Name]`).
   - *Body*: References specific tech stacks and products from their website, explains how your experience solves their needs, and includes a clear call to action (resume attachment / portfolio link).
 
 #### Step 4: SMTP Dispatcher & Strict Deduplication (`mailer.py`)
@@ -958,10 +958,10 @@ Whenever you're ready to deploy, we will include:REDACTED_PASSWORD@`, `careers@`
 
 #### Step 5: Unified Pipeline UI (`index.html` + `app.js`)
 A single dashboard with 4 organized tabs:
-1. 🔍 **Scout Companies**: Run Google search queries or paste URLs; auto-saves companies to Neon DB.
-2. 🧠 **AI Enrichment**: View and review extracted HR emails, tech stacks, and company summaries.
+1.  **Scout Companies**: Run Google search queries or paste URLs; auto-saves companies to Neon DB.
+2.  **AI Enrichment**: View and review extracted HR emails, tech stacks, and company summaries.
 3. 📄 **Resume & Profile Hub**: Save your resume once (persisted forever in Neon DB) + SMTP configuration.
-4. ✉️ **Outreach Studio**: Generate customized email drafts, preview/edit text, click **"Send All Cold Emails"**, and track live sent history.
+4. ✉ **Outreach Studio**: Generate customized email drafts, preview/edit text, click **"Send All Cold Emails"**, and track live sent history.
 
 ---
 
@@ -996,7 +996,7 @@ Here are the **3 best and most trusted alternatives** we can use instead:
 
 ---
 
-### Alternative 1: 1-Click "Open in Gmail Web / Default Mail Client" *(Zero Password, 100% Trust)* — **Recommended**
+### Alternative 1: 1-Click "Open in Gmail Web / Default Mail Client" *(Zero Password, 100% Trust)*  -  **Recommended**
 
 Instead of sending emails in the background through a server:
 - Next to each generated cold email in the UI, there is a **"Send with Gmail"** and **"Open in Email Client"** button.
@@ -1078,18 +1078,18 @@ flowchart TD
 
 ### How Each Option Works in the UI
 
-1. **Tier 1 — Direct Send with Google OAuth (Automated)**:
+1. **Tier 1  -  Direct Send with Google OAuth (Automated)**:
    - A **"Connect with Google"** button in the header.
    - If connected: The card displays a **"Send Cold Email"** button.
    - When clicked, a quick preview modal pops up: *"Send to hr@company.com?"* &rarr; on confirm, it dispatches instantly via official Gmail API and records the timestamp in Neon DB.
 
-2. **Tier 2 — 1-Click Open in Gmail Web & Mobile App (Zero Password)**:
+2. **Tier 2  -  1-Click Open in Gmail Web & Mobile App (Zero Password)**:
    - If the user hasn't connected Google OAuth or prefers manual control:
    - **On Desktop**: Opens `https://mail.google.com/mail/?view=cm...` with recipient, subject, and body pre-filled in a new tab.
    - **On Mobile**: Opens the native **Gmail App** automatically with `mailto:...`.
    - Automatically marks the company as **Contacted** in Neon DB.
 
-3. **Tier 3 — 1-Click Copy & Outreach Pack Export**:
+3. **Tier 3  -  1-Click Copy & Outreach Pack Export**:
    - Quick **"Copy Pitch"** / **"Copy Subject"** / **"Copy Email"** buttons on every card.
    - **"Download Outreach Pack (CSV)"** with all tailored pitches, company summaries, and HR emails ready for batch tools.
 
@@ -1128,7 +1128,7 @@ Yes, absolutely! **Each email will be sent as an individual 1-to-1 message** dir
    - No company will ever see other companies' emails (no CC/BCC or group lists).
 
 2. **Smart Anti-Spam Throttling (Pacing)**:
-   - When you click **"Send All Cold Emails"**, the system queues the approved pitches and sends them one by one with a natural, randomized delay (e.g., 2–4 seconds between each email).
+   - When you click **"Send All Cold Emails"**, the system queues the approved pitches and sends them one by one with a natural, randomized delay (e.g., 2-4 seconds between each email).
    - This protects your sender domain reputation and prevents Gmail/anti-spam filters from flagging your account.
 
 3. **Individual Timestamps & Status Tracking in Neon DB**:
@@ -1137,7 +1137,7 @@ Yes, absolutely! **Each email will be sent as an individual 1-to-1 message** dir
      - `sent_at` (exact ISO timestamp: `2026-10-09 18:02:15`)
      - `status`: `sent`
      - `subject` & `body` sent
-   - The UI displays a live progress counter (e.g., *"Sent 4 of 20 emails..."*) and updates each company's card to a green **`✓ Contacted on [Date & Time]`** badge.
+   - The UI displays a live progress counter (e.g., *"Sent 4 of 20 emails..."*) and updates each company's card to a green **`[v] Contacted on [Date & Time]`** badge.
 
 4. **Safety Check**:
    - If any company in the list was already contacted in a previous session, the batch sender **automatically skips it** to guarantee zero duplicate emails.
@@ -1148,14 +1148,14 @@ Yes, absolutely! **Each email will be sent as an individual 1-to-1 message** dir
 
 | Feature | Included |
 | :--- | :---: |
-| **Neon PostgreSQL Database** (Permanent Cloud Storage & Deduplication) | ✅ |
-| **Deep Website Scraper** (Finds HR emails, tech stack, and company overview) | ✅ |
-| **Resume & Profile Hub** (Save your resume once, auto-tailored cold pitches) | ✅ |
-| **1-to-1 Batch Dispatcher** (Sends individual emails with pacing & timestamps) | ✅ |
-| **1-Click Open in Gmail Web / Mobile App** (Zero password fallback) | ✅ |
-| **Google OAuth 2.0 Integration** (Official, password-free direct sending) | ✅ |
-| **1-Click Copy Pitch & CSV Export** | ✅ |
-| **Refined Matte Slate UI** (Non-neon, clean & calm) | ✅ |
+| **Neon PostgreSQL Database** (Permanent Cloud Storage & Deduplication) | [v] |
+| **Deep Website Scraper** (Finds HR emails, tech stack, and company overview) | [v] |
+| **Resume & Profile Hub** (Save your resume once, auto-tailored cold pitches) | [v] |
+| **1-to-1 Batch Dispatcher** (Sends individual emails with pacing & timestamps) | [v] |
+| **1-Click Open in Gmail Web / Mobile App** (Zero password fallback) | [v] |
+| **Google OAuth 2.0 Integration** (Official, password-free direct sending) | [v] |
+| **1-Click Copy Pitch & CSV Export** | [v] |
+| **Refined Matte Slate UI** (Non-neon, clean & calm) | [v] |
 
 I am ready to begin the implementation. Let's start building!
 
@@ -1218,7 +1218,7 @@ flowchart LR
 
 #### 5. Multi-Tier Outreach & 1-to-1 Batch Sending
 - **Strict 1-to-1 Sending**: Each company receives its own private email (no group emails, no visible CC/BCC).
-- **Anti-Spam Pacing**: Sends with a natural 2–4 second delay between emails to protect sender reputation.
+- **Anti-Spam Pacing**: Sends with a natural 2-4 second delay between emails to protect sender reputation.
 - **3-Tier Delivery Options**:
   1. **Google OAuth 2.0**: Official password-free connection with one-click direct dispatch.
   2. **1-Click Open in Gmail Web / Mobile App**: Pre-fills the composer in Gmail (desktop) or native Gmail app (mobile) without entering any passwords.
@@ -1274,11 +1274,11 @@ Here are the best options (all fast, accurate, and free):
 
 | AI Provider | Model | Free Tier Allowance | Speed | Best For |
 | :--- | :--- | :--- | :--- | :--- |
-| **1. Google Gemini (Google AI Studio)** — *(Top Pick)* | **Gemini 1.5 / 2.0 Flash** | **1,500 requests/day FREE** (no credit card) | ⚡ ~0.8s | **Top Recommended** (Generous free tier & high quality) |
-| **2. Groq Cloud** | **Llama 3.3 70B** | **100% Free API** | ⚡⚡ ~0.3s (Blazing fast) | Ultra-fast batch processing |
-| **3. OpenRouter** | **DeepSeek / Llama 3 / Mistral** | Free & low-cost models | ⚡ ~1s | Access to any open-source model |
-| **4. OpenAI / Claude** | **GPT-4o-mini / Claude 3.5 Haiku** | Pay-as-you-go ($0.0001 / summary) | ⚡ ~1s | Industry standard |
-| **5. Built-in Smart NLP (Zero-Key Fallback)** | **Heuristic Tag & Summary Extractor** | **Unlimited / Offline** | ⚡ ~0.1s | Works immediately without any API key |
+| **1. Google Gemini (Google AI Studio)**  -  *(Top Pick)* | **Gemini 1.5 / 2.0 Flash** | **1,500 requests/day FREE** (no credit card) |  ~0.8s | **Top Recommended** (Generous free tier & high quality) |
+| **2. Groq Cloud** | **Llama 3.3 70B** | **100% Free API** |  ~0.3s (Blazing fast) | Ultra-fast batch processing |
+| **3. OpenRouter** | **DeepSeek / Llama 3 / Mistral** | Free & low-cost models |  ~1s | Access to any open-source model |
+| **4. OpenAI / Claude** | **GPT-4o-mini / Claude 3.5 Haiku** | Pay-as-you-go ($0.0001 / summary) |  ~1s | Industry standard |
+| **5. Built-in Smart NLP (Zero-Key Fallback)** | **Heuristic Tag & Summary Extractor** | **Unlimited / Offline** |  ~0.1s | Works immediately without any API key |
 
 ---
 
@@ -1337,7 +1337,7 @@ Instead, we will instruct **Groq (Llama 3.3 70B)** to output clean, structured, 
 
 ### 1. Company AI Summary Structure (`companies.ai_profile`)
 
-Instead of paragraphs of text, Groq returns a concise, token-efficient payload (~150–200 bytes per company):
+Instead of paragraphs of text, Groq returns a concise, token-efficient payload (~150-200 bytes per company):
 
 ```json
 {
@@ -1393,7 +1393,7 @@ Each generated cold email is stored in a clean, concise record:
 ```sql
 company_id: 42
 recipient_email: "hr@codelineinfotech.com"
-subject: "Application: PHP / Laravel Developer – [Your Name]"
+subject: "Application: PHP / Laravel Developer - [Your Name]"
 body: "Hi Team,\n\nI noticed Codeline Infotech specializes in high-performance Laravel and web solutions...\n\nBest,\n[Your Name]"
 status: "sent"
 sent_at: "2026-10-09 18:15:30"
@@ -1426,7 +1426,7 @@ Yes, understood perfectly! That is the smartest development approach.
 
 ### Two-Phase Execution Plan
 
-#### 🛠️ Phase 1: Local Development & Complete Testing (Current Phase)
+####  Phase 1: Local Development & Complete Testing (Current Phase)
 1. **Local Database (SQLite via SQLAlchemy)**:
    - We will build the exact relational schema locally first (`companies`, `user_profiles`, `cold_emails`, `email_settings`).
    - Zero external network dependencies, instant local testing, zero configuration.
@@ -1441,9 +1441,9 @@ Yes, understood perfectly! That is the smartest development approach.
 
 ---
 
-#### 🚀 Phase 2: Shipping to Neon PostgreSQL & Cloud Deployment
+####  Phase 2: Shipping to Neon PostgreSQL & Cloud Deployment
 1. **1-Step Neon Switch**:
-   - Because we will use **SQLAlchemy**, switching from local SQLite to **Neon PostgreSQL** requires **zero code rewrites**—just setting `DATABASE_URL=postgresql://...`.
+   - Because we will use **SQLAlchemy**, switching from local SQLite to **Neon PostgreSQL** requires **zero code rewrites** - just setting `DATABASE_URL=postgresql://...`.
 2. **Cloud Deployment**:REDACTED_PASSWORD@`, `careers@`, `jobs@`).
    - Groq AI generates a compact JSON summary of the company's core services & tech stack.
 3. **Stage 3: Candidate Profile Hub (`profile`)**:
@@ -1484,7 +1484,7 @@ give me indepth overview in the MD file
 
 #### Assistant Implementation & Final Response
 
-I have generated the comprehensive in-depth project overview document and saved it directly in your workspace as [PROJECT_OVERVIEW.md](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/PROJECT_OVERVIEW.md).
+I have generated the detailed in-depth project overview document and saved it directly in your workspace as [PROJECT_OVERVIEW.md](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/PROJECT_OVERVIEW.md).
 
 ### 📖 Summary of What's Covered in the Document:
 1. **Executive Summary & Vision:** Core problem, solution, and high-level workflow.
@@ -1494,14 +1494,14 @@ I have generated the comprehensive in-depth project overview document and saved 
    - **Stage 3 (Groq AI Profiler):** Llama-3.3-70b compact JSON extraction for database efficiency.
    - **Stage 4 (Pitch Generator):** Resume-to-company matching for hyper-personalized 1-to-1 cold emails & cover letters.
    - **Stage 5 (Outreach Dispatcher):** Zero-password 1-Click Gmail Web/App links, OAuth 2.0 direct sending, and strict deduplication.
-3. **Database Schema & Entity Relationship Diagram (ERD):** Unified SQLAlchemy models designed for seamless local SQLite testing and instant migration to Neon Serverless PostgreSQL.
-4. **Security & Anti-Spam Safeguards:** Zero raw password storage policy, randomized human delay (2–4s), and strict 1-to-1 recipient isolation.
+3. **Database Schema & Entity Relationship Diagram (ERD):** Unified SQLAlchemy models designed for automated local SQLite testing and instant migration to Neon Serverless PostgreSQL.
+4. **Security & Anti-Spam Safeguards:** Zero raw password storage policy, randomized human delay (2-4s), and strict 1-to-1 recipient isolation.
 5. **Two-Phase Deployment Roadmap:** Local validation &rarr; Neon PostgreSQL cloud deployment.
 6. **Readiness Checklist:** Everything needed before initiating development.
 
 ---
 
-### 🚀 Next Steps:
+###  Next Steps:
 Whenever you are ready to start building the code, please share:
 1. Your **Groq Cloud API Key**
 2. Your **Resume text & target job role**
@@ -1528,7 +1528,7 @@ Spot on! That is a brilliant and secure architectural model. I have updated [PRO
 
 ---
 
-### 🛡️ 1. The Two-Tier Authentication & Anti-Abuse Gate
+### 🛡 1. The Two-Tier Authentication & Anti-Abuse Gate
 - **Step 1: Public & Instant (No Login Needed):**
   - Anyone can search keywords or cities and scrape the list of 20+ companies from Google Local without logging in.
   - Gives users instant value with zero barrier to entry.
@@ -1566,7 +1566,7 @@ remember if the 2nd step is performed then we will store those data in the TAble
 
 Excellent point! I have updated [PROJECT_OVERVIEW.md](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/PROJECT_OVERVIEW.md) to add the **Smart Enrichment Caching & Token-Saver Engine**:
 
-### ⚡ How the Database Caching Works:
+###  How the Database Caching Works:
 1. **First-Time Discovery:**
    - When a company is enriched in Step 2, the discovered emails and Groq AI-generated summary/tech-stack profile are saved in the `COMPANIES`, `EMAILS`, and `COMPANY_PROFILES` database tables keyed by `domain`.
 2. **Subsequent Searches / Hits:**
@@ -1599,8 +1599,8 @@ By associating actions with the logged-in user account, we get complete tracking
 1. **Accurate Audit Trail & History:**
    - Tracks the exact **timestamp** (`sent_at`), **company name**, **recipient email**, and **pitch version** sent by that user.
 2. **Universal Duplicate Prevention:**
-   - If you (or any user) search for a company you’ve already contacted, the UI immediately shows a badge:
-     > `[ALREADY SENT: Oct 9, 2026 via Gmail] — Click to view sent pitch`
+   - If you (or any user) search for a company you've already contacted, the UI immediately shows a badge:
+     > `[ALREADY SENT: Oct 9, 2026 via Gmail]  -  Click to view sent pitch`
    - This prevents accidental embarrassing re-sends.
 3. **Daily Quota & Anti-Spam Safety:**
    - Tracks your daily volume (e.g., `24 / 50 emails sent today`) to ensure your Gmail account stays healthy and never hits Google's spam threshold.
@@ -1629,15 +1629,15 @@ Here are the **8 Step-by-Step Phases of Development** for ReachPilot AI (now ful
 
 ---
 
-### 🗺️ The 8 Development Phases:
+### 🗺 The 8 Development Phases:
 
 | Phase | Milestone | What We Will Build |
 |---|---|---|
 | **Phase 1** | **Database & ORM Models** | `db.py`: Clean SQLAlchemy models (`Company`, `Email`, `CompanyProfile`, `ColdPitch`, `OutreachLog`, `User`) that run on **Local SQLite** now and **Neon PostgreSQL** later with 0 code changes. |
 | **Phase 2** | **Deep Crawler & Email Extractor** | `enricher.py`: Subpage crawler (`/contact`, `/about`, `/careers`), RFC 5322 regex + `mailto:` extractor, plus **instant DB caching** to prevent re-crawling existing domains. |
 | **Phase 3** | **Groq AI Profiler & Resume Ingestion** | `ai_agent.py`: Groq Cloud `llama-3.3-70b` integration. Generates compact JSON company profiles and ingests uploaded resumes in-memory (auto-purging the raw file for privacy). |
-| **Phase 4** | **1-to-1 Pitch Generator** | `pitch_engine.py`: Groq AI matchmaking engine that crafts 120–160 word personalized cold emails (hook, skill bridge, CTA) and cover letters. |
-| **Phase 5** | **Multi-Tier Outreach Engine** | `outreach.py`: 1-Click Gmail Web links, 1-Click Mobile links, Google OAuth direct sender, 1-to-1 sequential batching with 2–4s delays, and audit timestamp tracking. |
+| **Phase 4** | **1-to-1 Pitch Generator** | `pitch_engine.py`: Groq AI matchmaking engine that crafts 120-160 word personalized cold emails (hook, skill bridge, CTA) and cover letters. |
+| **Phase 5** | **Multi-Tier Outreach Engine** | `outreach.py`: 1-Click Gmail Web links, 1-Click Mobile links, Google OAuth direct sender, 1-to-1 sequential batching with 2-4s delays, and audit timestamp tracking. |
 | **Phase 6** | **UI 4-Stage Pipeline Integration** | Modern matte slate/zinc interface with 4 pipeline tabs, Google login auth modal, real-time status bars, and duplicate badges (`[ALREADY CONTACTED]`). |
 | **Phase 7** | **End-to-End Local Testing** | Run and test the full pipeline locally on `http://localhost:8000` to verify performance, anti-spam delays, and accuracy. |
 | **Phase 8** | **Neon PostgreSQL & Cloud Deployment** | Point `DATABASE_URL` to Neon serverless Postgres, set up cloud environment variables, and deploy to Hugging Face Spaces / Render. |
@@ -1661,9 +1661,9 @@ You have **3 great options** for your database during local development, and you
 
 ---
 
-### 💡 Option 1: SQLite Locally via SQLAlchemy *(Easiest & Recommended)*
-- **Why it’s great:** Requires **zero installation**, zero setup, and zero background services. It simply saves as a single lightweight file (`reachpilot.db`) in your folder.
-- **Why it works seamlessly with Neon:** Because we use **SQLAlchemy ORM**, our Python code is **100% database-agnostic**. The exact same queries work on both SQLite and PostgreSQL.
+###  Option 1: SQLite Locally via SQLAlchemy *(Easiest & Recommended)*
+- **Why it's great:** Requires **zero installation**, zero setup, and zero background services. It simply saves as a single lightweight file (`reachpilot.db`) in your folder.
+- **Why it works smoothly with Neon:** Because we use **SQLAlchemy ORM**, our Python code is **100% database-agnostic**. The exact same queries work on both SQLite and PostgreSQL.
 - **How migration works:** When you're ready for cloud/Neon, you literally just swap one line in your `.env` file:
   ```ini
   # Local Testing (Zero Setup):
@@ -1675,19 +1675,19 @@ You have **3 great options** for your database during local development, and you
 
 ---
 
-### ⚡ Option 2: Free Neon PostgreSQL Dev Branch *(True Postgres from Day 1)*
+###  Option 2: Free Neon PostgreSQL Dev Branch *(True Postgres from Day 1)*
 - If you want true PostgreSQL from day one without installing anything on Windows:
 - Neon (`neon.tech`) gives you a **free instant PostgreSQL database** in 10 seconds.
 - You can just paste your Neon connection string into `.env`, and your local app will talk directly to the cloud PostgreSQL database!
 
 ---
 
-### 🖥️ Option 3: Local PostgreSQL Server on Windows
+### 🖥 Option 3: Local PostgreSQL Server on Windows
 - If you already have PostgreSQL installed on your machine (or use Docker: `docker run -p 5432:5432 postgres`), we can point to `postgresql://postgres:REDACTED_PASSWORD@localhost:5432/reachpilot`.
 
 ---
 
-### 🎯 Recommendation:
+###  Recommendation:
 Start with **Option 1 (SQLite)** so we can build and test immediately with zero setup friction. Whenever you want to test on Neon or ship to production, switching is as simple as pasting your Neon URL into `.env`!
 
 ---
@@ -1701,13 +1701,13 @@ what i want is i use loccal for the testing and developement and once done we wi
 
 #### Assistant Implementation & Final Response
 
-**No, it is NOT hard at all — it takes less than 30 seconds!**
+**No, it is NOT hard at all  -  it takes less than 30 seconds!**
 
 Because we write our code using **SQLAlchemy ORM**, the database logic is completely independent of the underlying database engine. 
 
 ---
 
-### 🚀 How the Move from Local SQLite to Neon Works:
+###  How the Move from Local SQLite to Neon Works:
 
 #### Step 1: During Local Testing
 In your `.env` file, we leave it set to SQLite:
@@ -1914,7 +1914,7 @@ OutreachPilot is broad enough for your current job-seeker workflow and potential
 
 
 
-It works naturally in product language: “Launch OutreachPilot,” “Your OutreachPilot dashboard,” and “Powered by OutreachPilot AI.”
+It works naturally in product language: "Launch OutreachPilot," "Your OutreachPilot dashboard," and "Powered by OutreachPilot AI."
 
 
 
@@ -1958,7 +1958,7 @@ Logo direction
 
 Minimal paper plane combined with a navigation or targeting symbol
 
-One distinction: OutreachPilot is the product name; you don't necessarily need to append “AI” to the brand everywhere. Use “OutreachPilot” as the main wordmark and “AI-Powered Outreach Automation” as the descriptor.
+One distinction: OutreachPilot is the product name; you don't necessarily need to append "AI" to the brand everywhere. Use "OutreachPilot" as the main wordmark and "AI-Powered Outreach Automation" as the descriptor.
 
 Before committing, verify the domain, existing products using the same or similar name, and trademark availability in your intended markets. I haven't verified those yet.
 
@@ -2020,7 +2020,7 @@ make it structurised code formate as well
 
 #### Assistant Implementation & Final Response
 
-### 🚀 OutreachPilot Codebase Architecture & Implementation Complete
+###  OutreachPilot Codebase Architecture & Implementation Complete
 
 The codebase is now clean, modular, and structured:
 
@@ -2049,7 +2049,7 @@ c:\Users\vorar\OneDrive\Desktop\gScrapper\
 ├── outreach.py                # Stage 5: Multi-Tier Outreach Engine
 │                              # - 1-Click Gmail Web Launcher (Zero passwords required)
 │                              # - 1-Click Mobile App mailto: URI generator
-│                              # - Google OAuth 2.0 direct sender & 1-to-1 sequential batching with 2–4s anti-spam jitter
+│                              # - Google OAuth 2.0 direct sender & 1-to-1 sequential batching with 2-4s anti-spam jitter
 │                              # - Full Audit Trail & Timestamp Logging
 │
 ├── app.py                     # Main FastAPI Application with lifespan management & async background tasks
@@ -2090,13 +2090,13 @@ make the conditions like when ever we are in the testing or devmod (flag maintai
 
 #### Assistant Implementation & Final Response
 
-### 🛡️ Dev / Sandbox Safety Mode Implemented
+### 🛡 Dev / Sandbox Safety Mode Implemented
 
 The **Development / Sandbox Mode** is now fully active:
 
 ---
 
-### ⚙️ Configuration in [.env](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/.env):
+### ⚙ Configuration in [.env](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/.env):
 ```ini
 # Development / Sandbox Safety Mode
 DEV_MODE=true
@@ -2138,27 +2138,27 @@ check the code linting errors
 
 #### Assistant Implementation & Final Response
 
-### ✅ Code Linting & Static Analysis Complete
+### [v] Code Linting & Static Analysis Complete
 
 All linting, typing, and syntax checks were executed across the entire codebase using **AST Verification**, **Pyflakes**, and **Ruff**:
 
 ---
 
-### 🔍 Results Summary:
+###  Results Summary:
 
 | File | Syntax Check | Pyflakes | Ruff Linter | Status |
 |---|:---:|:---:|:---:|:---:|
-| [app.py](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/app.py) | `PASS` | `0 errors` | `0 errors` | ✅ Clean |
-| [db.py](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/db.py) | `PASS` | `0 errors` | `0 errors` | ✅ Clean |
-| [config.py](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/config.py) | `PASS` | `0 errors` | `0 errors` | ✅ Clean |
-| [scraper_engine.py](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/scraper_engine.py) | `PASS` | `0 errors` | `0 errors` | ✅ Clean |
-| [enricher.py](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/enricher.py) | `PASS` | `0 errors` | `0 errors` | ✅ Clean |
-| [ai_agent.py](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/ai_agent.py) | `PASS` | `0 errors` | `0 errors` | ✅ Clean |
-| [outreach.py](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/outreach.py) | `PASS` | `0 errors` | `0 errors` | ✅ Clean |
+| [app.py](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/app.py) | `PASS` | `0 errors` | `0 errors` | [v] Clean |
+| [db.py](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/db.py) | `PASS` | `0 errors` | `0 errors` | [v] Clean |
+| [config.py](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/config.py) | `PASS` | `0 errors` | `0 errors` | [v] Clean |
+| [scraper_engine.py](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/scraper_engine.py) | `PASS` | `0 errors` | `0 errors` | [v] Clean |
+| [enricher.py](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/enricher.py) | `PASS` | `0 errors` | `0 errors` | [v] Clean |
+| [ai_agent.py](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/ai_agent.py) | `PASS` | `0 errors` | `0 errors` | [v] Clean |
+| [outreach.py](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/outreach.py) | `PASS` | `0 errors` | `0 errors` | [v] Clean |
 
 ---
 
-### 🛠️ Fixes Applied:
+###  Fixes Applied:
 1. **Unused Imports & Variables Purged:** Removed all unused modules (`csv`, `io`, `json`, `BackgroundTasks`, `StreamingResponse`, `Index`, `Session`, etc.).
 2. **Type Annotations Modernized:** Upgraded legacy type hints to modern Python syntax (`X | None`, `list[dict[str, Any]]`).
 3. **Ambiguous Variable Renamed:** Replaced ambiguous loop variable `l` with `log_item` in [app.py](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/app.py#L411-L422).
@@ -2204,23 +2204,23 @@ _Actions executed without standalone text summary:_
 
 #### Assistant Implementation & Final Response
 
-### 💡 Why that happened:
+###  Why that happened:
 
 In your browser screenshot, you typed:
-> ❌ `http://0.0.0.0:8000` &rarr; Chrome gives `ERR_ADDRESS_INVALID`
+> [x] `http://0.0.0.0:8000` &rarr; Chrome gives `ERR_ADDRESS_INVALID`
 
 On Windows, **`0.0.0.0`** is an internal server listening address, not a valid browser destination. 
 
 ---
 
-### ✅ Solution: Open either of these URLs in your browser:
+### [v] Solution: Open either of these URLs in your browser:
 
 👉 **[http://localhost:8000](http://localhost:8000)**  
 👉 **[http://127.0.0.1:8000](http://127.0.0.1:8000)**
 
 ---
 
-### 🚀 Verified:
+###  Verified:
 We just tested the server endpoint and confirmed:
 - **HTTP Status:** `200 OK`
 - **PostgreSQL Database:** Connected & schema initialized
@@ -2246,7 +2246,7 @@ i dont see any cards
 
 #### Assistant Implementation & Final Response
 
-### 🛠️ What Happened & How It's Fixed
+###  What Happened & How It's Fixed
 
 The scraper successfully discovered and saved **all 20 companies** into your PostgreSQL database:
 - **TOPS Technologies** (`tops-int.com`)
@@ -2258,7 +2258,7 @@ The scraper successfully discovered and saved **all 20 companies** into your Pos
 
 ---
 
-### 🔍 Cause of the 0 Cards Display:
+###  Cause of the 0 Cards Display:
 1. **Frontend Timing Race Condition:** When the headless browser finished scraping, it signaled completion a split second *before* the PostgreSQL transaction finished writing the 20 rows to the database. The initial fetch ran right before the database commit completed.
 2. **Fixed:**
    - In `app.py`: The `is_running` status now remains `True` with `Saving 20 companies to PostgreSQL...` until `db.commit()` has completed.
@@ -2266,12 +2266,12 @@ The scraper successfully discovered and saved **all 20 companies** into your Pos
 
 ---
 
-### 🚀 What to do now:
+###  What to do now:
 
 Simply **Refresh your browser page (`Ctrl + R` or `F5`)** at:
 👉 **[http://localhost:8000](http://localhost:8000)** (or click the **"🔄 Refresh List"** button)
 
-All **20 company cards** will appear with their domains, phone numbers, ratings, addresses, and the **⚡ Deep Enrich** and **✉️ Generate Pitch** buttons!
+All **20 company cards** will appear with their domains, phone numbers, ratings, addresses, and the ** Deep Enrich** and **✉ Generate Pitch** buttons!
 
 ---
 
@@ -2290,10 +2290,10 @@ on click ot working and also in PG admin4 how can i see the DBs
 
 #### Assistant Implementation & Final Response
 
-### 1. ⚡ "Enrich All Pending Leads" Button is Fixed!
-The **"⚡ Enrich All Pending Leads"**, **"🚀 Deep Enrich All"**, and **"✨ Generate Pitches for All"** buttons are now connected and active.
+### 1.  "Enrich All Pending Leads" Button is Fixed!
+The **" Enrich All Pending Leads"**, **" Deep Enrich All"**, and **" Generate Pitches for All"** buttons are now connected and active.
 - When you click it now, you'll see live progress:
-  > `⚡ Enriching (1/20): TOPS Technolo...` &rarr; `(2/20)...`
+  > ` Enriching (1/20): TOPS Technolo...` &rarr; `(2/20)...`
 - It will deeply crawl their subpages (`/contact`, `/about`, `/careers`), find emails, and use Groq AI to profile each company.
 
 ---
@@ -2305,7 +2305,7 @@ FATAL: password authentication failed for user "postgres"
 ```
 Because the password in [.env](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/.env) was set to default `postgres`, but your local PostgreSQL was installed with a different password, the system automatically used the safe local SQLite fallback (`reachpilot_fallback.db`) so your application wouldn't crash.
 
-#### 🔑 To see the database in pgAdmin 4:
+####  To see the database in pgAdmin 4:
 1. **What is your local PostgreSQL password** (the master password you enter when opening pgAdmin 4)?
 2. Once you provide it (or update [.env](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/.env)):
    ```ini
@@ -2329,11 +2329,11 @@ Because the password in [.env](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper
 
 ---
 
-### Turn 45: Expand outreachpilot → Schemas → public → Tables id ont see any tables To see th...
+### Turn 45: Expand outreachpilot -> Schemas -> public -> Tables id ont see any tables To see th...
 
 #### User Prompt
 ```text
-Expand outreachpilot → Schemas → public → Tables id ont see any tables
+Expand outreachpilot -> Schemas -> public -> Tables id ont see any tables
  To see the database in pgAdmin 4:
 
 What is your local PostgreSQL password (the master password you enter when opening pgAdmin 4)?
@@ -2359,18 +2359,18 @@ Since you **already have pgAdmin 4 open**, you can reset your password to `postg
 
 ---
 
-### ⚡ How to set your password in pgAdmin 4:
+###  How to set your password in pgAdmin 4:
 
 1. In **pgAdmin 4**, click on your database in the left sidebar:  
    👉 **`outreachpilot`** (or **`postgres`**)
 2. In the top navigation menu, click:  
    👉 **Tools** &rarr; **Query Tool**  
-   *(or click the little **Play / Lightning ⚡** Query Tool icon)*
+   *(or click the little **Play / Lightning ** Query Tool icon)*
 3. In the query window, paste this exact command:
    ```sql
    ALTER USER postgres WITH PASSWORD 'postgres';
    ```
-4. Click the **Execute / Play ▶️** button (or press **`F5`**).
+4. Click the **Execute / Play -** button (or press **`F5`**).
    - You will see the message: `ALTER ROLE - Query returned successfully in ... ms`.
 
 ---
@@ -2414,10 +2414,10 @@ The tables and data are now created in your local PostgreSQL database (`outreach
 
 ---
 
-### 👁️ How to View Them in pgAdmin 4 Right Now:
+### 👁 How to View Them in pgAdmin 4 Right Now:
 
 1. Go to **pgAdmin 4**.
-2. In the left panel tree, right-click on **Tables** under `outreachpilot → Schemas → public`.
+2. In the left panel tree, right-click on **Tables** under `outreachpilot -> Schemas -> public`.
 3. Click **Refresh** 🔄.
 4. You will now see all **6 Tables**:
    - 📂 **`companies`** *(Already populated with your 20 scouted companies!)*
@@ -2431,7 +2431,7 @@ To view the data: Right-click **`companies`** &rarr; **View/Edit Data** &rarr; *
 
 ---
 
-### ⚡ Two Fixes Made:
+###  Two Fixes Made:
 1. **PostgreSQL Driver Dialect:** Updated `.env` to `postgresql+psycopg2://` so SQLAlchemy 2.0 connects via `psycopg2`.
 2. **Groq AI Model:REDACTED_PASSWORD@gmail.com" as the master admin gmail it can pe...
 
@@ -2446,7 +2446,7 @@ but remeber this will only be this specific email ID , i can add multiple master
 ```
 
 #### Actions & Tools Executed
-- Tools utilized: `view_file`
+- Tools used: `view_file`
 
 #### Assistant Implementation & Final Response
 
@@ -2701,7 +2701,7 @@ check the location its not working properly like i get open on-site services as 
 ```
 
 #### Actions & Tools Executed
-- Tools utilized: `view_file`, `grep_search`, `manage_task`
+- Tools used: `view_file`, `grep_search`, `manage_task`
 
 #### Assistant Implementation & Final Response
 
@@ -2757,10 +2757,10 @@ All 5 checks passed. Here's a summary of everything that was implemented and is 
 
 ---
 
-## ✅ All Changes Complete & Verified
+## [v] All Changes Complete & Verified
 
-### 1. 🗺️ Location URLs (Google Maps Links)
-- **Grid cards**: Map-pin icon → clickable link to Google Maps (opens in new tab)
+### 1. 🗺 Location URLs (Google Maps Links)
+- **Grid cards**: Map-pin icon -> clickable link to Google Maps (opens in new tab)
 - **Table rows**: Phone & Location column shows clickable Google Maps link
 - **Company details modal**: Header changed to "Location (Google Maps)" with a clickable `external-link` icon
 - Fallback: if `location_url` is missing from DB, `buildMapsUrl()` builds one client-side from the company name + address
@@ -2770,15 +2770,15 @@ All 5 checks passed. Here's a summary of everything that was implemented and is 
 - **DB backfill ran**: cleaned **409** bad addresses and backfilled **437** `location_url` records in the database
 - `scraper_engine.py` already had the server-side fix in place for new scrapes
 
-### 3. ⌨️ ESC Key Closes Modals
-- Global `keydown` listener on `document` — pressing `Escape` closes any of: company details modal, pitch modal, login modal
+### 3. ⌨ ESC Key Closes Modals
+- Global `keydown` listener on `document`  -  pressing `Escape` closes any of: company details modal, pitch modal, login modal
 
-### 4. 🔑 Keyword Filter Dropdown
+### 4.  Keyword Filter Dropdown
 - New `Keyword:` select in the All Companies toolbar, populated dynamically from `data.available_keywords`
 - Filters companies by their `source_query` (e.g. `"IT Companies Surat"`, `"Web Development Surat"`)
 
 ### 5. 📩 Job Opportunity Cold Emails
-- Pitch prompt completely rewritten — explicitly labeled **"JOB OPPORTUNITY / TALENT APPLICATION outreach"**
+- Pitch prompt completely rewritten  -  explicitly labeled **"JOB OPPORTUNITY / TALENT APPLICATION outreach"**
 - CTA asks for engineering openings or to connect with hiring manager, not a "5-minute call about services"
 - Subject line format: `"{Role} Application - {Name} - {Company}"`
 
@@ -2865,18 +2865,18 @@ php related , php based , php  , PhP all are same but rightnow all will be shown
 
 #### Assistant Implementation & Final Response
 
-### 🎯 Features Implemented & Verified
+###  Features Implemented & Verified
 
 ---
 
-#### 1. 🔍 Two Separate Filters: **Keyword** and **City**
+#### 1.  Two Separate Filters: **Keyword** and **City**
 * In the toolbar of the **"All Companies"** tab, we now have two independent dropdown filters:
-  * **`Keyword:`** dropdown — displays canonical, normalized tech skill / industry categories.
-  * **`City:`** dropdown — displays all distinct cities (e.g. *Surat*, *Ahmedabad*, *Rajkot*, *Gandhinagar*, *Bangalore*).
+  * **`Keyword:`** dropdown  -  displays canonical, normalized tech skill / industry categories.
+  * **`City:`** dropdown  -  displays all distinct cities (e.g. *Surat*, *Ahmedabad*, *Rajkot*, *Gandhinagar*, *Bangalore*).
 * **Cross-filtering support**: You can filter by:
-  * Just **Keyword** (e.g. `PHP` → shows PHP companies across all cities).
-  * Just **City** (e.g. `Surat` → shows all companies in Surat).
-  * Both **Keyword + City** (e.g. `PHP` + `Surat` → shows only PHP companies in Surat).
+  * Just **Keyword** (e.g. `PHP` -> shows PHP companies across all cities).
+  * Just **City** (e.g. `Surat` -> shows all companies in Surat).
+  * Both **Keyword + City** (e.g. `PHP` + `Surat` -> shows only PHP companies in Surat).
 
 ---
 
@@ -2898,7 +2898,7 @@ php related , php based , php  , PhP all are same but rightnow all will be shown
 
 ---
 
-#### 3. 🏷️ UI Badges & View Support
+#### 3. 🏷 UI Badges & View Support
 * **Grid Cards**: Each company card displays clean tags for its canonical skill (e.g. `PHP`) and location (e.g. `Surat`).
 * **Table Rows**: Each table row under the company name features the normalized keyword tag and city tag.
 * **Instant Dynamic Population**: The dropdowns are dynamically populated directly from the API response (`available_keywords` and `available_cities`).
@@ -2919,13 +2919,13 @@ on this card clicks i want filter grids
 
 #### Assistant Implementation & Final Response
 
-### ✅ Interactive Metric Card Filters Implemented & Verified
+### [v] Interactive Metric Card Filters Implemented & Verified
 
 Clicking any of the top KPI metric cards now instantly filters the company grid and table:
 
 ---
 
-#### 🎛️ Click Interactions & Behavior:
+#### 🎛 Click Interactions & Behavior:
 
 1. **Genuine Companies Card** (`stat-card-all`):
    * **Click**: Resets all metric filters and displays all verified genuine companies.
@@ -3002,7 +3002,7 @@ Uncaught ReferenceError: btnFilterEmails is not defined
 
 #### Assistant Implementation & Final Response
 
-### 🛠️ Bug Fixed: `btnFilterEmails is not defined`
+###  Bug Fixed: `btnFilterEmails is not defined`
 
 #### What happened:
 * The variable `btnFilterEmails` was accidentally left out of the top-level element declarations when refactoring the metric card filters, which caused an uncaught reference error when `app.js` first evaluated.
@@ -3084,17 +3084,17 @@ The jumbled, overflowing toolbar has been reorganized into a **structured, two-t
 
 ```
 ┌────────────────────────────────────────────────────────────────────────────────────────┐
-│ [⟳ Refresh] [⚡ Deep Enrich All] [📥 Export CSV]  │  [🛡️ Admin Toggle] [⊞ Cards | ▦ Table]│
+│ [⟳ Refresh] [ Deep Enrich All] [📥 Export CSV]  │  [🛡 Admin Toggle] [⊞ Cards | ▦ Table]│
 ├────────────────────────────────────────────────────────────────────────────────────────┤
-│ ⚙️ Filters:  Keyword: [PHP ▼]  City: [Surat ▼]  [✉ With Emails]  Sort: [Rating ▼] │ 🔍 [Search...    ]│
+│ ⚙ Filters:  Keyword: [PHP ▼]  City: [Surat ▼]  [✉ With Emails]  Sort: [Rating ▼] │  [Search...    ]│
 └────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
-#### 1. 🚀 Top Tier — Actions & Views
-* **Left**: Primary batch actions — **Refresh**, **Deep Enrich All** *(primary gradient with zap icon)*, and **Export CSV**.
-* **Right**: View switchers — **Master Admin View / Preview toggle** and the **Cards / Table switcher**.
+#### 1.  Top Tier  -  Actions & Views
+* **Left**: Primary batch actions  -  **Refresh**, **Deep Enrich All** *(primary gradient with zap icon)*, and **Export CSV**.
+* **Right**: View switchers  -  **Master Admin View / Preview toggle** and the **Cards / Table switcher**.
 
-#### 2. 🔍 Bottom Tier — Search & Dedicated Filters
+#### 2.  Bottom Tier  -  Search & Dedicated Filters
 * **Left**:
   * Clean `Filters:` section indicator.
   * **Keyword** dropdown *(AI-normalized categories like PHP, MERN Stack, Web Development)*.
@@ -3102,11 +3102,11 @@ The jumbled, overflowing toolbar has been reorganized into a **structured, two-t
   * **"With Emails"** toggle pill with live counter badge.
   * **Sort** dropdown *(Highest rating, newest, etc.)*.
 * **Right**:
-  * Unified search bar with embedded search icon: `[ 🔍 Search name, domain, tech... ]`.
+  * Unified search bar with embedded search icon: `[  Search name, domain, tech... ]`.
 
 ---
 
-No random wrapping or jagged overlap — every control now has its dedicated, logical place on both desktop and mobile viewports.
+No random wrapping or jagged overlap  -  every control now has its dedicated, logical place on both desktop and mobile viewports.
 
 ---
 
@@ -3122,9 +3122,9 @@ seach filter position issue icon and plcae holder
 
 #### Assistant Implementation & Final Response
 
-### ✅ Fixed: Search Icon & Placeholder Overlap + Row Alignment
+### [v] Fixed: Search Icon & Placeholder Overlap + Row Alignment
 
-#### 1. 🔍 Search Icon & Text Collision Fixed
+#### 1.  Search Icon & Text Collision Fixed
 * **The Cause**: The search input previously had an invalid Tailwind class (`pl-8.5`), which resulted in 0 left padding, causing the magnifying glass icon to sit directly on top of the `"Search name, domain, tech..."` placeholder.
 * **The Fix**: Applied a guaranteed `style="padding-left: 2.25rem !important;"` and `pl-9` with `left-3` positioning. The placeholder text and any typed query now have generous 10px breathing room from the icon.
 
@@ -3152,7 +3152,7 @@ can you give me an complete workflow/explaination everything in 1 MD file so i c
 
 #### Assistant Implementation & Final Response
 
-I have created a comprehensive, self-contained documentation file:
+I have created a detailed, self-contained documentation file:
 
 👉 **[`COMPLETE_SYSTEM_WORKFLOW_AND_ARCHITECTURE.md`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/COMPLETE_SYSTEM_WORKFLOW_AND_ARCHITECTURE.md)**
 
@@ -3194,13 +3194,13 @@ we have multi user configuration master admin normal user dev mode everything i 
 
 #### Assistant Implementation & Final Response
 
-Here is a comprehensive security audit and vulnerability assessment of the **OutreachPilot** codebase. 
+Here is a detailed security audit and vulnerability assessment of the **OutreachPilot** codebase. 
 
 The audit evaluated authentication flows, session handling, multi-user privilege boundaries, master admin controls, developer mode overrides, crawling/SSRF vectors, file handling, and client-side rendering.
 
 ---
 
-# 🛡️ OutreachPilot — Full Security & Vulnerability Assessment Report
+# 🛡 OutreachPilot  -  Full Security & Vulnerability Assessment Report
 
 ## 📊 Vulnerability Severity Breakdown
 | Severity | Count | Summary of Issues |
@@ -3215,7 +3215,7 @@ The audit evaluated authentication flows, session handling, multi-user privilege
 ## 🔴 Critical Vulnerabilities & Backdoors
 
 ### 1. Hard Backdoor: Instant Unauthenticated Master Admin Takeover via `/auth/demo/login`
-* **Vulnerable File:** [`app.py` lines 372–415](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/app.py#L372-L415)
+* **Vulnerable File:** [`app.py` lines 372-415](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/app.py#L372-L415)
 * **Severity:** **CRITICAL (CVSS 9.8)**
 * **Vulnerability Description:**  
   The endpoint `POST /auth/demo/login` accepts a JSON payload `{ "as_admin": true }`. It does **not** check whether `DEV_MODE` is enabled or whether the requester is authenticated:
@@ -3242,7 +3242,7 @@ The audit evaluated authentication flows, session handling, multi-user privilege
 ---
 
 ### 2. Broken Authentication: Complete Session Forgery via Plaintext Cookie
-* **Vulnerable File:** [`app.py` lines 97–118](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/app.py#L97-L118)
+* **Vulnerable File:** [`app.py` lines 97-118](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/app.py#L97-L118)
 * **Severity:** **CRITICAL (CVSS 9.1)**
 * **Vulnerability Description:**  
   Authentication relies entirely on reading a plain, unsigned cookie `pilot_user_email`:
@@ -3270,7 +3270,7 @@ The audit evaluated authentication flows, session handling, multi-user privilege
 ### 3. Server-Side Request Forgery (SSRF) in Website Crawler & Direct URL Scout
 * **Vulnerable Files:**  
   * [`enricher.py` line 141](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/enricher.py#L141)
-  * [`scraper_engine.py` lines 312–325](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/scraper_engine.py#L312-L325)
+  * [`scraper_engine.py` lines 312-325](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/scraper_engine.py#L312-L325)
 * **Severity:** **CRITICAL (CVSS 9.0)**
 * **Vulnerability Description:**  
   In `enricher.py`:
@@ -3293,7 +3293,7 @@ The audit evaluated authentication flows, session handling, multi-user privilege
 ## 🟠 High Severity Vulnerabilities
 
 ### 4. Stored DOM Cross-Site Scripting (XSS) via Scraped Data
-* **Vulnerable File:** [`static/js/app.js` lines 748–800](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/static/js/app.js#L748-L800)
+* **Vulnerable File:** [`static/js/app.js` lines 748-800](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/static/js/app.js#L748-L800)
 * **Severity:** **HIGH (CVSS 8.2)**
 * **Vulnerability Description:**  
   Company cards and tables are constructed using direct template literal interpolation into `.innerHTML`:
@@ -3325,8 +3325,8 @@ The audit evaluated authentication flows, session handling, multi-user privilege
 
 ### 5. Insecure Direct Object Reference (IDOR) & Broken Access on Pitches
 * **Vulnerable Files:**  
-  * [`app.py` lines 659–684](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/app.py#L659-L684) (`/api/pitch/{pitch_id}/log-sent`)
-  * [`outreach.py` lines 134–146](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/outreach.py#L134-L146) (`dispatch_batch_outreach`)
+  * [`app.py` lines 659-684](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/app.py#L659-L684) (`/api/pitch/{pitch_id}/log-sent`)
+  * [`outreach.py` lines 134-146](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/outreach.py#L134-L146) (`dispatch_batch_outreach`)
 * **Severity:** **HIGH (CVSS 7.5)**
 * **Vulnerability Description:**  
   In `/api/pitch/{pitch_id}/log-sent`:
@@ -3357,7 +3357,7 @@ The audit evaluated authentication flows, session handling, multi-user privilege
 ### 6. Plaintext Storage of Sensitive Google OAuth Refresh Tokens
 * **Vulnerable Files:**  
   * [`db.py` line 34](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/db.py#L34)
-  * [`app.py` lines 803–810](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/app.py#L803-L810)
+  * [`app.py` lines 803-810](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/app.py#L803-L810)
 * **Severity:** **HIGH (CVSS 7.4)**
 * **Vulnerability Description:**  
   In `User.oauth_tokens = Column(JSON, nullable=True)`, Google OAuth 2.0 access tokens and **long-lived refresh tokens** with full `gmail.send` scope are written directly to PostgreSQL in unencrypted plaintext:
@@ -3393,7 +3393,7 @@ The audit evaluated authentication flows, session handling, multi-user privilege
 ---
 
 ### 8. Denial of Service (DoS) & Memory Exhaustion via PDF Upload
-* **Vulnerable File:** [`app.py` lines 545–557](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/app.py#L545-L557)
+* **Vulnerable File:** [`app.py` lines 545-557](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/app.py#L545-L557)
 * **Severity:** **MEDIUM (CVSS 6.2)**
 * **Vulnerability Description:**  
   In `/api/resume/upload`:
@@ -3441,14 +3441,14 @@ The audit evaluated authentication flows, session handling, multi-user privilege
 * **Remediation:** Set `httponly=True`, `samesite="lax"`, and `secure=True` (in production).
 
 ### 11. Missing Rate Limiting on Groq AI Endpoints
-* **Vulnerable File:** [`app.py` lines 507–533 & 572–603](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/app.py#L507)
+* **Vulnerable File:** [`app.py` lines 507-533 & 572-603](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/app.py#L507)
 * **Severity:** **LOW (CVSS 3.1)**
 * **Issue:** `/api/companies/bulk-enrich` and `/api/pitch/generate` have no rate limiting per IP or user. A single user can trigger hundreds of simultaneous Groq API requests, burning through API rate limits or quota.
 * **Remediation:** Integrate `slowapi` or FastAPI rate limiters (e.g. limit `/api/pitch/generate` to 20 calls/minute per user).
 
 ---
 
-## 📋 Comprehensive Remediation Plan
+## 📋 Detailed Remediation Plan
 
 If you'd like, I can apply these fixes in order of priority:
 1. **Patch `/auth/demo/login`:** Restrict strictly to `DEV_MODE=True`.
@@ -3509,7 +3509,7 @@ The documentation detailing every finding, threat scenario, CVSS rating, and tec
 
 ---
 
-### 🛡️ 2. Summary of Applied Fixes
+### 🛡 2. Summary of Applied Fixes
 
 | ID | Vulnerability Title | Severity | Files Modified | Fix Description |
 | :--- | :--- | :---: | :--- | :--- |
@@ -3527,7 +3527,7 @@ The documentation detailing every finding, threat scenario, CVSS rating, and tec
 
 ---
 
-### ✅ 3. Verification & Live Server Status
+### [v] 3. Verification & Live Server Status
 - **JavaScript Syntax:** Validated via `node -c static/js/app.js` (clean, 0 errors).
 - **Security Logic Unit Tests:** Cryptographic signing, Fernet encryption, and SSRF private IP blocking all passed with 100% assertions.
 - **Server:** Active and running live on `http://127.0.0.1:8000`. Database verified intact with all 515 leads preserved.
@@ -3583,10 +3583,10 @@ It is a **Sliding Window Log (Sliding Window Counter)** rate limiter.
 
 | Rate Limiter Type | How It Works | Why/Why Not Chosen |
 | :--- | :--- | :--- |
-| **Fixed Window** | Resets a counter at hard time boundaries (e.g. 00:00, 00:01). | ❌ **Vulnerable to boundary bursts**: An attacker can send all allowed requests at 00:00:59 and another burst at 00:01:01, doubling the allowed quota in 2 seconds. |
-| **Leaky Bucket** | Processes requests at a constant drip rate; queues excess requests. | ❌ Adds latency and queuing delays for legitimate interactive users who want an instant pitch. |
+| **Fixed Window** | Resets a counter at hard time boundaries (e.g. 00:00, 00:01). | [x] **Vulnerable to boundary bursts**: An attacker can send all allowed requests at 00:00:59 and another burst at 00:01:01, doubling the allowed quota in 2 seconds. |
+| **Leaky Bucket** | Processes requests at a constant drip rate; queues excess requests. | [x] Adds latency and queuing delays for legitimate interactive users who want an instant pitch. |
 | **Token Bucket** | Tokens refill at a steady rate; allows bursts up to bucket capacity. | Good, but more complex state management across multiple endpoints without persistence. |
-| **Sliding Window (Active in OutreachPilot)** ✅ | Tracks the exact timestamps of recent calls within a dynamic rolling time window (`window_seconds`). | ✅ **Eliminates burst vulnerabilities** at boundary edges. Each user/IP gets a smooth rolling quota. |
+| **Sliding Window (Active in OutreachPilot)** [v] | Tracks the exact timestamps of recent calls within a dynamic rolling time window (`window_seconds`). | [v] **Eliminates burst vulnerabilities** at boundary edges. Each user/IP gets a smooth rolling quota. |
 
 ---
 
@@ -3649,7 +3649,7 @@ have we implemented this sliding window logic?
 ---
 
 ### 1. The Core Sliding Window Implementation
-In [`app.py` (Lines 32–45)](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/app.py#L32-L45):
+In [`app.py` (Lines 32-45)](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/app.py#L32-L45):
 
 ```python
 # In-memory sliding window rate limiter
@@ -3778,7 +3778,7 @@ All mentions of **Groq AI** and **Groq** have been scrubbed from all user interf
 
 ---
 
-### ✅ Verification
+### [v] Verification
 - The live homepage HTML was verified (`Contains groq in HTML?: False`).
 - JavaScript syntax check (`node -c static/js/app.js`) passed with 0 errors.
 - The server is live and running on `http://127.0.0.1:8000`.
@@ -3909,7 +3909,7 @@ Here are the answers to your questions along with the newly implemented features
 
 ### 1. Scouting All Pagination Pages (Now Live)
 
-A new option has been added to the **"Pages to Scrape"** dropdown: **`⚡ All Available Pages (Auto-Detect Until End)`** along with higher page tiers (15, 20, and 30 pages):
+A new option has been added to the **"Pages to Scrape"** dropdown: **` All Available Pages (Auto-Detect Until End)`** along with higher page tiers (15, 20, and 30 pages):
 
 * **Available Pagination Options:**
   - `1 Page (~20 leads)`
@@ -3920,7 +3920,7 @@ A new option has been added to the **"Pages to Scrape"** dropdown: **`⚡ All Av
   - `15 Pages (~300 leads)`
   - `20 Pages (~400 leads)`
   - `30 Pages (~600 leads)`
-  - **`⚡ All Available Pages (Auto-Detect Until End)`**
+  - **` All Available Pages (Auto-Detect Until End)`**
 
 #### How the "All Pages" Engine Works:
 1. When you select **All Available Pages** (`value: 0`), the scraper does not stop at a fixed limit.
@@ -3944,7 +3944,7 @@ A new option has been added to the **"Pages to Scrape"** dropdown: **`⚡ All Av
          id = Column(Integer, primary_key=True, index=True)
          domain = Column(String(255), unique=True, index=True, nullable=False)
      ```
-   - Before saving, every URL is normalized to its canonical root domain (e.g. `https://www.coruscate.com/about/` → `coruscate.com`), stripping `http://`, `https://`, `www.`, subpage paths, and ports.
+   - Before saving, every URL is normalized to its canonical root domain (e.g. `https://www.coruscate.com/about/` -> `coruscate.com`), stripping `http://`, `https://`, `www.`, subpage paths, and ports.
 
 2. **Dual-Layer Deduplication:**
    - **In-Memory Batch Deduplication:** During the live crawl, an in-memory set (`seen_domains`) prevents the same company from being saved multiple times if Google repeats listings across subsequent pages.
@@ -3965,7 +3965,7 @@ A new option has been added to the **"Pages to Scrape"** dropdown: **`⚡ All Av
      ```
    - **If the company domain is new:** A new row is inserted.
    - **If the domain already exists:** It updates fresh review counts, ratings, and phone numbers **without creating duplicates**.
-   - **Zero Data Loss:** It strictly preserves all pre-existing enriched data—such as discovered email addresses, candidate pitches, and outreach sent timestamps.
+   - **Zero Data Loss:** It strictly preserves all pre-existing enriched data - such as discovered email addresses, candidate pitches, and outreach sent timestamps.
 
 ---
 
@@ -3993,15 +3993,15 @@ The application has been upgraded with full **Mobile**, **Tablet**, and **Laptop
 
 ### Responsive Breakdown Across Screen Sizes
 
-#### 1. 📱 Mobile Screens (`< 768px` — Phones)
+#### 1. 📱 Mobile Screens (`< 768px`  -  Phones)
 * **Off-Canvas Slide-Over Navigation Drawer:** The left sidebar automatically transforms into an off-canvas slide-out drawer that is hidden off-screen by default.
 * **Top Header Hamburger Button:** An accessible hamburger button (`☰`) in the sticky top header opens the drawer with smooth spring physics (`transform: translateX(0)`).
 * **Backdrop Blur Overlay:** Tapping outside the drawer or tapping any navigation tab immediately auto-closes the drawer and unlocks the page scroll.
-* **Full-Width Content Layout:** Removed hardcoded left margins on mobile (`ml-0`), allowing all cards, forms, and results to utilize 100% of the screen width with zero awkward horizontal scrolling.
+* **Full-Width Content Layout:** Removed hardcoded left margins on mobile (`ml-0`), allowing all cards, forms, and results to use 100% of the screen width with zero awkward horizontal scrolling.
 * **Adaptive Single-Column Grid:** Scouted company cards and the directory display in a finger-friendly 1-column layout with touch targets (minimum 42px height).
 * **Responsive Modals:** Company Details and Pitch Preview modals feature responsive padding and stacked action buttons (`flex-col sm:flex-row`).
 
-#### 2. 📱 Tablet Screens (`768px – 1023px` — iPads & Tablets)
+#### 2. 📱 Tablet Screens (`768px - 1023px`  -  iPads & Tablets)
 * **Proportional 14rem Sidebar:** Rebalanced sidebar width to prevent squeezing content.
 * **Adaptive 2-Column Grid:** Both the Live Scraped Leads section and the All Companies directory smoothly arrange into a clean **2-column layout** (`sm:grid-cols-2`).
 * **Multi-Row Form Controls:** The Scout search form organizes into balanced 2-column input rows (Keyword, City, Pages, Country, Button).
@@ -4040,7 +4040,7 @@ I have thoroughly reviewed the layout across all screen sizes (mobile, tablet, a
 * **Balanced Horizontal Margin System**:
   * Standardized horizontal padding across `<header>` and `<main>`:
     * **Mobile (`< 640px`)**: Symmetric `16px` (`px-4`) on both left and right edges.
-    * **Tablet (`640px – 1023px`)**: Symmetric `24px` (`sm:px-6`) on both edges.
+    * **Tablet (`640px - 1023px`)**: Symmetric `24px` (`sm:px-6`) on both edges.
     * **Laptop / Desktop (`≥ 1024px`)**: Symmetric `32px` (`lg:px-8`) on both edges with `max-w-7xl mx-auto` centering.
   * No card, container box, filter bar, or modal touches screen boundaries or viewport edges on any device.
 
@@ -4106,7 +4106,7 @@ all companies , candidate profile and outreach hub
 
 #### Assistant Implementation & Final Response
 
-Yes, exactly — having **All Companies** as the primary landing view creates a much cleaner, directory-first workflow.
+Yes, exactly  -  having **All Companies** as the primary landing view creates a much cleaner, directory-first workflow.
 
 All changes have been implemented and verified:
 
@@ -4124,7 +4124,7 @@ The left navigation sidebar now contains exactly **3 buttons**:
 When you want to scout new leads, you can jump directly to the **Google Local Lead Scout** interface via:
 - **`+ Scout New Leads`** button in the [All Companies toolbar](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/templates/index.html#L490)
 - **`Scout Leads`** button in the [top header](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/templates/index.html#L151)
-- On the Scout page, a **`← Back to All Companies`** button is provided to return at any moment.
+- On the Scout page, a **`<- Back to All Companies`** button is provided to return at any moment.
 
 ---
 
@@ -4197,7 +4197,7 @@ The mobile view has been overhauled to resolve the layout and text-truncation is
 ### What Was Fixed
 
 1. **Card Company Titles No Longer Squished (`MDIDM INFOWAY`, `WIT Solution Pvt Ltd.`)**:
-   - **Before**: The company name was crammed onto the same horizontal line as the badge (`⚡ Enriched`) and delete button, leaving only ~45px and truncating names to `M_` and `W..`.
+   - **Before**: The company name was crammed onto the same horizontal line as the badge (` Enriched`) and delete button, leaving only ~45px and truncating names to `M_` and `W..`.
    - **Now**: The badge sits in a dedicated top micro-row, giving the company title the **full card width** with 2-line clean wrapping (`line-clamp-2 break-words`). Names are now completely readable.
 
 2. **Rating & Phone Number Collision**:
@@ -4212,7 +4212,7 @@ The mobile view has been overhauled to resolve the layout and text-truncation is
    - **Before**: 8 separate buttons wrapped into 4 vertical rows, pushing cards down below the screen fold.
    - **Now**:
      - **Row 1**: `+ Scout New Leads` (prominent primary call-to-action).
-     - **Row 2**: `[ ⚡ Deep Enrich All ]  [ 📥 Export CSV ]` (balanced 50/50 grid).
+     - **Row 2**: `[  Deep Enrich All ]  [ 📥 Export CSV ]` (balanced 50/50 grid).
      - **Row 3**: `[ ⊞ Cards | ▦ Table ]` (segmented view switch).
 
 5. **2x2 Filter & Search Alignment**:
@@ -4301,8 +4301,8 @@ I have completely redesigned the **Company Details Modal** across desktop, table
 2. **Added Segmented Subtabs (`Overview & Contacts` vs. `AI Intel & Report`)**:
    * Instead of dumping phone, maps, multi-line emails, overview, badges, 15 tech tags, **and** a 700-word raw text report in one gigantic vertical scroll, the modal is split into two clean subtabs:
      * **`Overview & Contacts`**: Direct phone, Google Maps location, compact verified email chips with 1-click copy, company executive overview, industry & tone badges, and tech stack chips.
-     * **`AI Intel & Report`**: Comprehensive 500–700 word technical deep-dive report with clean typography and a **1-click Copy Report** button.
-   * The modal automatically resets to the **Overview** tab whenever opened, keeping the dialog height compact (~480px–540px).
+     * **`AI Intel & Report`**: Detailed 500-700 word technical deep-dive report with clean typography and a **1-click Copy Report** button.
+   * The modal automatically resets to the **Overview** tab whenever opened, keeping the dialog height compact (~480px-540px).
 
 3. **Streamlined Footer Actions**:
    * **Left**: `Deep Crawl & Profile` (re-enrich with AI) + Admin restore/invalidate action button.
@@ -4349,7 +4349,7 @@ All text clipping (where words were previously cut off into `...` like `Ge..`, `
 | **Company Names** | Long company names had hard line clamps or ellipses on small cards. | Replaced `line-clamp-2` and `truncate` with `break-words leading-tight`. Full business titles wrap without disappearing into `...`. |
 | **Addresses & Locations** | Street addresses were cut off into `...` on both mobile cards and modals. | Replaced `truncate` with `break-words leading-tight`. Street numbers, buildings, and areas wrap cleanly. |
 | **Tags & Filter Badges** | Industry and City badges were truncated. | Removed `truncate max-w-full`, allowing tags to display complete text with `leading-tight`. |
-| **Company Details Modal** | Full domain names, email pill addresses, and street locations were clipped to `...`. | Removed `truncate` across modal elements, utilizing `break-all` on domains/emails and `break-words` on addresses. |
+| **Company Details Modal** | Full domain names, email pill addresses, and street locations were clipped to `...`. | Removed `truncate` across modal elements, using `break-all` on domains/emails and `break-words` on addresses. |
 
 ---
 
@@ -4379,7 +4379,7 @@ Backend-centric jargon, database phrasing, and confusing terminology have been r
 | **18** | `In-Memory Active` | **Active Profile** | "In-Memory" is backend RAM jargon; "Active Profile" is the relevant status for the user. |
 | **19** | `Elevator Pitch` | **Professional Summary** | More established professional standard for executive resumes. |
 | **20** | `Candidate Superpower` | **Core Strengths & Highlights** | Replaced quirky startup phrasing with formal executive terminology. |
-| **21** | `In-Depth Candidate Technical Report (500-700 words)` | **Comprehensive Candidate Evaluation Report** | Professional framing for the detailed AI candidate profile. |
+| **21** | `In-Depth Candidate Technical Report (500-700 words)` | **Detailed Candidate Evaluation Report** | Professional framing for the detailed AI candidate profile. |
 | **22** | `Real-Time Audit Log` | **Recent Outreach Activity** | "Audit log" is compliance/IT jargon; "Recent Outreach Activity" is clean and intuitive. |
 | **23** | `Live Scraper CDP Stream` | **Live Search Activity** | "CDP" (Chrome DevTools Protocol) is internal browser automation jargon. |
 | **24** | `Headless Chrome Undetected` | **Automated Search Engine** | Explains the underlying engine simply without developer terms. |
@@ -4466,17 +4466,17 @@ All issues have been resolved. Below is an explanation of what was happening, wh
 * **Cause:** Previously, when switching to the **Find Leads** (Scout) tab, the application ran an automatic database filter matching whatever was in the inputs (`"IT Companies"` in `"Surat"`). This loaded previously saved database records (the 37 cards) into the Scout view.
 * **Fix Applied:**
   * The Scout tab is now isolated strictly to **live search sessions**.
-  * On initial load or between searches, you see a clean ready state: *"Ready to Discover Leads — Enter your Target Keyword and Location above, then click 'Find Leads'. Real-time scraped leads from your search session will appear here instantly."* with count **0 Leads**.
+  * On initial load or between searches, you see a clean ready state: *"Ready to Discover Leads  -  Enter your Target Keyword and Location above, then click 'Find Leads'. Real-time scraped leads from your search session will appear here instantly."* with count **0 Leads**.
   * When you click **"Find Leads"**, leads stream into the Discovered Leads container in real-time as the browser discovers them.
   * When scraping finishes, **only the leads discovered during that active run** are kept in the Scout view. Historical records remain safely in the **All Companies** directory.
 
 ---
 
 ### 2. Duplicate "Back to All Companies" Buttons (Fixed)
-* **Cause:** Both the top right of the Scout form card (`← Back to All Companies`) and the right side of the Discovered Leads bar (`All Companies →`) had buttons performing the identical navigation action within 80px of each other.
+* **Cause:** Both the top right of the Scout form card (`<- Back to All Companies`) and the right side of the Discovered Leads bar (`All Companies ->`) had buttons performing the identical navigation action within 80px of each other.
 * **Fix Applied:**
-  * Removed the redundant `All Companies →` button from the Discovered Leads bar in [index.html](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/templates/index.html#L325-L336).
-  * Kept the single primary `← Back to All Companies` button at the top right of the search card.
+  * Removed the redundant `All Companies ->` button from the Discovered Leads bar in [index.html](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/templates/index.html#L325-L336).
+  * Kept the single primary `<- Back to All Companies` button at the top right of the search card.
 
 ---
 
@@ -4507,7 +4507,7 @@ This error happens because your Google Cloud project's OAuth Consent Screen is c
 
 Follow these steps to authorize `vorarahul111@gmail.com`:
 
-#### Option A: Add Your Email as a Test User (Recommended — Takes 1 minute)
+#### Option A: Add Your Email as a Test User (Recommended  -  Takes 1 minute)
 1. Go to the [Google Cloud Console](https://console.cloud.google.com/).
 2. In the top navigation bar, ensure your **OutreachPilot** project is selected in the project dropdown.
 3. In the left-hand menu, navigate to **APIs & Services** > **OAuth consent screen** (or search for "OAuth consent screen" in the search box at the top).
@@ -4517,7 +4517,7 @@ Follow these steps to authorize `vorarahul111@gmail.com`:
 7. Click **Save**.
 8. Go back to OutreachPilot at [http://127.0.0.1:8000/](http://127.0.0.1:8000/) and click **Sign in with Google**.
    > **Note on the "Google hasn't verified this app" screen:** 
-   > When you sign in, Google will show a screen saying *"Google hasn't verified this app"*. Click **Advanced** (bottom left) → **Go to OutreachPilot (unsafe)** → **Continue**. You will now be signed in.
+   > When you sign in, Google will show a screen saying *"Google hasn't verified this app"*. Click **Advanced** (bottom left) -> **Go to OutreachPilot (unsafe)** -> **Continue**. You will now be signed in.
 
 ---
 
@@ -4526,7 +4526,7 @@ If you want anyone to be able to sign in without adding them one by one:
 1. In [Google Cloud Console](https://console.cloud.google.com/), open **APIs & Services** > **OAuth consent screen**.
 2. Under **Publishing status**, click **PUBLISH APP**.
 3. Confirm the modal by clicking **Confirm**.
-4. The publishing status will change to **In production**. Any Google account can now sign in (users will simply click through the *"Advanced → Go to OutreachPilot"* prompt).
+4. The publishing status will change to **In production**. Any Google account can now sign in (users will simply click through the *"Advanced -> Go to OutreachPilot"* prompt).
 
 ---
 
@@ -4538,7 +4538,7 @@ did we add multiple resume analysing for single user?
 ```
 
 #### Actions & Tools Executed
-- Tools utilized: `view_file`, `list_dir`, `grep_search`
+- Tools used: `view_file`, `list_dir`, `grep_search`
 
 #### Assistant Implementation & Final Response
 
@@ -4606,11 +4606,11 @@ Yes, this has now been implemented and verified.
 
 ### Real Test Extraction Results on Your Leads:
 During verification across your database companies:
-* **VPN Infotech:** 4 raw emails found (`info@`, `support@`, `sales@`, `hr@`) → **Excludes all 3 generic emails; kept ONLY `hr@vpninfotech.com`**.
-* **Netsol IT Solutions:** 6 raw emails found → **Excludes all 5 generic emails; kept ONLY `hr@netsolitsolution.com`**.
-* **Codewinglet:** 3 raw emails found → **Kept ONLY `jobs@codewinglet.com`**.
-* **Instance IT Solutions:** 6 raw emails found → **Kept ONLY `career@instanceit.com`**.
-* **Tagline Infotech:** 3 raw emails found → **Kept ONLY `hr@taglineinfotech.com`**.
+* **VPN Infotech:** 4 raw emails found (`info@`, `support@`, `sales@`, `hr@`) -> **Excludes all 3 generic emails; kept ONLY `hr@vpninfotech.com`**.
+* **Netsol IT Solutions:** 6 raw emails found -> **Excludes all 5 generic emails; kept ONLY `hr@netsolitsolution.com`**.
+* **Codewinglet:** 3 raw emails found -> **Kept ONLY `jobs@codewinglet.com`**.
+* **Instance IT Solutions:** 6 raw emails found -> **Kept ONLY `career@instanceit.com`**.
+* **Tagline Infotech:** 3 raw emails found -> **Kept ONLY `hr@taglineinfotech.com`**.
 
 ---
 
@@ -4646,7 +4646,7 @@ What you saw on your screen was the **hardcoded emergency fallback profile**:
 1. **Groq Free Tier Rate Limit (OTPM):**
    Groq enforces an **Output Tokens Per Minute (OTPM)** ceiling of **1,000 tokens** on the free tier for `qwen/qwen3.8-27b`.
 2. **Token Over-budget:**
-   The resume parsing prompt previously requested an extensive 500–700 word essay with `max_tokens=1800`.
+   The resume parsing prompt previously requested an extensive 500-700 word essay with `max_tokens=1800`.
 3. **HTTP 429 Error:**
    Because `1800 > 1000`, Groq immediately rejected the request with:
    > `Error code: 429: Request too large on output tokens per minute (OTPM): Limit 1000, Requested 1211.`
@@ -4658,7 +4658,7 @@ What you saw on your screen was the **hardcoded emergency fallback profile**:
 ### Fix Applied:
 
 * **Token Budget Optimized ([ai_agent.py](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/ai_agent.py#L107-L145)):**
-  Adjusted the evaluation prompt to target a sharp, high-impact **200–300 word structured technical report** and reduced `max_tokens` to **800** (safely below the 1,000 OTPM ceiling).
+  Adjusted the evaluation prompt to target a sharp, high-impact **200-300 word structured technical report** and reduced `max_tokens` to **800** (safely below the 1,000 OTPM ceiling).
 * **Full Report Structure Preserved:**
   Maintains all 4 detailed technical sections:
   1. *Engineering Archetype & Core Specializations*
@@ -4674,7 +4674,7 @@ Tested with your backend developer resume profile:
 * **Report Length:** **2,150+ characters** of deep technical analysis.
 * **Elevator Pitch:** Dynamic, customized pitch highlighting your specific microservices, latency optimization, and architecture experience.
 
-👉 **To refresh your profile:** Go to the **Candidate Profile** tab and click **"Analyze Resume with AI"** — it will now generate your full, detailed technical report.
+👉 **To refresh your profile:** Go to the **Candidate Profile** tab and click **"Analyze Resume with AI"**  -  it will now generate your full, detailed technical report.
 
 ---
 
@@ -4702,7 +4702,7 @@ Here is the exact breakdown of how Groq's limits work and why your features are 
 ### 1. What Are Groq's Free-Tier Limits?
 Groq provides high-speed inference on their free tier, but enforces three constraints per model:
 * **RPM (Requests Per Minute):** ~30 requests/minute (plenty for regular use).
-* **TPM (Input Tokens Per Minute):** 6,000–30,000 tokens/minute.
+* **TPM (Input Tokens Per Minute):** 6,000-30,000 tokens/minute.
 * **OTPM (Output Tokens Per Minute):** **1,000 output tokens/minute** for `qwen/qwen3.8-27b`.
 
 The issue that occurred with the resume was simply that the resume prompt had `max_tokens=1800` requested in a single call. Groq's API rejects any single request whose `max_tokens` configuration exceeds the 1,000 OTPM ceiling.
@@ -4711,7 +4711,7 @@ The issue that occurred with the resume was simply that the resume prompt had `m
 
 ### 2. Why Company Enrichment Is NOT Affected:
 Company enrichment does **not** need 1,800 output tokens:
-* An executive company profile (executive summary, industry detection, tech stack extraction, services list, and strategic angles) naturally consumes **~350–500 tokens**.
+* An executive company profile (executive summary, industry detection, tech stack extraction, services list, and strategic angles) naturally consumes **~350-500 tokens**.
 * We have audited and calibrated all AI functions across the codebase:
   * **Company Enrichment (`analyze_company`):** Budgeted at `max_tokens=850` (safely below 1,000).
   * **Cold Pitch & Cover Letter Generator (`generate_personalized_pitch`):** Budgeted at `max_tokens=800`.
@@ -4766,7 +4766,7 @@ The project directory has been completely cleaned and prepared for GitHub.
 
 ---
 
-### 🚀 Commands to Create & Push to GitHub:
+###  Commands to Create & Push to GitHub:
 
 Open your terminal in this directory (`c:\Users\vorar\OneDrive\Desktop\gScrapper`) and run:
 
@@ -4805,11 +4805,11 @@ now create 1 awesome cool readme file for this and remove other markdown files w
 
 #### Assistant Implementation & Final Response
 
-All extra markdown files have been removed, and a single comprehensive [`README.md`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/README.md) has been created for your repository.
+All extra markdown files have been removed, and a single detailed [`README.md`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/README.md) has been created for your repository.
 
 ---
 
-### 🗑️ Files Removed:
+### 🗑 Files Removed:
 * `COMPLETE_SYSTEM_WORKFLOW_AND_ARCHITECTURE.md`
 * `PROJECT_OVERVIEW.md`
 * `SECURITY_AUDIT_AND_VULNERABILITIES.md`
@@ -4819,7 +4819,7 @@ All extra markdown files have been removed, and a single comprehensive [`README.
 ### ⭐ Highlights of the New [`README.md`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/README.md):
 1. **GitHub Badges & Hero Header:** Python 3.11+, FastAPI, PostgreSQL, Groq AI, TailwindCSS, MIT License badges.
 2. **Interactive Mermaid Architecture Flowchart:** Visual representation of the full 5-stage pipeline from Google Maps scraping to HR email prioritization, Groq profiling, resume parsing, and 1-click dispatch.
-3. **Comprehensive Feature Breakdown:** Detailed highlights covering real-time scouting, dual-view directory (Grid + Table), recruitment email prioritization (`hr@`, `careers@`, `jobs@`), in-memory resume parsing, and Gmail OAuth integration.
+3. **Detailed Feature Breakdown:** Detailed highlights covering real-time scouting, dual-view directory (Grid + Table), recruitment email prioritization (`hr@`, `careers@`, `jobs@`), in-memory resume parsing, and Gmail OAuth integration.
 4. **Security & Privacy Hardening Section:** Documented SSRF prevention, encrypted cookie sessions, token budget optimization, and sandbox testing mode.
 5. **REST API Documentation:** Concise endpoint table covering all scrapers, company endpoints, resume uploads, and outreach routes.
 6. **Quick-Start & Setup Guide:** Clear instructions for virtual environment creation, environment variables configuration, and Uvicorn server execution.
@@ -4910,9 +4910,9 @@ this is everything you need you can now push the changes also change the dir nam
 
 #### Assistant Implementation & Final Response
 
-### 🚀 Successfully Pushed to GitHub!
+###  Successfully Pushed to GitHub!
 
-Your entire clean codebase and comprehensive documentation are now live on GitHub:
+Your entire clean codebase and detailed documentation are now live on GitHub:
 👉 **[https://github.com/vorarahul4700/outreachPilot](https://github.com/vorarahul4700/outreachPilot)**
 
 ```text
@@ -5010,23 +5010,23 @@ Here is a detailed, side-by-side comparison between **our current scraping engin
 
 | Dimension | Our Current Logic (Google Local Scout) | Google Places API (Official) |
 | :--- | :--- | :--- |
-| **Cost** | 🟢 **$0 (100% Free & Unlimited)** | 🔴 **Expensive ($17 – $32 per 1,000 leads)** |
+| **Cost** | 🟢 **$0 (100% Free & Unlimited)** | 🔴 **Expensive ($17 - $32 per 1,000 leads)** |
 | **Max Leads Per Query** | 🟢 **Hundreds / Thousands** (No hard cap, multi-page) | 🔴 **Strict limit: 60 leads maximum** per search query |
 | **Email Discovery** | 🟢 **Built-in Deep Crawling** (`hr@`, `careers@`, etc.) | 🔴 **ZERO emails** (Google Places API does not provide emails) |
 | **Aggregator Filtering** | 🟢 **Automatic** (Strips Justdial, IndiaMart, Yelp, etc.) | 🟡 Raw data (Returns whatever URL is in Google Maps) |
 | **Setup & Requirements** | 🟢 No credit card or Google Cloud billing required | 🔴 Requires Google Cloud account, API key & credit card |
-| **Speed** | 🟡 2–5 seconds per page (Browser rendering) | 🟢 100–300 ms per REST request |
+| **Speed** | 🟡 2-5 seconds per page (Browser rendering) | 🟢 100-300 ms per REST request |
 | **Maintenance** | 🟡 Needs maintenance if Google updates DOM selectors | 🟢 99.9% stable JSON REST contracts |
 | **Terms of Service** | 🟡 Web scraping public search results | 🟢 100% compliant with Google Maps Platform ToS |
 
 ---
 
-### 🔍 Deep Dive: The 5 Major Differences
+###  Deep Dive: The 5 Major Differences
 
 #### 1. Email Discovery (The Biggest Factor for Cold Outreach)
 * **Google Places API:** Google **does not collect or expose email addresses** anywhere in the Places API schema. It only returns: `name`, `formatted_address`, `international_phone_number`, `website_uri`, `rating`, and `user_ratings_total`. 
   * *Even if you paid for the Places API, you would still need our exact subpage crawler & HR filtering engine to actually get emails.*
-* **Our Current Logic:** Seamlessly pairs scraping with our deep crawler across `/contact`, `/careers`, and `/jobs`, discovering and prioritizing verified recruitment/HR emails (`hr@`, `jobs@`, `recruit@`) on the fly.
+* **Our Current Logic:** Smoothly pairs scraping with our deep crawler across `/contact`, `/careers`, and `/jobs`, discovering and prioritizing verified recruitment/HR emails (`hr@`, `jobs@`, `recruit@`) on the fly.
 
 ---
 
@@ -5046,7 +5046,7 @@ Here is a detailed, side-by-side comparison between **our current scraping engin
 
 #### 3. The 60-Lead Hard Cap per Query
 * **Google Places API:** Google enforces a hard ceiling: **a maximum of 3 pages (20 results per page = 60 results total)** per query. After the 60th business, the `next_page_token` disappears. To get more, you have to write complex geographic grid-splitting algorithms (latitude/longitude radius bounding boxes).
-* **Our Current Logic:** Browses organic Google Local search (`udm=local`) page-by-page (Pages 1, 2, 5, 10, 30+), allowing our *"⚡ All Available Pages (Auto-Detect Until End)"* mode to gather hundreds of businesses for a single city.
+* **Our Current Logic:** Browses organic Google Local search (`udm=local`) page-by-page (Pages 1, 2, 5, 10, 30+), allowing our *" All Available Pages (Auto-Detect Until End)"* mode to gather hundreds of businesses for a single city.
 
 ---
 
@@ -5062,10 +5062,10 @@ Here is a detailed, side-by-side comparison between **our current scraping engin
 
 ---
 
-### 💡 Recommendation: Which Should You Use?
+###  Recommendation: Which Should You Use?
 
 * **Keep Current Logic if:** Your goal is high-volume, cost-free B2B prospecting, job inquiries, and agency client acquisition where finding verified **HR/recruiter emails** is the primary objective.
-* **Switch to / Add Places API if:** You need sub-second search speeds, want an official Google SLA with zero CAPTCHA risk, and don't mind paying $25–$30 per 1,000 leads while using our crawler as a secondary enrichment step for the websites it returns.
+* **Switch to / Add Places API if:** You need sub-second search speeds, want an official Google SLA with zero CAPTCHA risk, and don't mind paying $25-$30 per 1,000 leads while using our crawler as a secondary enrichment step for the websites it returns.
 
 ---
 
@@ -5088,11 +5088,11 @@ Instead of running a headless Chrome browser on your computer, these services sc
 * **Top Providers:** **[SerpApi](https://serpapi.com/)**, **[HasData](https://hasdata.com/)**, **[ValueSerp](https://valueserp.com/)**, **[Bright Data](https://brightdata.com/)**
 * **How it works:** You send a simple HTTP request `GET https://serpapi.com/search?engine=google_maps&q=IT+Companies+Surat`, and they return all business cards, websites, phone numbers, and ratings in 500ms.
 * **Pros:**
-  * **Zero CAPTCHAs or IP blocks** — they manage all rotating proxies.
+  * **Zero CAPTCHAs or IP blocks**  -  they manage all rotating proxies.
   * **Ultra-lightweight:** No local Chrome browser required (ideal if deploying OutreachPilot on a small $5/mo cloud VPS or Docker).
   * No 60-result hard cap like Google Places API.
 * **Cons:**
-  * Paid: ~$25 to $50/month for 5,000–10,000 queries.
+  * Paid: ~$25 to $50/month for 5,000-10,000 queries.
   * **Still returns no emails:** You still need our subpage crawler to extract the emails from the websites.
 
 ---
@@ -5109,7 +5109,7 @@ These platforms already have pre-built databases of millions of companies, tech 
 #### B. **[Hunter.io](https://hunter.io/) or [Snov.io](https://snov.io/) API**
 * **What it gives:** Domain Search API.
 * **How it works:** You give them `domain.com` (from Google Maps), and they return all public employee email addresses categorized by department (`HR`, `Executive`, `Engineering`).
-* **Cost:** 25–50 free searches/month; paid plans ~$39–$49/mo.
+* **Cost:** 25-50 free searches/month; paid plans ~$39-$49/mo.
 
 ---
 
@@ -5123,7 +5123,7 @@ These are third-party services specifically specialized in bulk Google Maps extr
 
 #### B. **[Apify (Google Maps Scraper Actor)](https://apify.com/)**
 * **How it works:** Cloud-hosted serverless scrapers that run open-source crawler scripts.
-* **Cost:** $5/month free credit included (enough to scrape ~1,000–2,000 businesses/month for free).
+* **Cost:** $5/month free credit included (enough to scrape ~1,000-2,000 businesses/month for free).
 
 ---
 
@@ -5146,14 +5146,14 @@ These are third-party services specifically specialized in bulk Google Maps extr
 
 | Solution | Monthly Cost | Speed | CAPTCHA Risk | Direct HR Emails Included? | Best Use Case |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Our Current Logic** | **$0.00** | 3–5 sec/page | Low–Medium | **Yes** (via our custom HR subpage crawler) | **Best for local desktop use & zero operating cost** |
-| **Google Places API** | $25–$32 / 1k | < 1 sec | None | **No** (Needs our crawler) | High-budget enterprise apps requiring official Google SLA |
-| **SerpApi / ValueSerp** | ~$25–$40 / mo | < 1 sec | None | **No** (Needs our crawler) | Moving OutreachPilot to a lightweight cloud VPS without running Chrome |
+| **Our Current Logic** | **$0.00** | 3-5 sec/page | Low-Medium | **Yes** (via our custom HR subpage crawler) | **Best for local desktop use & zero operating cost** |
+| **Google Places API** | $25-$32 / 1k | < 1 sec | None | **No** (Needs our crawler) | High-budget enterprise apps requiring official Google SLA |
+| **SerpApi / ValueSerp** | ~$25-$40 / mo | < 1 sec | None | **No** (Needs our crawler) | Moving OutreachPilot to a lightweight cloud VPS without running Chrome |
 | **Outscraper** | ~$3 / 1k | Fast (bulk) | None | **Yes** (General emails) | Massive bulk one-off scraping without keeping your PC on |
 | **Apollo.io API** | Free tier / $49 mo | Instant | None | **Yes** (Direct human contacts & job titles) | Reaching specific decision makers (e.g. *VP of Engineering*, *Head of HR*) |
 
 ### Recommendation for OutreachPilot:
-1. **Right Now:** Keep **Our Current Logic** — it gives you **unlimited leads at $0 cost** with complete control over the HR prioritization and local execution.
+1. **Right Now:** Keep **Our Current Logic**  -  it gives you **unlimited leads at $0 cost** with complete control over the HR prioritization and local execution.
 2. **If You Deploy to Cloud (VPS/Render/Railway):** Consider a provider like **SerpApi** or **Outscraper** so your cloud server doesn't need to run a heavy headless Chrome instance.
 
 ---
@@ -5230,7 +5230,7 @@ We can add a **"View Sent Email Modal"** to the *Recent Outreach Activity* feed 
 
 ---
 
-### 💡 Next Steps:
+###  Next Steps:
 1. Would you like me to reset the historical test log so `Emails Sent` shows **0**?
 2. Shall we implement the **"View Sent Email Modal"** so clicking any contacted lead opens a dialog with the exact sent message?
 3. Would you prefer **Approach A** (Cloud Resume link) or **Approach B** (Direct PDF attachment via Gmail OAuth)?
@@ -5250,14 +5250,14 @@ To verify everything for **Production Deployment (`DEV_MODE=false`)**, here is t
 
 ---
 
-### 🛡️ What Changes When `DEV_MODE=false`?
+### 🛡 What Changes When `DEV_MODE=false`?
 
 | Feature | `DEV_MODE=true` (Sandbox) | `DEV_MODE=false` (Production) |
 | :--- | :--- | :--- |
 | **Email Destination** | Overridden & redirected to `DEV_OVERRIDE_EMAIL` | **Dispatched directly to the real company / HR email** |
 | **Demo Login Buttons** | Visible (`Dev: Master Admin`, `Dev: Standard User`) | **Completely hidden** from header and modals |
 | **Demo Auth API** | Enabled (`POST /auth/demo/login`) | **Hard-blocked (`403 Forbidden`)** for security |
-| **Sandbox Banner** | Displays *"Dev Sandbox Active"* | **Removed** — clean production UI |
+| **Sandbox Banner** | Displays *"Dev Sandbox Active"* | **Removed**  -  clean production UI |
 | **Authentication** | Bypasses allowed | **Strict Google OAuth 2.0 login required** |
 | **Admin Authorization** | Any demo admin | **Only emails in `MASTER_ADMIN_EMAILS`** get admin features |
 
@@ -5277,7 +5277,7 @@ python -c "from db import SessionLocal, Company, OutreachLog; db = SessionLocal(
 #### 2. Verify UI Cleanliness (Hard Refresh: `Ctrl + Shift + R`)
 * Confirm the amber **"Dev Sandbox Active"** badge is gone from the bottom-left sidebar.
 * Confirm the red **"Dev: Master Admin"** button is gone from the top utility header.
-* Click **Sign in with Google** — confirm the modal only shows official Google sign-in (no demo buttons).
+* Click **Sign in with Google**  -  confirm the modal only shows official Google sign-in (no demo buttons).
 
 #### 3. Test Real Google OAuth Login
 * Click **Sign in with Google** and log in with `vorarahul111@gmail.com`.
@@ -5294,7 +5294,7 @@ python -c "from db import SessionLocal, Company, OutreachLog; db = SessionLocal(
 * Select a lead with an `hr@` or `careers@` email (e.g. *Softieons Technologies* or *VPN Infotech*).
 * Click **Review & Send Email**.
 * Confirm the AI generates a customized cold application email and cover letter matching your resume to their tech stack.
-* Click **1-Click Gmail Web** — confirm Gmail opens in a new tab with the recipient, subject, and body pre-filled.
+* Click **1-Click Gmail Web**  -  confirm Gmail opens in a new tab with the recipient, subject, and body pre-filled.
 
 ---
 
@@ -5457,7 +5457,7 @@ Because OutreachPilot uses `gmail.send` (which Google classifies as a *Sensitive
 
 ---
 
-### Option 1: Keep in "Testing" & Add Yourself as a Test User *(Recommended — Takes 30 Seconds)*
+### Option 1: Keep in "Testing" & Add Yourself as a Test User *(Recommended  -  Takes 30 Seconds)*
 
 If this app is for your own personal use or internal team use, you **do not need full Google verification**. You can keep it in Testing and simply add your email to the approved list:
 
@@ -5577,12 +5577,12 @@ Saves to PostgreSQL                    Marks `is_enriched = True`
 #### Critical Factors to Plan Before Implementation:
 
 1. **Groq AI Token Budgeting**:
-   * Enriching 1 company uses ~1,000–1,500 tokens for deep analysis.
+   * Enriching 1 company uses ~1,000-1,500 tokens for deep analysis.
    * On the Groq free tier (6,000 TPM limit), automating 100 companies at once would hit rate limits.
-   * **Solution**: The background worker processes companies in batches of 3–5 with a 15–20 second delay between requests.
+   * **Solution**: The background worker processes companies in batches of 3-5 with a 15-20 second delay between requests.
 2. **Scraper Throttling**:
    * Google Maps blocks scrapers that fire too rapidly from the same IP.
-   * **Solution**: The automated scout runs during off-peak hours (e.g., 2:00 AM) with 3–5 second human delays.
+   * **Solution**: The automated scout runs during off-peak hours (e.g., 2:00 AM) with 3-5 second human delays.
 3. **Master Admin Dashboard Control**:
    * You should have an **Auto-Pilot Toggle (ON/OFF)** in the admin interface so you can pause, resume, or adjust the schedule anytime.
 
@@ -5720,10 +5720,10 @@ Here is the honest breakdown of cloud platforms, specifically for your project w
 
 ### The Big Catch with Free Tiers (Must-Know)
 
-Headless browser scraping (Playwright/Chromium) requires **~400MB–800MB RAM** when rendering Google Maps and dynamic JavaScript sites. 
+Headless browser scraping (Playwright/Chromium) requires **~400MB-800MB RAM** when rendering Google Maps and dynamic JavaScript sites. 
 
 * **Railway**: **No longer has a permanent free tier.** They offer a one-time $5 trial credit, after which it requires a $5/month minimum card subscription.
-* **Render.com Free Tier**: Has a permanent free web tier (512MB RAM), but it **spins down (sleeps) after 15 minutes of inactivity**, and free cron jobs cost $1/month minimum. If a scrape takes more than 100 seconds, Render’s free tier kills the HTTP connection.
+* **Render.com Free Tier**: Has a permanent free web tier (512MB RAM), but it **spins down (sleeps) after 15 minutes of inactivity**, and free cron jobs cost $1/month minimum. If a scrape takes more than 100 seconds, Render's free tier kills the HTTP connection.
 * **Vercel / Netlify**: Serverless only (10-second timeout). They **cannot** run Playwright scrapers or long-running Python background processes.
 
 ---
@@ -5735,17 +5735,17 @@ To get **unlimited, enterprise-grade free scraping, 0 server sleep issues, and 0
 ```
 ┌─────────────────────────────────────────────────────────────────┐
 │ 1. Database: NEON (Serverless PostgreSQL)                        │
-│    • 100% Permanently Free (0.5 GB, pooled connections, SSL)    │
+│    - 100% Permanently Free (0.5 GB, pooled connections, SSL)    │
 └────────────────────────────────┬────────────────────────────────┘
                                  │
          ┌───────────────────────┴───────────────────────┐
          ▼                                               ▼
 ┌───────────────────────────────────┐ ┌───────────────────────────────────┐
 │ 2. Web App UI: RENDER / KOYEB     │ │ 3. Cron & Scraper: GITHUB ACTIONS │
-│    • Serves FastAPI & Dashboard   │ │    • Runs at 2:00 AM (Schedule)   │
-│    • Fast, responsive UI          │ │    • 7 GB RAM + 2 vCPUs for FREE  │
-│    • Free custom domain & SSL     │ │    • Pre-installed Playwright     │
-│    • Connects to Neon DB          │ │    • 2,000 free minutes / month   │
+│    - Serves FastAPI & Dashboard   │ │    - Runs at 2:00 AM (Schedule)   │
+│    - Fast, responsive UI          │ │    - 7 GB RAM + 2 vCPUs for FREE  │
+│    - Free custom domain & SSL     │ │    - Pre-installed Playwright     │
+│    - Connects to Neon DB          │ │    - 2,000 free minutes / month   │
 └───────────────────────────────────┘ └───────────────────────────────────┘
 ```
 
@@ -5766,10 +5766,10 @@ To get **unlimited, enterprise-grade free scraping, 0 server sleep issues, and 0
 
 | Platform | Free Tier Specs | Pros | Cons for OutreachPilot | Best For |
 | :--- | :--- | :--- | :--- | :--- |
-| **Koyeb** | 512 MB RAM, 0.1 vCPU, 2.5 GB Disk | • **100% permanently free**<br>• Does NOT sleep like Render<br>• Supports Docker & Python | • 512MB RAM can be tight if running Web App + Playwright at the same time | Hosting the Web UI / FastAPI |
-| **Render.com** | 512 MB RAM, Shared CPU | • Very easy setup<br>• Free HTTPS domain | • Sleeps after 15 mins of inactivity (30s wake-up)<br>• Cron jobs are paid ($1/mo) | Hosting the Web UI |
-| **Oracle Cloud Always Free** | 4 ARM Cores, 24 GB RAM, 200 GB Disk | • Most generous cloud tier in the world<br>• Permanently free full Linux VM | • Registration requires a credit card and strict address verification | Running an entire VPS for free |
-| **Zeabur** | $5 Free Monthly Credit | • Very fast deploys<br>• Supports Docker | • Reaches memory limits quickly on heavy scraping | Web UI testing |
+| **Koyeb** | 512 MB RAM, 0.1 vCPU, 2.5 GB Disk | - **100% permanently free**<br>- Does NOT sleep like Render<br>- Supports Docker & Python | - 512MB RAM can be tight if running Web App + Playwright at the same time | Hosting the Web UI / FastAPI |
+| **Render.com** | 512 MB RAM, Shared CPU | - Very easy setup<br>- Free HTTPS domain | - Sleeps after 15 mins of inactivity (30s wake-up)<br>- Cron jobs are paid ($1/mo) | Hosting the Web UI |
+| **Oracle Cloud Always Free** | 4 ARM Cores, 24 GB RAM, 200 GB Disk | - Most generous cloud tier in the world<br>- Permanently free full Linux VM | - Registration requires a credit card and strict address verification | Running an entire VPS for free |
+| **Zeabur** | $5 Free Monthly Credit | - Very fast deploys<br>- Supports Docker | - Reaches memory limits quickly on heavy scraping | Web UI testing |
 
 ---
 
@@ -5806,9 +5806,9 @@ Every web application needs two separate pieces:
 │     1. Application Host         │           │        2. Database              │
 │       (FastAPI / Python)        │  ──────>  │          (Neon)                 │
 │                                 │           │                                 │
-│ • Runs app.py, HTML, CSS, JS    │           │ • Stores company tables         │
-│ • Handles Google OAuth login    │           │ • Stores outreach history       │
-│ • Calls Groq AI                 │           │ • Provides DATABASE_URL         │
+│ - Runs app.py, HTML, CSS, JS    │           │ - Stores company tables         │
+│ - Handles Google OAuth login    │           │ - Stores outreach history       │
+│ - Calls Groq AI                 │           │ - Provides DATABASE_URL         │
 └─────────────────────────────────┘           └─────────────────────────────────┘
 ```
 
@@ -5883,10 +5883,10 @@ On Vercel's free tier, every API request has a strict **10-second timeout limit*
 
 | Feature | Vercel (Free) | Render / Koyeb (Free) |
 | :--- | :--- | :--- |
-| **Playwright / Chromium Scraper** | ❌ **Cannot run** (size & library limits) | ✅ **Works** (full Linux environment) |
-| **Execution Timeout** | ❌ **10 seconds max** (Kills scraping) | ✅ **No 10s timeout** (Runs continuous tasks) |
-| **Background Tasks & Progress Bar** | ❌ **Frozen immediately** | ✅ **Runs smoothly in background** |
-| **FastAPI + HTML Web App** | ⚠️ Only with complex serverless hacks | ✅ **Native 1-click support** |
+| **Playwright / Chromium Scraper** | [x] **Cannot run** (size & library limits) | [v] **Works** (full Linux environment) |
+| **Execution Timeout** | [x] **10 seconds max** (Kills scraping) | [v] **No 10s timeout** (Runs continuous tasks) |
+| **Background Tasks & Progress Bar** | [x] **Frozen immediately** | [v] **Runs smoothly in background** |
+| **FastAPI + HTML Web App** |  Only with complex serverless hacks | [v] **Native 1-click support** |
 | **Cost** | Free | Free |
 
 ---
@@ -5919,7 +5919,7 @@ If you plan to upgrade to a paid tier in the future, here is the honest, side-by
 | **Cheapest Paid Plan** | **$7 / month** (512 MB RAM, 0.5 CPU) | **~$3.60 / month** (512 MB RAM) or **~$7 / month** (1 GB RAM) |
 | **High-Performance Plan (2 GB RAM)** | **$25 / month** | **~$14 / month** |
 | **Billing Model** | Flat monthly fee | Pay-per-second / Pay-as-you-go |
-| **Technology Architecture** | Standard Linux Containers | Next-Gen MicroVMs (Firecracker — ultra-fast boot times) |
+| **Technology Architecture** | Standard Linux Containers | Next-Gen MicroVMs (Firecracker  -  ultra-fast boot times) |
 | **Ecosystem & Community** | **Massive** (The most popular Heroku alternative) | Growing, but smaller community |
 | **Ease of Use** | ⭐⭐⭐⭐⭐ (Very beginner-friendly) | ⭐⭐⭐⭐ (Clean, modern developer UI) |
 
@@ -5943,7 +5943,7 @@ If you plan to upgrade to a paid tier in the future, here is the honest, side-by
 ### Final Recommendation: **Render**
 
 For 95% of founders and developers, **Render is the overall winner**:
-* Start today on **Render’s Free Tier**.
+* Start today on **Render's Free Tier**.
 * When you are ready for your app to never sleep and run at 100% capacity, simply click one button to upgrade to the **$7/month Starter plan**.
 * Combined with **Neon's Free Database**, your total cost will be just **$7/month** for a production-grade SaaS infrastructure.
 
@@ -6021,7 +6021,7 @@ Here is the exact step-by-step guide to get your **Neon Database** and **Render 
 
 7. Click **Create Web Service**!
 
-Render will automatically pull your code, install all dependencies, configure the database tables automatically on Neon, and launch your app. In about 2–3 minutes, you will get your live URL at the top left, like:
+Render will automatically pull your code, install all dependencies, configure the database tables automatically on Neon, and launch your app. In about 2-3 minutes, you will get your live URL at the top left, like:
 👉 **`https://outreachpilot.onrender.com`**
 
 ---
@@ -6070,7 +6070,7 @@ On Render, you don't need to add variables individually:
    ```env
    DATABASE_URL=postgresql://user:REDACTED_PASSWORD@ep-something.aws.neon.tech/neondb?sslmode=require
    ```
-5. Click **Save Changes**. That’s it!
+5. Click **Save Changes**. That's it!
 
 ---
 
@@ -6181,7 +6181,7 @@ During the build, you will see in the Render logs:
 ==> Build completed successfully!
 ```
 
-Once deployed, click **"Find Leads"** again—the headless Chrome browser will launch and scrape Google Maps directly in the cloud!
+Once deployed, click **"Find Leads"** again - the headless Chrome browser will launch and scrape Google Maps directly in the cloud!
 
 ---
 
@@ -6325,8 +6325,8 @@ Scraping speed differences between your PC and Render Free Tier come down to thr
 
 | Factor | Your Local PC | Render Free Web Service |
 | :--- | :--- | :--- |
-| **Compute / CPU** | 4–8 cores, multi-GHz | **0.1 vCPU (shared/throttled)** |
-| **Memory (RAM)** | 8 GB – 16+ GB | **512 MB RAM** |
+| **Compute / CPU** | 4-8 cores, multi-GHz | **0.1 vCPU (shared/throttled)** |
+| **Memory (RAM)** | 8 GB - 16+ GB | **512 MB RAM** |
 | **Network IP** | Residential Indian Broadband (Airtel/Jio) | Cloud Datacenter (AWS/Render) |
 | **Google Maps Response** | Instant, trusted residential traffic | Throttled / anti-bot challenges |
 
@@ -6341,7 +6341,7 @@ Headless Google Chrome requires significant RAM and CPU to render modern JavaScr
 > **Recommended Workflow for Bulk Scraping (Free Tier)**:
 > Since both your local PC and Render are connected to the same live **Neon Cloud Database**:
 > - You can keep the main dashboard running on **Render**.
-> - For large multi-page scrapes (e.g., 5–10 pages), running them locally takes advantage of your local CPU and residential IP. Any leads scraped locally will instantly appear on your live Render website!
+> - For large multi-page scrapes (e.g., 5-10 pages), running them locally takes advantage of your local CPU and residential IP. Any leads scraped locally will instantly appear on your live Render website!
 
 ---
 
@@ -6360,7 +6360,7 @@ this is neon DB url what you are saing is i find lead in local genearate all hte
 ```
 
 #### Actions & Tools Executed
-- Tools utilized: `view_file`
+- Tools used: `view_file`
 
 #### Assistant Implementation & Final Response
 
@@ -6370,8 +6370,8 @@ this is neon DB url what you are saing is i find lead in local genearate all hte
 
 ```
 [ Your Local PC ]                                  [ Render (Live Web App) ]
-• High-speed Multi-core CPU                        • Live 24/7 Web Dashboard
-• Indian Residential IP (Fast Google Scraping)    • View Leads, Send Emails, Review Pitches
+- High-speed Multi-core CPU                        - Live 24/7 Web Dashboard
+- Indian Residential IP (Fast Google Scraping)    - View Leads, Send Emails, Review Pitches
        │                                                    │
        ▼                                                    ▼
    ───────────────────────────────────────────────────────────────
@@ -6435,7 +6435,7 @@ When running locally, this happens due to a browser cookie boundary mismatch bet
 
 In [`app.py`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/app.py#L988-L1000):
 * Updated the callback verification: if both the cookie and Google's query param state are present, they are strictly validated with constant-time comparison (`secrets.compare_digest`).
-* If the browser drops the cookie due to the `127.0.0.1` vs `localhost` origin switch, the app now proceeds seamlessly with Google's backend token exchange (which verifies your private `GOOGLE_CLIENT_SECRET` directly with Google's OAuth servers).
+* If the browser drops the cookie due to the `127.0.0.1` vs `localhost` origin switch, the app now proceeds smoothly with Google's backend token exchange (which verifies your private `GOOGLE_CLIENT_SECRET` directly with Google's OAuth servers).
 * Configured `secure=is_secure` dynamically so cookies work properly on both local HTTP and Render HTTPS.
 
 The changes are active on your running local server (auto-reloaded via `reload=True`) and have also been pushed to Render. You can now click **"Sign in with Google"** and the sign-in flow will complete smoothly.
@@ -6502,7 +6502,7 @@ Ensure your Render callback URL is added to your Google OAuth credentials:
    * `https://outreachpilot-nfdj.onrender.com/auth/google/callback`
 4. Click **Save**.
 
-The code changes have been pushed to GitHub (`6ff4ea3`). Once Render finishes auto-deploying the latest commit (in ~1 minute), test Google Sign-in on your live site—it will keep you on Render and log you in.
+The code changes have been pushed to GitHub (`6ff4ea3`). Once Render finishes auto-deploying the latest commit (in ~1 minute), test Google Sign-in on your live site - it will keep you on Render and log you in.
 
 ---
 
@@ -6514,7 +6514,7 @@ The code changes have been pushed to GitHub (`6ff4ea3`). Once Render finishes au
 ```
 
 #### Actions & Tools Executed
-- Tools utilized: `view_file`
+- Tools used: `view_file`
 
 #### Assistant Implementation & Final Response
 
@@ -6539,23 +6539,23 @@ Instead of paying for larger servers or rewriting the codebase, ChatGPT recommen
 ```
  ┌──────────────────────────────────────────────────────────────┐
  │                  Render Web Service (Free)                   │
- │  • Dashboard UI (Fast & responsive)                          │
- │  • View leads, filter, review AI pitches, send emails       │
- │  • Dispatches heavy jobs to Neon queue                       │
+ │  - Dashboard UI (Fast & responsive)                          │
+ │  - View leads, filter, review AI pitches, send emails       │
+ │  - Dispatches heavy jobs to Neon queue                       │
  └──────────────────────────────┬───────────────────────────────┘
                                 │
                                 ▼
  ┌──────────────────────────────────────────────────────────────┐
  │                Neon Cloud PostgreSQL (neondb)                │
- │  • Companies, Contacts, Outreach Logs                        │
- │  • Persistent Job Queue (processing_jobs table)              │
+ │  - Companies, Contacts, Outreach Logs                        │
+ │  - Persistent Job Queue (processing_jobs table)              │
  └──────────────────────────────┬───────────────────────────────┘
                                 │
                                 ▼
  ┌──────────────────────────────────────────────────────────────┐
  │                 Heavy Worker (Where Chrome Runs)              │
- │  • Option A (Simplest): Your Local PC (`python worker.py`)   │
- │  • Option B (Cloud Free): GitHub Actions (7GB RAM, 2 CPU)   │
+ │  - Option A (Simplest): Your Local PC (`python worker.py`)   │
+ │  - Option B (Cloud Free): GitHub Actions (7GB RAM, 2 CPU)   │
  └──────────────────────────────────────────────────────────────┘
 ```
 
@@ -6565,9 +6565,9 @@ Instead of paying for larger servers or rewriting the codebase, ChatGPT recommen
 
 | Approach | How It Works | Pros | Cons |
 | :--- | :--- | :--- | :--- |
-| **1. Local Worker on your PC (`worker.py`)** *(Recommended Start)* | Your Render site is live 24/7. When you want to scrape 200+ companies, you run `python worker.py` on your laptop. | • 100% Free<br>• Uses your fast multi-core CPU & 16GB RAM<br>• Uses your residential Indian IP (Google Maps never throttles it)<br>• Leads instantly show up on Render | Stops when your laptop is turned off. |
-| **2. GitHub Actions Batch Worker** | Run a batch script inside a GitHub Actions workflow that connects to Neon. | • 100% Free (2,000 runner minutes/mo)<br>• 7GB RAM + 2 vCPUs<br>• Runs completely in the cloud | Better for scheduled/occasional batches than 24/7 real-time listening. |
-| **3. Google Cloud Run** | On-demand container that spins up for heavy scraping, then shuts down. | • Free tier allowance<br>• Serverless | Complex container setup with Chrome. |
+| **1. Local Worker on your PC (`worker.py`)** *(Recommended Start)* | Your Render site is live 24/7. When you want to scrape 200+ companies, you run `python worker.py` on your laptop. | - 100% Free<br>- Uses your fast multi-core CPU & 16GB RAM<br>- Uses your residential Indian IP (Google Maps never throttles it)<br>- Leads instantly show up on Render | Stops when your laptop is turned off. |
+| **2. GitHub Actions Batch Worker** | Run a batch script inside a GitHub Actions workflow that connects to Neon. | - 100% Free (2,000 runner minutes/mo)<br>- 7GB RAM + 2 vCPUs<br>- Runs completely in the cloud | Better for scheduled/occasional batches than 24/7 real-time listening. |
+| **3. Google Cloud Run** | On-demand container that spins up for heavy scraping, then shuts down. | - Free tier allowance<br>- Serverless | Complex container setup with Chrome. |
 
 ---
 
@@ -6583,7 +6583,7 @@ To make scraping and enrichment **resumable** (so network drops or crashes don't
 The ChatGPT analysis aligns with the architectural reality of Render's free tier. The smartest and fastest path forward without spending any money:
 
 1. **Keep Render for your live Web Dashboard** (viewing leads, reviewing AI pitches, sending outreach emails).
-2. **Add a simple job runner / worker script (`worker.py`)**: Whenever you want to run bulk scraping (100–500 companies) or heavy deep enrichment, your worker runs with full local CPU/RAM and residential IP speed, writing straight into Neon.
+2. **Add a simple job runner / worker script (`worker.py`)**: Whenever you want to run bulk scraping (100-500 companies) or heavy deep enrichment, your worker runs with full local CPU/RAM and residential IP speed, writing straight into Neon.
 3. Everything synced into Neon appears on your live Render website immediately.
 
 Would you like to start by implementing the **Job Queue + `worker.py`** workflow, or would you prefer exploring the **GitHub Actions cloud runner** approach?
@@ -6619,9 +6619,9 @@ To run Headless Chrome, SeleniumBase, and FastAPI without freezing or getting th
 
 | Provider | What You Get | Price / Reality | Verdict for OutreachPilot |
 | :--- | :--- | :--- | :--- |
-| **1. FreeVPS (`freevps.edu.pl`)** | Minimal student/educational VPS (usually NAT IPv4, 512MB RAM). | Free, but requires monthly manual renewals, strict port blocks, and severe rate limits. | ❌ **Not Recommended**: Will crash instantly when Chrome launches. Datacenter IP is frequently blacklisted by Google. |
-| **2. Bluehost VPS** | Traditional cPanel managed VPS. | Starts at **$30 – $50+/month** (intro discounts renew at high prices). | ❌ **Not Recommended**: Extremely overpriced, slow for Python/Chrome automation, and locked into legacy web hosting. |
-| **3. Vultr (`try250` Promo)** | High-performance cloud compute with root SSH access. | **$250 free credit**, but valid for **30 days only**. Afterwards, standard VPS plans start at **$5 – $6/month**. |  **Good Option**: Fast NVMe SSD, datacenters in India (Mumbai/Delhi), excellent Linux performance. Great for testing with free credits. |
+| **1. FreeVPS (`freevps.edu.pl`)** | Minimal student/educational VPS (usually NAT IPv4, 512MB RAM). | Free, but requires monthly manual renewals, strict port blocks, and severe rate limits. | [x] **Not Recommended**: Will crash instantly when Chrome launches. Datacenter IP is frequently blacklisted by Google. |
+| **2. Bluehost VPS** | Traditional cPanel managed VPS. | Starts at **$30 - $50+/month** (intro discounts renew at high prices). | [x] **Not Recommended**: Extremely overpriced, slow for Python/Chrome automation, and locked into legacy web hosting. |
+| **3. Vultr (`try250` Promo)** | High-performance cloud compute with root SSH access. | **$250 free credit**, but valid for **30 days only**. Afterwards, standard VPS plans start at **$5 - $6/month**. |  **Good Option**: Fast NVMe SSD, datacenters in India (Mumbai/Delhi), excellent Linux performance. Great for testing with free credits. |
 
 ---
 
@@ -6629,7 +6629,7 @@ To run Headless Chrome, SeleniumBase, and FastAPI without freezing or getting th
 
 #### 1. Best 100% Genuinely Free: **Oracle Cloud "Always Free" Tier**
 * **The Deal**: Oracle gives **up to 4 ARM vCPUs and 24 GB of RAM** (Ampere A1) completely free, permanently.
-* **Why it fits**: 24 GB of RAM is overkill for SeleniumBase—it will run Chrome and scrapers at full speed with zero lag.
+* **Why it fits**: 24 GB of RAM is overkill for SeleniumBase - it will run Chrome and scrapers at full speed with zero lag.
 * **Catch**: Registration requires an international credit/debit card for verification (a temporary $1 hold that gets refunded). In high-demand regions (e.g., Mumbai), free ARM capacity can take a few days to become available.
 
 #### 2. Best Value & Performance Under $4/mo: **Hetzner Cloud (CX22)**
@@ -6641,7 +6641,7 @@ To run Headless Chrome, SeleniumBase, and FastAPI without freezing or getting th
 * **Vultr ($250 credit for 30 days)** or **DigitalOcean ($200 credit for 60 days)**:
   * Deploy an Ubuntu droplet in **Mumbai/Bangalore** (low network latency to Indian Google Local listings).
   * Choose the **2 GB RAM / 1 vCPU ($12/mo)** plan covered 100% by your trial credit.
-  * When the trial ends, you can scale it down to their entry-level plan ($4–$6/mo) or migrate.
+  * When the trial ends, you can scale it down to their entry-level plan ($4-$6/mo) or migrate.
 
 ---
 
@@ -6651,7 +6651,7 @@ To run Headless Chrome, SeleniumBase, and FastAPI without freezing or getting th
 | :--- | :--- | :--- | :--- |
 | **Oracle Cloud Free** | **$0 / month** (Permanently) | Up to 4 vCPUs, 24 GB RAM | If you have a card to sign up and want 100% free cloud compute forever. |
 | **Hetzner Cloud (CX22)** | **~$4 / month** (₹350/mo) | 2 vCPUs, 4 GB RAM | The most stable, professional, and affordable paid VPS on the market. |
-| **Vultr (Promo Link)** | **$0 for 30 days** ($6/mo after) | 1–2 vCPUs, 1–2 GB RAM | Quick testing using free credits with an Indian server location. |
+| **Vultr (Promo Link)** | **$0 for 30 days** ($6/mo after) | 1-2 vCPUs, 1-2 GB RAM | Quick testing using free credits with an Indian server location. |
 
 > [!TIP]
 > **If your budget is strictly $0**:
@@ -6687,7 +6687,7 @@ The only reason Render struggles is because it is running a full Chromium browse
   * When you click "Find Leads", the backend makes a simple 1-second HTTP request to the API.
   * The API handles all the anti-bot protection, IP rotation, and parsing, and returns pure JSON with company names, websites, phones, and addresses.
 * **Pros**: 
-  * **Instant speed**: Results return in 2–3 seconds instead of 1–2 minutes.
+  * **Instant speed**: Results return in 2-3 seconds instead of 1-2 minutes.
   * **Zero memory pressure**: Render only uses ~50 MB RAM; you can completely delete the Chrome install script (`render-build.sh`).
   * **Never blocked**: No Google CAPTCHAs or datacenter IP throttling.
 * **Cons**: Limited by the free monthly quota unless you rotate API keys.
@@ -6695,7 +6695,7 @@ The only reason Render struggles is because it is running a full Chromium browse
 ---
 
 ### Alternative 2: GitHub Actions as a Cloud Worker (100% Free)
-**Leverage GitHub’s free cloud compute infrastructure.**
+**Use GitHub's free cloud compute infrastructure.**
 GitHub provides **2,000 free runner minutes per month** for every free GitHub account:
 * **The hardware**: GitHub gives you a virtual machine with **2 vCPUs, 7 GB RAM, and a 10 Gbps connection** for free.
 * **How it works**:
@@ -6704,7 +6704,7 @@ GitHub provides **2,000 free runner minutes per month** for every free GitHub ac
   3. The GitHub runner launches Chrome, scrapes Google Maps, enriches websites, and writes the leads directly into your **Neon PostgreSQL** database.
   4. Your live **Render** dashboard reads directly from Neon.
 * **Pros**: 100% free, 7GB RAM handles Chrome effortlessly, runs in the cloud (no need to keep your laptop on).
-* **Cons**: Best suited for batches (e.g., scrape 50–200 leads at a time) rather than instant 5-second one-off queries.
+* **Cons**: Best suited for batches (e.g., scrape 50-200 leads at a time) rather than instant 5-second one-off queries.
 
 ---
 
@@ -6730,9 +6730,9 @@ GitHub provides **2,000 free runner minutes per month** for every free GitHub ac
 
 | Option | Setup Time | Monthly Cost | Speed | Reliability on Render Free |
 | :--- | :--- | :--- | :--- | :--- |
-| **1. Free Scraper API (e.g., ScrapingDog)** | ~15 mins | **$0** (free tier) | ⚡ 2–3 seconds | ⭐⭐⭐⭐⭐ (Rock solid, 0 RAM) |
-| **2. GitHub Actions Runner** | ~20 mins | **$0** (2,000 mins/mo) | 🚀 High | ⭐⭐⭐⭐⭐ (7GB RAM cloud runner) |
-| **3. Hybrid Local Worker** | ~15 mins | **$0** | 🚀 High | ⭐⭐⭐⭐ (Depends on PC being on) |
+| **1. Free Scraper API (e.g., ScrapingDog)** | ~15 mins | **$0** (free tier) |  2-3 seconds | ⭐⭐⭐⭐⭐ (Rock solid, 0 RAM) |
+| **2. GitHub Actions Runner** | ~20 mins | **$0** (2,000 mins/mo) |  High | ⭐⭐⭐⭐⭐ (7GB RAM cloud runner) |
+| **3. Hybrid Local Worker** | ~15 mins | **$0** |  High | ⭐⭐⭐⭐ (Depends on PC being on) |
 
 ### Which approach would you like to take?
 1. **Option 1 (Free Scraper API)**: Easiest, fastest, and removes the heavy Chrome dependency completely from Render.
@@ -6766,18 +6766,18 @@ Here is the exact end-to-end blueprint of how **GitHub Actions + Neon DB + Rende
        │ 3. Fires GitHub API Webhook (workflow_dispatch)
        ▼
 [ GitHub Actions Cloud Runner (7 GB RAM, 2 vCPU) ]
-       │ 4. Spins up in 3–5 seconds
+       │ 4. Spins up in 3-5 seconds
        │ 5. Runs Headless Chrome (super fast, no throttles)
        │ 6. Discovers leads & runs AI Website Enrichment
        │
-       │ ── Every 1 second: writes latest logs, progress %, & cards ──▶ [ Neon DB ]
+       │ ── Every 1 second: writes latest logs, progress %, & cards ──- [ Neon DB ]
        │                                                                    ▲
 [ Render Dashboard ]                                                        │
        │                                                                    │
        └──── Polls `/api/progress?job_id=42` every 2s ──────────────────────┘
-             • Real-time Progress Bar moves (10% ➔ 35% ➔ 70% ➔ 100%)
-             • Live Terminal Logs stream on screen
-             • New Company Cards appear dynamically!
+             - Real-time Progress Bar moves (10% ➔ 35% ➔ 70% ➔ 100%)
+             - Live Terminal Logs stream on screen
+             - New Company Cards appear dynamically!
 ```
 
 ---
@@ -6915,7 +6915,7 @@ return {"success": True, "job_id": job.id}
 ### Why this setup is ideal:
 1. **$0 Forever**: Render Free (Web UI) + Neon Free (DB) + GitHub Actions Free (7GB RAM Runner) + Groq Free (AI).
 2. **Never freezes or crashes**: Headless Chrome runs with 7 GB RAM instead of 512 MB.
-3. **Real-time UX preserved**: The progress bar, logs, and live cards stream seamlessly using Neon as the state bridge.
+3. **Real-time UX preserved**: The progress bar, logs, and live cards stream smoothly using Neon as the state bridge.
 4. **Resumable**: If a network drop happens, tasks are tracked per-company in Neon so progress is never lost.
 
 ---
@@ -6932,7 +6932,7 @@ like suppose 5 uesrs hit scout leads at the same time the github will create 5 d
 
 **Yes, absolutely!** GitHub Actions handles this even better than a paid server:
 
-### 1. GitHub’s Free Concurrency Limit
+### 1. GitHub's Free Concurrency Limit
 On a standard free GitHub account:
 * GitHub allows **up to 20 concurrent jobs running at the exact same second** on Linux runners.
 * If 5 users click "Scout Leads" simultaneously:
@@ -6947,11 +6947,11 @@ On a standard free GitHub account:
 Because each workflow run is tagged with a unique `job_id`:
 
 ```
-User 1 (Surat)   ──▶ Job #101 ──▶ GitHub Runner 1 ──▶ Neon DB (job_id: 101) ──▶ Screen 1
-User 2 (Mumbai)  ──▶ Job #102 ──▶ GitHub Runner 2 ──▶ Neon DB (job_id: 102) ──▶ Screen 2
-User 3 (Delhi)   ──▶ Job #103 ──▶ GitHub Runner 3 ──▶ Neon DB (job_id: 103) ──▶ Screen 3
-User 4 (Bangalore)─▶ Job #104 ──▶ GitHub Runner 4 ──▶ Neon DB (job_id: 104) ──▶ Screen 4
-User 5 (Pune)    ──▶ Job #105 ──▶ GitHub Runner 5 ──▶ Neon DB (job_id: 105) ──▶ Screen 5
+User 1 (Surat)   ──- Job #101 ──- GitHub Runner 1 ──- Neon DB (job_id: 101) ──- Screen 1
+User 2 (Mumbai)  ──- Job #102 ──- GitHub Runner 2 ──- Neon DB (job_id: 102) ──- Screen 2
+User 3 (Delhi)   ──- Job #103 ──- GitHub Runner 3 ──- Neon DB (job_id: 103) ──- Screen 3
+User 4 (Bangalore)─- Job #104 ──- GitHub Runner 4 ──- Neon DB (job_id: 104) ──- Screen 4
+User 5 (Pune)    ──- Job #105 ──- GitHub Runner 5 ──- Neon DB (job_id: 105) ──- Screen 5
 ```
 
 * **No Cross-Talk**: 
@@ -6965,8 +6965,8 @@ User 5 (Pune)    ──▶ Job #105 ──▶ GitHub Runner 5 ──▶ Neon DB 
 If more than 20 jobs are triggered at the same second:
 * 20 run immediately.
 * The remaining 5 sit in GitHub's queue (`queued`).
-* The instant one worker finishes (usually in 1–2 minutes), the next queued job starts automatically.
-* The user's screen simply shows: `"Job Queued — Waiting for cloud runner..."` until it begins.
+* The instant one worker finishes (usually in 1-2 minutes), the next queued job starts automatically.
+* The user's screen simply shows: `"Job Queued  -  Waiting for cloud runner..."` until it begins.
 
 ---
 
@@ -6990,7 +6990,7 @@ okay this resolves the scrapping functionality what about the AI en richment
 ```
 
 #### Actions & Tools Executed
-- Tools utilized: `view_file`
+- Tools used: `view_file`
 
 #### Assistant Implementation & Final Response
 
@@ -7007,7 +7007,7 @@ Here is how both **Single** and **Bulk** enrichment are handled:
 ### Scenario A: Single Company Enrichment (Instant on Render)
 * When a user is browsing leads on the Render dashboard and clicks **"Deep Enrich"** on a single company:
 * **Where it runs**: Directly on **Render**!
-* **Why it works smoothly**: Since this is just standard HTTP requests (fetching HTML + 1 Groq API call) and **does not launch Chrome**, it consumes less than 30 MB of RAM and completes in **2–3 seconds**. 
+* **Why it works smoothly**: Since this is just standard HTTP requests (fetching HTML + 1 Groq API call) and **does not launch Chrome**, it consumes less than 30 MB of RAM and completes in **2-3 seconds**. 
 * Render's free tier handles single-company enrichments effortlessly without timing out.
 
 ---
@@ -7041,9 +7041,9 @@ Here is how both **Single** and **Bulk** enrichment are handled:
 
 | Action | Where it Runs | Time Taken | RAM Used | Impact on Render Free Tier |
 | :--- | :--- | :--- | :--- | :--- |
-| **Enrich 1 Company** | **Render** | ~2 seconds | ~30 MB | ✅ Zero issues (super lightweight) |
-| **Scout + Auto-Enrich** | **GitHub Actions** | ~1.5 minutes | 1.2 GB (inside GitHub) | ✅ Zero load on Render |
-| **Bulk Enrich 100 Leads** | **GitHub Actions** | ~2–3 minutes | 300 MB (inside GitHub) | ✅ Zero load on Render |
+| **Enrich 1 Company** | **Render** | ~2 seconds | ~30 MB | [v] Zero issues (super lightweight) |
+| **Scout + Auto-Enrich** | **GitHub Actions** | ~1.5 minutes | 1.2 GB (inside GitHub) | [v] Zero load on Render |
+| **Bulk Enrich 100 Leads** | **GitHub Actions** | ~2-3 minutes | 300 MB (inside GitHub) | [v] Zero load on Render |
 
 This keeps your Render web app fast and responsive while delegating all the heavy lifting to GitHub's free 7 GB cloud runners.
 
@@ -7139,7 +7139,7 @@ To let your Render web app trigger the GitHub runner:
 
 #### Assistant Implementation & Final Response
 
-### This is working! 🚀
+### This is working! 
 
 Here is what your screenshot confirms:
 
@@ -7151,7 +7151,7 @@ Here is what your screenshot confirms:
 3. **Chromium Engine Initialized**:
    * It automatically detected Chrome, downloaded the matching `uc_driver` (v156.0.8078.47), and launched the headless browser.
 4. **Current Status in Neon DB**:
-   * I just verified Job **#2** in your database—it is actively **`RUNNING`**.
+   * I just verified Job **#2** in your database - it is actively **`RUNNING`**.
    * It is scraping the 2 pages of Google Local results for *"PHP based companies in Surat"*.
    * Once it collects the listings, it will immediately crawl each company's website for verified HR emails and generate the AI profile using Groq, writing each one straight to Neon.
 
@@ -7272,7 +7272,7 @@ isit because not added the groq key in vafriables?
 ```
 
 #### Actions & Tools Executed
-- Tools utilized: `grep_search`
+- Tools used: `grep_search`
 
 #### Assistant Implementation & Final Response
 
@@ -7315,7 +7315,7 @@ Error code: 404 - {'error': {'message': "The model `llama-3.3-70b-versatile` doe
 This occurred because:
 1. **Groq Model Availability**: Groq updated its model catalog and deprecated several models. For your account tier, `llama-3.3-70b-versatile` returns `404 model_not_found`.
 2. **Workflow Default**: Because `GROQ_MODEL` wasn't explicitly forwarded in the GitHub Actions runner environment, [config.py](file:///c:/Users/vorar/OneDrive/Desktop/outreachPilot/config.py) fell back to its hardcoded default (`llama-3.3-70b-versatile`).
-3. **Token Limit**: The token limit in `ai_agent.py` was set to `850`, which caused a 500–700 word technical intelligence report to get truncated before closing its JSON braces.
+3. **Token Limit**: The token limit in `ai_agent.py` was set to `850`, which caused a 500-700 word technical intelligence report to get truncated before closing its JSON braces.
 
 ---
 
@@ -7324,8 +7324,8 @@ This occurred because:
 We queried Groq's live models using your `GROQ_API_KEY`:
 | Model | Status | Notes |
 | :--- | :--- | :--- |
-| `llama-3.3-70b-versatile` | ❌ **404 Not Found** | Unavailable on this key |
-| `llama3-70b-8192` | ❌ **400 Decommissioned** | Retired by Groq |
+| `llama-3.3-70b-versatile` | [x] **404 Not Found** | Unavailable on this key |
+| `llama3-70b-8192` | [x] **400 Decommissioned** | Retired by Groq |
 | `qwen/qwen3.8-27b` |  **200 OK** | Ultra-fast, produces clean structured JSON |
 | `openai/gpt-oss-120b` |  **200 OK** | High-capacity fallback |
 | `openai/gpt-oss-20b` |  **200 OK** | Lightweight fallback |
@@ -7341,7 +7341,7 @@ We queried Groq's live models using your `GROQ_API_KEY`:
 2. **Automated Multi-Model Fallback**:
    - In [ai_agent.py](file:///c:/Users/vorar/OneDrive/Desktop/outreachPilot/ai_agent.py): Added `call_groq_with_fallback()` which cascades automatically:
      $$\text{Primary: qwen/qwen3.8-27b} \longrightarrow \text{Fallback 1: gpt-oss-120b} \longrightarrow \text{Fallback 2: gpt-oss-20b}$$
-   - Increased `max_tokens` to `1800` to allow the full 500–700 word technical report to generate and close JSON cleanly.
+   - Increased `max_tokens` to `1800` to allow the full 500-700 word technical report to generate and close JSON cleanly.
 
 ---
 
@@ -7351,27 +7351,27 @@ We dispatched a fresh cloud job with the updated code:
 - **GitHub Actions Run**: [View Run #39586089729](https://github.com/vorarahul4700/outreachPilot/actions/runs/39586089729)
 - **Target**: `"Digital Marketing Agencies in Surat"` (ScoutJob #7 in Neon DB)
 
-You can view the live runner in GitHub Actions — every company is now enriched using `qwen/qwen3.8-27b` with zero 404 errors!
+You can view the live runner in GitHub Actions  -  every company is now enriched using `qwen/qwen3.8-27b` with zero 404 errors!
 
 ---
 
-### Turn 163: [10:40:06] ✓ Successfully enriched & verified: Good Old Geek (2 emails found) [1...
+### Turn 163: [10:40:06] [v] Successfully enriched & verified: Good Old Geek (2 emails found) [1...
 
 #### User Prompt
 ```text
-[10:40:06] ✓ Successfully enriched & verified: Good Old Geek (2 emails found)
+[10:40:06] [v] Successfully enriched & verified: Good Old Geek (2 emails found)
 [10:40:07] [2/18] Deep AI Enriching: Monkey Ads & Studios (monkeyads.in)...
-[10:40:49] ✓ Successfully enriched & verified: Monkey Ads & Studios (2 emails found)
+[10:40:49] [v] Successfully enriched & verified: Monkey Ads & Studios (2 emails found)
 [10:40:49] [3/18] Deep AI Enriching: MyPrachar (myprachar.com)...
-[10:41:26] ✓ Successfully enriched & verified: MyPrachar (0 emails found)
+[10:41:26] [v] Successfully enriched & verified: MyPrachar (0 emails found)
 [10:41:26] [4/18] Deep AI Enriching: Bizbuddy (bizbuddy.co.in)...
 [Enrich Warning] Failed to enrich bizbuddy.co.in: (psycopg2.errors.StringDataRightTruncation) value too long for type character varying(100)
 [SQL: INSERT INTO company_profiles (company_id, summary_short, detailed_analysis, industry, tech_stack, services, hiring_signals, tone, analyzed_at) VALUES (%(company_id)s, %(summary_short)s, %(detailed_analysis)s, %(industry)s, %(tech_stack)s::JSONB, %(services)s::JSONB, %(hiring_signals)s, %(tone)s, %(analyzed_at)s) RETURNING company_profiles.id]
-[parameters: {'company_id': 51, 'summary_short': 'BizBuddy is a full‑service digital marketing and IT solutions agency that delivers AI‑enhanced SEO, paid‑media, lead‑generation, and custom web/app d ... (42 characters truncated) ... India and overseas. Their primary audience includes mid‑market brands seeking data‑driven growth, omnichannel presence, and cybersecurity assurance.', 'detailed_analysis': '### 1. Executive Business Overview & Value Proposition\nBizBuddy positions itself as an AI‑driven strategic marketing and IT partner with 14\u202fyea ... (5138 characters truncated) ... te ROI, align with BizBuddy’s service narrative, and showcase a candidate’s ability to elevate both marketing performance and engineering robustness.', 'industry': 'Digital Marketing & Technology Services Agency', 'tech_stack': '["React", "Next.js", "Vue.js", "Node.js", "Express", "Laravel", "PHP", "WordPress", "Headless CMS", "MySQL", "PostgreSQL", "MongoDB", "AWS", "Google ... (137 characters truncated) ... Salesforce", "Ma
+[parameters: {'company_id': 51, 'summary_short': 'BizBuddy is a full-service digital marketing and IT solutions agency that delivers AI-enhanced SEO, paid-media, lead-generation, and custom web/app d ... (42 characters truncated) ... India and overseas. Their primary audience includes mid-market brands seeking data-driven growth, omnichannel presence, and cybersecurity assurance.', 'detailed_analysis': '### 1. Executive Business Overview & Value Proposition\nBizBuddy positions itself as an AI-driven strategic marketing and IT partner with 14\u202fyea ... (5138 characters truncated) ... te ROI, align with BizBuddy's service narrative, and showcase a candidate's ability to improve both marketing performance and engineering robustness.', 'industry': 'Digital Marketing & Technology Services Agency', 'tech_stack': '["React", "Next.js", "Vue.js", "Node.js", "Express", "Laravel", "PHP", "WordPress", "Headless CMS", "MySQL", "PostgreSQL", "MongoDB", "AWS", "Google ... (137 characters truncated) ... Salesforce", "Ma
 (Background on this error at: [https://sqlalche.me/e/21/9h9h)](https://sqlalche.me/e/21/9h9h\))
 [Error] Cloud runner failure: This Session's transaction has been rolled back due to a previous exception during flush. To begin a new transaction with this Session, first issue Session.rollback(). Original exception was: (psycopg2.errors.StringDataRightTruncation) value too long for type character varying(100)
 [SQL: INSERT INTO company_profiles (company_id, summary_short, detailed_analysis, industry, tech_stack, services, hiring_signals, tone, analyzed_at) VALUES (%(company_id)s, %(summary_short)s, %(detailed_analysis)s, %(industry)s, %(tech_stack)s::JSONB, %(services)s::JSONB, %(hiring_signals)s, %(tone)s, %(analyzed_at)s) RETURNING company_profiles.id]
-[parameters: {'company_id': 51, 'summary_short': 'BizBuddy is a full‑service digital marketing and IT solutions agency that delivers AI‑enhanced SEO, paid‑media, lead‑generation, and custom web/app d ... (42 characters truncated) ... India and overseas. Their primary audience includes mid‑market brands seeking data‑driven growth, omnichannel presence, and cybersecurity assurance.', 'detailed_analysis': '### 1. Executive Business Overview & Value Proposition\nBizBuddy positions itself as an AI‑driven strategic marketing and IT partner with 14\u202fyea ... (5138 characters truncated) ... te ROI, align with BizBuddy’s service narrative, and showcase a candidate’s ability to elevate both marketing performance and engineering robustness.', 'industry': 'Digital Marketing & Technology Services Agency', 'tech_stack': '["React", "Next.js", "Vue.js", "Node.js", "Express", "Laravel", "PHP", "WordPress", "Headless CMS", "MySQL", "PostgreSQL", "MongoDB", "AWS", "Google ... (137 characters truncated) ... Salesforce", "Ma
+[parameters: {'company_id': 51, 'summary_short': 'BizBuddy is a full-service digital marketing and IT solutions agency that delivers AI-enhanced SEO, paid-media, lead-generation, and custom web/app d ... (42 characters truncated) ... India and overseas. Their primary audience includes mid-market brands seeking data-driven growth, omnichannel presence, and cybersecurity assurance.', 'detailed_analysis': '### 1. Executive Business Overview & Value Proposition\nBizBuddy positions itself as an AI-driven strategic marketing and IT partner with 14\u202fyea ... (5138 characters truncated) ... te ROI, align with BizBuddy's service narrative, and showcase a candidate's ability to improve both marketing performance and engineering robustness.', 'industry': 'Digital Marketing & Technology Services Agency', 'tech_stack': '["React", "Next.js", "Vue.js", "Node.js", "Express", "Laravel", "PHP", "WordPress", "Headless CMS", "MySQL", "PostgreSQL", "MongoDB", "AWS", "Google ... (137 characters truncated) ... Salesforce", "Ma
 (Background on this error at: [https://sqlalche.me/e/21/9h9h)](https://sqlalche.me/e/21/9h9h\)) (Background on this error at: [https://sqlalche.me/e/21/7s2a)](https://sqlalche.me/e/21/7s2a\))
 Traceback (most recent call last):
 File "/home/runner/work/outreachPilot/outreachPilot/cloud_worker.py", line 143, in run_worker
@@ -7399,7 +7399,7 @@ File "/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/sqlal
 raise sa_exc.PendingRollbackError(
 sqlalchemy.exc.PendingRollbackError: This Session's transaction has been rolled back due to a previous exception during flush. To begin a new transaction with this Session, first issue Session.rollback(). Original exception was: (psycopg2.errors.StringDataRightTruncation) value too long for type character varying(100)
 [SQL: INSERT INTO company_profiles (company_id, summary_short, detailed_analysis, industry, tech_stack, services, hiring_signals, tone, analyzed_at) VALUES (%(company_id)s, %(summary_short)s, %(detailed_analysis)s, %(industry)s, %(tech_stack)s::JSONB, %(services)s::JSONB, %(hiring_signals)s, %(tone)s, %(analyzed_at)s) RETURNING company_profiles.id]
-[parameters: {'company_id': 51, 'summary_short': 'BizBuddy is a full‑service digital marketing and IT solutions agency that delivers AI‑enhanced SEO, paid‑media, lead‑generation, and custom web/app d ... (42 characters truncated) ... India and overseas. Their primary audience includes mid‑market brands seeking data‑driven growth, omnichannel presence, and cybersecurity assurance.', 'detailed_analysis': '### 1. Executive Business Overview & Value Proposition\nBizBuddy positions itself as an AI‑driven strategic marketing and IT partner with 14\u202fyea ... (5138 characters truncated) ... te ROI, align with BizBuddy’s service narrative, and showcase a candidate’s ability to elevate both marketing performance and engineering robustness.', 'industry': 'Digital Marketing & Technology Services Agency', 'tech_stack': '["React", "Next.js", "Vue.js", "Node.js", "Express", "Laravel", "PHP", "WordPress", "Headless CMS", "MySQL", "PostgreSQL", "MongoDB", "AWS", "Google ... (137 characters truncated) ... Salesforce", "Ma
+[parameters: {'company_id': 51, 'summary_short': 'BizBuddy is a full-service digital marketing and IT solutions agency that delivers AI-enhanced SEO, paid-media, lead-generation, and custom web/app d ... (42 characters truncated) ... India and overseas. Their primary audience includes mid-market brands seeking data-driven growth, omnichannel presence, and cybersecurity assurance.', 'detailed_analysis': '### 1. Executive Business Overview & Value Proposition\nBizBuddy positions itself as an AI-driven strategic marketing and IT partner with 14\u202fyea ... (5138 characters truncated) ... te ROI, align with BizBuddy's service narrative, and showcase a candidate's ability to improve both marketing performance and engineering robustness.', 'industry': 'Digital Marketing & Technology Services Agency', 'tech_stack': '["React", "Next.js", "Vue.js", "Node.js", "Express", "Laravel", "PHP", "WordPress", "Headless CMS", "MySQL", "PostgreSQL", "MongoDB", "AWS", "Google ... (137 characters truncated) ... Salesforce", "Ma
 (Background on this error at: [https://sqlalche.me/e/21/9h9h)](https://sqlalche.me/e/21/9h9h\)) (Background on this error at: [https://sqlalche.me/e/21/7s2a)](https://sqlalche.me/e/21/7s2a\))
 During handling of the above exception, another exception occurred:
 Traceback (most recent call last):
@@ -7430,7 +7430,7 @@ File "/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/sqlal
 raise sa_exc.PendingRollbackError(
 sqlalchemy.exc.PendingRollbackError: This Session's transaction has been rolled back due to a previous exception during flush. To begin a new transaction with this Session, first issue Session.rollback(). Original exception was: (psycopg2.errors.StringDataRightTruncation) value too long for type character varying(100)
 [SQL: INSERT INTO company_profiles (company_id, summary_short, detailed_analysis, industry, tech_stack, services, hiring_signals, tone, analyzed_at) VALUES (%(company_id)s, %(summary_short)s, %(detailed_analysis)s, %(industry)s, %(tech_stack)s::JSONB, %(services)s::JSONB, %(hiring_signals)s, %(tone)s, %(analyzed_at)s) RETURNING company_profiles.id]
-[parameters: {'company_id': 51, 'summary_short': 'BizBuddy is a full‑service digital marketing and IT solutions agency that delivers AI‑enhanced SEO, paid‑media, lead‑generation, and custom web/app d ... (42 characters truncated) ... India and overseas. Their primary audience includes mid‑market brands seeking data‑driven growth, omnichannel presence, and cybersecurity assurance.', 'detailed_analysis': '### 1. Executive Business Overview & Value Proposition\nBizBuddy positions itself as an AI‑driven strategic marketing and IT partner with 14\u202fyea ... (5138 characters truncated) ... te ROI, align with BizBuddy’s service narrative, and showcase a candidate’s ability to elevate both marketing performance and engineering robustness.', 'industry': 'Digital Marketing & Technology Services Agency', 'tech_stack': '["React", "Next.js", "Vue.js", "Node.js", "Express", "Laravel", "PHP", "WordPress", "Headless CMS", "MySQL", "PostgreSQL", "MongoDB", "AWS", "Google ... (137 characters truncated) ... Salesforce", "Ma
+[parameters: {'company_id': 51, 'summary_short': 'BizBuddy is a full-service digital marketing and IT solutions agency that delivers AI-enhanced SEO, paid-media, lead-generation, and custom web/app d ... (42 characters truncated) ... India and overseas. Their primary audience includes mid-market brands seeking data-driven growth, omnichannel presence, and cybersecurity assurance.', 'detailed_analysis': '### 1. Executive Business Overview & Value Proposition\nBizBuddy positions itself as an AI-driven strategic marketing and IT partner with 14\u202fyea ... (5138 characters truncated) ... te ROI, align with BizBuddy's service narrative, and showcase a candidate's ability to improve both marketing performance and engineering robustness.', 'industry': 'Digital Marketing & Technology Services Agency', 'tech_stack': '["React", "Next.js", "Vue.js", "Node.js", "Express", "Laravel", "PHP", "WordPress", "Headless CMS", "MySQL", "PostgreSQL", "MongoDB", "AWS", "Google ... (137 characters truncated) ... Salesforce", "Ma
 (Background on this error at: [https://sqlalche.me/e/21/9h9h)](https://sqlalche.me/e/21/9h9h\)) (Background on this error at: [https://sqlalche.me/e/21/7s2a)](https://sqlalche.me/e/21/7s2a\))
 Error: Process completed with exit code 1.
 ```
@@ -7449,9 +7449,9 @@ Error: Process completed with exit code 1.
 
 Notice how the previous run successfully enriched companies 1, 2, and 3:
 ```text
-[10:40:06] ✓ Successfully enriched & verified: Good Old Geek (2 emails found)
-[10:40:49] ✓ Successfully enriched & verified: Monkey Ads & Studios (2 emails found)
-[10:41:26] ✓ Successfully enriched & verified: MyPrachar (0 emails found)
+[10:40:06] [v] Successfully enriched & verified: Good Old Geek (2 emails found)
+[10:40:49] [v] Successfully enriched & verified: Monkey Ads & Studios (2 emails found)
+[10:41:26] [v] Successfully enriched & verified: MyPrachar (0 emails found)
 ```
 The Groq AI integration with `qwen/qwen3.8-27b` is working as expected!
 
@@ -7531,19 +7531,19 @@ The architecture is **hybrid**: combining multi-threading, asynchronous I/O, and
 ```
 ┌────────────────────────────────────────────────────────────────────────┐
 │ 1. GOOGLE MAPS SCOUTING                                                │
-│    • Chrome Browser (Undetected): Single-threaded session              │
+│    - Chrome Browser (Undetected): Single-threaded session              │
 │      (Prevents Google from flagging concurrent browser instances)      │
-│    • Website Domain Resolution: Multi-Threaded (ThreadPoolExecutor)    │
+│    - Website Domain Resolution: Multi-Threaded (ThreadPoolExecutor)    │
 │      Resolves up to 25 redirect URLs concurrently in parallel          │
 └───────────────────────────────────┬────────────────────────────────────┘
                                     │
                                     ▼
 ┌────────────────────────────────────────────────────────────────────────┐
 │ 2. DEEP AI ENRICHMENT (Per Company)                                    │
-│    • Website Subpage Crawler: Concurrent Asynchronous (asyncio.gather) │
+│    - Website Subpage Crawler: Concurrent Asynchronous (asyncio.gather) │
 │      Fetches /, /about, /contact, /team, /careers simultaneously        │
-│    • Groq LLM Profiling: Dedicated thread (asyncio.to_thread)          │
-│    • Company-to-Company Batch Loop: Sequential                          │
+│    - Groq LLM Profiling: Dedicated thread (asyncio.to_thread)          │
+│    - Company-to-Company Batch Loop: Sequential                          │
 └────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -7588,15 +7588,15 @@ The architecture is **hybrid**: combining multi-threading, asynchronous I/O, and
 
 [10:56:53] [1/20] Deep AI Enriching: Webito Infotech | AI Software, CRM, ERP & Mobile App Development Company (webitoinfotech.com)...
 
-[10:57:03] ✓ Successfully enriched & verified: Webito Infotech | AI Software, CRM, ERP & Mobile App Development Company (0 emails found)
+[10:57:03] [v] Successfully enriched & verified: Webito Infotech | AI Software, CRM, ERP & Mobile App Development Company (0 emails found)
 
 [10:57:04] [2/20] Deep AI Enriching: EnactOn Technologies Private Limited (enacton.com)...
 
-[10:57:08] ✓ Successfully enriched & verified: EnactOn Technologies Private Limited (1 emails found)
+[10:57:08] [v] Successfully enriched & verified: EnactOn Technologies Private Limited (1 emails found)
 
 [10:57:08] [3/20] Deep AI Enriching: FutureX - AI, Web & App Development Company (futurexcs.com)...
 
-[10:58:00] ✓ Successfully enriched & verified: FutureX - AI, Web & App Development Company (0 emails found)
+[10:58:00] [v] Successfully enriched & verified: FutureX - AI, Web & App Development Company (0 emails found)
 
 [10:58:00] [4/20] Deep AI Enriching: Codeline Infotech | Software development company | Mobile app development | Web development | UI/UX design (codelineinfotech.com)...
 
@@ -7631,7 +7631,7 @@ Looking at the timestamps from your log snippet:
 
 ---
 
-### How we can make it 3x–4x faster:
+### How we can make it 3x-4x faster:
 
 #### 1. Concurrent Async Worker Pool (`asyncio.Semaphore(3)` or `4`)
 Instead of running one company at a time:
@@ -7748,8 +7748,8 @@ var g=this||self;var m=g.JSON.parse,p=g.JSON.stringify;function q(a,b,d){(a=a.ge
 function w(a){window.addEventListener("pageswap",b=>{v(b,a,"mpa_vt-ps");t("s","mpavt","mpa-vt-types",JSON.stringify(a));if(window.navigation){b=window.navigation.currentEntry?.getState()||{};b.i||(b.i={});var d;(d=b.i).next||(d.next={});b.i.next.types=a;window.navigation.updateCurrentEntry({state:b})}},{once:!0})};var x;window.addEventListener("pagereveal",async a=>{a:{try{var b=q(window.sessionStorage,"mpavt","mpa-vt-types");break a}catch(k){}b=null}var d=b;b=[];var c=window.navigation;c=c?.activation?.from&&c.activation.navigationType!=="reload"?c.activation.navigationType==="traverse"&&c.activation.entry&&c.activation.entry.index<c.activation.from.index?"b":"f":"o";if(d){c="f";b=JSON.parse(d);try{window.sessionStorage.removeItem("mpavt;;mpa-vt-types")}catch(k){}d=b;if(window.navigation){var e=window.navigation.currentEntry?.getState()||{};e.i||(e.i={});var f;(f=e.i).l||(f.l={});e.i.l.types=d||e.i.l.types;window.navigation.updateCurrentEntry({state:e})}}else window.navigation&&(f=window.navigation.currentEntry?.getState()?.i,b=c==="f"?f?.l?.types:c==="b"?f?.next?.types:[]);a.viewTransition&&b?.length&&v(a,[...b,c],"mpa_vt-pr");try{await a?.viewTransition?.finished}finally{y()}},{once:!0});B();document.addEventListener("click",a=>{try{a:{for(let {j:d,types:c}of u)if(a.target?.closest(`[${d}]`)){var b=c;break a}b=[]}a=b;a.length>0?(B(),w(a)):y()}catch(d){google.ml(d,!0,{src:"mpa_vt-t"})}},{capture:!0,passive:!0});function C(){x||(x=document.createElement("style"),document.head.append(x));return x}function y(){var a=C();a.textContent!=="@view-transition{navigation:none;}"&&(a.textContent="@view-transition{navigation:none;}")}
 function B(){var a=C();a.textContent!=="@view-transition{navigation:auto;}"&&(a.textContent="@view-transition{navigation:auto;}")};}).call(this);(function(){'use strict';window.addEventListener("pagereveal",async a=>{try{let b=a.viewTransition;if(b?.types?.size){await b.ready;a=[["root"],["sb"],["mb"],["ubi",!0],["mode-selector-underbar",!0]];var f=document.getAnimations();for(let [k,g]of a)h(f,k,g)}}catch(b){google.ml(b,!0,{src:"mpa_vt-c"})}});function p(a){return Number(a.split("px")[0])}
 function h(a,f,b){var k=`::view-transition-group(${f})`;if(a=a.find(q=>q.effect?.pseudoElement===k)){var g=a.effect,c=g.getKeyframes(),d=new DOMMatrix(c[0].transform),l=p(c[0].width),m=p(c[0].height),e=new DOMMatrix(c[1].transform),n=p(c[1].height);l/=p(c[1].width);b=b?m/n:l;var r=d.e;d=d.f;var t=e.e;e=e.f;f!=="sb"&&(d+m<0||e+n<0)&&a.cancel();g.setKeyframes([{transform:`translate(${r}px, ${d}px) scale(${l}, ${b})`,easing:c[0].easing},{transform:`translate(${t}px, ${e}px) scale(1, 1)`,easing:c[1].easing}])}}
-;}).call(this);</script> <link href="[#ZnpjSd](https://www.google.com/search?q=php+based+companies+in+ahmedabad&sca_esv=7e69963a3bb46de9&udm=local&biw=1526&bih=839&sxsrf=APpeQnvLVpR5djVYAHyn85hvsbMwqCE7zA%3A1792580493455&ei=jZvYavexG6-XseMPuNqnoQY&ved=0ahUKEwi3rKzc-sqXAxWvS2wGHTjtKWQ4FBDh1QMIEA&uact=5&oq=php+based+companies+in+ahmedabad&gs_lp=EhZnd3Mtd2l6LW1vZGVsZXNzLWxvY2FsIiBwaHAgYmFzZWQgY29tcGFuaWVzIGluIGFobWVkYWJhZDIGEAAYFhgeMgUQABjvBTIFEAAY7wUyBRAAGO8FSNYXUL0IWJsWcAF4AJABAJgBxAKgAdwRqgEHMC4yLjUuMrgBA8gBAPgBAZgCCqACgxLCAgUQIRigAcICBRAhGJ8FmAMAiAYBkgcHMS4yLjUuMqAH8R-yBwcwLjIuNS4yuAeAEsIHBTAuOS4xyAcVgAgB&sclient=gws-wiz-modeless-local#ZnpjSd)" blocking="render" rel="expect"> <style>::view-transition-old(sb){height:100%}::view-transition-new(sb){height:100%}@keyframes sb-slide-down-fade-in{0%{transform:scale(.5) translateY(-50px);opacity:0}20%{opacity:0}to{transform:scale(1) translateY(0);opacity:1}}@keyframes sb-slide-up-fade-out{0%{transform:scale(1) translateY(0);opacity:1}20%{opacity:0}to{transform:scale(.5) translateY(-50px);opacity:0}}@keyframes ubi-fade-in{0%{transform:translateY(-20px);opacity:0}20%{opacity:0}to{transform:translateY(0);opacity:1}}@keyframes ubi-fade-out{0%{transform:translateY(0);opacity:1}20%{opacity:0}to{transform:translateY(-20px);opacity:0}}html:active-view-transition-type(aimc)::view-transition-new(sb),html:active-view-transition-type(aimc)::view-transition-old(sb){height:100%}html:active-view-transition-type(aimc)::view-transition-old(sb):only-child{animation:sb-slide-up-fade-out .5s cubic-bezier(.38,.72,0,1) forwards}html:active-view-transition-type(aimc)::view-transition-new(sb):only-child{animation:sb-slide-down-fade-in .5s cubic-bezier(.38,.72,0,1) forwards}html:active-view-transition-type(aimc)::view-transition-new(mb),html:active-view-transition-type(aimc)::view-transition-old(mb){width:auto;animation-duration:.5s;animation-timing-function:cubic-bezier(.38,.72,0,1)}html:active-view-transition-type(aimc)::view-transition-group(*){transform-origin:top left}html:active-view-transition-type(aimc)::view-transition-new(ubi),html:active-view-transition-type(aimc)::view-transition-old(ubi){width:100%;height:100%;animation-duration:.5s;animation-timing-function:cubic-bezier(.38,.72,0,1)}html:active-view-transition-type(aimc)::view-transition-old(ubi):only-child{animation:ubi-fade-out .5s cubic-bezier(.38,.72,0,1)}html:active-view-transition-type(aimc)::view-transition-new(ubi):only-child{animation:ubi-fade-in .5s cubic-bezier(.38,.72,0,1)}@view-transition{navigation:auto}:root::view-transition-group(root){animation:none}:root::view-transition-old(root){animation:none;opacity:0}:root::view-transition-new(root){animation:none;opacity:1}html,body,h1,input,select{font-family:Arial,sans-serif,Noto Color Emoji}body,h1{font-size:var(--Mhs7de);}h1{font-weight:normal;margin:0;padding:0}h3{font-weight:normal;margin:0;padding:0;font-size:20px;line-height:1.272}body{margin:0;background:var(--xhUGwc);color:var(--YLNNHc);}a{color:var(--JKqx2);text-decoration:none;-webkit-tap-highlight-color:rgba(255,255,255,.1)}a:visited{color:#c58af9}a:hover{text-decoration:underline}a:hover h3{text-decoration:underline}a.a-no-hover-decoration:hover,a.a-no-hover-decoration:hover h3{text-decoration:none}cite,cite a:link,cite a:visited{color:#bdc1c6;font-style:normal}button{margin:0}ol li{list-style:none}ol,ul,li{margin:0;padding:0}input{font-size:var(--Mhs7de)}em{font-weight:bold;font-style:normal}.aCOpRe em,.yXK7lf em,.p4wth em,.ycrdod em{}.z1asCe{display:inline-block;fill:currentColor;height:24px;line-height:24px;position:relative;width:24px}.z1asCe svg{display:block;height:100%;width:100%}:root{}.ynAwRc{color:var(--JKqx2)}a:visited .ynAwRc,a:visited.ynAwRc{color:#c58af9}.JIFdL{color:#8ab4f8}.NUnG9d{color:var(--YLNNHc);font-family:var(--YfiKf);font-size:var(--gOs6Bf);font-weight:var(--MzKBpd);line-height:var(--punZlc)}.kqEaA{color:var(--IXoxUe);font-family:var(--LI4Bo);font-size:var(--Mhs7de);font-weight:var(--ofwUBc);line-height:var(--XWv1if)}.N8MDs{font-family:Arial,sans-serif,Noto Color Emoji;font-weight:300}.z8gr9e{color:var(--bbQxAb)}.x2sBq{color:#f28b82}.tGXccd{color:#81c995}.XEI2lf{color:#e8eaf2}.Q7PwXb{text-decoration:none}.NnEaBd{text-align:right}.xLQxIf{text-transform:capitalize}.uKdaQe{text-transform:lowercase}.MUmB9{text-transform:none}.xpdclps,.xpdxpnd{overflow:hidden}.xpdclps,.xpdxpnd{-webkit-transition:max-height 0.3s}.xpdxpnd,.xpdopen .xpdclps,.xpdopen .xpdxpnd.xpdnoxpnd{max-height:0}.xpdopen .xpdxpnd{max-height:none}.xpdopen .xpdbox .xpdxpnd,.xpdopen .xpdbox.xpdopen .xpdclps{max-height:0}.xpdopen .xpdbox.xpdopen .xpdxpnd,.xpdopen .xpdbox .xpdclps{max-height:none}.xpdclose .k5nfEc{display:none}html:not(.zAoYTe) [tabindex],html:not(.zAoYTe) [href],html:not(.zAoYTe) button,html:not(.zAoYTe) iframe,html:not(.zAoYTe) input,html:not(.zAoYTe) select,html:not(.zAoYTe) textarea{outline:0}.bNg8Rb{clip:rect(1px,1px,1px,1px);height:1px;overflow:hidden;position:absolute;white-space:nowrap;width:1px;user-select:none;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none}.btku5b{display:inline-block;vertical-align:middle;cursor:pointer}.btku5b,.brKmxb:focus-visible{outline:0;-webkit-tap-highlight-color:transparent}.niO4u::before,.niO4u::after{position:absolute;top:0;left:0;width:100%;height:100%;border-radius:inherit}.btku5b:not([disabled]):hover .niO4u::after,.btku5b:not([disabled]):active .niO4u::after{content:'';z-index:-1}.btku5b:focus-visible .niO4u::after,.brKmxb:focus-visible .niO4u::after{content:'';outline:2px solid var(--Pa8Wlb);outline-offset:3px}.niO4u{display:flex;justify-content:center;position:relative;align-items:center;width:100%;z-index:0;box-sizing:border-box;padding:calc(8px - 1px) calc(16px - 1px);border:1px solid transparent;border-radius:9999px}.niO4u::before{content:'';height:48px;margin-top:-24px;top:50%}@media (forced-colors:active){.niO4u{border-color:ButtonBorder}}.btku5b[disabled]{cursor:auto}.btku5b[disabled] .niO4u{color:rgb(from var(--pEa0Bc) r g b/0.38)}.FR7ZSc[disabled]:not(.dmKIje):not([selected]) .niO4u,.zqrO0[disabled]:not(.dmKIje):not([selected]) .niO4u,.GQ0bde[disabled]:not(.dmKIje):not([selected]) .niO4u,.fqiILb.fqiILb[selected][disabled] .niO4u{border-color:var(--kloG3)}.r69FZ[disabled] .niO4u,.Bmegof[disabled] .niO4u,.expUPd[disabled] .niO4u,.qVhvac.qVhvac[selected][disabled] .niO4u{background:var(--YaIeMb)}@media (forced-colors:active){.btku5b.btku5b[disabled]{opacity:1;color:GrayText}.btku5b.btku5b.btku5b.btku5b.btku5b.btku5b[disabled] .niO4u{outline:1px solid GrayText}}.qVhvac[selected]{color:var(--xPpiM)}.qVhvac[selected]:hover .niO4u::after{background:rgb(from var(--Nsm0ce) r g b/0.08)}.qVhvac[selected] .niO4u{background:var(--KIZPne);border-color:transparent}.qVhvac[selected]:active .niO4u::after{background:rgb(from var(--Nsm0ce) r g b/0.24)}.vVVcqf{container-name:rhs;container-type:inline-size;grid-column:span 7/-2}.vVVcqf{display:none}@media (min-width:800px){.vVVcqf{display:block}}body[data-sv-shown="1"] .TQc1id[data-csic="1"]{opacity:0;visibility:hidden;transition:opacity 150ms cubic-bezier(0.2,0,0,1),visibility 0s 150ms}#rhs{position:relative;padding-bottom:15px;}#rhs .VjDLd{border:1px solid #050607;padding-left:17px;padding-right:16px;position:relative;box-sizing:border-box}.s6JM6d .SwlyWb{display:none}#rhs .VjDLd{width:100%}.N4Xssf.vVVcqf,.TQc1id.N4Xssf{width:var(--rhs-width)}.k5T88b .nmrhhd{background:none !important;display:none !important}.N4Xssf .SwlyWb{background:none !important;display:none !important}.srp.DfE4Hf{--rhs-width:457px}.GLcBOb{color:var(--IXoxUe);font-size:14px;font-family:Google Sans,Arial,sans-serif,Noto Color Emoji;position:relative;}.dURPMd{margin-top:6px}.KpqFHb .dURPMd{display:grid;grid-template-columns:repeat(12,minmax(0,1fr))}@media (min-width:940px){.KpqFHb .dURPMd{grid-template-columns:repeat(16,minmax(0,1fr))}}.yhQgZb{grid-column:1/-1}.V9qXjb{grid-column:1/span 12}.Fgyi2e{flex:1;}.Fgyi2e:empty{min-height:54px;}.wZQcA{position:relative;height:0;z-index:1;top:42px;}.wZQcA .BO2cCe{border-bottom:1px solid var(--Aqn7xd);}.rZj61{margin-top:-12px;}.beZ0tf{display:flex}.BdqKIe .o0VWn{background-color:var(--xhUGwc)}.GG4mbd{padding-top:6px;max-width:861px;}.mjAqnb{margin-left:-12px;}.rQTE8b{display:flex;min-width:max-content;width:100%;justify-content:space-between;flex:1}.rQTE8b .R0DW9c{z-index:200}.O1uzAe{margin-left:-12px}.yeKjxb{display:flex;align-items:center;margin-right:8px}.mOKdDc{cursor:pointer}a.C6AK7c,a.C6AK7c:link,a.C6AK7c:visited,a.C6AK7c:hover,a.C6AK7c:active{-webkit-tap-highlight-color:transparent;text-decoration:none}a.C6AK7c.wbH0pd{-webkit-tap-highlight-color:rgba(255,255,255,.1)}.mXwfNd{display:flex;min-height:48px;padding:0 12px;align-items:end;}.R1QWuf{display:inline-block;white-space:nowrap;width:fit-content;font-family:var(--qR8X0);font-size:var(--hbmnje);line-height:var(--CbdmE);border-bottom:3px solid transparent;padding-bottom:8px}.R1QWuf,.M5dSnd{color:#80868b;font-weight:500;}.R1QWuf,.M5dSnd{color:#9c9ea6}[selected] .R1QWuf,[selected] .M5dSnd{border-bottom-color:var(--YLNNHc);}[selected] .R1QWuf,[selected] .M5dSnd,.mXwfNd:hover .R1QWuf,.mXwfNd:hover .M5dSnd,.rNHry:hover .R1QWuf,.mTpL7c:hover .R1QWuf,.mTpL7c:hover .M5dSnd,[aria-expanded="true"] .R1QWuf,[aria-expanded="true"] .M5dSnd{color:var(--YLNNHc);}.mVH5Fc{display:flex;align-items:center;padding-bottom:8px;border-bottom:3px solid transparent}.mVH5Fc .R1QWuf{padding-bottom:0;border-bottom:0}.rNHry .mXwfNd,.rNHry .R1QWuf{padding:0;border-bottom:0;min-height:auto}.FXBAof{padding-left:2px}[dir='ltr'],[dir='rtl']{unicode-bidi:-webkit-isolate;unicode-bidi:isolate}bdo[dir='ltr'],bdo[dir='rtl']{unicode-bidi:bidi-override;unicode-bidi:-webkit-isolate-override;unicode-bidi:isolate-override}.EE3Upf.lVm3ye.TElO2c.OSrXXb>a{font-size:18px !important}@-webkit-keyframes qs-timer {0%{}}html{scrollbar-gutter:stable}.YNk70c{display:grid;column-gap:20px}.YNk70c:not(.B2Ogle){min-width:684px}.YNk70c{grid-template-columns:minmax(0,1fr) repeat(12,36px) minmax(0,1fr)}@media (max-width:691px){.YNk70c.B2Ogle{grid-template-columns:0px repeat(12,minmax(10px,1fr)) 0px}}@media (min-width:800px){.YNk70c{grid-template-columns:minmax(0,1fr) repeat(14,36px) minmax(0,1fr)}}@media (min-width:940px){.YNk70c{grid-template-columns:minmax(0,1fr) repeat(16,36px) minmax(0,1fr)}}@media (min-width:1164px){.YNk70c{grid-template-columns:minmax(0,210px) repeat(20,36px) minmax(0,210px)}}@media (min-width:1560px){.YNk70c{grid-template-columns:minmax(0,210px) repeat(20,36px) minmax(0,1fr)}}.bzXtMb{grid-column:1/-1;max-width:100vw}.SLPe5b{grid-column:2/-2}.ufC5Cb{container-type:inline-size;grid-column:2/span 12}.KpqFHb .vVVcqf{grid-column:span 3/-2}@media (min-width:940px){.KpqFHb .ufC5Cb{grid-column:2/span 16}}.P3mIxe{grid-column:2/-1}.SxCvHe{grid-column:1}@media (max-width:799.98px){.cKhQJf .SxCvHe{background:var(--xhUGwc);box-shadow:10px 0 15px -15px rgba(23,23,23,0.6);margin-top:45px;top:72px;width:190px}.cKhQJf .SxCvHe .Pl4aJc{padding-right:20px}.cKhQJf .appbar{z-index:125}}@media (max-width:799.98px){.jBpNZc{width:0;overflow:hidden}}.OtcOmd .EjQTId{transition:grid-template-columns 250ms cubic-bezier(0,0,.1,1)}.OtcOmd .cKhQJf .EjQTId,.OtcOmd.cKhQJf .EjQTId{transition:grid-template-columns 300ms cubic-bezier(0,0,.1,1)}.OtcOmd .EjQTId .SxCvHe{transition:transform 250ms cubic-bezier(0,0,.1,1),opacity 250ms cubic-bezier(0,0,.1,1)}.OtcOmd .cKhQJf .EjQTId .SxCvHe,.OtcOmd.cKhQJf .EjQTId .SxCvHe{transition:transform 300ms cubic-bezier(0,0,.1,1),opacity 300ms cubic-bezier(0,0,.1,1)}.EjQTId .SxCvHe{transform:translate(0%);opacity:0;pointer-events:none}@media (min-width:1164px){.EjQTId .SxCvHe{transform:translate(-100%)}}.w3yrN.cKhQJf .SxCvHe{transform:translate(0%);opacity:1;pointer-events:auto}@media (min-width:800px){.cKhQJf .EjQTId.YNk70c{grid-template-columns:minmax(170px,170px) repeat(14,36px) minmax(0,1fr)}}@media (min-width:940px){.cKhQJf .EjQTId.YNk70c{grid-template-columns:minmax(170px,170px) repeat(16,36px) minmax(0,1fr)}}@media (min-width:1164px){.cKhQJf .EjQTId.YNk70c{grid-template-columns:minmax(170px,210px) repeat(20,36px) minmax(0,1fr)}}.srp:not(.w3yrN) .SxCvHe{display:none}@media (min-width:1300px){.w3yrN .EjQTId.YNk70c{grid-template-columns:minmax(170px,210px) repeat(20,36px) minmax(0,210px)}}@media (min-width:1560px){.cKhQJf .EjQTId.YNk70c{grid-template-columns:minmax(210px,210px) repeat(20,36px) minmax(0,1fr)}}.JpWqif .appbar .YNk70c,.JpWqif .GyAeWb.YNk70c,.JpWqif #bGmlqc .YNk70c,.JpWqif .M8OgIe .YNk70c,.JpWqif .CuvrIe{grid-template-columns:minmax(160px,1fr) repeat(12,36px) minmax(0,1fr)}@media (min-width:800px){.JpWqif .appbar .YNk70c,.JpWqif .GyAeWb.YNk70c,.JpWqif #bGmlqc .YNk70c,.JpWqif .M8OgIe .YNk70c,.JpWqif .CuvrIe{grid-template-columns:minmax(160px,1fr) repeat(14,36px) minmax(0,1fr)}}@media (min-width:940px){.JpWqif .appbar .YNk70c,.JpWqif .GyAeWb.YNk70c,.JpWqif #bGmlqc .YNk70c,.JpWqif .M8OgIe .YNk70c,.JpWqif .CuvrIe{grid-template-columns:minmax(160px,1fr) repeat(16,36px) minmax(0,1fr)}}@media (min-width:1164px){.JpWqif .appbar .YNk70c,.JpWqif .GyAeWb.YNk70c,.JpWqif #bGmlqc .YNk70c,.JpWqif .M8OgIe .YNk70c,.JpWqif .CuvrIe{grid-template-columns:minmax(160px,210px) repeat(20,36px) minmax(160px,210px)}}@media (min-width:1560px){.JpWqif .appbar .YNk70c,.JpWqif .GyAeWb.YNk70c,.JpWqif #bGmlqc .YNk70c,.JpWqif .M8OgIe .YNk70c,.JpWqif .CuvrIe{grid-template-columns:minmax(160px,210px) repeat(20,36px) minmax(0,1fr)}}.ufC5Cb{grid-column:2/span 8}.vVVcqf.vVVcqf{display:block;grid-column:10/-1}.GyAeWb{}.srp{--center-abs-margin:180px;--center-width:652px;--rhs-margin:76px;--rhs-width:372px;--lhs-refinements-width:0px;--lhs-margin:24px;--lhs-width:calc(var(--center-abs-margin) - var(--lhs-margin) - var(--center-margin));--center-margin:24px;position:relative;min-height:100vh;}@media (min-width:1475px) and (max-width:1675px){.srp{--center-abs-margin:calc(25vw + -188.75px)}}@media (min-width:1675px){.srp{--center-abs-margin:230px}}@media (min-width:1124px) and (max-width:1300px){.srp{--center-abs-margin:calc((100vw - 1068px)/2)}}@media (max-width:1124px){.srp{--center-abs-margin:28px}}.eqAnXb{font-size:medium;font-weight:normal;}.main{width:100%;}.s6JM6d{position:relative;flex:0 auto;}.e9EfHf{font-family:Arial,sans-serif,Noto Color Emoji;clear:both;margin-left:0;box-sizing:border-box;min-height:100vh;padding-top:8px;}.appbar{position:relative;-webkit-box-sizing:border-box;}</style> </head><body jsmodel="hspDDf JfINdf" class="srp" jscontroller="Eox39d" data-dt="1" marginheight="3" topmargin="3" jsaction="rcuQ6b:npT2md" id="gsr"><style>.wYq63b{display:flex;left:0;position:absolute;top:0;z-index:1001}.S6VXfe{align-items:center;background-color:var(--xhUGwc);border-radius:0 2px 2px 0;box-shadow:0 2px 2px 0 rgba(0,0,0,.16),0 0 0 1px rgba(0,0,0,.08);display:flex;margin:80px auto 8px 0;overflow:hidden}.gyPpGe,.gyPpGe:visited,.qlVNAd{border:2px solid rgba(255,255,255,.16);border-radius:2px;color:#c58af9;cursor:pointer;display:inline-block;font-size:var(--hbmnje);line-height:20px;margin:6px 11px;min-height:32px;text-decoration:underline;text-align:center;width:106px}.gyPpGe:not(:focus){clip:rect(1px,1px,1px,1px);overflow:hidden;position:absolute;padding:0}.xrOgrb{padding-top:16px}.CvDJxb{width:100%;z-index:128;position:relative;padding:10px 0;}#gb{min-width:unset;position:relative}.tsf{flex-grow:1;max-width:861px;}.NDnoQ{display:flex;justify-content:space-between;}.Q3DXx{display:flex}.Efnghe{padding-left:16px}.Q3DXx #gb,.Q3DXx #gb>div{float:none}.Efnghe{padding-top:2px}.CvDJxb iframe{color-scheme:light}.A8SBwf{--client-adapter-margin-base:var(--center-abs-margin);}.A8SBwf{position:relative;margin-top:0;margin-right:auto;margin-bottom:0;margin-left:auto}.SDkEP{flex:1;display:flex;padding:0 4px 0 0}.iblpc{display:flex;align-items:center;padding-right:6px;padding-left:14px;margin-top:-2px;margin-top:0;height:50px;}.A8SBwf,.IormK{box-sizing:border-box;width:100%;}.RNNXgb{display:flex;z-index:3;position:relative;min-height:50px;border:1px solid #4d5156;background:var(--aYn2S);box-shadow:none;border-radius:26px;margin:0 auto;box-sizing:border-box;width:100%;}@media (max-width:939.98px){html .A8SBwf{padding-left:0}}@media (min-width:940px) and (max-width:1460px){html .A8SBwf{margin-left:136px;width:calc(100% - 136px)}}@media (min-width:1461px){html .A8SBwf{margin-left:-20px}}.logo{position:absolute;top:6px;left:0;padding:4px 44px 0 24px;left:-160px;}@media (max-width:939.98px){.logo{visibility:hidden}.FgNLaf{display:block;width:36px;height:36px;align-self:center;padding-left:8px}@media (max-width:639.98px) and (min-width:499.98px){.aypyie .ywK6Rd,.aypyie .HZVG1b,.aypyie .BKRPef .ACRAdd{display:none}.aypyie .BKRPef{padding-right:0}}.minidiv .FgNLaf{height:32px;width:32px;padding-right:4px}.sbfc .FgNLaf,.emcav .FgNLaf,.BgPPrc .FgNLaf{display:none}.sbfc .SDkEP,.emcav .SDkEP,.BgPPrc .SDkEP{padding-left:14px}.SDkEP .iblpc{padding-left:3px;padding-right:0}.sbfc .iblpc,.emcav .iblpc,.BgPPrc .iblpc{padding-left:0}}.iblpc span{display:none}@media (min-width:1461px){.sbfc.A8SBwf,.emcav.A8SBwf,.BgPPrc.A8SBwf{width:calc(100% + 27px)}}@media (min-width:940px){.sbfc.A8SBwf,.emcav.A8SBwf,.BgPPrc.A8SBwf{transform:translateX(-27px)}}@media (min-width:940px) and (max-width:1460px){.sbfc.A8SBwf,.emcav.A8SBwf,.BgPPrc.A8SBwf{width:calc(100% - 109px)}}@media (min-width:0) and (max-width:1460px){.emcav.A8SBwf.pD4qTd{width:988px}}@media (min-width:1461px){.emcav.A8SBwf.pD4qTd{width:1148px}}#logo{overflow:hidden;position:relative;display:block}.hvhmMe{margin:auto}.Ty0Rrc{color:#9aa0a6}.gLFyf,.svBvU{font:16px Google Sans,Arial,sans-serif,Noto Color Emoji;line-height:40px;font-size:16px;flex:100%;line-height:39px}textarea.gLFyf,.svBvU{line-height:22px;border-bottom:8px solid transparent;padding-top:14px;overflow-x:hidden}textarea.gLFyf{white-space:nowrap;overflow:hidden}.gLFyf{resize:none;background-color:transparent;border:none;margin:0;padding:0 0 3px;color:var(--YLNNHc);word-wrap:break-word;outline:none;display:flex;-webkit-tap-highlight-color:transparent}.a4bIc{display:flex;flex-wrap:wrap;flex:1;}.svBvU{color:transparent;white-space:pre;position:absolute;pointer-events:none;scrollbar-width:none}.svBvU span{text-decoration:#f28b82 dotted underline}.gLFyf::placeholder{color:#a0a2ab;}.gLFyf.OVWmAd{display:block;position:absolute}.LNRLRe{white-space:nowrap;margin:20px;font-size:var(--Mhs7de);font-weight:bold;line-height:normal;color:#e8eaf2}.AeLhAe{font-weight:normal;border:1px solid #fff;border-radius:3px;padding:1px 3px 0 3px}.dRYYxd{display:flex;flex:0 0 auto;align-items:stretch;flex-direction:row;height:50px;color:var(--bbQxAb)}.ywK6Rd{background-color:inherit;display:flex;align-self:center}.ywK6Rd{height:100%}.BKRPef{background:transparent;align-items:center;flex:1 0 auto;flex-direction:row;display:flex;cursor:pointer;}.vOY7J{background:transparent;border:0;align-items:center;flex:1 0 auto;cursor:pointer;display:none;height:100%;line-height:44px;outline-offset:-2px;padding:0 12px;}.M2vV3{display:flex}.ExCKkf{height:100%;vertical-align:middle;outline:none;color:inherit}.BKRPef{padding-right:4px}.ACRAdd{border-left:1px solid #4d5156;height:65%;display:none}.ACRAdd.M2vV3{display:block}.fzj3ad{flex:1 0 auto;display:flex;cursor:pointer;align-items:center;border:0;background:transparent;padding:0 8px;width:24px;line-height:44px;}.ByCvB{height:24px;width:24px;vertical-align:middle}.etxtjc{flex:1 0 auto;display:flex;cursor:pointer;align-items:center;border:0;background:transparent;padding:0 8px;width:24px;line-height:44px;}.hWdRGb{height:24px;width:24px;vertical-align:middle}.Tg7LZd{height:50px;width:44px;background:transparent;border:none;cursor:pointer;flex:0 0 auto;padding:0 13px 0 0}html:not(.zAoYTe) .Tg7LZd:focus{outline:none}.DO7Hj{background:none;color:var(--bbQxAb);height:24px;width:24px;margin:auto}.UUbT9{position:absolute;text-align:left;z-index:989;cursor:default;-webkit-user-select:none;width:100%;margin-top:-1px;font-family:Google Sans,Arial,sans-serif,Noto Color Emoji;}.UUbT9 b{font-family:Google Sans,Arial,sans-serif,Noto Color Emoji;font-weight:700}.aajZCb{display:flex;flex-direction:column;margin:0;padding:0;overflow:hidden;box-sizing:border-box;background:var(--aYn2S);border-radius:0 0 26px 26px;box-shadow:0 4px 6px 0 #171717;border:1px solid #4d5156;border-top:0;padding-bottom:4px}.gDtRnb{display:flex;flex:1 1 auto;min-height:0;overflow-y:auto}.erkvQe{padding-bottom:16px;flex:auto;overflow-x:hidden}.RjPuVb{height:1px;margin:0 26px 0 0}.eemHY,.xtSCL,.lh87ke:link,.lh87ke:visited{flex-shrink:0}.xtSCL{border-top:1px solid #4d5156;margin:0 14px;padding-bottom:4px}.ky4hfd{display:none}.RK9gM{background-color:var(--TMYS9);color:var(--EpFNW);font-family:Google Sans,Roboto,Arial,sans-serif;padding:18px 60px 18px 12px;position:relative}@media (forced-colors:active){.RK9gM:not(.EXhexd){outline:1px solid ButtonBorder}.RK9gM.EXhexd .pbgWk{outline:1px solid ButtonBorder}}#shJ2Vb{display:none}.OBMEnb{padding:0;margin:0}.OBMEnb:not(:first-child){padding-top:8px}.G43f7e{display:flex;flex-direction:column;min-width:0;padding:0;margin:0;list-style:none}#ynRric{display:none}.ynRric{list-style-type:none;flex-direction:column;color:var(--IXoxUe);font-family:Google Sans,Arial,sans-serif,Noto Color Emoji;font-weight:500;font-size:var(--ZNg88);margin:0 20px 0 16px;padding:8px 0 8px 0;line-height:16px;width:100%}.ynRric{letter-spacing:0;text-transform:none}.sbct{display:flex;flex-direction:column;min-width:0;overflow:hidden;max-height:none;padding:0}.eIPGRd{flex:auto;display:flex;align-items:center;margin:0 20px 0 14px}.pcTkSc{display:flex;flex:auto;flex-direction:column;min-width:0;max-height:none;padding:6px 0}.sbic{display:flex;align-items:center;margin-right:14px}.ClJ9Yb{display:flex;align-items:center;line-height:16px;font-size:12px;color:#9aa0a6;margin-top:2px;padding-right:8px;min-width:0}.wM6W7d{display:flex;font-size:16px;color:#e8eaed;flex:auto;align-items:center;word-break:break-word;padding-right:8px}.wM6W7d span{flex:auto}.AQZ9Vd{display:flex;align-self:stretch}.zjKSsb{background:var(--TMYS9);border-radius:50%;margin-right:6px;width:6px;height:6px}@media (forced-colors:active){.ClJ9Yb .zjKSsb{background-color:CanvasText}}#YMXe{display:none}.x6vvNd{width:20px;height:20px;fill:#9aa0a6}@media (hover:hover){.sbai{visibility:hidden}.sbhl .sbai{visibility:inherit}}#d6ItKb{display:none}.AB2Fdd{display:flex}.ZDHp{position:relative;margin:20px;display:flex}.ZDHp .SHFPkb{margin-bottom:12px}.ZDHp .HrUlUc,.ZDHp .PnfqLc{font-size:18px;line-height:24px}.ZDHp .bTSf5c{line-height:var(--XWv1if);font-size:var(--Mhs7de);margin-bottom:6px}.ZDHp .HrUlUc,.ZDHp .PnfqLc{overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}.kZtr1b{display:flex;flex-direction:column;flex-grow:1;min-width:0}.XAFD5c{width:200px;height:200px;background-color:#2c2e35;border-radius:20px;margin-left:20px;flex-shrink:0;background-position:center;background-repeat:no-repeat;background-size:contain}.ZDHp .lnnVSe{font-size:18px;flex-grow:1}.ZDHp .HrUlUc,.ZDHp .PnfqLc{display:flex;flex-direction:column}.j0GJWd{margin-left:20px}.EOLKOc{width:calc(50% - 1px)}.iQxPRb{display:flex;gap:2px}.EOLKOc:first-child{border-bottom-left-radius:20px}.EOLKOc:last-child{border-bottom-right-radius:20px}.AZNDm{border-top-right-radius:20px;border-top-left-radius:20px}.MagqMc .ZFiwCf{background-color:#2c2e35;border:1px solid var(--gS5jXb);width:100%}.MagqMc.U48fD{padding:0;margin-top:16px}.MagqMc .Bi9oQd{display:none}.MagqMc{padding:0}.MagqMc:hover .LGwnxb{color:var(--YLNNHc)}.U48fD{display:block;padding:16px;padding-top:0;margin-top:16px;position:relative;-webkit-tap-highlight-color:transparent;cursor:pointer;line-height:18px;text-overflow:ellipsis;white-space:nowrap}.ZFiwCf{display:flex;align-items:center;justify-content:center;position:relative;z-index:0;margin:0 auto;width:100%;border-radius:18px;outline:1px solid transparent;color:var(--bcxd3b);background-color:var(--MV2sG);font-size:var(--hbmnje);font-family:var(--qR8X0);line-height:var(--CbdmE);font-weight:var(--Oycjt);max-width:372px;min-height:40px;border-radius:20px}@media (forced-colors:active){.ZFiwCf{border:1px solid transparent}}.ZFiwCf::after{position:absolute;top:0;left:0;width:100%;height:100%;border-radius:inherit;z-index:-1}.ZFiwCf:hover::after{content:'';background-color:rgb(from #e8eaf2 r g b/0.0824)}.ZFiwCf:active::after{content:'';background-color:rgb(from #e8eaf2 r g b/0.224)}.Bi9oQd{background-color:var(--gS5jXb);margin-top:18px;position:absolute;border:0;height:1px;left:0;width:100%;margin-top:20px}.w2fKdd.w2fKdd svg{width:auto}.w2fKdd{color:var(--amnPwe)}.LGwnxb{-webkit-line-clamp:1;word-break:break-all;width:auto;padding-left:0;padding-right:8px;max-width:calc(100% - 64px)}.LGwnxb:empty{padding-right:0}.LGwnxb span,.LGwnxb div{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;width:auto}#TN4rFf{display:none}.IDVnvc{display:inline-block;overflow:hidden;max-width:223px;border-radius:16px;height:178px;margin:-2px -10px 2px 10px}.OBMEnb:only-child .IDVnvc{margin-right:calc(25% - 113px)}.cRV9hb{width:90px;padding:6px}.cRV9hb .pcTkSc{font-family:Arial,sans-serif,Noto Color Emoji;overflow:hidden;margin-top:4px;padding:0}.cRV9hb .pcTkSc .wM6W7d{font-family:Google Sans,Arial,sans-serif,Noto Color Emoji;font-size:var(--Mhs7de);line-height:18px;padding:0;color:var(--YLNNHc)}.cRV9hb .pcTkSc .ClJ9Yb{line-height:16px;font-size:12px;font-family:var(--YfiKf);display:none;display:flex}.cRV9hb .pcTkSc .wM6W7d span,.cRV9hb .pcTkSc .ClJ9Yb span{overflow:hidden;text-overflow:ellipsis;-webkit-box-orient:vertical;display:-webkit-box;white-space:normal}.cRV9hb .pcTkSc .wM6W7d span{-webkit-line-clamp:2}.cRV9hb .pcTkSc .ClJ9Yb span{-webkit-line-clamp:2}.aVbWac{background:#fff;border-radius:12px;height:90px}@media (max-width:1300px){.A8SBwf:not(.pD4qTd) .IDVnvc{height:167px}.A8SBwf:not(.pD4qTd) .cRV9hb{width:79px}.A8SBwf:not(.pD4qTd) .aVbWac{height:79px}.A8SBwf:not(.pD4qTd) .aVbWac .sbic.vYOkbe{height:79px;width:79px}}.WzNHm{font-size:11px;line-height:12px;overflow:hidden;bottom:4px;margin-top:0;position:absolute;right:20px;color:var(--IXoxUe)}.c58wS{display:flex;position:relative;}.fLciMb{border-radius:50%;color:#e8eaed;cursor:pointer;height:24px;margin-top:4px;padding:8px;width:24px}.fLciMb:hover{background-color:#2c2e35;text-decoration:none}#gb{height:0;padding-left:16px;padding-right:16px;width:unset}</style><style>.gb_y{display:-webkit-box;display:-webkit-flex;display:flex;-webkit-box-pack:end;-webkit-justify-content:flex-end;justify-content:flex-end;width:100%}.gb_z{box-sizing:border-box;height:48px;padding:4px}.gb_A,.gb_B,.gb_C{-webkit-tap-highlight-color:rgba(0,0,0,0);-webkit-tap-highlight-color:transparent;box-sizing:border-box;float:right;outline:none}.gb_D{box-sizing:border-box;display:inline-block;height:48px;outline:none;padding:4px;position:relative}.gb_E{display:none}.gb_F{display:block}.gb_H,.gb_I,.gb_J{fill:currentColor;color:#444746;color:var(--og-svg-color,var(--gm3-sys-color-on-surface-variant,#444746))}.gb_K .gb_H,.gb_K .gb_I,.gb_K .gb_J{--gm3-sys-color-on-surface-variant:#c4c7c5;--gm3-sys-color-on-surface-variant-rgb:196,199,197;color:#c4c7c5;color:var(--og-svg-color,var(--gm3-sys-color-on-surface-variant,#444746))}.gb_L .gb_C,.gb_M .gb_C,.gb_N .gb_C{cursor:pointer;padding:8px}.gb_O,.gb_P{display:none}.gb_y a.gb_A{border-radius:100px;background:#0b57d0;background:var(--gm3-sys-color-primary,#0b57d0);box-sizing:border-box;color:#fff;color:var(--gm3-sys-color-on-primary,#fff);display:inline-block;font-size:14px;font-weight:500;min-height:40px;outline:none;padding:10px 12px;text-align:center;text-decoration:none;white-space:normal;line-height:18px;position:relative;font-family:Google Sans Text,Roboto,Helvetica,Arial,sans-serif;min-width:85px}.gb_A:after{content:"";inset:-4px 0;position:absolute}.gb_y.gb_K a.gb_A{--gm3-sys-color-on-secondary-fixed:#001d35;--gm3-sys-color-on-secondary-fixed-rgb:0,29,53;--gm3-sys-color-secondary-fixed:#c2e7ff;--gm3-sys-color-secondary-fixed-rgb:194,231,255;background:#c2e7ff;background:var(--gm3-sys-color-secondary-fixed,#c2e7ff);color:#001d35;color:var(--gm3-sys-color-on-secondary-fixed,#001d35)}.gb_4{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;max-height:40px;max-width:100%;overflow:hidden;overflow-wrap:break-word;pointer-events:none;word-break:break-word}.gb_V{fill:#1a73e8;margin:4px}.gb_K .gb_V{fill:#8ab4f8}@media (max-width:640px){.gb_y a.gb_A{min-width:75px}}.gb_X,.gb_Z{position:absolute}.gb_Z{right:0;top:0}.gb_X{right:-1px;top:-1px;width:42px}.gb_C{background-color:transparent;background-position:50%;background-repeat:no-repeat;border:0;display:inline-block;height:40px;padding:4px;position:relative;width:40px}.gb_0{border-radius:50%}.gb_1,.gb_C .gb_2.gb_3{display:none}.gb_2{display:none}.gb_Q,.gb_R{display:none}sentinel{}@font-face{font-family:'Noto Color Emoji';font-style:normal;font-weight:400;src:url(//fonts.gstatic.com/l/font?kit=Yq6P-KqIXTD0t4D9z1ESnKM3-HpFabt0B9NCbApLdGkN-Le66x_YHo73OOwmFCzY9mNlm3ynxmc5ecKzapk6YFmhb-TuLDM1aq7KSfUEVUf2yyX7PBEgby6zM1wsQcY-CtQtOu3qzRf9qffZVQyKGrgWVSCwciT4brzETceV3zs2F1Nr-hdHkg0__ioCtiwPMLviYsEzERVoFHRdaPiNu6PFGvGSsKtBFtRq6xI6v-vzk0MOspjLoL7CEr2jNtsX02fbFtmR8wLjtnJpSWIZRO_3Ajr-ieiGWOJCCd02qg2UeyUZCBcbJ3atTflBz3btlCMfn5eFxqmrJSw4fAWe4DrSY_XFX_gYOCG3sqgYQ5MeewrDZBJLF8jnl3rSC-nGR_OaXluRo7R0hQgj0pFi3G4KGT7IYwQ1ONpfwj5Hkh8Ax_-Ar4CKBzW-SvjLulACIn6KWXkiSwDcZ0ihf-8LX4yJFtI1Ieb_lK8DfYQrGEs8FQAy3svCyUa8K4Inwp8TEbo5TIP1RPScBMkPowWrS_9WDLBAnak9rLdzNX2A55kwtwexq7W3t3rklvh-XX2iJ_pps_gytkFsk2qWuK5Kd9IJWEkGQcdHdi9AdvP-bqMdr-aBUv0J1nkMKqpgLZ915D-0NkNDW15uvDV4lMrxv-32flNHI3CTDwthV3OTk3lqjnjpRALBlw&skey=a373f7129eaba270&v=v38)format('woff2');unicode-range:U+1f1e6-1f1ff,U+1f3f4,U+e0020-e007f;}body {--google-font-color-notocoloremoji:colrv1;}@font-face{font-family:'Google Sans';font-style:normal;font-weight:400 700;font-feature-settings:"calt" 0,"liga" 0;font-display:optional;src:url(//fonts.gstatic.com/s/googlesans/v29/4UaGrENHsxJlGDuGo1OIlL3Owp4.woff2)format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;}</style><script nonce="mlyUHrAL_7pdw8M3GTN-Iw">(function(){var w=["Google Sans",[400,500,700]];(function(){for(var a=0;a<w.length;a+=2)for(var b=w[a],e=w[a+1],d=0,c=void 0;c=e[d];++d)b==="Noto Color Emoji"?document.fonts.load(c+" 10pt "+b,"\ud83c\uddfa\ud83c\uddf8").catch(function(){}):document.fonts.load(c+" 10pt "+b).catch(function(){})})();})();(function(){setTimeout(function(){var a=document.querySelector(".medCX");a&&a.classList.remove("medCX")},1E4);}).call(this);</script><noscript><style>table,div,span,p{display:none}</style><meta content="0;url=/httpservice/retry/enablejs?sei=jpzYaqPyDYOQ4-EP2K6kuAg" http-equiv="refresh"><div style="display:block">Please click <a href="/httpservice/retry/enablejs?sei=jpzYaqPyDYOQ4-EP2K6kuAg">here</a> if you are not redirected within a few seconds.</div></noscript><div jscontroller="EufiNb" class="wYq63b" data-ved="0ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ7LoDCAQ"><div class="S6VXfe"><a jsname="BKxS1e" class="gyPpGe" role="link" tabindex="0" jsaction="i3viod;focus:a0Q7Qd" data-ved="0ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ67oDCAU">Skip to main content</a><a jsname="KI37ad" class="gyPpGe" href="[https://support.google.com/websearch/answer/181196?hl=en-IN](https://support.google.com/websearch/answer/181196?hl=en-IN)" jsaction="focus:a0Q7Qd" data-ved="0ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQwcMDCAY" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;url=https://support.google.com/websearch/answer/181196%3Fhl%3Den-IN&amp;ved=0ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQwcMDCAY&amp;opi=89978449">Accessibility help</a></div></div><div class="xrOgrb"></div><span jscontroller="Zby8rf" class="LoygGf" data-cls="VHFyob" data-h="70" data-mode="6" style="height:70px" jsaction="rcuQ6b:npT2md;MDuPYe:pcqARd"><div jsname="P9ya7d" class="Xx7Mif E5eFb" style="height:70px"><div class="CvDJxb YNk70c" id="searchform"><div class="NDnoQ P3mIxe"><form class="tsf" action="/search" id="tsf" autocomplete="off" data-submitfalse="q" method="GET" name="f" role="search"> <div jsmodel="b5W85 vNzKHd" jsdata="MuIEvd;_;jpzYaqPyDYOQ4-EP2K6kuAg1"> <div jscontroller="cnjECf" jsmodel="kjkykd EPRt9d LM7wx Qlyryb EtCx8b Ip3Erc L97mud zmptHf CoyuFb YHnUBc" class="A8SBwf aypyie" data-alt="true" data-biboe="false" data-blu="https://lens.google.com" data-expids="" data-hp="false" jsaction="lX6RWd:w3Wsmc;aaFXSd:k0wtTd;ocDSvd:duwfG;XmGRxb:mVw6nb;R6Slyc:F3goue;FU8dpd:VH3XBb;DkpM0b:d3sQLd;IQOavd:dFyQEf;XzZZPe:jI3wzf;Aghsf:AVsnlb;iHd9U:Q7Cnrc;f5hEHe:G0jgYd;vmxUb:j3bJnb;XBqW7:ihYaWc;UkQk6c:VSb4De;nTzfpf:YPRawb;CudXPd:iu9yrc;TsIFpc:aGAD7e;R2c5O:LuRugf;qiCkJd:ANdidc;Q3vWPd:FtWxqb;NOg9L:HLgh3;zLdLw:eaGBS;H9muVd:J4e6lb;S8pxKe:u3rcXd;hBEIVb:nUZ9le;acb7qb:H8sTz;by9jW:LGmyb;rcuQ6b:npT2md"><div class="logo"><a aria-label="Go to Google Home" href="[https://www.google.com/webhp?hl=en&amp;sa=X&amp;ved=0ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQPAgI](https://www.google.com/webhp?hl=en&sa=X&ved=0ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQPAgI)" title="Go to Google Home" id="logo" data-hveid="8"><svg aria-hidden="true" height="30" viewBox="0 0 92 30" width="92" xmlns="http://www.w3.org/2000/svg"><path fill="#e8eaf2" d="M83.4 23.08a7.4 7.4 0 0 0 6.34-3.52l-2.3-1.5a4.8 4.8 0 0 1-3.9 2.2 4.6 4.6 0 0 1-3.99-2.4l10.33-4.39a7 7 0 0 0-.28-1.07c-1.23-3.16-3.38-4.6-6.28-4.6-4.42 0-7.43 3.22-7.43 7.68 0 4.56 3.17 7.6 7.5 7.6m-4.51-7.61v-.17c0-2.93 1.68-4.9 4.32-4.9 1.26 0 2.39.57 3.15 1.9zM74.3 2.41h-3.08v20.23h3.08zM61.77 29.2q7.18 0 7.17-8.22V8.23h-2.93v1.8h-.06c-.92-1.43-2.66-2.23-4.62-2.23-4.24 0-6.82 3.23-6.82 7.54 0 4.3 2.51 7.46 6.93 7.46a5.5 5.5 0 0 0 4.47-2.26h.1v1.31c0 2.9-1.5 4.6-4.29 4.6-1.82 0-3.03-1-3.92-2.68l-2.66 1.17c1.4 2.96 3.4 4.26 6.63 4.26m0-9.2c-2.59 0-4.24-1.9-4.24-4.75 0-2.74 1.64-4.71 4.25-4.71s4.23 1.83 4.23 4.7c0 2.9-1.7 4.76-4.24 4.76m-16.01 3.1c4.44 0 7.6-3.24 7.6-7.72 0-4.4-3.12-7.67-7.6-7.67-4.24 0-7.57 3-7.57 7.67 0 4.45 3.15 7.73 7.57 7.73m0-2.68c-2.68 0-4.56-2.2-4.56-5.04s1.98-4.99 4.56-4.99c2.73 0 4.57 2.2 4.57 5 0 2.87-1.88 5.03-4.57 5.03M29.33 23.1c4.41 0 7.6-3.23 7.6-7.72 0-4.4-3.12-7.67-7.6-7.67-4.23 0-7.57 3-7.57 7.67 0 4.45 3.15 7.73 7.57 7.73m0-2.68c-2.68 0-4.56-2.2-4.56-5.04s1.98-4.99 4.56-4.99c2.73 0 4.57 2.2 4.57 5 0 2.87-1.88 5.03-4.57 5.03M10.35 23.1c5.89.06 9.9-3.9 9.9-9.98q0-.75-.14-1.7h-9.8v2.93h6.87c-.36 3.83-3.06 5.82-6.76 5.82-4.15 0-7.33-3.12-7.33-7.66 0-4.47 3.03-7.6 7.33-7.6 2.16 0 3.76.67 5.35 2.3l2.05-2.14c-1.8-2.1-4.4-3.1-7.44-3.1-5.9 0-10.49 4.43-10.49 10.5 0 5.8 4.43 10.58 10.46 10.64"></path></svg></a></div><div jsname="RNNXgb" class="RNNXgb" data-ved="0ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ3tUDCAk"><a class="FgNLaf" href="[https://www.google.com/webhp?hl=en&amp;ictx=0&amp;sa=X&amp;ved=0ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQpYkNCAo](https://www.google.com/webhp?hl=en&ictx=0&sa=X&ved=0ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQpYkNCAo)" id="_jpzYaqPyDYOQ4-EP2K6kuAg_1" data-hveid="10"></a><div class="SDkEP"><div jsname="uFMOof" class="iblpc"><div class="hvhmMe"><span class="Ty0Rrc z1asCe" style="height:20px;line-height:20px;width:20px"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M784-120L532-372q-30,24-69,38t-83,14q-109,0-184.5-75.5T120-580t75.5-184.5T380-840t184.5,75.5T640-580q0,44-14,83t-38,69L840-176l-56,56ZM380-400q75,0 127.5-52.5T560-580T507.5-707.5T380-760T252.5-707.5T200-580t52.5,127.5T380-400Z"></path></svg></span></div></div><div jscontroller="vZr2rb" jsname="gLFyf" class="a4bIc" data-mnr="4" jsaction="KjsqPd;input:Lg5SV;blur:fpfTEe;paste:V64iSc;mousedown:LhvU2e"><div jsname="vdLsw" class="svBvU"></div><div jsname="aJyGR" jscontroller="xMclgd" class="gLFyf OVWmAd" jsaction="rcuQ6b:npT2md"><g-snackbar jsname="nH91he" jscontroller="OZLguc" style="display:none" data-dismiss="" jsshadow=""><div jsname="sM5MNb" aria-live="polite" class="jhZvod"><div jsname="Ng57nc" class="Wu0v9b v0rrvd" data-ved="0ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ4G8ICw"><div class="b77HKf"><div jsname="bN97Pc" class="rIxsve" jsslot="" style="display:none"><span class="Txngnb wHYlTd yUTMj LNRLRe">Press <span class="AeLhAe">/</span> to jump to the search box</span></div></div></div></div></g-snackbar></div><textarea jsname="yZiJbe" class="gLFyf" aria-controls="Alh6id" aria-owns="Alh6id" maxlength="2048" aria-label="Search" placeholder="" aria-autocomplete="both" aria-expanded="false" aria-haspopup="false" autocapitalize="off" autocomplete="off" autocorrect="off" id="ti6dpd" name="q" role="combobox" rows="1" spellcheck="false" data-ved="0ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ39UDCAw">php based companies in ahmedabad</textarea></div><div class="dRYYxd"> <div jscontroller="PymCCe" jsname="RP0xob" class="BKRPef"> <div class="vOY7J M2vV3" jsname="pkjasb" aria-label="Clear" role="button" tabindex="0" jsaction="AVsnlb;rcuQ6b:npT2md" data-ved="0ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ05YFCA0"> <span jsname="itVqKe" class="ExCKkf z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M256-200l-56-56L424-480L200-704l56-56L480-536L704-760l56,56L536-480L760-256l-56,56L480-424L256-200Z"></path></svg></span> </div> <span jsname="s1VaRe" class="ACRAdd M2vV3"></span> </div> <div jsname="UdfVXc" class="ywK6Rd"><div jscontroller="unV4T" jsname="F7uqIe" class="fzj3ad" aria-label="Search by voice" role="button" tabindex="0" jsaction="h5M12e;rcuQ6b:npT2md;KHxBOb:EANhx;HINvVc:OUwavc;hATt5e:AkD3se;CQJmec:efDZmf" data-ved="0ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQvs8DCA4"><svg class="ByCvB" aria-hidden="true" focusable="false" viewbox="0 -960 960 960" xmlns="http://www.w3.org/2000/svg"><path d="M480-400q-50 0-85-35t-35-85v-240q0-50 35-85t85-35q50 0 85 35t35 85v240q0 50-35 85t-85 35Zm-40 280v-123q-104-14-172-93t-68-184h80q0 83 58.5 141.5T480-320q83 0 141.5-58.5T680-520h80q0 105-68 184t-172 93v123h-80Z" fill="currentColor"></path></svg></div><div jscontroller="lpsUAf" jsname="R5mgy" class="etxtjc" data-is-images-mode="false" aria-label="Search by image" role="button" tabindex="0" jsaction="rcuQ6b:npT2md;h5M12e;AMruCe:Zpug7c" data-ved="0ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQhqEICA8"><svg class="hWdRGb" aria-hidden="true" focusable="false" viewbox="0 -960 960 960" xmlns="http://www.w3.org/2000/svg"><path d="M480-320q-50 0-85-35t-35-85q0-50 35-85t85-35q50 0 85 35t35 85q0 50-35 85t-85 35Zm240 160q-33 0-56.5-23.5T640-240q0-33 23.5-56.5T720-320q33 0 56.5 23.5T800-240q0 33-23.5 56.5T720-160Zm-440 40q-66 0-113-47t-47-113v-80h80v80q0 33 23.5 56.5T280-200h200v80H280Zm480-320v-160q0-33-23.5-56.5T680-680H280q-33 0-56.5 23.5T200-600v120h-80v-120q0-66 47-113t113-47h80l40-80h160l40 80h80q66 0 113 47t47 113v160h-80Z" fill="currentColor"></path></svg></div></div></div></div><button class="HZVG1b Tg7LZd" jsaction="pointerdown:trigger.acb7qb" jsname="Tg7LZd" aria-label="Search" type="submit" data-ved="0ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ4dUDCBA"> <div class="DO7Hj"> <span class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M784-120L532-372q-30,24-69,38t-83,14q-109,0-184.5-75.5T120-580t75.5-184.5T380-840t184.5,75.5T640-580q0,44-14,83t-38,69L840-176l-56,56ZM380-400q75,0 127.5-52.5T560-580T507.5-707.5T380-760T252.5-707.5T200-580t52.5,127.5T380-400Z"></path></svg></span> </div> </button><div jsname="mvaK7d" class="M8H8pb" data-ved="0ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ4d8ICBE"></div></div><div jscontroller="Dvn7fe" jsname="UUbT9" class="UUbT9 EyBRub" style="display:none" jsaction="mouseout:ItzDCd;mouseleave:MWfikb;hBEIVb:nUZ9le;ldyIye:CmVOgc" data-ved="0ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ4tUDCBI"><div jscontroller="Wo3n8" jsname="aadvhe" jsmodel=" d5EhJe" data-bkt="searchbox" data-fhs="" data-maindata='[null,null,null,"autocomplete_user_feedback_kp_id",null,11,null,null,null,null,null,5010715,"searchbox",null,"AutocompletePrediction",null,null,null,null,11]' data-ofbl="114,120,134" data-pid="5010715" jsaction="kPzEO: MlP2je;qjLxRc: FbhRG;w8f1fc: hRwSgb;kq2wxf: s5CUif;aIJAdf: UhDUnd;rwuG3b: KGQHJd;BqbTbe: naa5ve;kYAKrf: CqUGrf;hwhRRe: KyxjCd;rcuQ6b: npT2md" jsdata="vST7rb;_;jpzYaqPyDYOQ4-EP2K6kuAg2 zEIyGd;_;"><div id="_jpzYaqPyDYOQ4-EP2K6kuAg_5"><div jsname="GkjeIf" id="_jpzYaqPyDYOQ4-EP2K6kuAg_7" data-jiis="up" data-async-type="kp_feedback" class="yp" data-ved="0ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ68cECBM"></div></div></div><div jscontroller="P10Owf" class="RK9gM ky4hfd" aria-label="Choose what you’re giving feedback on" jsdata="vST7rb;_;jpzYaqPyDYOQ4-EP2K6kuAg2" role="dialog" tabindex="-1" jsaction="kPzEO:MlP2je;qjLxRc:MlP2je;w8f1fc:hRwSgb;kq2wxf:s5CUif" data-ved="0ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQlokGCBQ"><div class="pbgWk" id="_jpzYaqPyDYOQ4-EP2K6kuAg_9"></div></div><div jsname="RjPuVb" class="RjPuVb"></div><div jsname="aajZCb" class="aajZCb"><div class="xtSCL"></div><div class="gDtRnb" id="Alh6id" role="presentation"><div jsname="erkvQe" class="erkvQe"></div><div jsname="tovEib" class="e1R9Ud" role="presentation"></div></div><div jsname="E80e9e" class="OBMEnb" id="shJ2Vb" role="presentation"><ul jsname="bw4e9b" class="G43f7e" role="listbox"></ul></div><div class="ynRric" id="ynRric" role="presentation"></div><li data-view-type="1" class="sbct PZPZlf" id="YMXe" role="presentation" data-attrid="AutocompletePrediction" data-entityid="autocomplete_user_feedback_kp_id"><div class="eIPGRd"><div class="sbic"><svg class="x6vvNd" aria-hidden="true" viewBox="0 -960 960 960"></svg></div><div class="pcTkSc"><div class="lnnVSe" aria-atomic="true" role="option"><div class="wM6W7d"><span></span></div><div class="ClJ9Yb"><div class="zjKSsb"></div><span class="dKU7sc"></span></div><div class="a5RLac"><span></span></div></div></div><div class="AQZ9Vd" aria-atomic="true" role="button"><div class="sbai" role="presentation">Delete</div></div></div></li><li class="AB2Fdd" data-view-type="9" id="d6ItKb" role="presentation"><div class="eIPGRd"><div class="ZDHp" style="display:none" role="presentation"><div class="kZtr1b"><div class="lnnVSe" aria-atomic="true" role="option"><div class="SHFPkb"></div><div class="bTSf5c"></div><div class="PnfqLc"></div><div class="HrUlUc"></div></div><div jsname="EFD5jf" class="MagqMc U48fD" style="display:none" aria-label="See more" role="button" tabindex="0"><hr class="Bi9oQd" aria-hidden="true"><div class="ZFiwCf"><span class="LGwnxb JGD2rd"><span>See more</span></span><span class="w2fKdd z1asCe" style="height:20px;line-height:20px;width:20px"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M504-480L320-664l56-56L616-480L376-240l-56-56L504-480Z"></path></svg></span></div></div></div><span class="XAFD5c" style="display:none"></span><div class="j0GJWd" style="display:none"><div><img class="uHGFVd AZNDm" alt="" style="display:none"></div><div class="iQxPRb"><img class="uHGFVd EOLKOc" alt="" style="display:none"><img class="uHGFVd EOLKOc" alt="" style="display:none"></div></div></div></div></li><li class="IDVnvc PZPZlf" data-view-type="6" id="TN4rFf" role="presentation" data-attrid="AutocompletePrediction" data-entityid="autocomplete_user_feedback_kp_id"><div class="cRV9hb"><div class="aVbWac"><div class="sbic"></div></div><div class="pcTkSc" role="presentation"><div class="lnnVSe" aria-atomic="true" role="option"><div class="wM6W7d"><span></span></div><div class="ClJ9Yb"><span class="dKU7sc"></span></div></div></div></div></li></div><div jsname="JUypV"><div class="WzNHm mWcf0e" jscontroller="gSZvdb" data-dccl="false" role="button" tabindex="0" jsaction="i5KCU" jsdata="vST7rb;_;jpzYaqPyDYOQ4-EP2K6kuAg2" data-ved="0ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ6scECBc"><div class="VfL2Y LRZwuc">Report inappropriate predictions</div></div></div></div></div> <script nonce="mlyUHrAL_7pdw8M3GTN-Iw">(function(){
-var a=this||self;var c=document.querySelector("form");if(c){var d=function(b){b.key!=="Enter"||b.shiftKey||(b.preventDefault(),c.submit&&c.submit())};c.addEventListener("keydown",d);a.sbmlhf=d};}).call(this);</script> </div> <div id="tophf" data-st-u="tophf"><input name="sca_esv" value="7e69963a3bb46de9" type="hidden"><input name="udm" value="local" type="hidden"><input name="biw" value="1526" type="hidden"><input name="bih" value="839" type="hidden"><input name="sxsrf" value="APpeQnvUJ1-btSeGe6n8-VVdiwsHHbMeSw:1792580750235" type="hidden"><input value="jpzYaqPyDYOQ4-EP2K6kuAg" name="ei" type="hidden"></div></form><div class="Q3DXx Efnghe"><div class="c58wS"><div jscontroller="w4UyN" class="fLciMb" data-oam="" id="og-te" aria-label="Settings" role="button" tabindex="0" jsaction="rcuQ6b:npT2md;noGWuc;mouseenter:eGiyHb;focus:eGiyHb;focusin:eGiyHb;mouseleave:LfDNce;focusout:LfDNce" data-ved="0ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ6psICBg"><div data-noaftde="" id="_jpzYaqPyDYOQ4-EP2K6kuAg_11"></div></div></div><span class="gb" style="display:none"></span><div jscontroller="SJpD2c" jsname="uZkjhb" data-cca="" data-so="" jsaction="rcuQ6b:npT2md;YQNWc:MMAZpe;zWO23b:FPeyVe" data-ved="0ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQnJQPCBk"><header class="gb_y gb_K gb_Pd" id="gb" role="none"><div class="gb_L gb_Hd gb_aa" data-ogsr-fb="true" data-ogsr-alt="" id="gbwa"><div class="gb_D"><a class="gb_C" aria-label="Google apps" href="[https://www.google.co.in/intl/en/about/products?tab=wh](https://www.google.co.in/intl/en/about/products?tab=wh)" aria-expanded="false" role="button" tabindex="0"><svg class="gb_H" aria-hidden="true" focusable="false" viewbox="0 0 24 24"><path d="M6,8c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2zM12,20c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2zM6,20c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2zM6,14c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2zM12,14c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2zM16,6c0,1.1 0.9,2 2,2s2,-0.9 2,-2 -0.9,-2 -2,-2 -2,0.9 -2,2zM12,8c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2zM18,14c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2zM18,20c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2z"></path><image src="[https://ssl.gstatic.com/gb/images/bar/al-icon.png](https://ssl.gstatic.com/gb/images/bar/al-icon.png)" alt="" height="24" width="24" style="border:none;display:none \9"></image></svg></a></div></div><div class="gb_z" data-ogsr-up=""><a class="gb_A" aria-label="Sign in" href="[https://accounts.google.com/ServiceLogin?hl=en&amp;passive=true&amp;continue=https://www.google.com/search%3Fq%3Dphp%2Bbased%2Bcompanies%2Bin%2Bahmedabad%26sca_esv%3D7e69963a3bb46de9%26udm%3Dlocal%26biw%3D1526%26bih%3D839%26sxsrf%3DAPpeQnvLVpR5djVYAHyn85hvsbMwqCE7zA%253A1792580493455%26ei%3DjZvYavexG6-XseMPuNqnoQY%26ved%3D0ahUKEwi3rKzc-sqXAxWvS2wGHTjtKWQ4FBDh1QMIEA%26uact%3D5%26oq%3Dphp%2Bbased%2Bcompanies%2Bin%2Bahmedabad%26gs_lp%3DEhZnd3Mtd2l6LW1vZGVsZXNzLWxvY2FsIiBwaHAgYmFzZWQgY29tcGFuaWVzIGluIGFobWVkYWJhZDIGEAAYFhgeMgUQABjvBTIFEAAY7wUyBRAAGO8FSNYXUL0IWJsWcAF4AJABAJgBxAKgAdwRqgEHMC4yLjUuMrgBA8gBAPgBAZgCCqACgxLCAgUQIRigAcICBRAhGJ8FmAMAiAYBkgcHMS4yLjUuMqAH8R-yBwcwLjIuNS4yuAeAEsIHBTAuOS4xyAcVgAgB%26sclient%3Dgws-wiz-modeless-local&amp;ec=futura_srp_og_si_72236_p](https://accounts.google.com/ServiceLogin?hl=en&passive=true&continue=https://www.google.com/search%3Fq%3Dphp%2Bbased%2Bcompanies%2Bin%2Bahmedabad%26sca_esv%3D7e69963a3bb46de9%26udm%3Dlocal%26biw%3D1526%26bih%3D839%26sxsrf%3DAPpeQnvLVpR5djVYAHyn85hvsbMwqCE7zA%253A1792580493455%26ei%3DjZvYavexG6-XseMPuNqnoQY%26ved%3D0ahUKEwi3rKzc-sqXAxWvS2wGHTjtKWQ4FBDh1QMIEA%26uact%3D5%26oq%3Dphp%2Bbased%2Bcompanies%2Bin%2Bahmedabad%26gs_lp%3DEhZnd3Mtd2l6LW1vZGVsZXNzLWxvY2FsIiBwaHAgYmFzZWQgY29tcGFuaWVzIGluIGFobWVkYWJhZDIGEAAYFhgeMgUQABjvBTIFEAAY7wUyBRAAGO8FSNYXUL0IWJsWcAF4AJABAJgBxAKgAdwRqgEHMC4yLjUuMrgBA8gBAPgBAZgCCqACgxLCAgUQIRigAcICBRAhGJ8FmAMAiAYBkgcHMS4yLjUuMqAH8R-yBwcwLjIuNS4yuAeAEsIHBTAuOS4xyAcVgAgB%26sclient%3Dgws-wiz-modeless-local&ec=futura_srp_og_si_72236_p)" target="_top"><span class="gb_4">Sign in</span></a></div></header><div jsname="nSxrjf" style="display:none" data-ved="0ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQtsANCBo"></div><div jsname="NG1V7d" style="display:none" data-ved="0ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ8JsICBs"></div><div jsname="IZKNDc" style="display:none" data-ved="0ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ8ZsICBw"></div><div jsname="tP7ayb" style="display:none" data-ved="0ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ65sICB0"></div><div jsname="uO6mde" style="display:none" data-ved="0ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ8psICB4"></div></div></div></div></div></div></span><span class="kp-collapsed-osrp kpshf line gsr" style="display:none"></span><div jsmodel="" class="main" id="main"><div jsmodel="QPRQHf ROaKxe" class="e9EfHf" id="cnt"><div id="sfcnt"></div><div class="Fgyi2e wZQcA"><span jscontroller="uUzMF" jsaction="rcuQ6b:npT2md" data-c="3"><div jsname="KbJTVc" class="zLSRge" style="z-index:999"></div></span></div><div id="ZnpjSd"></div><style>:root{--COEmY:var(--YLNNHc);--xhUGwc:#22242a}:root{--vZe0jb:#515a7b;--nwXobb:var(--vZe0jb);--VuZXBd:#eef0ff;--uLz37c:#c3c6d6;--jINu6c:#eef0ff;--TyVYld:#8ab4f8;--ZEpPmd:#515a7b;--QWaaaf:var(--ZEpPmd);--DEeStf:#242832;--TSWZIb:#2c303d;--BRLwE:#3a3f50;--gS5jXb:#42444d;--Aqn7xd:#5a5c66;--EpFNW:#1f1f1f;--Xqboce:#fff;--IXoxUe:#a7a9b2;--bbQxAb:#ced0d9;--YLNNHc:#e8eaf2;--TMYS9:#a8c7fa;--JKqx2:#99c3ff;--rrJJUc:#a8c7fa;--mXZkqc:#42444d;--JclFj:#5a5c66;--Nsm0ce:#a8c7fa;--vdwxpe:#0b57d0;--ywz01c:#fdd663;--XKMDxc:#2c2e35;--aYn2S:#363840;--Lm570b:#42444d}:root{--amnPwe:#a7a9b2;--ZXiaGf:#202124;--EoKObe:#fff;--cIehld:var(--xhUGwc);--ONhrGd:#42444d;--gVUKcd:rgba(0,0,0,0.6);--jwFC2e:#203da0;--yTtsEf:#c4eed0}.Xx7Mif{contain:style;position:relative}.E5eFb{width:100%;contain:size style}.LoygGf{width:100%;display:block}.CTOaxb{position:fixed;top:0;left:0;contain:size layout style}.OMqmfd{position:sticky;top:0}.zLSRge{border-bottom:1px solid var(--gS5jXb)}.AX1Qf{position:absolute;left:50vw;width:1px;height:2px;visibility:hidden;pointer-events:none}.oDzakc{display:inline-block;float:left}.wXpfVb{position:relative;top:-1px;width:100%;height:0}:root{--nkmQOe:Arial,sans-serif,Noto Color Emoji;--a9X0Jc:24px;--z3BFIe:16px;--XWliwc:400;--LI4Bo:Arial,sans-serif,Noto Color Emoji;--XWv1if:22px;--Mhs7de:14px;--ofwUBc:400;--YfiKf:Arial,sans-serif,Noto Color Emoji;--punZlc:16px;--gOs6Bf:12px;--MzKBpd:400;--IT7y3c:Google Sans,Arial,sans-serif,Noto Color Emoji;--hPDMFf:36px;--Ia70Xd:28px;--Vyi8yc:400;--Aoh9Xe:Google Sans,Arial,sans-serif,Noto Color Emoji;--qYGXw:28px;--qpdFp:20px;--JT4IPc:400;--rTk0E:Google Sans,Arial,sans-serif,Noto Color Emoji;--Ok3irf:24px;--uBdgTe:18px;--Zf9Xnd:400;--qR8X0:Google Sans,Arial,sans-serif,Noto Color Emoji;--CbdmE:20px;--hbmnje:14px;--Oycjt:500;--qBwyqb:Arial,sans-serif,Noto Color Emoji;--nUOqEc:16px;--cMTvjf:12px;--CUS15e:500;--Eou8Yc:Google Sans,Arial,sans-serif,Noto Color Emoji;--qWZYEc:26px;--GiToJf:20px;--p2Lqxe:400;--ztTqPe:Google Sans,Arial,sans-serif,Noto Color Emoji;--C74x2e:24px;--gyu5L:16px;--Yoa6qd:400;--lI1Trc:Arial,sans-serif,Noto Color Emoji;--HIyEKc:18px;--ZNg88:14px;--qjVU3d:400}.mWcf0e{cursor:pointer}@media (forced-colors:active){.CNbPnc{background-color:ButtonFace;border:1px solid transparent;border-color:ButtonBorder;color:ButtonText}}.VfL2Y{position:relative;margin:-4px 0;padding:4px 0}.YQpX9d{cursor:pointer;position:relative;margin:0;padding:4px 0}.LRZwuc{display:inline-block}.BJ1Ird .LRZwuc{display:block}.nKHyTc{color:var(--IXoxUe);float:right;font-size:var(--gOs6Bf);line-height:var(--punZlc);padding-bottom:4px}.eDGqNd{color:var(--IXoxUe);float:right;font-size:var(--gOs6Bf);line-height:var(--punZlc)}.BJ1Ird,.k62gjb .W7GCoc:hover,.k62gjb:hover{text-decoration:underline}.JGD2rd{display:-webkit-box;overflow:hidden;text-overflow:ellipsis;white-space:normal!important;-webkit-box-orient:vertical}@media (max-width:360px){.JGD2rd{word-break:break-word!important;-webkit-line-clamp:3!important}}.v0rrvd{padding-bottom:16px}.jhZvod{bottom:0;height:0;position:fixed;z-index:999;left:16px;right:auto}.Wu0v9b{box-sizing:border-box;visibility:hidden;position:relative}@media (min-width:569px) and (min-height:569px){.jhZvod{text-align:center}.Wu0v9b{display:inline-block;max-width:568px;min-width:288px;text-align:left}}.zJUuqf{margin-bottom:4px}.AB4Wff{margin-left:16px}@keyframes g-snackbar-show{0%{pointer-events:none;transform:translateY(0)}to{transform:translateY(-100%)}}@keyframes g-snackbar-hide{0%{transform:translateY(-100%)}to{transform:translateY(0)}}@keyframes g-snackbar-show-content{0%{opacity:0}}@keyframes g-snackbar-hide-content{to{opacity:0}}.LH3wG{bottom:0;height:0;position:fixed;z-index:999}.yK6jqe{box-sizing:border-box;visibility:hidden}.rTYTNb{animation:g-snackbar-hide .4s cubic-bezier(0.4,0,0.2,1) both;visibility:inherit}.UewPMd.UewPMd{animation:g-snackbar-show .5s cubic-bezier(0.4,0,0.2,1) both;visibility:inherit}.b77HKf{background-color:#3c4043;padding:0 24px}@media (forced-colors:active){.b77HKf{border:1px solid CanvasText}}.rIxsve{align-items:center;display:flex}.UewPMd .rIxsve{animation:g-snackbar-show-content .35s cubic-bezier(0.4,0,0.2,1) .15s both}.Txngnb.Txngnb{line-height:20px}.Txngnb{color:#e8eaf2;flex:1 1 auto;margin:14px 0;word-break:break-word}@media (min-width:569px) and (min-height:569px){.LH3wG{text-align:center}.yK6jqe{display:inline-block;max-width:568px;min-width:288px;text-align:left}.b77HKf{border-radius:8px}}.LH3wG{left:0;right:0}.yK6jqe{position:relative}.mqsAne{margin-bottom:env(safe-area-inset-bottom)}html:active-view-transition-type(sb) .RNNXgb{view-transition-name:sb}.M8H8pb{position:absolute;top:0;left:0;right:0;padding:inherit}.M8H8pb{width:100%}.A8SBwf.BgPPrc .XWrYL{display:block;margin-right:8px}.yUTMj{font-family:Arial,sans-serif,Noto Color Emoji;font-weight:400}.wHYlTd{font-family:var(--LI4Bo);font-size:var(--Mhs7de);line-height:var(--XWv1if)}.DpgmK,.Enb9pe,.FAoEle,.LwDUdc,.MTIaKb,.RlTCPd,.RoOVmf,.V3Ezn,.Vnob4b,.YKUhfb,.aVsZpf,.bbxTBb,.caNvfd,.dIfvQd,.iQMtqe,.kJSB8,.mYuoaf,.tUr4Kc,.uNnvb,.wPNfjb{--Yi4Nb:var(--mXZkqc);--pEa0Bc:var(--bbQxAb);--kloG3:var(--mXZkqc);--YaIeMb:var(--XKMDxc);--Pa8Wlb:var(--Nsm0ce);--izGsqb:var(--Nsm0ce);--d5F9Lb:var(--EpFNW);--todMNc:var(--EpFNW);--p9J9c:var(--Nsm0ce)}:root{--KIZPne:#34517d;--xPpiM:#eef0ff;--Ehh4mf:var(--Nsm0ce)}:root{--pEa0Bc:#bfbfbf;--Pa8Wlb:#336ef3;--YaIeMb:#28292a;--Yi4Nb:#444746;--ngPXTb:var(--rrJJUc);--hwEqod:var(--jINu6c);--kloG3:#444746;--lv6yU:#a8c7fa;--Wmwad:#b1c5ff;--vWq1if:var(--jINu6c);--Ijc2tf:#2c303d;--VeLyLc:#eef0ff;--fuvksc:#a8c7fa;--gJjJk:#b1c5ff;--LMFHUd:var(--jINu6c);--Zia6nf:var(--BRLwE);--y01ou:#eef0ff;--p9J9c:#a8c7fa;--MoaHse:#b1c5ff;--CRMNZd:var(--jINu6c);--izGsqb:#336ef3;--d5F9Lb:#ffffff;--todMNc:#ffffff;--NoaQW:#090f28;--qdHZF:rgba(0,0,0,.6);--V9ysqf:#fff;--PBxOKe:#22242a;--MV2sG:var(--XKMDxc);--bcxd3b:var(--YLNNHc);--D9aNi:rgba(232,232,232,0.08)}</style><script nonce="mlyUHrAL_7pdw8M3GTN-Iw">(function(){google.tick("load","sct",void 0,"SearchBodyStart");}).call(this);</script><style>.FJCJfd{border:none;box-shadow:0px 1px 3px rgba(95,99,104,0.64)}.XVMlrc{text-decoration:none;cursor:pointer}.XVMlrc:hover{text-decoration:none}.olrp5b{display:flex}.mTpL7c{display:inline-block}.mTpL7c:not([disabled]){cursor:pointer}.R0DW9c:not(.vpR9sb){display:none}.R0DW9c{position:relative}.vH6rvf{padding:8px 0;z-index:100;opacity:0;top:0;position:absolute;background:var(--aYn2S);border-radius:8px;overflow:hidden}@media (forced-colors:active){.vH6rvf{outline:1px solid}}.bsmXxe{display:contents}.LJefwf{display:none}</style><div class="Fgyi2e rZj61" data-st-cnt="fb"><div data-st-tgt="fb" data-hveid="CBIQAA" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ96AJegQIEhAA"><div class="YNk70c"><div class="GG4mbd P3mIxe" jscontroller="O63OXd" role="navigation" tabindex="-1" jsaction="rcuQ6b:npT2md;YcfJ:rWvwbc;"><div class="rQTE8b" data-hveid="CBIQAQ" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQjMEKegQIEhAB"><div class="beZ0tf O1uzAe" role="list"><div jsname="xBNgKe" role="listitem" data-hveid="CBIQAg" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQtoAJKAB6BAgSEAI"><div><div class="olrp5b" data-fbs="ABfTbFVyMZGZf1hfvX9uKjN_-G8cn05EoNqnRUpRtqDK_L3JtTXKTzUG4jnwGMDgCQgjtI7w-shaL8a7GoBTWkGqEZw3vgCV-YCHddODkgrurr9Y-JCOYbmjDvp8VJThlTYIItLUuot_-Wn95hcwoixnrebQ0N5yYbznQrFNWFtPaZY5WN0SZCRx5DwUJ0p8t4m0tYVITextFopM2MGmttCLnI9S21T84A"><a class="XVMlrc C6AK7c" data-mstk-u="" data-vt-mb="" href="[/search?q=php+based+companies+in+ahmedabad&amp;sca_esv=7e69963a3bb46de9&amp;biw=1526&amp;bih=839&amp;sxsrf=APpeQnvUJ1-btSeGe6n8-VVdiwsHHbMeSw:1792580750235&amp;udm=50&amp;fbs=ABfTbFVyMZGZf1hfvX9uKjN_-G8cn05EoNqnRUpRtqDK_L3JtTXKTzUG4jnwGMDgCQgjtI7w-shaL8a7GoBTWkGqEZw3vgCV-YCHddODkgrurr9Y-JCOYbmjDvp8VJThlTYIItLUuot_-Wn95hcwoixnrebQ0N5yYbznQrFNWFtPaZY5WN0SZCRx5DwUJ0p8t4m0tYVITextFopM2MGmttCLnI9S21T84A&amp;vsint=&amp;aep=1&amp;ntc=1&amp;cs=1&amp;sa=X&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ2J8OegQIEhAD](https://www.google.com/search?q=php+based+companies+in+ahmedabad&sca_esv=7e69963a3bb46de9&biw=1526&bih=839&sxsrf=APpeQnvUJ1-btSeGe6n8-VVdiwsHHbMeSw:1792580750235&udm=50&fbs=ABfTbFVyMZGZf1hfvX9uKjN_-G8cn05EoNqnRUpRtqDK_L3JtTXKTzUG4jnwGMDgCQgjtI7w-shaL8a7GoBTWkGqEZw3vgCV-YCHddODkgrurr9Y-JCOYbmjDvp8VJThlTYIItLUuot_-Wn95hcwoixnrebQ0N5yYbznQrFNWFtPaZY5WN0SZCRx5DwUJ0p8t4m0tYVITextFopM2MGmttCLnI9S21T84A&vsint=&aep=1&ntc=1&cs=1&sa=X&ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ2J8OegQIEhAD)" tabindex="0" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ2J8OegQIEhAD"><div class="mXwfNd"><div class="mVH5Fc"><span class="R1QWuf"><span jsname="KliEFc">AI Mode</span></span></div></div></a></div></div></div><div role="listitem" data-hveid="CBgQAA" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQtoAJKAB6BAgYEAA"><a jsname="pxBnId" class="C6AK7c" href="[/search?sca_esv=7e69963a3bb46de9&amp;biw=1526&amp;bih=839&amp;sxsrf=APpeQnvUJ1-btSeGe6n8-VVdiwsHHbMeSw:1792580750235&amp;q=php+based+companies+in+ahmedabad&amp;source=lnms&amp;fbs=ABfTbFVyMZGZf1hfvX9uKjN_-G8cn05EoNqnRUpRtqDK_L3JtTXKTzUG4jnwGMDgCQgjtI7w-shaL8a7GoBTWkGqEZw3vgCV-YCHddODkgrurr9Y-JCOYbmjDvp8VJThlTYIItLUuot_-Wn95hcwoixnrebQ0N5yYbznQrFNWFtPaZY5WN0SZCRx5DwUJ0p8t4m0tYVITextFopM2MGmttCLnI9S21T84A&amp;sa=X&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ0pQJegQIGBAB](https://www.google.com/search?sca_esv=7e69963a3bb46de9&biw=1526&bih=839&sxsrf=APpeQnvUJ1-btSeGe6n8-VVdiwsHHbMeSw:1792580750235&q=php+based+companies+in+ahmedabad&source=lnms&fbs=ABfTbFVyMZGZf1hfvX9uKjN_-G8cn05EoNqnRUpRtqDK_L3JtTXKTzUG4jnwGMDgCQgjtI7w-shaL8a7GoBTWkGqEZw3vgCV-YCHddODkgrurr9Y-JCOYbmjDvp8VJThlTYIItLUuot_-Wn95hcwoixnrebQ0N5yYbznQrFNWFtPaZY5WN0SZCRx5DwUJ0p8t4m0tYVITextFopM2MGmttCLnI9S21T84A&sa=X&ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ0pQJegQIGBAB)" jsaction="" data-hveid="CBgQAQ" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ0pQJegQIGBAB"><div jsname="xBNgKe" class="mXwfNd"><span class="R1QWuf">All</span></div></a></div><div role="listitem" data-hveid="CBwQAA" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQtoAJKAB6BAgcEAA"><a jsname="pxBnId" class="C6AK7c" href="[/search?sca_esv=7e69963a3bb46de9&amp;biw=1526&amp;bih=839&amp;sxsrf=APpeQnvUJ1-btSeGe6n8-VVdiwsHHbMeSw:1792580750235&amp;udm=forums&amp;fbs=ABfTbFVyMZGZf1hfvX9uKjN_-G8cn05EoNqnRUpRtqDK_L3JtTXKTzUG4jnwGMDgCQgjtI7w-shaL8a7GoBTWkGqEZw3vgCV-YCHddODkgrurr9Y-JCOYbmjDvp8VJThlTYIItLUuot_-Wn95hcwoixnrebQ0N5yYbznQrFNWFtPaZY5WN0SZCRx5DwUJ0p8t4m0tYVITextFopM2MGmttCLnI9S21T84A&amp;q=php+based+companies+in+ahmedabad&amp;sa=X&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQs6gLegQIHBAB](https://www.google.com/search?sca_esv=7e69963a3bb46de9&biw=1526&bih=839&sxsrf=APpeQnvUJ1-btSeGe6n8-VVdiwsHHbMeSw:1792580750235&udm=forums&fbs=ABfTbFVyMZGZf1hfvX9uKjN_-G8cn05EoNqnRUpRtqDK_L3JtTXKTzUG4jnwGMDgCQgjtI7w-shaL8a7GoBTWkGqEZw3vgCV-YCHddODkgrurr9Y-JCOYbmjDvp8VJThlTYIItLUuot_-Wn95hcwoixnrebQ0N5yYbznQrFNWFtPaZY5WN0SZCRx5DwUJ0p8t4m0tYVITextFopM2MGmttCLnI9S21T84A&q=php+based+companies+in+ahmedabad&sa=X&ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQs6gLegQIHBAB)" jsaction="" data-hveid="CBwQAQ" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQs6gLegQIHBAB"><div jsname="xBNgKe" class="mXwfNd"><span class="R1QWuf">Forums</span></div></a></div><div role="listitem" data-hveid="CB0QAA" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQtoAJegQIHRAA"><a class="C6AK7c" aria-disabled="true" role="link" tabindex="0" data-hveid="CB0QAQ" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ850MegQIHRAB"><div jsname="xBNgKe" aria-current="page" selected="" class="mXwfNd"><span class="R1QWuf">Places</span></div></a></div><div role="listitem" data-hveid="CBoQAA" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQtoAJKAB6BAgaEAA"><a jsname="pxBnId" class="C6AK7c" href="[/search?sca_esv=7e69963a3bb46de9&amp;biw=1526&amp;bih=839&amp;sxsrf=APpeQnvUJ1-btSeGe6n8-VVdiwsHHbMeSw:1792580750235&amp;udm=39&amp;fbs=ABfTbFVyMZGZf1hfvX9uKjN_-G8cn05EoNqnRUpRtqDK_L3JtTXKTzUG4jnwGMDgCQgjtI7w-shaL8a7GoBTWkGqEZw3vgCV-YCHddODkgrurr9Y-JCOYbmjDvp8VJThlTYIItLUuot_-Wn95hcwoixnrebQ0N5yYbznQrFNWFtPaZY5WN0SZCRx5DwUJ0p8t4m0tYVITextFopM2MGmttCLnI9S21T84A&amp;q=php+based+companies+in+ahmedabad&amp;sa=X&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQs6gLegQIGhAB](https://www.google.com/search?sca_esv=7e69963a3bb46de9&biw=1526&bih=839&sxsrf=APpeQnvUJ1-btSeGe6n8-VVdiwsHHbMeSw:1792580750235&udm=39&fbs=ABfTbFVyMZGZf1hfvX9uKjN_-G8cn05EoNqnRUpRtqDK_L3JtTXKTzUG4jnwGMDgCQgjtI7w-shaL8a7GoBTWkGqEZw3vgCV-YCHddODkgrurr9Y-JCOYbmjDvp8VJThlTYIItLUuot_-Wn95hcwoixnrebQ0N5yYbznQrFNWFtPaZY5WN0SZCRx5DwUJ0p8t4m0tYVITextFopM2MGmttCLnI9S21T84A&q=php+based+companies+in+ahmedabad&sa=X&ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQs6gLegQIGhAB)" jsaction="" data-hveid="CBoQAQ" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQs6gLegQIGhAB"><div jsname="xBNgKe" class="mXwfNd"><span class="R1QWuf">Short videos</span></div></a></div><div role="listitem" data-hveid="CBsQAA" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQtoAJKAB6BAgbEAA"><a jsname="pxBnId" class="C6AK7c" href="[/search?sca_esv=7e69963a3bb46de9&amp;biw=1526&amp;bih=839&amp;sxsrf=APpeQnvUJ1-btSeGe6n8-VVdiwsHHbMeSw:1792580750235&amp;udm=web&amp;fbs=ABfTbFVyMZGZf1hfvX9uKjN_-G8cn05EoNqnRUpRtqDK_L3JtTXKTzUG4jnwGMDgCQgjtI7w-shaL8a7GoBTWkGqEZw3vgCV-YCHddODkgrurr9Y-JCOYbmjDvp8VJThlTYIItLUuot_-Wn95hcwoixnrebQ0N5yYbznQrFNWFtPaZY5WN0SZCRx5DwUJ0p8t4m0tYVITextFopM2MGmttCLnI9S21T84A&amp;q=php+based+companies+in+ahmedabad&amp;sa=X&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQs6gLegQIGxAB](https://www.google.com/search?sca_esv=7e69963a3bb46de9&biw=1526&bih=839&sxsrf=APpeQnvUJ1-btSeGe6n8-VVdiwsHHbMeSw:1792580750235&udm=web&fbs=ABfTbFVyMZGZf1hfvX9uKjN_-G8cn05EoNqnRUpRtqDK_L3JtTXKTzUG4jnwGMDgCQgjtI7w-shaL8a7GoBTWkGqEZw3vgCV-YCHddODkgrurr9Y-JCOYbmjDvp8VJThlTYIItLUuot_-Wn95hcwoixnrebQ0N5yYbznQrFNWFtPaZY5WN0SZCRx5DwUJ0p8t4m0tYVITextFopM2MGmttCLnI9S21T84A&q=php+based+companies+in+ahmedabad&sa=X&ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQs6gLegQIGxAB)" jsaction="" data-hveid="CBsQAQ" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQs6gLegQIGxAB"><div jsname="xBNgKe" class="mXwfNd"><span class="R1QWuf">Web</span></div></a></div><div role="listitem" data-hveid="CBkQAA" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQtoAJKAB6BAgZEAA"><a jsname="pxBnId" class="C6AK7c" href="[/travel/flights?sca_esv=7e69963a3bb46de9&amp;biw=1526&amp;bih=839&amp;output=search&amp;q=php+based+companies+in+ahmedabad&amp;source=lnms&amp;fbs=ABfTbFVyMZGZf1hfvX9uKjN_-G8cn05EoNqnRUpRtqDK_L3JtTXKTzUG4jnwGMDgCQgjtI7w-shaL8a7GoBTWkGqEZw3vgCV-YCHddODkgrurr9Y-JCOYbmjDvp8VJThlTYIItLUuot_-Wn95hcwoixnrebQ0N5yYbznQrFNWFtPaZY5WN0SZCRx5DwUJ0p8t4m0tYVITextFopM2MGmttCLnI9S21T84A&amp;ved=1t:200715&amp;ictx=111](https://www.google.com/travel/flights?sca_esv=7e69963a3bb46de9&biw=1526&bih=839&output=search&q=php+based+companies+in+ahmedabad&source=lnms&fbs=ABfTbFVyMZGZf1hfvX9uKjN_-G8cn05EoNqnRUpRtqDK_L3JtTXKTzUG4jnwGMDgCQgjtI7w-shaL8a7GoBTWkGqEZw3vgCV-YCHddODkgrurr9Y-JCOYbmjDvp8VJThlTYIItLUuot_-Wn95hcwoixnrebQ0N5yYbznQrFNWFtPaZY5WN0SZCRx5DwUJ0p8t4m0tYVITextFopM2MGmttCLnI9S21T84A&ved=1t:200715&ictx=111)" jsaction="" data-hveid="CBkQAQ" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQi6AMegQIGRAB" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=/travel/flights%3Fsca_esv%3D7e69963a3bb46de9%26biw%3D1526%26bih%3D839%26output%3Dsearch%26q%3Dphp%2Bbased%2Bcompanies%2Bin%2Bahmedabad%26source%3Dlnms%26fbs%3DABfTbFVyMZGZf1hfvX9uKjN_-G8cn05EoNqnRUpRtqDK_L3JtTXKTzUG4jnwGMDgCQgjtI7w-shaL8a7GoBTWkGqEZw3vgCV-YCHddODkgrurr9Y-JCOYbmjDvp8VJThlTYIItLUuot_-Wn95hcwoixnrebQ0N5yYbznQrFNWFtPaZY5WN0SZCRx5DwUJ0p8t4m0tYVITextFopM2MGmttCLnI9S21T84A%26ved%3D1t:200715%26ictx%3D111&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQi6AMegQIGRAB"><div jsname="xBNgKe" class="mXwfNd"><span class="R1QWuf">Flights</span></div></a></div><div role="listitem" jscontroller="eBYPP" jsaction="keydown:uYT2Vb;UBsZj:gk6SMd;JkcjMe:AOJsKd;UszG1b:Seb4Qb;r4FAn:TvD9Pc" jsshadow=""><div class="mTpL7c" aria-controls="_jpzYaqPyDYOQ4-EP2K6kuAg_32" jsname="oYxtQd" jsaction="gq6u4d;" aria-expanded="false" role="button" tabindex="0" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ7p0OegQIEhAF"><div aria-label="More filters" class="mXwfNd"><div class="mVH5Fc"><span class="R1QWuf">More</span><span class="FXBAof M5dSnd z1asCe" style="height:16px;line-height:16px;width:16px"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M480-360L280-560H680L480-360Z"></path></svg></span></div></div></div><div jsname="H9P06b" class="R0DW9c"><div class="vH6rvf FJCJfd" data-mw="280" jsname="xl07Ob" id="_jpzYaqPyDYOQ4-EP2K6kuAg_32" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ750OegQIEhAG"><div class="bsmXxe" id="jpzYaqPyDYOQ4-EP2K6kuAg__16" role="none"></div><div class="bsmXxe" id="jpzYaqPyDYOQ4-EP2K6kuAg__17" role="none"></div><div class="bsmXxe" id="jpzYaqPyDYOQ4-EP2K6kuAg__18" role="none"></div><div class="bsmXxe" id="jpzYaqPyDYOQ4-EP2K6kuAg__19" role="none"></div></div></div></div></div><div class="yeKjxb" data-noaftde="" id="_jpzYaqPyDYOQ4-EP2K6kuAg_35"></div></div></div></div><div jsname="wKal9e"></div></div><span class="LJefwf"></span></div><style>.rfiSsc{position:relative;}.sBbkle{display:flex;height:max-content}.TrmO7{white-space:nowrap;flex:1;min-width:0;position:relative;z-index:126;padding-top:8px;margin-bottom:-8px;}.xhjkHe{position:relative;display:flex;flex:1;}@media (min-width:1460px){.aAbqZ .xhjkHe{margin-left:-20px;max-width:861px}}.xhjkHe .TrmO7{width:0}@media (max-width:1435px){.xhjkHe.CEXVle:not(.YoVbHc){width:calc(100% - 155px)}}@media (max-width:1300px){.xhjkHe.YoVbHc{width:calc(var(--center-width) + 4px)}}.nPDzT{align-items:center;display:inline-flex}.sBbkle{justify-content:space-between}.bqHHPb{line-height:initial}header .bqHHPb,[data-isc] .bqHHPb{box-shadow:0px 1px 3px rgba(23,23,23,0.24)}header .bqHHPb.SWDl0d,[data-isc] .bqHHPb.SWDl0d{height:unset}.wtAAQb{display:none;visibility:hidden}</style><div class="rfiSsc YNk70c"><div class="sBbkle P3mIxe" role="navigation"><div class="xhjkHe"><div class="TrmO7" data-st-cnt="mode"><div aria-labelledby="_jpzYaqPyDYOQ4-EP2K6kuAg_43" data-st-tgt="mode" data-zru="1" role="navigation"><style>.GKS7s:hover,.Ps6jAe:hover .GKS7s,.Ps6jAe:hover .XAHwbe{background-color:var(--aYn2S)}.IUOThf{display:flex;-ms-overflow-style:none;gap:6px;overflow-x:scroll;overflow-y:hidden;scrollbar-width:none;white-space:nowrap}.IUOThf::-webkit-scrollbar{display:none}.PHj8of{flex-direction:column;display:flex}.FpfXM{flex:1;align-items:center;display:flex;margin-left:-17px;position:relative;padding-top:4px;padding-bottom:8px;}.SvoXfb{box-sizing:border-box;align-items:center;appearance:none;background-color:transparent;border:none;border-radius:50%;cursor:pointer;display:flex;height:36px;justify-content:center;opacity:0;outline:none;margin-right:0;position:absolute;width:36px;visibility:hidden;z-index:201;}.SvoXfb:hover{background-color:var(--XKMDxc)}.x5f7Bc{fill:var(--amnPwe);height:24px;width:24px}.SvoXfb:hover>.x5f7Bc{fill:var(--bbQxAb)}.SvoXfb.vezEod .x5f7Bc{transform:scale(-1)}.F9Idpe{background:linear-gradient(to right, transparent 0%, var(--xhUGwc) 60%, var(--xhUGwc));height:100%;opacity:0;margin-right:0;position:absolute;visibility:hidden;width:100px;pointer-events:none;z-index:200;}.F9Idpe.Iy1nvd{background:linear-gradient(to left, transparent 0%, var(--xhUGwc) 60%, var(--xhUGwc))}.Iy1nvd{left:-16px}.vezEod{right:0}.vBfb5{opacity:1;visibility:visible}.nPDzT{-webkit-tap-highlight-color:transparent;position:relative;align-items:center;outline:none;display:inline-flex;}.nPDzT:focus-visible div:first-child{outline:-webkit-focus-ring-color auto 1px}a.nPDzT,a.nPDzT:link,a.nPDzT:visited,a.nPDzT:hover,a.nPDzT:active{text-decoration:none}.FMKtTb{font-family:Google Sans,Arial,sans-serif,Noto Color Emoji;font-size:14px;width:fit-content}.FMKtTb span{display:inline-block}.GKS7s{display:flex;align-items:center;height:36px;justify-content:center;box-shadow:inset 0 0 0 1px #444746;background:var(--xhUGwc);border-radius:20px;min-width:38px;cursor:pointer;}[selected].GKS7s{box-shadow:unset;border-radius:22px;outline:solid 2px var(--xhUGwc);background:#394457;}.GKS7s .FMKtTb,.GKS7s .RWhoyd.mol54e{color:var(--YLNNHc)}@media (forced-colors:active),(prefers-contrast:more){.GKS7s .FMKtTb,.FMKtTb.bSsRe,.UqcIvb.bSsRe{color:var(--YLNNHc) !important}[selected].GKS7s.Jtxj4e{border-color:var(--Nsm0ce) !important}}.UqcIvb{margin:0 16px;}[selected].GKS7s{background-color:#34517d;border-color:#34517d}</style><div jsname="IZrYQ" class="ZeeOc"><div id="bqHHPb" class="bqHHPb SWDl0d"><div jscontroller="GElbSc" data-d="" data-epu="" data-mpc="4" data-o="" data-ptr="" data-rlp="14" data-rsi="8" data-shbg="var(--xhUGwc)" data-sz="0" data-tfr="" id="hdtb-sc" jsaction="rcuQ6b:npT2md; YcfJ:rWvwbc; sIMx0:PSOd0d;" data-id="trc" class="fMHynf Jb8vdb boECb" data-hveid="CB8QAA" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ96AJegQIHxAA"><div class="PHj8of J1AhHd"><div jscontroller="fcDBE" jsname="QcAYrd" class="zp6Lyf FpfXM" id="UpCcGe" jsaction="rcuQ6b:npT2md" jsshadow=""><div class="IUOThf" role="list" jsslot="" data-hveid="CB8QAQ" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQjcEKegQIHxAB"><div role="listitem" data-hveid="CB4QAA" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQtoAJKAB6BAgeEAA"><a href="[/search?sca_esv=7e69963a3bb46de9&amp;biw=1526&amp;bih=839&amp;sxsrf=APpeQnvUJ1-btSeGe6n8-VVdiwsHHbMeSw:1792580750235&amp;q=online+appointments+php+based+companies+in+ahmedabad&amp;uds=AJ5uw1_a2D0D09lxm8gpKKOTUn4rHUzhDI4nhMYM1fmcm88QP40WKwc5XBCyfXSmXHv9JvRUva_IX1Zwp6EhOvT9_f_-EDhEiwjXOAGrCiJhfB9xUrN_oxA76LIQCF5FwNmp1HNR0ZuHFOXspUCl2Dw3HTYiJErehesx2N4aewIway2ZLAMNiRIJMGxlhMHjmT5fpRyGKodAe7Ixq9L1GITofRDJh7lP_A1m1M2ujLXDEMi6MmVG6Ir8IVyc90JT78qpRSw0Vgjpx1fpiAUrSfyo1REzGRXmgQ&amp;udm=local&amp;sa=X&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQxKsJKAB6BAgeEAE&amp;ictx=0](https://www.google.com/search?sca_esv=7e69963a3bb46de9&biw=1526&bih=839&sxsrf=APpeQnvUJ1-btSeGe6n8-VVdiwsHHbMeSw:1792580750235&q=online+appointments+php+based+companies+in+ahmedabad&uds=AJ5uw1_a2D0D09lxm8gpKKOTUn4rHUzhDI4nhMYM1fmcm88QP40WKwc5XBCyfXSmXHv9JvRUva_IX1Zwp6EhOvT9_f_-EDhEiwjXOAGrCiJhfB9xUrN_oxA76LIQCF5FwNmp1HNR0ZuHFOXspUCl2Dw3HTYiJErehesx2N4aewIway2ZLAMNiRIJMGxlhMHjmT5fpRyGKodAe7Ixq9L1GITofRDJh7lP_A1m1M2ujLXDEMi6MmVG6Ir8IVyc90JT78qpRSw0Vgjpx1fpiAUrSfyo1REzGRXmgQ&udm=local&sa=X&ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQxKsJKAB6BAgeEAE&ictx=0)" aria-label="Add Online appointments" class="nPDzT T3FoJb" jsname="VIftV" role="link" data-hveid="CB4QAQ" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQxKsJKAB6BAgeEAE"><div jsname="bVqjv" class="GKS7s"><span class="FMKtTb UqcIvb bSsRe" jsname="pIvPIe">Online appointments</span></div></a></div><div role="listitem" data-hveid="CCEQAA" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQtoAJKAB6BAghEAA"><a href="[/search?sca_esv=7e69963a3bb46de9&amp;biw=1526&amp;bih=839&amp;sxsrf=APpeQnvUJ1-btSeGe6n8-VVdiwsHHbMeSw:1792580750235&amp;q=php+based+companies+in+ahmedabad+open+now&amp;uds=AJ5uw1_a2D0D09lxm8gpKKOTUn4r4dYQz9Ne4RKr47YXKBHKZTZkb35DlXpztuXnePjc4ifK6B9DDLTfl4vFwSJTppdIBiAOzIclZpppyzt8NpBjAoO7CC7QeuWbVk97EfeA1oadI2fEbw4qTcRGXUzF5RqojwyKxTtnwJXDnnkFbLEIRE8eVIu5lrGoFQImOwlej4jEBELCv3SyJ54yZhUIWRebsBQkfA&amp;udm=local&amp;sa=X&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQxKsJKAF6BAghEAE&amp;ictx=0](https://www.google.com/search?sca_esv=7e69963a3bb46de9&biw=1526&bih=839&sxsrf=APpeQnvUJ1-btSeGe6n8-VVdiwsHHbMeSw:1792580750235&q=php+based+companies+in+ahmedabad+open+now&uds=AJ5uw1_a2D0D09lxm8gpKKOTUn4r4dYQz9Ne4RKr47YXKBHKZTZkb35DlXpztuXnePjc4ifK6B9DDLTfl4vFwSJTppdIBiAOzIclZpppyzt8NpBjAoO7CC7QeuWbVk97EfeA1oadI2fEbw4qTcRGXUzF5RqojwyKxTtnwJXDnnkFbLEIRE8eVIu5lrGoFQImOwlej4jEBELCv3SyJ54yZhUIWRebsBQkfA&udm=local&sa=X&ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQxKsJKAF6BAghEAE&ictx=0)" aria-label="Add Open now" class="nPDzT T3FoJb" jsname="VIftV" role="link" data-hveid="CCEQAQ" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQxKsJKAF6BAghEAE"><div jsname="bVqjv" class="GKS7s"><span class="FMKtTb UqcIvb bSsRe" jsname="pIvPIe">Open now</span></div></a></div><div role="listitem" data-hveid="CCAQAA" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQtoAJKAB6BAggEAA"><a href="[/search?sca_esv=7e69963a3bb46de9&amp;biw=1526&amp;bih=839&amp;sxsrf=APpeQnvUJ1-btSeGe6n8-VVdiwsHHbMeSw:1792580750235&amp;q=top+rated+php+based+companies+in+ahmedabad&amp;uds=AJ5uw1_a2D0D09lxm8gpKKOTUn4ruGODu5hizmYiHrjAqLglX_1OJXgTcj-6edHNA7T-w73dQGGm76sDY8RlriPqp-fqMJk0bCYsmzZ_UFtdfxDfz3OgmLC9jRAYnUC7OwXbhmvfcUaDzYvm1-sqs8eXmF4IjORYoLYQasYchEBrzPyQvfxD879G3d6dUBxpP2ZB49pLeNyji4a5pA2vOpwhgrEJoJAqWg&amp;udm=local&amp;sa=X&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQxKsJKAJ6BAggEAE&amp;ictx=0](https://www.google.com/search?sca_esv=7e69963a3bb46de9&biw=1526&bih=839&sxsrf=APpeQnvUJ1-btSeGe6n8-VVdiwsHHbMeSw:1792580750235&q=top+rated+php+based+companies+in+ahmedabad&uds=AJ5uw1_a2D0D09lxm8gpKKOTUn4ruGODu5hizmYiHrjAqLglX_1OJXgTcj-6edHNA7T-w73dQGGm76sDY8RlriPqp-fqMJk0bCYsmzZ_UFtdfxDfz3OgmLC9jRAYnUC7OwXbhmvfcUaDzYvm1-sqs8eXmF4IjORYoLYQasYchEBrzPyQvfxD879G3d6dUBxpP2ZB49pLeNyji4a5pA2vOpwhgrEJoJAqWg&udm=local&sa=X&ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQxKsJKAJ6BAggEAE&ictx=0)" aria-label="Add Top rated" class="nPDzT T3FoJb" jsname="VIftV" role="link" data-hveid="CCAQAQ" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQxKsJKAJ6BAggEAE"><div jsname="bVqjv" class="GKS7s"><span class="FMKtTb UqcIvb bSsRe" jsname="pIvPIe">Top rated</span></div></a></div></div><div jsname="dS5Bb" class="F9Idpe Iy1nvd"></div><button jsname="ggE0ke" class="Iy1nvd SvoXfb" jsaction="click: VeAzv" aria-hidden="true" tabindex="-1" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQmbMJegQIHxAC"><svg class="x5f7Bc" aria-hidden="true" focusable="false" viewbox="0 0 48 48"><path d="M28.05 36 16 23.95 28.05 11.9l2.15 2.15-9.9 9.9 9.9 9.9Z"></path></svg></button><div jsname="HbXMbc" class="F9Idpe vezEod vBfb5"></div><button jsname="xpqF6b" class="vezEod SvoXfb" jsaction="click: NfCDXd" aria-hidden="true" tabindex="-1" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQmrMJegQIHxAD"><svg class="x5f7Bc" aria-hidden="true" focusable="false" viewbox="0 0 48 48"><path d="M28.05 36 16 23.95 28.05 11.9l2.15 2.15-9.9 9.9 9.9 9.9Z"></path></svg></button></div></div></div></div></div></div></div></div></div></div><span class="wtAAQb"></span><div data-st-cnt="ee" id="easter-egg"><div class="YNk70c" data-st-tgt="ee"></div></div><h1 class="bNg8Rb">Search Results</h1><style>.Qe0THe{z-index:1101;position:absolute;top:-1000px}@keyframes pulse-animation {0%{opacity:1}50%{animation-timing-function:cubic-bezier(0,0,1,1);opacity:0.5}100%{opacity:1}}</style><div jscontroller="HYSCof" data-push-down-results="true" data-st-u="top_nav" id="top_nav" jsdata="Z1JpA;_;jpzYaqPyDYOQ4-EP2K6kuAg3" role="presentation" jsaction="rcuQ6b:npT2md"><div class="GLcBOb" id="hdtb"><div jscontroller="sHZ92c" id="tn_jpzYaqPyDYOQ4-EP2K6kuAg_1" jsaction="rcuQ6b:npT2md;L7T4N:iA74Xe"></div></div></div><div id="before-appbar"><div id="_jpzYaqPyDYOQ4-EP2K6kuAg_16"></div></div><div class="Qe0THe OLKT8d" id="lb"></div><div class="appbar" data-st-cnt="appbar" id="appbar"><div data-st-tgt="appbar"><style>.c4bKff{min-height:12px;-webkit-transition:height .22s ease-in-out}</style><div style="margin-top:12px"></div><div style="position:relative"><div class="c4bKff" id="slim_appbar"></div></div></div></div> <div id="_jpzYaqPyDYOQ4-EP2K6kuAg_20" role="presentation"></div> <div class="YNk70c CuvrIe EjQTId"><div class="SLPe5b"><div data-iatvcap="1" data-st-cnt="atvcap" id="atvcap"></div></div></div><div class="NbTBrb YNk70c EjQTId GyAeWb tXI1nd" id="rcnt"><div class="s6JM6d ufC5Cb EYIWQc" id="center_col" data-csic="1" role="main"><style>.VDgVie{text-align:center}.OSrXXb{overflow:hidden;text-overflow:ellipsis}.cHaqb{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.sjVJQd{font-family:var(--qR8X0);font-size:var(--hbmnje);font-weight:var(--Oycjt);line-height:var(--CbdmE)}.YrbPuc{color:var(--IXoxUe);font-family:var(--LI4Bo);font-size:var(--Mhs7de);font-weight:var(--ofwUBc);line-height:var(--XWv1if)}.oPWl9c{color:var(--IXoxUe);font-family:Arial,sans-serif,Noto Color Emoji;font-size:12px;font-weight:400;line-height:20px}.BjWz4c{color:var(--IXoxUe);font-family:var(--YfiKf);font-size:var(--gOs6Bf);font-weight:var(--MzKBpd);line-height:var(--punZlc)}.cj1ht{color:var(--bbQxAb);font-family:var(--YfiKf);font-size:var(--gOs6Bf);font-weight:var(--MzKBpd);line-height:var(--punZlc)}.FR7ZSc{color:var(--ngPXTb)}.FR7ZSc .niO4u{background:transparent;border-color:var(--Yi4Nb)}.FR7ZSc:hover .niO4u:after{background:rgb(from var(--lv6yU) r g b / 0.0824)}.FR7ZSc:active .niO4u:after{background:rgb(from var(--lv6yU) r g b / 0.224)}.QuU3Wb{margin-top:6px}.B6OMee.B6OMee{width:calc(16px + var(--CbdmE));height:calc(16px + var(--CbdmE))}.TcBmm.TcBmm{width:calc(16px + var(--nUOqEc));height:calc(16px + var(--nUOqEc))}.KnB5rb.KnB5rb{width:calc(24px + var(--CbdmE));height:calc(24px + var(--CbdmE))}.OJeuxf.OJeuxf .niO4u{margin:0 auto;padding:0}.OJeuxf .niO4u:before{width:48px;margin-left:-24px;left:50%}@media screen and (forced-colors:active){.PnYFnf,.z3HNkc span{forced-color-adjust:none}}.z3HNkc{display:inline-block}.z3HNkc .gTPtFb{color:var(--ywz01c);clip-path:polygon(6px 0,4.31px 3.98px,0 4.34px,3.28px 7.18px,2.29px 11.4px,6px 9.16px,9.71px 11.4px,8.72px 7.18px,12px 4.34px,7.69px 3.98px,6px 0,20px 0,18.31px 3.98px,14px 4.34px,17.28px 7.18px,16.29px 11.4px,20px 9.16px,23.71px 11.4px,22.72px 7.18px,26px 4.34px,21.69px 3.98px,20px 0,34px 0,32.31px 3.98px,28px 4.34px,31.28px 7.18px,30.29px 11.4px,34px 9.16px,37.71px 11.4px,36.72px 7.18px,40px 4.34px,35.69px 3.98px,34px 0,48px 0,46.31px 3.98px,42px 4.34px,45.28px 7.18px,44.29px 11.4px,48px 9.16px,51.71px 11.4px,50.72px 7.18px,54px 4.34px,49.69px 3.98px,48px 0,62px 0,60.31px 3.98px,56px 4.34px,59.28px 7.18px,58.29px 11.4px,62px 9.16px,65.71px 11.4px,64.72px 7.18px,68px 4.34px,63.69px 3.98px,62px 0);display:inline-block;zoom:var(--google-fs);width:68px;height:11.4px}.Y0A0hc{display:inline-block}.yi40Hd{margin-right:4px}.RDApEe{margin-left:4px}.RDApEe.YrbPuc,.yi40Hd.YrbPuc{line-height:unset}.CJHX3e{padding-bottom:12px;padding-top:12px}.ouy7Mc{padding-left:16px;padding-right:16px}.QOVtNe{color:var(--amnPwe);cursor:pointer;height:24px;position:absolute;width:24px;z-index:2}.AVvGRc{padding:2px 0 0 10px;padding:0;position:relative;transition:transform cubic-bezier(0.0,0.0,0.2,1) .3s,opacity cubic-bezier(0.0,0.0,0.2,1) .3s;transition:transform cubic-bezier(0.0,0.0,0.2,1) .3s,opacity cubic-bezier(0.0,0.0,0.2,1) .3s;width:523px}.QOVtNe{right:16px}.szCabc{opacity:0;transform:translateY(500px);transform:translateY(500px)}@media (max-width:939.98px){}.R4aD0e{background:var(--xhUGwc);border-radius:12px;box-shadow:0 1px 6px 0 rgba(32,33,36,.28);height:calc(100% - 100px);overflow-x:hidden;overflow-y:scroll;overscroll-behavior:contain;position:fixed;top:146px;width:fit-content;z-index:130;box-shadow:0 1px 6px 0 rgba(0,0,0,.65)}.Ph7k9c{color:#fdd663}.elrcId{padding-bottom:0;border:0;padding-left:0;background:var(--xhUGwc)}.elrcId{background-color:var(--xhUGwc)}.VkpGBb .mTwRT{display:table-cell}.yYlJEf:visited,#gsr .yYlJEf:active{color:var(--JKqx2)}.uMdZh:active,.rllt__local-item-selected{}@media (max-width:799.98px){.rllt__details .uDyWh{white-space:normal;-webkit-line-clamp:none;max-height:none}}.uMdZh{border-width:0;font-size:var(--Mhs7de);line-height:1.58;color:var(--IXoxUe);position:relative}.rllt__borderless{border-top-width:0}.VkpGBb{display:table;table-layout:fixed;width:100%;max-height:106px;min-height:58px}.yYlJEf{display:table-cell;padding:8px 0;width:84px;text-align:center;vertical-align:middle;}.yYlJEf:active{background:#16171a}@media (max-width:683.98px){.ixix9e .uMdZh .cXedhc{padding-left:0}}@media (max-width:799.98px){.VkpGBb{max-height:none}.rllt__details .uDyWh{white-space:normal;-webkit-line-clamp:none;max-height:none}}.uMdZh .cXedhc:hover .dbg0pd{text-decoration:underline}.dbg0pd{align-items:center;color:var(--YLNNHc);display:flex;font-family:Google Sans,Arial,sans-serif,Noto Color Emoji;font-size:var(--uBdgTe);margin-bottom:-1px;white-space:nowrap;padding-bottom:1px;line-height:20px}.pJ3Ci,.rllt__details .pJ3Ci,.rllt__details .pJ3Ci div{white-space:normal;word-break:break-word}.tIxNaf .rllt__details{white-space:nowrap}.rllt__details{white-space:normal}.rllt__details div{white-space:inherit;overflow:inherit;text-overflow:inherit}.rllt__details>div{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.cXedhc{align-items:stretch;color:var(--IXoxUe);display:flex;cursor:pointer}.vyFC0c{display:block;overflow:hidden;z-index:2}.vwVdIc{flex-grow:1;padding:16px 0 16px 0}.yYlJEf:not(:last-child) .wLAgVc{border-right:0}.FyvIhd{display:table;table-layout:fixed;min-height:16px;line-height:19px}.uDyWh{display:table-cell;vertical-align:center}.NmuOpc{display:table-cell;vertical-align:top;width:22px}.NJiz{display:inline-block;height:16px;width:16px;vertical-align:middle}.Ozf5lb{display:flex;flex-wrap:wrap;align-items:flex-start;align-content:flex-start}.ncRHuf{line-height:19px;max-width:100%}.r3PLsf{margin:0 4px}.tZ3wY{padding-top:1px}.JZfDId{margin-bottom:2px}.rllt__details .dSEeSc{line-height:inherit}.rllt__details .klVkgd{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}.dNtXMe{border-top:1px solid var(--gS5jXb);position:relative;z-index:1}</style><div id="taw"><div id="oFNiHe" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQL3oECAoQAw"></div><div id="tvcap"><div data-aqid="jpzYasrzEq-P88EPmenl4Qg" id="tads" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQGHoECAoQBA"><div class="GUyUUb" data-hb="t" data-vcap="1"><div></div></div><div class="GUyUUb" data-hb="t" data-vcap="1"><div></div></div></div></div></div><div class="eqAnXb" id="gevUs"><div id="topstuff"></div><div id="search"><div data-hveid="CAoQBg" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQGnoECAoQBg"><div class="dURPMd" eid="jpzYaqPyDYOQ4-EP2K6kuAg" data-async-context="query:php%20based%20companies%20in%20ahmedabad" id="rso"><div class="MjjYud"><div data-hveid="CEoQAA"><div class="R4aD0e szCabc AVvGRc" style="display:none" leid="jpzYaqPyDYOQ4-EP2K6kuAg" jscontroller="Q9yHb" jsaction="rcuQ6b:npT2md;e3EWke:kN9HDb;nXSRmc:dCbI6d;bEG0zf:JeisMe;NRnNtc:ZgFhbe" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ8UF6BAhKEAE"><div jsname="gVXRMe" class="QOVtNe" style="top:24px" jsaction="plIjzf" aria-label="Close" role="button" tabindex="0" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQoPMBegQIShAC"><span class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg></span></div><async-local-kp jsname="C2o4Ve" jscontroller="nXizP" jsaction="rcuQ6b:npT2md"> <div jsname="C2o4Ve" id="akp_tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_64" data-jiis="up" data-async-type="lcl_akp" class="yp"></div> </async-local-kp></div><div class="tF5xGd"></div><div jscontroller="Xt48yf" jsdata="oLUYVb;_;jpzYaqPyDYOQ4-EP2K6kuAg46" jsaction="rcuQ6b:npT2md"><div class="elrcId wHYlTd ouy7Mc CJHX3e"><span class="Ph7k9c"><span>Vijayadashami might affect these hours</span></span></div></div><div><div jsname="X3FFBc"><div class="dNtXMe"></div><div jscontroller="AtSb" class="w7Dbne" data-record-click-time="false" id="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_45" jsdata="zt2wNd;_;jpzYaqPyDYOQ4-EP2K6kuAg23 WDO8Ff;_;jpzYaqPyDYOQ4-EP2K6kuAg21" jsaction="rcuQ6b:npT2md;mouseover:UI3Kjd;mouseleave:Tx5Rb;focusin:UI3Kjd;focusout:Tx5Rb;e3EWke:kN9HDb;v1Cdnb:pFRkQb" data-hveid="CDsQAA"><div jsname="jXK9ad" class="uMdZh tIxNaf rllt__borderless"><div class="VkpGBb"><div jscontroller="IKqJbf" class="mTwRT" jsdata="XUxeGc;_;jpzYaqPyDYOQ4-EP2K6kuAg38" jsshadow=""><div jsname="ZfUr6c" id="pv-/g/11c425qc8q" jsslot="" role="button" tabindex="0" jsaction="IEAdff;W9aZQc:XX6jIe" data-hveid="CDsQAQ" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ1YkKegQIOxAB"><div class="cXedhc"><div class="vwVdIc vyFC0c"><div><div jsname="MZArnb" class="rllt__details"><div class="dbg0pd" aria-level="3" role="heading"><span class="OSrXXb">Maxgen Technologies Pvt.Ltd</span></div><div><span><span class="Y0A0hc" aria-label="Rated 4.7 out of 5, 1.6K user reviews" role="img"><span class="yi40Hd YrbPuc" aria-hidden="true">4.7</span><span aria-hidden="true" class="z3HNkc" aria-label="Rated 4.7 out of 5," role="img"><span aria-hidden="true"><span class="gTPtFb" style="background:linear-gradient(to right, currentcolor 62px, #8e9099 0%)"></span></span></span><span class="RDApEe YrbPuc" aria-hidden="true">(1.6K)</span></span></span> &middot; Software company</div><div>Abhijeet 3, 603, Netaji Rd, near Pantaloons &middot; 090990 39845</div><div><span><span style="color:rgba(109,213,140,1.0)">Open</span> · Closes 6:30 pm</span></div></div></div></div></div></div></div><a class="yYlJEf Q7PwXb L48Cpd brKmxb" aria-describedby="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_45" href="[/goto?url=CAESWwHrOzAVlvmzIEZRd-wNm4h_BdwGwC3bnIdRtYIGSoTkqPe4phlFVsGz5L7GcBN4s3g7PeDK8fuQrH7Ttt0MCnJduH14Jf-NbvBCVULqgEv5RX0D0TZGbtrFeDM](https://www.google.com/goto?url=CAESWwHrOzAVlvmzIEZRd-wNm4h_BdwGwC3bnIdRtYIGSoTkqPe4phlFVsGz5L7GcBN4s3g7PeDK8fuQrH7Ttt0MCnJduH14Jf-NbvBCVULqgEv5RX0D0TZGbtrFeDM)" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQgU96BAg7EAo" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=CAESWwHrOzAVlvmzIEZRd-wNm4h_BdwGwC3bnIdRtYIGSoTkqPe4phlFVsGz5L7GcBN4s3g7PeDK8fuQrH7Ttt0MCnJduH14Jf-NbvBCVULqgEv5RX0D0TZGbtrFeDM&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQgU96BAg7EAo&amp;uoh=1"><div class="wLAgVc" style="display:flex;flex-direction:column;align-items:center;justify-content:center"><div class="VDgVie btku5b FR7ZSc OJeuxf sjVJQd"><div class="niO4u KnB5rb"><span class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"></path></svg></span></div><div class="QuU3Wb"><span>Website</span></div></div></div></a><a href="[/maps/dir//Maxgen+Technologies+Pvt.Ltd,+Abhijeet+3,+603,+Netaji+Rd,+near+Pantaloons,+Mithakhali,+Ellisbridge,+Ahmedabad,+Gujarat+380006/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e84ac54a18239:0x558f4eb0ff0df853?sa=X&amp;ved=1t:57443&amp;ictx=111](https://www.google.com/maps/dir//Maxgen+Technologies+Pvt.Ltd,+Abhijeet+3,+603,+Netaji+Rd,+near+Pantaloons,+Mithakhali,+Ellisbridge,+Ahmedabad,+Gujarat+380006/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e84ac54a18239:0x558f4eb0ff0df853?sa=X&ved=1t:57443&ictx=111)" style="cursor:pointer" data-url="/maps/dir//Maxgen+Technologies+Pvt.Ltd,+Abhijeet+3,+603,+Netaji+Rd,+near+Pantaloons,+Mithakhali,+Ellisbridge,+Ahmedabad,+Gujarat+380006/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e84ac54a18239:0x558f4eb0ff0df853?sa=X&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ48ADegQIIxAA" tabindex="0" class="yYlJEf Q7PwXb VDgVie brKmxb" aria-describedby="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_45" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=/maps/dir//Maxgen%2BTechnologies%2BPvt.Ltd,%2BAbhijeet%2B3,%2B603,%2BNetaji%2BRd,%2Bnear%2BPantaloons,%2BMithakhali,%2BEllisbridge,%2BAhmedabad,%2BGujarat%2B380006/data%3D!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e84ac54a18239:0x558f4eb0ff0df853%3Fsa%3DX%26ved%3D1t:57443%26ictx%3D111&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ48ADegQIOxAM"><div><div class="VDgVie btku5b FR7ZSc OJeuxf sjVJQd"><div class="niO4u KnB5rb"><span style="height:24px" class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24" viewBox="0 0 24 24" width="24"><g><rect fill="none" height="24" width="24"></rect></g><g><path d="m21.41 10.59-7.99-8c-.78-.78-2.05-.78-2.83 0l-8.01 8c-.78.78-.78 2.05 0 2.83l8.01 8c.78.78 2.05.78 2.83 0l7.99-8c.79-.79.79-2.05 0-2.83zM13.5 14.5V12H10v3H8v-4c0-.55.45-1 1-1h4.5V7.5L17 11l-3.5 3.5z"></path></g></svg></span></div><div class="QuU3Wb"><span>Directions</span></div></div></div></a></div></div></div><div class="dNtXMe"></div><div jscontroller="AtSb" class="w7Dbne" data-record-click-time="false" id="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_44" jsdata="zt2wNd;_;jpzYaqPyDYOQ4-EP2K6kuAg14 WDO8Ff;_;jpzYaqPyDYOQ4-EP2K6kuAg21" jsaction="rcuQ6b:npT2md;mouseover:UI3Kjd;mouseleave:Tx5Rb;focusin:UI3Kjd;focusout:Tx5Rb;e3EWke:kN9HDb;v1Cdnb:pFRkQb" data-hveid="CDkQAA"><div jsname="jXK9ad" class="uMdZh tIxNaf"><div class="VkpGBb"><div jscontroller="IKqJbf" class="mTwRT" jsdata="XUxeGc;_;jpzYaqPyDYOQ4-EP2K6kuAg34" jsshadow=""><div jsname="ZfUr6c" id="pv-/g/12cnxb05r" jsslot="" role="button" tabindex="0" jsaction="IEAdff;W9aZQc:XX6jIe" data-hveid="CDkQAQ" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ1YkKegQIORAB"><div class="cXedhc"><div class="vwVdIc vyFC0c"><div><div jsname="MZArnb" class="rllt__details"><div class="dbg0pd" aria-level="3" role="heading"><span class="OSrXXb">Sapphire Software Solutions</span></div><div><span><span class="Y0A0hc" aria-label="Rated 4.8 out of 5, 925 user reviews" role="img"><span class="yi40Hd YrbPuc" aria-hidden="true">4.8</span><span aria-hidden="true" class="z3HNkc" aria-label="Rated 4.8 out of 5," role="img"><span aria-hidden="true"><span class="gTPtFb" style="background:linear-gradient(to right, currentcolor 70px, #8e9099 0%)"></span></span></span><span class="RDApEe YrbPuc" aria-hidden="true">(925)</span></span></span> &middot; Software company</div><div>Ganesh Meridian, C-102/103, Sarkhej - Gandhinagar Hwy, opp. Kargil Petrol Pump &middot; 090999 76034</div><div><span><span style="color:rgba(109,213,140,1.0)">Open</span> · Closes 7 pm</span></div></div></div></div></div></div></div><a class="yYlJEf Q7PwXb L48Cpd brKmxb" aria-describedby="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_44" href="[/goto?url=CAESWgHrOzAVW9Axz1C-SP7ygzGjo55jpuLxhfzMmUFI7ihGwNw4DODU9yoaiBBWqxYTegPBwkZYatgE5bHiZLh2Ly6umqeOG4NHeqFXanVmsQFZfV0RA3djyUJP6A](https://www.google.com/goto?url=CAESWgHrOzAVW9Axz1C-SP7ygzGjo55jpuLxhfzMmUFI7ihGwNw4DODU9yoaiBBWqxYTegPBwkZYatgE5bHiZLh2Ly6umqeOG4NHeqFXanVmsQFZfV0RA3djyUJP6A)" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQgU96BAg5EAo" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=CAESWgHrOzAVW9Axz1C-SP7ygzGjo55jpuLxhfzMmUFI7ihGwNw4DODU9yoaiBBWqxYTegPBwkZYatgE5bHiZLh2Ly6umqeOG4NHeqFXanVmsQFZfV0RA3djyUJP6A&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQgU96BAg5EAo&amp;uoh=1"><div class="wLAgVc" style="display:flex;flex-direction:column;align-items:center;justify-content:center"><div class="VDgVie btku5b FR7ZSc OJeuxf sjVJQd"><div class="niO4u KnB5rb"><span class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"></path></svg></span></div><div class="QuU3Wb"><span>Website</span></div></div></div></a><a href="[/maps/dir//Sapphire+Software+Solutions,+Ganesh+Meridian,+C-102%2F103,+Sarkhej+-+Gandhinagar+Hwy,+opp.+Kargil+Petrol+Pump,+Ahmedabad,+Gujarat+380060/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e834be1f0a9db:0x7f499e4a46ae9349?sa=X&amp;ved=1t:57443&amp;ictx=111](https://www.google.com/maps/dir//Sapphire+Software+Solutions,+Ganesh+Meridian,+C-102%2F103,+Sarkhej+-+Gandhinagar+Hwy,+opp.+Kargil+Petrol+Pump,+Ahmedabad,+Gujarat+380060/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e834be1f0a9db:0x7f499e4a46ae9349?sa=X&ved=1t:57443&ictx=111)" style="cursor:pointer" data-url="/maps/dir//Sapphire+Software+Solutions,+Ganesh+Meridian,+C-102%2F103,+Sarkhej+-+Gandhinagar+Hwy,+opp.+Kargil+Petrol+Pump,+Ahmedabad,+Gujarat+380060/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e834be1f0a9db:0x7f499e4a46ae9349?sa=X&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ48ADegQIKRAA" tabindex="0" class="yYlJEf Q7PwXb VDgVie brKmxb" aria-describedby="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_44" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=/maps/dir//Sapphire%2BSoftware%2BSolutions,%2BGanesh%2BMeridian,%2BC-102%252F103,%2BSarkhej%2B-%2BGandhinagar%2BHwy,%2Bopp.%2BKargil%2BPetrol%2BPump,%2BAhmedabad,%2BGujarat%2B380060/data%3D!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e834be1f0a9db:0x7f499e4a46ae9349%3Fsa%3DX%26ved%3D1t:57443%26ictx%3D111&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ48ADegQIORAM"><div><div class="VDgVie btku5b FR7ZSc OJeuxf sjVJQd"><div class="niO4u KnB5rb"><span style="height:24px" class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24" viewBox="0 0 24 24" width="24"><g><rect fill="none" height="24" width="24"></rect></g><g><path d="m21.41 10.59-7.99-8c-.78-.78-2.05-.78-2.83 0l-8.01 8c-.78.78-.78 2.05 0 2.83l8.01 8c.78.78 2.05.78 2.83 0l7.99-8c.79-.79.79-2.05 0-2.83zM13.5 14.5V12H10v3H8v-4c0-.55.45-1 1-1h4.5V7.5L17 11l-3.5 3.5z"></path></g></svg></span></div><div class="QuU3Wb"><span>Directions</span></div></div></div></a></div></div></div><div class="dNtXMe"></div><div jscontroller="AtSb" class="w7Dbne" data-record-click-time="false" id="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_46" jsdata="zt2wNd;_;jpzYaqPyDYOQ4-EP2K6kuAg24 WDO8Ff;_;jpzYaqPyDYOQ4-EP2K6kuAg21" jsaction="rcuQ6b:npT2md;mouseover:UI3Kjd;mouseleave:Tx5Rb;focusin:UI3Kjd;focusout:Tx5Rb;e3EWke:kN9HDb;v1Cdnb:pFRkQb" data-hveid="CDgQAA"><div jsname="jXK9ad" class="uMdZh tIxNaf"><div class="VkpGBb"><div jscontroller="IKqJbf" class="mTwRT" jsdata="XUxeGc;_;jpzYaqPyDYOQ4-EP2K6kuAg28" jsshadow=""><div jsname="ZfUr6c" id="pv-/g/11ggbm0q21" jsslot="" role="button" tabindex="0" jsaction="IEAdff;W9aZQc:XX6jIe" data-hveid="CDgQAQ" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ1YkKegQIOBAB"><div class="cXedhc"><div class="vwVdIc vyFC0c"><div><div jsname="MZArnb" class="rllt__details"><div class="dbg0pd" aria-level="3" role="heading"><span class="OSrXXb">Infikey Technologies Private Limited</span></div><div><span><span class="Y0A0hc" aria-label="Rated 4.7 out of 5, 100 user reviews" role="img"><span class="yi40Hd YrbPuc" aria-hidden="true">4.7</span><span aria-hidden="true" class="z3HNkc" aria-label="Rated 4.7 out of 5," role="img"><span aria-hidden="true"><span class="gTPtFb" style="background:linear-gradient(to right, currentcolor 62px, #8e9099 0%)"></span></span></span><span class="RDApEe YrbPuc" aria-hidden="true">(100)</span></span></span> &middot; Software company</div><div>KRISH CUBICAL, BLOCK- B/901, nr. Govardhan Party Plot &middot; 063515 84506</div><div><span><span style="color:rgba(109,213,140,1.0)">Open</span> · Closes 8 pm</span></div><div class="pJ3Ci"><div class="Ozf5lb"><span class="ncRHuf"><span>On-site services</span><span class="r3PLsf">&middot;<wbr></span></span><span class="ncRHuf"><span>Online appointments</span></span></div></div></div></div></div></div></div></div><a class="yYlJEf Q7PwXb L48Cpd brKmxb" aria-describedby="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_46" href="[/goto?url=CAESVAHrOzAVZuJGZYCX91nxXXtf2ON3XuGin5X6pAOpQXsj1XFJsD-XTGSzvKxpcP9ZVlFH56EPg_I3a1VfJcUohnEO0flvmpTXDPiA55Xbx0eSvqAmUw](https://www.google.com/goto?url=CAESVAHrOzAVZuJGZYCX91nxXXtf2ON3XuGin5X6pAOpQXsj1XFJsD-XTGSzvKxpcP9ZVlFH56EPg_I3a1VfJcUohnEO0flvmpTXDPiA55Xbx0eSvqAmUw)" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQgU96BAg4EAw" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=CAESVAHrOzAVZuJGZYCX91nxXXtf2ON3XuGin5X6pAOpQXsj1XFJsD-XTGSzvKxpcP9ZVlFH56EPg_I3a1VfJcUohnEO0flvmpTXDPiA55Xbx0eSvqAmUw&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQgU96BAg4EAw&amp;uoh=1"><div class="wLAgVc" style="display:flex;flex-direction:column;align-items:center;justify-content:center"><div class="VDgVie btku5b FR7ZSc OJeuxf sjVJQd"><div class="niO4u KnB5rb"><span class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"></path></svg></span></div><div class="QuU3Wb"><span>Website</span></div></div></div></a><a href="[/maps/dir//Infikey+Technologies+Private+Limited,+KRISH+CUBICAL,+BLOCK-+B%2F901,+nr.+Govardhan+Party+Plot,+Ahmedabad,+Gujarat+380059/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e9b5894bfffff:0x249c21f81988473f?sa=X&amp;ved=1t:57443&amp;ictx=111](https://www.google.com/maps/dir//Infikey+Technologies+Private+Limited,+KRISH+CUBICAL,+BLOCK-+B%2F901,+nr.+Govardhan+Party+Plot,+Ahmedabad,+Gujarat+380059/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e9b5894bfffff:0x249c21f81988473f?sa=X&ved=1t:57443&ictx=111)" style="cursor:pointer" data-url="/maps/dir//Infikey+Technologies+Private+Limited,+KRISH+CUBICAL,+BLOCK-+B%2F901,+nr.+Govardhan+Party+Plot,+Ahmedabad,+Gujarat+380059/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e9b5894bfffff:0x249c21f81988473f?sa=X&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ48ADegQILhAA" tabindex="0" class="yYlJEf Q7PwXb VDgVie brKmxb" aria-describedby="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_46" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=/maps/dir//Infikey%2BTechnologies%2BPrivate%2BLimited,%2BKRISH%2BCUBICAL,%2BBLOCK-%2BB%252F901,%2Bnr.%2BGovardhan%2BParty%2BPlot,%2BAhmedabad,%2BGujarat%2B380059/data%3D!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e9b5894bfffff:0x249c21f81988473f%3Fsa%3DX%26ved%3D1t:57443%26ictx%3D111&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ48ADegQIOBAO"><div><div class="VDgVie btku5b FR7ZSc OJeuxf sjVJQd"><div class="niO4u KnB5rb"><span style="height:24px" class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24" viewBox="0 0 24 24" width="24"><g><rect fill="none" height="24" width="24"></rect></g><g><path d="m21.41 10.59-7.99-8c-.78-.78-2.05-.78-2.83 0l-8.01 8c-.78.78-.78 2.05 0 2.83l8.01 8c.78.78 2.05.78 2.83 0l7.99-8c.79-.79.79-2.05 0-2.83zM13.5 14.5V12H10v3H8v-4c0-.55.45-1 1-1h4.5V7.5L17 11l-3.5 3.5z"></path></g></svg></span></div><div class="QuU3Wb"><span>Directions</span></div></div></div></a></div></div></div><div class="dNtXMe"></div><div jscontroller="AtSb" class="w7Dbne" data-record-click-time="false" id="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_63" jsdata="zt2wNd;_;jpzYaqPyDYOQ4-EP2K6kuAg47 WDO8Ff;_;jpzYaqPyDYOQ4-EP2K6kuAg21" jsaction="rcuQ6b:npT2md;mouseover:UI3Kjd;mouseleave:Tx5Rb;focusin:UI3Kjd;focusout:Tx5Rb;e3EWke:kN9HDb;v1Cdnb:pFRkQb" data-hveid="CEsQAA"><div jsname="jXK9ad" class="uMdZh tIxNaf"><div class="VkpGBb"><div jscontroller="IKqJbf" class="mTwRT" jsdata="XUxeGc;_;jpzYaqPyDYOQ4-EP2K6kuAg53" jsshadow=""><div jsname="ZfUr6c" id="pv-/g/11bxfmvhq8" jsslot="" role="button" tabindex="0" jsaction="IEAdff;W9aZQc:XX6jIe" data-hveid="CEsQAQ" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ1YkKegQISxAB"><div class="cXedhc"><div class="vwVdIc vyFC0c"><div><div jsname="MZArnb" class="rllt__details"><div class="dbg0pd" aria-level="3" role="heading"><span class="OSrXXb">WayToWeb Pvt Ltd.</span></div><div><span><span class="Y0A0hc" aria-label="Rated 4.5 out of 5, 911 user reviews" role="img"><span class="yi40Hd YrbPuc" aria-hidden="true">4.5</span><span aria-hidden="true" class="z3HNkc" aria-label="Rated 4.5 out of 5," role="img"><span aria-hidden="true"><span class="gTPtFb" style="background:linear-gradient(to right, currentcolor 62px, #8e9099 0%)"></span></span></span><span class="RDApEe YrbPuc" aria-hidden="true">(911)</span></span></span> &middot; Software company</div><div>Samedh Complex, 402, Chimanlal Girdharlal Rd, near associate Petrol Pump, above Panjab National Bank &middot; 079 4004 1819</div><div><span><span style="color:rgba(109,213,140,1.0)">Open</span> · Closes 7 pm</span></div><div class="pJ3Ci"><div class="Ozf5lb"><span class="ncRHuf"><span>On-site services</span></span></div></div></div></div></div></div></div></div><a class="yYlJEf Q7PwXb L48Cpd brKmxb" aria-describedby="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_63" href="[/goto?url=CAESVQHrOzAVccK46sUqbGeJjpNfXmCrx5T8eNQJNSZEiffsgoEzjxijO2KyEhxrzoFYJovoLw_rEHfMyGwb1OtxYeJD9ctloU8JGg_IZNl5pVZTBYyhJqA](https://www.google.com/goto?url=CAESVQHrOzAVccK46sUqbGeJjpNfXmCrx5T8eNQJNSZEiffsgoEzjxijO2KyEhxrzoFYJovoLw_rEHfMyGwb1OtxYeJD9ctloU8JGg_IZNl5pVZTBYyhJqA)" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQgU96BAhLEAw" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=CAESVQHrOzAVccK46sUqbGeJjpNfXmCrx5T8eNQJNSZEiffsgoEzjxijO2KyEhxrzoFYJovoLw_rEHfMyGwb1OtxYeJD9ctloU8JGg_IZNl5pVZTBYyhJqA&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQgU96BAhLEAw&amp;uoh=1"><div class="wLAgVc" style="display:flex;flex-direction:column;align-items:center;justify-content:center"><div class="VDgVie btku5b FR7ZSc OJeuxf sjVJQd"><div class="niO4u KnB5rb"><span class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"></path></svg></span></div><div class="QuU3Wb"><span>Website</span></div></div></div></a><a href="[/maps/dir//WayToWeb+Pvt+Ltd.,+Samedh+Complex,+402,+Chimanlal+Girdharlal+Rd,+near+associate+Petrol+Pump,+above+Panjab+National+Bank,+Ahmedabad,+Gujarat+380006/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e84f68d560049:0x84fd6f2a7cdedca?sa=X&amp;ved=1t:57443&amp;ictx=111](https://www.google.com/maps/dir//WayToWeb+Pvt+Ltd.,+Samedh+Complex,+402,+Chimanlal+Girdharlal+Rd,+near+associate+Petrol+Pump,+above+Panjab+National+Bank,+Ahmedabad,+Gujarat+380006/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e84f68d560049:0x84fd6f2a7cdedca?sa=X&ved=1t:57443&ictx=111)" style="cursor:pointer" data-url="/maps/dir//WayToWeb+Pvt+Ltd.,+Samedh+Complex,+402,+Chimanlal+Girdharlal+Rd,+near+associate+Petrol+Pump,+above+Panjab+National+Bank,+Ahmedabad,+Gujarat+380006/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e84f68d560049:0x84fd6f2a7cdedca?sa=X&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ48ADegQINRAA" tabindex="0" class="yYlJEf Q7PwXb VDgVie brKmxb" aria-describedby="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_63" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=/maps/dir//WayToWeb%2BPvt%2BLtd.,%2BSamedh%2BComplex,%2B402,%2BChimanlal%2BGirdharlal%2BRd,%2Bnear%2Bassociate%2BPetrol%2BPump,%2Babove%2BPanjab%2BNational%2BBank,%2BAhmedabad,%2BGujarat%2B380006/data%3D!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e84f68d560049:0x84fd6f2a7cdedca%3Fsa%3DX%26ved%3D1t:57443%26ictx%3D111&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ48ADegQISxAO"><div><div class="VDgVie btku5b FR7ZSc OJeuxf sjVJQd"><div class="niO4u KnB5rb"><span style="height:24px" class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24" viewBox="0 0 24 24" width="24"><g><rect fill="none" height="24" width="24"></rect></g><g><path d="m21.41 10.59-7.99-8c-.78-.78-2.05-.78-2.83 0l-8.01 8c-.78.78-.78 2.05 0 2.83l8.01 8c.78.78 2.05.78 2.83 0l7.99-8c.79-.79.79-2.05 0-2.83zM13.5 14.5V12H10v3H8v-4c0-.55.45-1 1-1h4.5V7.5L17 11l-3.5 3.5z"></path></g></svg></span></div><div class="QuU3Wb"><span>Directions</span></div></div></div></a></div></div></div><div class="dNtXMe"></div><div jscontroller="AtSb" class="w7Dbne" data-record-click-time="false" id="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_47" jsdata="zt2wNd;_;jpzYaqPyDYOQ4-EP2K6kuAg12 WDO8Ff;_;jpzYaqPyDYOQ4-EP2K6kuAg21" jsaction="rcuQ6b:npT2md;mouseover:UI3Kjd;mouseleave:Tx5Rb;focusin:UI3Kjd;focusout:Tx5Rb;e3EWke:kN9HDb;v1Cdnb:pFRkQb" data-hveid="CD4QAA"><div jsname="jXK9ad" class="uMdZh tIxNaf"><div class="VkpGBb"><div jscontroller="IKqJbf" class="mTwRT" jsdata="XUxeGc;_;jpzYaqPyDYOQ4-EP2K6kuAg36" jsshadow=""><div jsname="ZfUr6c" id="pv-/g/1tgpwllq" jsslot="" role="button" tabindex="0" jsaction="IEAdff;W9aZQc:XX6jIe" data-hveid="CD4QAQ" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ1YkKegQIPhAB"><div class="cXedhc"><div class="vwVdIc vyFC0c"><div><div jsname="MZArnb" class="rllt__details"><div class="dbg0pd" aria-level="3" role="heading"><span class="OSrXXb">Infilon Technologies</span></div><div><span><span class="Y0A0hc" aria-label="Rated 4.6 out of 5, 99 user reviews" role="img"><span class="yi40Hd YrbPuc" aria-hidden="true">4.6</span><span aria-hidden="true" class="z3HNkc" aria-label="Rated 4.6 out of 5," role="img"><span aria-hidden="true"><span class="gTPtFb" style="background:linear-gradient(to right, currentcolor 62px, #8e9099 0%)"></span></span></span><span class="RDApEe YrbPuc" aria-hidden="true">(99)</span></span></span> &middot; Software company</div><div>Shivalik Shilp 2, 1101-1105, Judges Bunglow Rd, opp. Keshavbaug Party plot &middot; 081607 63895</div><div><span><span style="color:rgba(109,213,140,1.0)">Open</span> · Closes 8:15 pm</span></div></div></div></div></div></div></div><a class="yYlJEf Q7PwXb L48Cpd brKmxb" aria-describedby="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_47" href="[/goto?url=CAESUAHrOzAVJp1N8jhsTy_21SNJPW3ZN0aCQLc8VsFIIiI85W9vJfWANsDrsKqK7URQ_ZX9YG-YaBXweaZoZ5L3FtBwc7Ie7mVBq_8WHK4QE8hu](https://www.google.com/goto?url=CAESUAHrOzAVJp1N8jhsTy_21SNJPW3ZN0aCQLc8VsFIIiI85W9vJfWANsDrsKqK7URQ_ZX9YG-YaBXweaZoZ5L3FtBwc7Ie7mVBq_8WHK4QE8hu)" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQgU96BAg-EAo" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=CAESUAHrOzAVJp1N8jhsTy_21SNJPW3ZN0aCQLc8VsFIIiI85W9vJfWANsDrsKqK7URQ_ZX9YG-YaBXweaZoZ5L3FtBwc7Ie7mVBq_8WHK4QE8hu&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQgU96BAg-EAo&amp;uoh=1"><div class="wLAgVc" style="display:flex;flex-direction:column;align-items:center;justify-content:center"><div class="VDgVie btku5b FR7ZSc OJeuxf sjVJQd"><div class="niO4u KnB5rb"><span class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"></path></svg></span></div><div class="QuU3Wb"><span>Website</span></div></div></div></a><a href="[/maps/dir//Infilon+Technologies,+Shivalik+Shilp+2,+1101-1105,+Judges+Bunglow+Rd,+opp.+Keshavbaug+Party+plot,+Satellite,+Ahmedabad,+Gujarat+380015/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e84f466a8194f:0xbdcde14274fb0096?sa=X&amp;ved=1t:57443&amp;ictx=111](https://www.google.com/maps/dir//Infilon+Technologies,+Shivalik+Shilp+2,+1101-1105,+Judges+Bunglow+Rd,+opp.+Keshavbaug+Party+plot,+Satellite,+Ahmedabad,+Gujarat+380015/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e84f466a8194f:0xbdcde14274fb0096?sa=X&ved=1t:57443&ictx=111)" style="cursor:pointer" data-url="/maps/dir//Infilon+Technologies,+Shivalik+Shilp+2,+1101-1105,+Judges+Bunglow+Rd,+opp.+Keshavbaug+Party+plot,+Satellite,+Ahmedabad,+Gujarat+380015/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e84f466a8194f:0xbdcde14274fb0096?sa=X&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ48ADegQIJRAA" tabindex="0" class="yYlJEf Q7PwXb VDgVie brKmxb" aria-describedby="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_47" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=/maps/dir//Infilon%2BTechnologies,%2BShivalik%2BShilp%2B2,%2B1101-1105,%2BJudges%2BBunglow%2BRd,%2Bopp.%2BKeshavbaug%2BParty%2Bplot,%2BSatellite,%2BAhmedabad,%2BGujarat%2B380015/data%3D!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e84f466a8194f:0xbdcde14274fb0096%3Fsa%3DX%26ved%3D1t:57443%26ictx%3D111&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ48ADegQIPhAM"><div><div class="VDgVie btku5b FR7ZSc OJeuxf sjVJQd"><div class="niO4u KnB5rb"><span style="height:24px" class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24" viewBox="0 0 24 24" width="24"><g><rect fill="none" height="24" width="24"></rect></g><g><path d="m21.41 10.59-7.99-8c-.78-.78-2.05-.78-2.83 0l-8.01 8c-.78.78-.78 2.05 0 2.83l8.01 8c.78.78 2.05.78 2.83 0l7.99-8c.79-.79.79-2.05 0-2.83zM13.5 14.5V12H10v3H8v-4c0-.55.45-1 1-1h4.5V7.5L17 11l-3.5 3.5z"></path></g></svg></span></div><div class="QuU3Wb"><span>Directions</span></div></div></div></a></div></div></div><div class="dNtXMe"></div><div jscontroller="AtSb" class="w7Dbne" data-record-click-time="false" id="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_62" jsdata="zt2wNd;_;jpzYaqPyDYOQ4-EP2K6kuAg45 WDO8Ff;_;jpzYaqPyDYOQ4-EP2K6kuAg21" jsaction="rcuQ6b:npT2md;mouseover:UI3Kjd;mouseleave:Tx5Rb;focusin:UI3Kjd;focusout:Tx5Rb;e3EWke:kN9HDb;v1Cdnb:pFRkQb" data-hveid="CEgQAA"><div jsname="jXK9ad" class="uMdZh tIxNaf"><div class="VkpGBb"><div jscontroller="IKqJbf" class="mTwRT" jsdata="XUxeGc;_;jpzYaqPyDYOQ4-EP2K6kuAg50" jsshadow=""><div jsname="ZfUr6c" id="pv-/g/1ptymryxl" jsslot="" role="button" tabindex="0" jsaction="IEAdff;W9aZQc:XX6jIe" data-hveid="CEgQAQ" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ1YkKegQISBAB"><div class="cXedhc"><div class="vwVdIc vyFC0c"><div><div jsname="MZArnb" class="rllt__details"><div class="dbg0pd" aria-level="3" role="heading"><span class="OSrXXb">PearlInfo - Software development company</span></div><div><span><span class="Y0A0hc" aria-label="Rated 4.9 out of 5, 385 user reviews" role="img"><span class="yi40Hd YrbPuc" aria-hidden="true">4.9</span><span aria-hidden="true" class="z3HNkc" aria-label="Rated 4.9 out of 5," role="img"><span aria-hidden="true"><span class="gTPtFb" style="background:linear-gradient(to right, currentcolor 70px, #8e9099 0%)"></span></span></span><span class="RDApEe YrbPuc" aria-hidden="true">(385)</span></span></span> &middot; Software company</div><div>Law Garden, 602, SiliconTower B/h Samartheshwar Mahadev, Netaji Rd &middot; 094260 62643</div><div><span><span style="color:rgba(109,213,140,1.0)">Open</span> · Closes 7 pm</span></div><div class="pJ3Ci"><div class="Ozf5lb"><span class="ncRHuf"><span>On-site services</span><span class="r3PLsf">&middot;<wbr></span></span><span class="ncRHuf"><span>Online appointments</span></span></div></div></div></div></div></div></div></div><a class="yYlJEf Q7PwXb L48Cpd brKmxb" aria-describedby="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_62" href="[/goto?url=CAESTQHrOzAVvnrcAL3yflNobs64UwlQxaEKs9_D7SwOovawrBS2TmYVM_UEJnoZf_qjKbKvCV0Hq3FSt1nr4ExXiwudO0L-n5fM3JVe9YCv](https://www.google.com/goto?url=CAESTQHrOzAVvnrcAL3yflNobs64UwlQxaEKs9_D7SwOovawrBS2TmYVM_UEJnoZf_qjKbKvCV0Hq3FSt1nr4ExXiwudO0L-n5fM3JVe9YCv)" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQgU96BAhIEAw" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=CAESTQHrOzAVvnrcAL3yflNobs64UwlQxaEKs9_D7SwOovawrBS2TmYVM_UEJnoZf_qjKbKvCV0Hq3FSt1nr4ExXiwudO0L-n5fM3JVe9YCv&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQgU96BAhIEAw&amp;uoh=1"><div class="wLAgVc" style="display:flex;flex-direction:column;align-items:center;justify-content:center"><div class="VDgVie btku5b FR7ZSc OJeuxf sjVJQd"><div class="niO4u KnB5rb"><span class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"></path></svg></span></div><div class="QuU3Wb"><span>Website</span></div></div></div></a><a href="[/maps/dir//PearlInfo+-+Software+development+company,+Law+Garden,+602,+SiliconTower+B%2Fh+Samartheshwar+Mahadev,+Netaji+Rd,+Ahmedabad,+Gujarat+380006/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e858dae1c9941:0x46fc395d93fb4aa8?sa=X&amp;ved=1t:57443&amp;ictx=111](https://www.google.com/maps/dir//PearlInfo+-+Software+development+company,+Law+Garden,+602,+SiliconTower+B%2Fh+Samartheshwar+Mahadev,+Netaji+Rd,+Ahmedabad,+Gujarat+380006/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e858dae1c9941:0x46fc395d93fb4aa8?sa=X&ved=1t:57443&ictx=111)" style="cursor:pointer" data-url="/maps/dir//PearlInfo+-+Software+development+company,+Law+Garden,+602,+SiliconTower+B%2Fh+Samartheshwar+Mahadev,+Netaji+Rd,+Ahmedabad,+Gujarat+380006/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e858dae1c9941:0x46fc395d93fb4aa8?sa=X&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ48ADegQINBAA" tabindex="0" class="yYlJEf Q7PwXb VDgVie brKmxb" aria-describedby="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_62" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=/maps/dir//PearlInfo%2B-%2BSoftware%2Bdevelopment%2Bcompany,%2BLaw%2BGarden,%2B602,%2BSiliconTower%2BB%252Fh%2BSamartheshwar%2BMahadev,%2BNetaji%2BRd,%2BAhmedabad,%2BGujarat%2B380006/data%3D!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e858dae1c9941:0x46fc395d93fb4aa8%3Fsa%3DX%26ved%3D1t:57443%26ictx%3D111&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ48ADegQISBAO"><div><div class="VDgVie btku5b FR7ZSc OJeuxf sjVJQd"><div class="niO4u KnB5rb"><span style="height:24px" class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24" viewBox="0 0 24 24" width="24"><g><rect fill="none" height="24" width="24"></rect></g><g><path d="m21.41 10.59-7.99-8c-.78-.78-2.05-.78-2.83 0l-8.01 8c-.78.78-.78 2.05 0 2.83l8.01 8c.78.78 2.05.78 2.83 0l7.99-8c.79-.79.79-2.05 0-2.83zM13.5 14.5V12H10v3H8v-4c0-.55.45-1 1-1h4.5V7.5L17 11l-3.5 3.5z"></path></g></svg></span></div><div class="QuU3Wb"><span>Directions</span></div></div></div></a></div></div></div><div class="dNtXMe"></div><div jscontroller="AtSb" class="w7Dbne" data-record-click-time="false" id="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_61" jsdata="zt2wNd;_;jpzYaqPyDYOQ4-EP2K6kuAg44 WDO8Ff;_;jpzYaqPyDYOQ4-EP2K6kuAg21" jsaction="rcuQ6b:npT2md;mouseover:UI3Kjd;mouseleave:Tx5Rb;focusin:UI3Kjd;focusout:Tx5Rb;e3EWke:kN9HDb;v1Cdnb:pFRkQb" data-hveid="CEcQAA"><div jsname="jXK9ad" class="uMdZh tIxNaf"><div class="VkpGBb"><div jscontroller="IKqJbf" class="mTwRT" jsdata="XUxeGc;_;jpzYaqPyDYOQ4-EP2K6kuAg52" jsshadow=""><div jsname="ZfUr6c" id="pv-/g/11f3bqf7yc" jsslot="" role="button" tabindex="0" jsaction="IEAdff;W9aZQc:XX6jIe" data-hveid="CEcQAQ" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ1YkKegQIRxAB"><div class="cXedhc"><div class="vwVdIc vyFC0c"><div><div jsname="MZArnb" class="rllt__details"><div class="dbg0pd" aria-level="3" role="heading"><span class="OSrXXb">Budventure Technologies Pvt Ltd</span></div><div><span><span class="Y0A0hc" aria-label="Rated 4.9 out of 5, 112 user reviews" role="img"><span class="yi40Hd YrbPuc" aria-hidden="true">4.9</span><span aria-hidden="true" class="z3HNkc" aria-label="Rated 4.9 out of 5," role="img"><span aria-hidden="true"><span class="gTPtFb" style="background:linear-gradient(to right, currentcolor 70px, #8e9099 0%)"></span></span></span><span class="RDApEe YrbPuc" aria-hidden="true">(112)</span></span></span> &middot; Software company</div><div>303, Vedanta, opp. Usmanpura &middot; 078618 04025</div><div><span><span style="color:rgba(109,213,140,1.0)">Open</span> · Closes 9 pm</span></div></div></div></div></div></div></div><a class="yYlJEf Q7PwXb L48Cpd brKmxb" aria-describedby="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_61" href="[/goto?url=CAESWgHrOzAV5tAe1hUTRhvAI5kxkQA-Pspyogu0hoJFL9pZmMufe09XbwzD6hxjekLne9n7-AYtUwSev5F-9o4QvfvxLmSB4-R1asyGVlnZfSvd2Qzv9aWhrmMw1g](https://www.google.com/goto?url=CAESWgHrOzAV5tAe1hUTRhvAI5kxkQA-Pspyogu0hoJFL9pZmMufe09XbwzD6hxjekLne9n7-AYtUwSev5F-9o4QvfvxLmSB4-R1asyGVlnZfSvd2Qzv9aWhrmMw1g)" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQgU96BAhHEAo" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=CAESWgHrOzAV5tAe1hUTRhvAI5kxkQA-Pspyogu0hoJFL9pZmMufe09XbwzD6hxjekLne9n7-AYtUwSev5F-9o4QvfvxLmSB4-R1asyGVlnZfSvd2Qzv9aWhrmMw1g&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQgU96BAhHEAo&amp;uoh=1"><div class="wLAgVc" style="display:flex;flex-direction:column;align-items:center;justify-content:center"><div class="VDgVie btku5b FR7ZSc OJeuxf sjVJQd"><div class="niO4u KnB5rb"><span class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"></path></svg></span></div><div class="QuU3Wb"><span>Website</span></div></div></div></a><a href="[/maps/dir//303,+Vedanta,+Budventure+Technologies+Pvt+Ltd,+opp.+Usmanpura,+Garden,+Usmanpura,+Ahmedabad,+Gujarat+380009/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e84f6675e6231:0x518095a3e48fdf16?sa=X&amp;ved=1t:57443&amp;ictx=111](https://www.google.com/maps/dir//303,+Vedanta,+Budventure+Technologies+Pvt+Ltd,+opp.+Usmanpura,+Garden,+Usmanpura,+Ahmedabad,+Gujarat+380009/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e84f6675e6231:0x518095a3e48fdf16?sa=X&ved=1t:57443&ictx=111)" style="cursor:pointer" data-url="/maps/dir//303,+Vedanta,+Budventure+Technologies+Pvt+Ltd,+opp.+Usmanpura,+Garden,+Usmanpura,+Ahmedabad,+Gujarat+380009/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e84f6675e6231:0x518095a3e48fdf16?sa=X&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ48ADegQIMxAA" tabindex="0" class="yYlJEf Q7PwXb VDgVie brKmxb" aria-describedby="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_61" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=/maps/dir//303,%2BVedanta,%2BBudventure%2BTechnologies%2BPvt%2BLtd,%2Bopp.%2BUsmanpura,%2BGarden,%2BUsmanpura,%2BAhmedabad,%2BGujarat%2B380009/data%3D!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e84f6675e6231:0x518095a3e48fdf16%3Fsa%3DX%26ved%3D1t:57443%26ictx%3D111&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ48ADegQIRxAM"><div><div class="VDgVie btku5b FR7ZSc OJeuxf sjVJQd"><div class="niO4u KnB5rb"><span style="height:24px" class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24" viewBox="0 0 24 24" width="24"><g><rect fill="none" height="24" width="24"></rect></g><g><path d="m21.41 10.59-7.99-8c-.78-.78-2.05-.78-2.83 0l-8.01 8c-.78.78-.78 2.05 0 2.83l8.01 8c.78.78 2.05.78 2.83 0l7.99-8c.79-.79.79-2.05 0-2.83zM13.5 14.5V12H10v3H8v-4c0-.55.45-1 1-1h4.5V7.5L17 11l-3.5 3.5z"></path></g></svg></span></div><div class="QuU3Wb"><span>Directions</span></div></div></div></a></div></div></div><div class="dNtXMe"></div><div jscontroller="AtSb" class="w7Dbne" data-record-click-time="false" id="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_60" jsdata="zt2wNd;_;jpzYaqPyDYOQ4-EP2K6kuAg43 WDO8Ff;_;jpzYaqPyDYOQ4-EP2K6kuAg21" jsaction="rcuQ6b:npT2md;mouseover:UI3Kjd;mouseleave:Tx5Rb;focusin:UI3Kjd;focusout:Tx5Rb;e3EWke:kN9HDb;v1Cdnb:pFRkQb" data-hveid="CEYQAA"><div jsname="jXK9ad" class="uMdZh tIxNaf"><div class="VkpGBb"><div jscontroller="IKqJbf" class="mTwRT" jsdata="XUxeGc;_;jpzYaqPyDYOQ4-EP2K6kuAg49" jsshadow=""><div jsname="ZfUr6c" id="pv-/g/11f3nm5yn6" jsslot="" role="button" tabindex="0" jsaction="IEAdff;W9aZQc:XX6jIe" data-hveid="CEYQAQ" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ1YkKegQIRhAB"><div class="cXedhc"><div class="vwVdIc vyFC0c"><div><div jsname="MZArnb" class="rllt__details"><div class="dbg0pd" aria-level="3" role="heading"><span class="OSrXXb">Rushkar Technology Pvt. Ltd</span></div><div><span><span class="Y0A0hc" aria-label="Rated 4.6 out of 5, 113 user reviews" role="img"><span class="yi40Hd YrbPuc" aria-hidden="true">4.6</span><span aria-hidden="true" class="z3HNkc" aria-label="Rated 4.6 out of 5," role="img"><span aria-hidden="true"><span class="gTPtFb" style="background:linear-gradient(to right, currentcolor 62px, #8e9099 0%)"></span></span></span><span class="RDApEe YrbPuc" aria-hidden="true">(113)</span></span></span> &middot; Software company</div><div>B-512, Titenium City Center &middot; 078628 49759</div><div><span><span style="color:rgba(109,213,140,1.0)">Open 24 hours</span></span></div><div class="pJ3Ci"><div class="Ozf5lb"><span class="ncRHuf"><span>On-site services</span><span class="r3PLsf">&middot;<wbr></span></span><span class="ncRHuf"><span>Online appointments</span></span></div></div></div></div></div></div></div></div><a class="yYlJEf Q7PwXb L48Cpd brKmxb" aria-describedby="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_60" href="[/goto?url=CAESdQHrOzAVJjNx1QGKVrqGgoMNFKG4yB-KcVykuNxDhxjRKtaueGQqNL7z36n7VPjzCRKOJDUsk8AvAiUCrLIQGGYJaCl47wR_V7Jr5TnF8KlXBVYPYV4NSVt8nccmeVXsFTgOi_J9xQ8-rVlQI-c-ZTPvxC9pRA](https://www.google.com/goto?url=CAESdQHrOzAVJjNx1QGKVrqGgoMNFKG4yB-KcVykuNxDhxjRKtaueGQqNL7z36n7VPjzCRKOJDUsk8AvAiUCrLIQGGYJaCl47wR_V7Jr5TnF8KlXBVYPYV4NSVt8nccmeVXsFTgOi_J9xQ8-rVlQI-c-ZTPvxC9pRA)" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQgU96BAhGEAw" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=CAESdQHrOzAVJjNx1QGKVrqGgoMNFKG4yB-KcVykuNxDhxjRKtaueGQqNL7z36n7VPjzCRKOJDUsk8AvAiUCrLIQGGYJaCl47wR_V7Jr5TnF8KlXBVYPYV4NSVt8nccmeVXsFTgOi_J9xQ8-rVlQI-c-ZTPvxC9pRA&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQgU96BAhGEAw&amp;uoh=1"><div class="wLAgVc" style="display:flex;flex-direction:column;align-items:center;justify-content:center"><div class="VDgVie btku5b FR7ZSc OJeuxf sjVJQd"><div class="niO4u KnB5rb"><span class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"></path></svg></span></div><div class="QuU3Wb"><span>Website</span></div></div></div></a><a href="[/maps/dir//Rushkar+Technology+Pvt.+Ltd,+B-512,+Titenium+City+Center,+Satellite,+Ahmedabad,+Gujarat+380015/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e84d50c28d7d3:0x4b2bc63dc8e8b107?sa=X&amp;ved=1t:57443&amp;ictx=111](https://www.google.com/maps/dir//Rushkar+Technology+Pvt.+Ltd,+B-512,+Titenium+City+Center,+Satellite,+Ahmedabad,+Gujarat+380015/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e84d50c28d7d3:0x4b2bc63dc8e8b107?sa=X&ved=1t:57443&ictx=111)" style="cursor:pointer" data-url="/maps/dir//Rushkar+Technology+Pvt.+Ltd,+B-512,+Titenium+City+Center,+Satellite,+Ahmedabad,+Gujarat+380015/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e84d50c28d7d3:0x4b2bc63dc8e8b107?sa=X&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ48ADegQIMhAA" tabindex="0" class="yYlJEf Q7PwXb VDgVie brKmxb" aria-describedby="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_60" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=/maps/dir//Rushkar%2BTechnology%2BPvt.%2BLtd,%2BB-512,%2BTitenium%2BCity%2BCenter,%2BSatellite,%2BAhmedabad,%2BGujarat%2B380015/data%3D!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e84d50c28d7d3:0x4b2bc63dc8e8b107%3Fsa%3DX%26ved%3D1t:57443%26ictx%3D111&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ48ADegQIRhAO"><div><div class="VDgVie btku5b FR7ZSc OJeuxf sjVJQd"><div class="niO4u KnB5rb"><span style="height:24px" class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24" viewBox="0 0 24 24" width="24"><g><rect fill="none" height="24" width="24"></rect></g><g><path d="m21.41 10.59-7.99-8c-.78-.78-2.05-.78-2.83 0l-8.01 8c-.78.78-.78 2.05 0 2.83l8.01 8c.78.78 2.05.78 2.83 0l7.99-8c.79-.79.79-2.05 0-2.83zM13.5 14.5V12H10v3H8v-4c0-.55.45-1 1-1h4.5V7.5L17 11l-3.5 3.5z"></path></g></svg></span></div><div class="QuU3Wb"><span>Directions</span></div></div></div></a></div></div></div><div class="dNtXMe"></div><div jscontroller="AtSb" class="w7Dbne" data-record-click-time="false" id="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_50" jsdata="zt2wNd;_;jpzYaqPyDYOQ4-EP2K6kuAg13 WDO8Ff;_;jpzYaqPyDYOQ4-EP2K6kuAg21" jsaction="rcuQ6b:npT2md;mouseover:UI3Kjd;mouseleave:Tx5Rb;focusin:UI3Kjd;focusout:Tx5Rb;e3EWke:kN9HDb;v1Cdnb:pFRkQb" data-hveid="CEAQAA"><div jsname="jXK9ad" class="uMdZh tIxNaf"><div class="VkpGBb"><div jscontroller="IKqJbf" class="mTwRT" jsdata="XUxeGc;_;jpzYaqPyDYOQ4-EP2K6kuAg35" jsshadow=""><div jsname="ZfUr6c" id="pv-/g/11bbx0f11x" jsslot="" role="button" tabindex="0" jsaction="IEAdff;W9aZQc:XX6jIe" data-hveid="CEAQAQ" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ1YkKegQIQBAB"><div class="cXedhc"><div class="vwVdIc vyFC0c"><div><div jsname="MZArnb" class="rllt__details"><div class="dbg0pd" aria-level="3" role="heading"><span class="OSrXXb">Elision Technologies Pvt. Ltd.</span></div><div><span><span class="Y0A0hc" aria-label="Rated 4.7 out of 5, 253 user reviews" role="img"><span class="yi40Hd YrbPuc" aria-hidden="true">4.7</span><span aria-hidden="true" class="z3HNkc" aria-label="Rated 4.7 out of 5," role="img"><span aria-hidden="true"><span class="gTPtFb" style="background:linear-gradient(to right, currentcolor 62px, #8e9099 0%)"></span></span></span><span class="RDApEe YrbPuc" aria-hidden="true">(253)</span></span></span> &middot; Software company</div><div>626, East Wing, Stratum @ Venus Grounds, Jhansi Ki Rani &middot; 070416 49394</div><div><span><span style="color:rgba(109,213,140,1.0)">Open</span> · Closes 10 pm</span></div><div class="pJ3Ci"><div class="Ozf5lb"><span class="ncRHuf"><span>On-site services</span></span></div></div></div></div></div></div></div></div><a class="yYlJEf Q7PwXb L48Cpd brKmxb" aria-describedby="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_50" href="[/goto?url=CAESUwHrOzAVioKnVd7_eeZv3bTIhVCqslwIvLgJHbjc02udGv63C7U-D_8R801rDk9CGig3sP3unZVGITNfa6UdogwxlfvuOwqCSSRbSL6f_7UAXKYK](https://www.google.com/goto?url=CAESUwHrOzAVioKnVd7_eeZv3bTIhVCqslwIvLgJHbjc02udGv63C7U-D_8R801rDk9CGig3sP3unZVGITNfa6UdogwxlfvuOwqCSSRbSL6f_7UAXKYK)" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQgU96BAhAEAw" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=CAESUwHrOzAVioKnVd7_eeZv3bTIhVCqslwIvLgJHbjc02udGv63C7U-D_8R801rDk9CGig3sP3unZVGITNfa6UdogwxlfvuOwqCSSRbSL6f_7UAXKYK&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQgU96BAhAEAw&amp;uoh=1"><div class="wLAgVc" style="display:flex;flex-direction:column;align-items:center;justify-content:center"><div class="VDgVie btku5b FR7ZSc OJeuxf sjVJQd"><div class="niO4u KnB5rb"><span class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"></path></svg></span></div><div class="QuU3Wb"><span>Website</span></div></div></div></a><a href="[/maps/dir//626,+Elision+Technologies+Pvt.+Ltd.,+East+Wing,+Stratum+@+Venus+Grounds,+Jhansi+Ki+Rani,+Nehru+Nagar,+Ahmedabad,+Gujarat+380015/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e85027cdeea97:0x5fb54adc5d661468?sa=X&amp;ved=1t:57443&amp;ictx=111](https://www.google.com/maps/dir//626,+Elision+Technologies+Pvt.+Ltd.,+East+Wing,+Stratum+@+Venus+Grounds,+Jhansi+Ki+Rani,+Nehru+Nagar,+Ahmedabad,+Gujarat+380015/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e85027cdeea97:0x5fb54adc5d661468?sa=X&ved=1t:57443&ictx=111)" style="cursor:pointer" data-url="/maps/dir//626,+Elision+Technologies+Pvt.+Ltd.,+East+Wing,+Stratum+@+Venus+Grounds,+Jhansi+Ki+Rani,+Nehru+Nagar,+Ahmedabad,+Gujarat+380015/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e85027cdeea97:0x5fb54adc5d661468?sa=X&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ48ADegQIJBAA" tabindex="0" class="yYlJEf Q7PwXb VDgVie brKmxb" aria-describedby="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_50" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=/maps/dir//626,%2BElision%2BTechnologies%2BPvt.%2BLtd.,%2BEast%2BWing,%2BStratum%2B%40%2BVenus%2BGrounds,%2BJhansi%2BKi%2BRani,%2BNehru%2BNagar,%2BAhmedabad,%2BGujarat%2B380015/data%3D!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e85027cdeea97:0x5fb54adc5d661468%3Fsa%3DX%26ved%3D1t:57443%26ictx%3D111&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ48ADegQIQBAO"><div><div class="VDgVie btku5b FR7ZSc OJeuxf sjVJQd"><div class="niO4u KnB5rb"><span style="height:24px" class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24" viewBox="0 0 24 24" width="24"><g><rect fill="none" height="24" width="24"></rect></g><g><path d="m21.41 10.59-7.99-8c-.78-.78-2.05-.78-2.83 0l-8.01 8c-.78.78-.78 2.05 0 2.83l8.01 8c.78.78 2.05.78 2.83 0l7.99-8c.79-.79.79-2.05 0-2.83zM13.5 14.5V12H10v3H8v-4c0-.55.45-1 1-1h4.5V7.5L17 11l-3.5 3.5z"></path></g></svg></span></div><div class="QuU3Wb"><span>Directions</span></div></div></div></a></div></div></div><div class="dNtXMe"></div><div jscontroller="AtSb" class="w7Dbne" data-record-click-time="false" id="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_59" jsdata="zt2wNd;_;jpzYaqPyDYOQ4-EP2K6kuAg42 WDO8Ff;_;jpzYaqPyDYOQ4-EP2K6kuAg21" jsaction="rcuQ6b:npT2md;mouseover:UI3Kjd;mouseleave:Tx5Rb;focusin:UI3Kjd;focusout:Tx5Rb;e3EWke:kN9HDb;v1Cdnb:pFRkQb" data-hveid="CEUQAA"><div jsname="jXK9ad" class="uMdZh tIxNaf"><div class="VkpGBb"><div jscontroller="IKqJbf" class="mTwRT" jsdata="XUxeGc;_;jpzYaqPyDYOQ4-EP2K6kuAg48" jsshadow=""><div jsname="ZfUr6c" id="pv-/g/11fzb0hl8n" jsslot="" role="button" tabindex="0" jsaction="IEAdff;W9aZQc:XX6jIe" data-hveid="CEUQAQ" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ1YkKegQIRRAB"><div class="cXedhc"><div class="vwVdIc vyFC0c"><div><div jsname="MZArnb" class="rllt__details"><div class="dbg0pd" aria-level="3" role="heading"><span class="OSrXXb">Sparks to Ideas</span></div><div><span><span class="Y0A0hc" aria-label="Rated 4.7 out of 5, 2.8K user reviews" role="img"><span class="yi40Hd YrbPuc" aria-hidden="true">4.7</span><span aria-hidden="true" class="z3HNkc" aria-label="Rated 4.7 out of 5," role="img"><span aria-hidden="true"><span class="gTPtFb" style="background:linear-gradient(to right, currentcolor 62px, #8e9099 0%)"></span></span></span><span class="RDApEe YrbPuc" aria-hidden="true">(2.8K)</span></span></span> &middot; Software company</div><div>406, Akshat Complex, Sarkhej - Gandhinagar Hwy, near pakwan hotel, opp. Rajpath Rangoli Road &middot; 095102 03204</div><div><span><span style="color:rgba(109,213,140,1.0)">Open</span> · Closes 7 pm</span></div><div class="pJ3Ci"><div class="FyvIhd dSEeSc"><span class="NmuOpc"><div class="NJiz JZfDId"> <svg class="tZ3wY" height="16" width="16" aria-hidden="true" viewBox="0 0 10.169 10.169" xmlns="http://www.w3.org/2000/svg"> <circle cx="5.084" cy="5.085" fill="#a0c3ff" r="5.0843"></circle> <circle cx="5.133" cy="3.811" fill="#4374e0" r="2.014"></circle> <ellipse cx="5.064" cy="8.165" fill="#4374e0" rx="3.564" ry="1.8067"></ellipse> </svg> </div></span><span class="uDyWh OSrXXb klVkgd"><span>"I have completed my internship in <b>PHP</b> technology and the mentorship is good."</span></span></div></div></div></div></div></div></div></div><a class="yYlJEf Q7PwXb L48Cpd brKmxb" aria-describedby="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_59" href="[/goto?url=CAESVgHrOzAVFXRUjzr9cLty-o_6gF0Z6prYpK2Cp03PC4P4OjGZGryWcw8ZCDnYl9PCEFGVsGEDe6QezTT924b9OSNbL7BqnNh-FHFKuNttdebJzjtb5QzC](https://www.google.com/goto?url=CAESVgHrOzAVFXRUjzr9cLty-o_6gF0Z6prYpK2Cp03PC4P4OjGZGryWcw8ZCDnYl9PCEFGVsGEDe6QezTT924b9OSNbL7BqnNh-FHFKuNttdebJzjtb5QzC)" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQgU96BAhFEAw" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=CAESVgHrOzAVFXRUjzr9cLty-o_6gF0Z6prYpK2Cp03PC4P4OjGZGryWcw8ZCDnYl9PCEFGVsGEDe6QezTT924b9OSNbL7BqnNh-FHFKuNttdebJzjtb5QzC&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQgU96BAhFEAw&amp;uoh=1"><div class="wLAgVc" style="display:flex;flex-direction:column;align-items:center;justify-content:center"><div class="VDgVie btku5b FR7ZSc OJeuxf sjVJQd"><div class="niO4u KnB5rb"><span class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"></path></svg></span></div><div class="QuU3Wb"><span>Website</span></div></div></div></a><a href="[/maps/dir//Sparks+to+Ideas,+406,+Akshat+Complex,+Sarkhej+-+Gandhinagar+Hwy,+near+pakwan+hotel,+opp.+Rajpath+Rangoli+Road,+Ahmedabad,+Gujarat+380015/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e9b4922484c6f:0xe077cfffcd90ee87?sa=X&amp;ved=1t:57443&amp;ictx=111](https://www.google.com/maps/dir//Sparks+to+Ideas,+406,+Akshat+Complex,+Sarkhej+-+Gandhinagar+Hwy,+near+pakwan+hotel,+opp.+Rajpath+Rangoli+Road,+Ahmedabad,+Gujarat+380015/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e9b4922484c6f:0xe077cfffcd90ee87?sa=X&ved=1t:57443&ictx=111)" style="cursor:pointer" data-url="/maps/dir//Sparks+to+Ideas,+406,+Akshat+Complex,+Sarkhej+-+Gandhinagar+Hwy,+near+pakwan+hotel,+opp.+Rajpath+Rangoli+Road,+Ahmedabad,+Gujarat+380015/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e9b4922484c6f:0xe077cfffcd90ee87?sa=X&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ48ADegQILxAA" tabindex="0" class="yYlJEf Q7PwXb VDgVie brKmxb" aria-describedby="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_59" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=/maps/dir//Sparks%2Bto%2BIdeas,%2B406,%2BAkshat%2BComplex,%2BSarkhej%2B-%2BGandhinagar%2BHwy,%2Bnear%2Bpakwan%2Bhotel,%2Bopp.%2BRajpath%2BRangoli%2BRoad,%2BAhmedabad,%2BGujarat%2B380015/data%3D!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e9b4922484c6f:0xe077cfffcd90ee87%3Fsa%3DX%26ved%3D1t:57443%26ictx%3D111&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ48ADegQIRRAO"><div><div class="VDgVie btku5b FR7ZSc OJeuxf sjVJQd"><div class="niO4u KnB5rb"><span style="height:24px" class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24" viewBox="0 0 24 24" width="24"><g><rect fill="none" height="24" width="24"></rect></g><g><path d="m21.41 10.59-7.99-8c-.78-.78-2.05-.78-2.83 0l-8.01 8c-.78.78-.78 2.05 0 2.83l8.01 8c.78.78 2.05.78 2.83 0l7.99-8c.79-.79.79-2.05 0-2.83zM13.5 14.5V12H10v3H8v-4c0-.55.45-1 1-1h4.5V7.5L17 11l-3.5 3.5z"></path></g></svg></span></div><div class="QuU3Wb"><span>Directions</span></div></div></div></a></div></div></div><div class="dNtXMe"></div><div jscontroller="AtSb" class="w7Dbne" data-record-click-time="false" id="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_57" jsdata="zt2wNd;_;jpzYaqPyDYOQ4-EP2K6kuAg39 WDO8Ff;_;jpzYaqPyDYOQ4-EP2K6kuAg21" jsaction="rcuQ6b:npT2md;mouseover:UI3Kjd;mouseleave:Tx5Rb;focusin:UI3Kjd;focusout:Tx5Rb;e3EWke:kN9HDb;v1Cdnb:pFRkQb" data-hveid="CEMQAA"><div jsname="jXK9ad" class="uMdZh tIxNaf"><div class="VkpGBb"><div jscontroller="IKqJbf" class="mTwRT" jsdata="XUxeGc;_;jpzYaqPyDYOQ4-EP2K6kuAg40" jsshadow=""><div jsname="ZfUr6c" id="pv-/g/1tt89nh3" jsslot="" role="button" tabindex="0" jsaction="IEAdff;W9aZQc:XX6jIe" data-hveid="CEMQAQ" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ1YkKegQIQxAB"><div class="cXedhc"><div class="vwVdIc vyFC0c"><div><div jsname="MZArnb" class="rllt__details"><div class="dbg0pd" aria-level="3" role="heading"><span class="OSrXXb">Agile Infoways LLC</span></div><div><span><span class="Y0A0hc" aria-label="Rated 4.0 out of 5, 330 user reviews" role="img"><span class="yi40Hd YrbPuc" aria-hidden="true">4.0</span><span aria-hidden="true" class="z3HNkc" aria-label="Rated 4.0 out of 5," role="img"><span aria-hidden="true"><span class="gTPtFb" style="background:linear-gradient(to right, currentcolor 56px, #8e9099 0%)"></span></span></span><span class="RDApEe YrbPuc" aria-hidden="true">(330)</span></span></span> &middot; Software company</div><div>10th Floor, Ashridhar Athens, Shivranjani Cross Rd, opp. Statue of Jhanshi ki Rani &middot; 076220 81234</div><div><span><span style="color:rgba(109,213,140,1.0)">Open</span> · Closes 7 pm</span></div></div></div></div></div></div></div><a class="yYlJEf Q7PwXb L48Cpd brKmxb" aria-describedby="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_57" href="[/goto?url=CAESVgHrOzAVheXEtztH3Ica5eccmav7KBL6Pe3loRE6i44pc_kQHAD_1mZ_83esRf3D5sWpF2Ulty0kU-wSEPbSU-XBlPlz3fSwp2yTx8HZjAcIWif0R3vS](https://www.google.com/goto?url=CAESVgHrOzAVheXEtztH3Ica5eccmav7KBL6Pe3loRE6i44pc_kQHAD_1mZ_83esRf3D5sWpF2Ulty0kU-wSEPbSU-XBlPlz3fSwp2yTx8HZjAcIWif0R3vS)" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQgU96BAhDEAo" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=CAESVgHrOzAVheXEtztH3Ica5eccmav7KBL6Pe3loRE6i44pc_kQHAD_1mZ_83esRf3D5sWpF2Ulty0kU-wSEPbSU-XBlPlz3fSwp2yTx8HZjAcIWif0R3vS&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQgU96BAhDEAo&amp;uoh=1"><div class="wLAgVc" style="display:flex;flex-direction:column;align-items:center;justify-content:center"><div class="VDgVie btku5b FR7ZSc OJeuxf sjVJQd"><div class="niO4u KnB5rb"><span class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"></path></svg></span></div><div class="QuU3Wb"><span>Website</span></div></div></div></a><a href="[/maps/dir//10th+Floor,+Agile+Infoways+LLC,+Ashridhar+Athens,+Shivranjani+Cross+Rd,+opp.+Statue+of+Jhanshi+ki+Rani,+Ahmedabad,+Gujarat+380015/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e848ac8a7faf3:0x891159e5666d4832?sa=X&amp;ved=1t:57443&amp;ictx=111](https://www.google.com/maps/dir//10th+Floor,+Agile+Infoways+LLC,+Ashridhar+Athens,+Shivranjani+Cross+Rd,+opp.+Statue+of+Jhanshi+ki+Rani,+Ahmedabad,+Gujarat+380015/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e848ac8a7faf3:0x891159e5666d4832?sa=X&ved=1t:57443&ictx=111)" style="cursor:pointer" data-url="/maps/dir//10th+Floor,+Agile+Infoways+LLC,+Ashridhar+Athens,+Shivranjani+Cross+Rd,+opp.+Statue+of+Jhanshi+ki+Rani,+Ahmedabad,+Gujarat+380015/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e848ac8a7faf3:0x891159e5666d4832?sa=X&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ48ADegQIMBAA" tabindex="0" class="yYlJEf Q7PwXb VDgVie brKmxb" aria-describedby="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_57" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=/maps/dir//10th%2BFloor,%2BAgile%2BInfoways%2BLLC,%2BAshridhar%2BAthens,%2BShivranjani%2BCross%2BRd,%2Bopp.%2BStatue%2Bof%2BJhanshi%2Bki%2BRani,%2BAhmedabad,%2BGujarat%2B380015/data%3D!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e848ac8a7faf3:0x891159e5666d4832%3Fsa%3DX%26ved%3D1t:57443%26ictx%3D111&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ48ADegQIQxAM"><div><div class="VDgVie btku5b FR7ZSc OJeuxf sjVJQd"><div class="niO4u KnB5rb"><span style="height:24px" class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24" viewBox="0 0 24 24" width="24"><g><rect fill="none" height="24" width="24"></rect></g><g><path d="m21.41 10.59-7.99-8c-.78-.78-2.05-.78-2.83 0l-8.01 8c-.78.78-.78 2.05 0 2.83l8.01 8c.78.78 2.05.78 2.83 0l7.99-8c.79-.79.79-2.05 0-2.83zM13.5 14.5V12H10v3H8v-4c0-.55.45-1 1-1h4.5V7.5L17 11l-3.5 3.5z"></path></g></svg></span></div><div class="QuU3Wb"><span>Directions</span></div></div></div></a></div></div></div><div class="dNtXMe"></div><div jscontroller="AtSb" class="w7Dbne" data-record-click-time="false" id="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_56" jsdata="zt2wNd;_;jpzYaqPyDYOQ4-EP2K6kuAg18 WDO8Ff;_;jpzYaqPyDYOQ4-EP2K6kuAg21" jsaction="rcuQ6b:npT2md;mouseover:UI3Kjd;mouseleave:Tx5Rb;focusin:UI3Kjd;focusout:Tx5Rb;e3EWke:kN9HDb;v1Cdnb:pFRkQb" data-hveid="CD8QAA"><div jsname="jXK9ad" class="uMdZh tIxNaf"><div class="VkpGBb"><div jscontroller="IKqJbf" class="mTwRT" jsdata="XUxeGc;_;jpzYaqPyDYOQ4-EP2K6kuAg29" jsshadow=""><div jsname="ZfUr6c" id="pv-/g/11w9d9zvx6" jsslot="" role="button" tabindex="0" jsaction="IEAdff;W9aZQc:XX6jIe" data-hveid="CD8QAQ" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ1YkKegQIPxAB"><div class="cXedhc"><div class="vwVdIc vyFC0c"><div><div jsname="MZArnb" class="rllt__details"><div class="dbg0pd" aria-level="3" role="heading"><span class="OSrXXb">PHP InfoSec</span></div><div><span><span class="Y0A0hc" aria-label="Rated 5.0 out of 5, 3 user reviews" role="img"><span class="yi40Hd YrbPuc" aria-hidden="true">5.0</span><span aria-hidden="true" class="z3HNkc" aria-label="Rated 5.0 out of 5," role="img"><span aria-hidden="true"><span class="gTPtFb" style="background:linear-gradient(to right, currentcolor 70px, #8e9099 0%)"></span></span></span><span class="RDApEe YrbPuc" aria-hidden="true">(3)</span></span></span> &middot; Software company</div><div>Hotel, Shivalik Highstreet, Itc Narmada, 901 &middot; 070467 27299</div><div><span><span style="color:rgba(109,213,140,1.0)">Open</span> · Closes 6 pm</span></div><div class="pJ3Ci"><div class="FyvIhd dSEeSc"><span class="NmuOpc"><div class="NJiz JZfDId"> <svg class="tZ3wY" height="16" width="16" aria-hidden="true" viewBox="0 0 10.169 10.169" xmlns="http://www.w3.org/2000/svg"> <circle cx="5.084" cy="5.085" fill="#a0c3ff" r="5.0843"></circle> <circle cx="5.133" cy="3.811" fill="#4374e0" r="2.014"></circle> <ellipse cx="5.064" cy="8.165" fill="#4374e0" rx="3.564" ry="1.8067"></ellipse> </svg> </div></span><span class="uDyWh OSrXXb klVkgd">"PHP Infosec offers a highly skilled team."</span></div></div></div></div></div></div></div></div><a class="yYlJEf Q7PwXb L48Cpd brKmxb" aria-describedby="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_56" href="[/goto?url=CAESUwHrOzAV40ZgUU4BqNwjbT9knQfPKGg-y8ds5xK4Qj3cpdpgoV30vzefEDg3SxTa0CZcSXN2kMIUqDTOpDu9OR0mdD5rUwnfD2zZfZdjRiaaSjpL](https://www.google.com/goto?url=CAESUwHrOzAV40ZgUU4BqNwjbT9knQfPKGg-y8ds5xK4Qj3cpdpgoV30vzefEDg3SxTa0CZcSXN2kMIUqDTOpDu9OR0mdD5rUwnfD2zZfZdjRiaaSjpL)" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQgU96BAg_EAw" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=CAESUwHrOzAV40ZgUU4BqNwjbT9knQfPKGg-y8ds5xK4Qj3cpdpgoV30vzefEDg3SxTa0CZcSXN2kMIUqDTOpDu9OR0mdD5rUwnfD2zZfZdjRiaaSjpL&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQgU96BAg_EAw&amp;uoh=1"><div class="wLAgVc" style="display:flex;flex-direction:column;align-items:center;justify-content:center"><div class="VDgVie btku5b FR7ZSc OJeuxf sjVJQd"><div class="niO4u KnB5rb"><span class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"></path></svg></span></div><div class="QuU3Wb"><span>Website</span></div></div></div></a><a href="[/maps/dir//PHP+InfoSec,+Hotel,+Shivalik+Highstreet,+Itc+Narmada,+901,+Nr:,+Ahmedabad,+Gujarat+380015/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e85be20f18d35:0x939758a27e7bd4cc?sa=X&amp;ved=1t:57443&amp;ictx=111](https://www.google.com/maps/dir//PHP+InfoSec,+Hotel,+Shivalik+Highstreet,+Itc+Narmada,+901,+Nr:,+Ahmedabad,+Gujarat+380015/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e85be20f18d35:0x939758a27e7bd4cc?sa=X&ved=1t:57443&ictx=111)" style="cursor:pointer" data-url="/maps/dir//PHP+InfoSec,+Hotel,+Shivalik+Highstreet,+Itc+Narmada,+901,+Nr:,+Ahmedabad,+Gujarat+380015/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e85be20f18d35:0x939758a27e7bd4cc?sa=X&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ48ADegQIKBAA" tabindex="0" class="yYlJEf Q7PwXb VDgVie brKmxb" aria-describedby="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_56" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=/maps/dir//PHP%2BInfoSec,%2BHotel,%2BShivalik%2BHighstreet,%2BItc%2BNarmada,%2B901,%2BNr:,%2BAhmedabad,%2BGujarat%2B380015/data%3D!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e85be20f18d35:0x939758a27e7bd4cc%3Fsa%3DX%26ved%3D1t:57443%26ictx%3D111&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ48ADegQIPxAO"><div><div class="VDgVie btku5b FR7ZSc OJeuxf sjVJQd"><div class="niO4u KnB5rb"><span style="height:24px" class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24" viewBox="0 0 24 24" width="24"><g><rect fill="none" height="24" width="24"></rect></g><g><path d="m21.41 10.59-7.99-8c-.78-.78-2.05-.78-2.83 0l-8.01 8c-.78.78-.78 2.05 0 2.83l8.01 8c.78.78 2.05.78 2.83 0l7.99-8c.79-.79.79-2.05 0-2.83zM13.5 14.5V12H10v3H8v-4c0-.55.45-1 1-1h4.5V7.5L17 11l-3.5 3.5z"></path></g></svg></span></div><div class="QuU3Wb"><span>Directions</span></div></div></div></a></div></div></div><div class="dNtXMe"></div><div jscontroller="AtSb" class="w7Dbne" data-record-click-time="false" id="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_55" jsdata="zt2wNd;_;jpzYaqPyDYOQ4-EP2K6kuAg17 WDO8Ff;_;jpzYaqPyDYOQ4-EP2K6kuAg21" jsaction="rcuQ6b:npT2md;mouseover:UI3Kjd;mouseleave:Tx5Rb;focusin:UI3Kjd;focusout:Tx5Rb;e3EWke:kN9HDb;v1Cdnb:pFRkQb" data-hveid="CEEQAA"><div jsname="jXK9ad" class="uMdZh tIxNaf"><div class="VkpGBb"><div jscontroller="IKqJbf" class="mTwRT" jsdata="XUxeGc;_;jpzYaqPyDYOQ4-EP2K6kuAg32" jsshadow=""><div jsname="ZfUr6c" id="pv-/g/1tfxwdzw" jsslot="" role="button" tabindex="0" jsaction="IEAdff;W9aZQc:XX6jIe" data-hveid="CEEQAQ" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ1YkKegQIQRAB"><div class="cXedhc"><div class="vwVdIc vyFC0c"><div><div jsname="MZArnb" class="rllt__details"><div class="dbg0pd" aria-level="3" role="heading"><span class="OSrXXb">NicheTech Computer Solutions Private Limited</span></div><div><span><span class="Y0A0hc" aria-label="Rated 4.7 out of 5, 178 user reviews" role="img"><span class="yi40Hd YrbPuc" aria-hidden="true">4.7</span><span aria-hidden="true" class="z3HNkc" aria-label="Rated 4.7 out of 5," role="img"><span aria-hidden="true"><span class="gTPtFb" style="background:linear-gradient(to right, currentcolor 62px, #8e9099 0%)"></span></span></span><span class="RDApEe YrbPuc" aria-hidden="true">(178)</span></span></span> &middot; Software company</div><div>409, Shital Varsha Complex, Cross Road &middot; 095121 80005</div><div><span><span style="color:rgba(109,213,140,1.0)">Open</span> · Closes 7 pm</span></div></div></div></div></div></div></div><a class="yYlJEf Q7PwXb L48Cpd brKmxb" aria-describedby="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_55" href="[/goto?url=CAESWwHrOzAVotbYk6Jmp1u2GQ3FA0RZxjeLa-_TDJX1sxeWb_irBBToU1YKBKoVSCxr9JdxR3xOXIl9EEfOZ4NiNXwDZhjsPxvqxZuqqNfwdgyEJLPH_0f_Vn1Y3CE](https://www.google.com/goto?url=CAESWwHrOzAVotbYk6Jmp1u2GQ3FA0RZxjeLa-_TDJX1sxeWb_irBBToU1YKBKoVSCxr9JdxR3xOXIl9EEfOZ4NiNXwDZhjsPxvqxZuqqNfwdgyEJLPH_0f_Vn1Y3CE)" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQgU96BAhBEAo" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=CAESWwHrOzAVotbYk6Jmp1u2GQ3FA0RZxjeLa-_TDJX1sxeWb_irBBToU1YKBKoVSCxr9JdxR3xOXIl9EEfOZ4NiNXwDZhjsPxvqxZuqqNfwdgyEJLPH_0f_Vn1Y3CE&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQgU96BAhBEAo&amp;uoh=1"><div class="wLAgVc" style="display:flex;flex-direction:column;align-items:center;justify-content:center"><div class="VDgVie btku5b FR7ZSc OJeuxf sjVJQd"><div class="niO4u KnB5rb"><span class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"></path></svg></span></div><div class="QuU3Wb"><span>Website</span></div></div></div></a><a href="[/maps/dir//NicheTech+Computer+Solutions+Private+Limited,+409,+Shital+Varsha+Complex,+Cross+Road,+Shivranjani,+Ahmedabad,+Gujarat+380015/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e84ce4a953913:0x8cd1bf81df9a0903?sa=X&amp;ved=1t:57443&amp;ictx=111](https://www.google.com/maps/dir//NicheTech+Computer+Solutions+Private+Limited,+409,+Shital+Varsha+Complex,+Cross+Road,+Shivranjani,+Ahmedabad,+Gujarat+380015/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e84ce4a953913:0x8cd1bf81df9a0903?sa=X&ved=1t:57443&ictx=111)" style="cursor:pointer" data-url="/maps/dir//NicheTech+Computer+Solutions+Private+Limited,+409,+Shital+Varsha+Complex,+Cross+Road,+Shivranjani,+Ahmedabad,+Gujarat+380015/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e84ce4a953913:0x8cd1bf81df9a0903?sa=X&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ48ADegQILBAA" tabindex="0" class="yYlJEf Q7PwXb VDgVie brKmxb" aria-describedby="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_55" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=/maps/dir//NicheTech%2BComputer%2BSolutions%2BPrivate%2BLimited,%2B409,%2BShital%2BVarsha%2BComplex,%2BCross%2BRoad,%2BShivranjani,%2BAhmedabad,%2BGujarat%2B380015/data%3D!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e84ce4a953913:0x8cd1bf81df9a0903%3Fsa%3DX%26ved%3D1t:57443%26ictx%3D111&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ48ADegQIQRAM"><div><div class="VDgVie btku5b FR7ZSc OJeuxf sjVJQd"><div class="niO4u KnB5rb"><span style="height:24px" class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24" viewBox="0 0 24 24" width="24"><g><rect fill="none" height="24" width="24"></rect></g><g><path d="m21.41 10.59-7.99-8c-.78-.78-2.05-.78-2.83 0l-8.01 8c-.78.78-.78 2.05 0 2.83l8.01 8c.78.78 2.05.78 2.83 0l7.99-8c.79-.79.79-2.05 0-2.83zM13.5 14.5V12H10v3H8v-4c0-.55.45-1 1-1h4.5V7.5L17 11l-3.5 3.5z"></path></g></svg></span></div><div class="QuU3Wb"><span>Directions</span></div></div></div></a></div></div></div><div class="dNtXMe"></div><div jscontroller="AtSb" class="w7Dbne" data-record-click-time="false" id="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_54" jsdata="zt2wNd;_;jpzYaqPyDYOQ4-EP2K6kuAg22 WDO8Ff;_;jpzYaqPyDYOQ4-EP2K6kuAg21" jsaction="rcuQ6b:npT2md;mouseover:UI3Kjd;mouseleave:Tx5Rb;focusin:UI3Kjd;focusout:Tx5Rb;e3EWke:kN9HDb;v1Cdnb:pFRkQb" data-hveid="CEIQAA"><div jsname="jXK9ad" class="uMdZh tIxNaf"><div class="VkpGBb"><div jscontroller="IKqJbf" class="mTwRT" jsdata="XUxeGc;_;jpzYaqPyDYOQ4-EP2K6kuAg30" jsshadow=""><div jsname="ZfUr6c" id="pv-/g/11gf1y407g" jsslot="" role="button" tabindex="0" jsaction="IEAdff;W9aZQc:XX6jIe" data-hveid="CEIQAQ" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ1YkKegQIQhAB"><div class="cXedhc"><div class="vwVdIc vyFC0c"><div><div jsname="MZArnb" class="rllt__details"><div class="dbg0pd" aria-level="3" role="heading"><span class="OSrXXb">Precise Developers</span></div><div><span><span class="Y0A0hc" aria-label="Rated 4.9 out of 5, 49 user reviews" role="img"><span class="yi40Hd YrbPuc" aria-hidden="true">4.9</span><span aria-hidden="true" class="z3HNkc" aria-label="Rated 4.9 out of 5," role="img"><span aria-hidden="true"><span class="gTPtFb" style="background:linear-gradient(to right, currentcolor 70px, #8e9099 0%)"></span></span></span><span class="RDApEe YrbPuc" aria-hidden="true">(49)</span></span></span> &middot; Software company</div><div>B-1001, PNTC, Times Of India Press Rd &middot; 063548 55130</div><div><span><span style="color:rgba(109,213,140,1.0)">Open 24 hours</span></span></div><div class="pJ3Ci"><div class="Ozf5lb"><span class="ncRHuf"><span>On-site services</span><span class="r3PLsf">&middot;<wbr></span></span><span class="ncRHuf"><span>Online appointments</span></span></div></div></div></div></div></div></div></div><a class="yYlJEf Q7PwXb L48Cpd brKmxb" aria-describedby="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_54" href="[/goto?url=CAESVgHrOzAVhz-1TXwPfSEwCjz1uoB8BUGFarE4DaY27AmuloyjLGXK2XiOWaWpwMXFjIprmDjzJdNgRCMZDnMawyFgOAwRVwRzWDvzYO6HTO2DnrfvqSyy](https://www.google.com/goto?url=CAESVgHrOzAVhz-1TXwPfSEwCjz1uoB8BUGFarE4DaY27AmuloyjLGXK2XiOWaWpwMXFjIprmDjzJdNgRCMZDnMawyFgOAwRVwRzWDvzYO6HTO2DnrfvqSyy)" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQgU96BAhCEAw" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=CAESVgHrOzAVhz-1TXwPfSEwCjz1uoB8BUGFarE4DaY27AmuloyjLGXK2XiOWaWpwMXFjIprmDjzJdNgRCMZDnMawyFgOAwRVwRzWDvzYO6HTO2DnrfvqSyy&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQgU96BAhCEAw&amp;uoh=1"><div class="wLAgVc" style="display:flex;flex-direction:column;align-items:center;justify-content:center"><div class="VDgVie btku5b FR7ZSc OJeuxf sjVJQd"><div class="niO4u KnB5rb"><span class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"></path></svg></span></div><div class="QuU3Wb"><span>Website</span></div></div></div></a><a href="[/maps/dir//B-1001,+PNTC,+Precise+Developers,+Times+Of+India+Press+Rd,+Prahlad+Nagar,+Ahmedabad,+Gujarat+380015/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e8461d6c1956d:0x70afee0af3f381ac?sa=X&amp;ved=1t:57443&amp;ictx=111](https://www.google.com/maps/dir//B-1001,+PNTC,+Precise+Developers,+Times+Of+India+Press+Rd,+Prahlad+Nagar,+Ahmedabad,+Gujarat+380015/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e8461d6c1956d:0x70afee0af3f381ac?sa=X&ved=1t:57443&ictx=111)" style="cursor:pointer" data-url="/maps/dir//B-1001,+PNTC,+Precise+Developers,+Times+Of+India+Press+Rd,+Prahlad+Nagar,+Ahmedabad,+Gujarat+380015/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e8461d6c1956d:0x70afee0af3f381ac?sa=X&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ48ADegQIJhAA" tabindex="0" class="yYlJEf Q7PwXb VDgVie brKmxb" aria-describedby="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_54" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=/maps/dir//B-1001,%2BPNTC,%2BPrecise%2BDevelopers,%2BTimes%2BOf%2BIndia%2BPress%2BRd,%2BPrahlad%2BNagar,%2BAhmedabad,%2BGujarat%2B380015/data%3D!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e8461d6c1956d:0x70afee0af3f381ac%3Fsa%3DX%26ved%3D1t:57443%26ictx%3D111&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ48ADegQIQhAO"><div><div class="VDgVie btku5b FR7ZSc OJeuxf sjVJQd"><div class="niO4u KnB5rb"><span style="height:24px" class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24" viewBox="0 0 24 24" width="24"><g><rect fill="none" height="24" width="24"></rect></g><g><path d="m21.41 10.59-7.99-8c-.78-.78-2.05-.78-2.83 0l-8.01 8c-.78.78-.78 2.05 0 2.83l8.01 8c.78.78 2.05.78 2.83 0l7.99-8c.79-.79.79-2.05 0-2.83zM13.5 14.5V12H10v3H8v-4c0-.55.45-1 1-1h4.5V7.5L17 11l-3.5 3.5z"></path></g></svg></span></div><div class="QuU3Wb"><span>Directions</span></div></div></div></a></div></div></div><div class="dNtXMe"></div><div jscontroller="AtSb" class="w7Dbne" data-record-click-time="false" id="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_51" jsdata="zt2wNd;_;jpzYaqPyDYOQ4-EP2K6kuAg19 WDO8Ff;_;jpzYaqPyDYOQ4-EP2K6kuAg21" jsaction="rcuQ6b:npT2md;mouseover:UI3Kjd;mouseleave:Tx5Rb;focusin:UI3Kjd;focusout:Tx5Rb;e3EWke:kN9HDb;v1Cdnb:pFRkQb" data-hveid="CD0QAA"><div jsname="jXK9ad" class="uMdZh tIxNaf"><div class="VkpGBb"><div jscontroller="IKqJbf" class="mTwRT" jsdata="XUxeGc;_;jpzYaqPyDYOQ4-EP2K6kuAg31" jsshadow=""><div jsname="ZfUr6c" id="pv-/g/11h4pjwll2" jsslot="" role="button" tabindex="0" jsaction="IEAdff;W9aZQc:XX6jIe" data-hveid="CD0QAQ" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ1YkKegQIPRAB"><div class="cXedhc"><div class="vwVdIc vyFC0c"><div><div jsname="MZArnb" class="rllt__details"><div class="dbg0pd" aria-level="3" role="heading"><span class="OSrXXb">Cherrypik Software Inc.</span></div><div><span><span class="Y0A0hc" aria-label="Rated 4.7 out of 5, 15 user reviews" role="img"><span class="yi40Hd YrbPuc" aria-hidden="true">4.7</span><span aria-hidden="true" class="z3HNkc" aria-label="Rated 4.7 out of 5," role="img"><span aria-hidden="true"><span class="gTPtFb" style="background:linear-gradient(to right, currentcolor 62px, #8e9099 0%)"></span></span></span><span class="RDApEe YrbPuc" aria-hidden="true">(15)</span></span></span> &middot; Software company</div><div>TITANIUM CITY CENTER BUSINESS PARK, D-806, 100 Feet Anand Nagar Rd, behind Titanium Mall, opp. Seema Hall &middot; 094082 56596</div><div><span><span style="color:rgba(109,213,140,1.0)">Open</span> · Closes 7 pm</span></div><div class="pJ3Ci"><div class="Ozf5lb"><span class="ncRHuf"><span>On-site services</span><span class="r3PLsf">&middot;<wbr></span></span><span class="ncRHuf"><span>Online appointments</span></span></div></div></div></div></div></div></div></div><a class="yYlJEf Q7PwXb L48Cpd brKmxb" aria-describedby="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_51" href="[/goto?url=CAESVgHrOzAVW-rMpyjvVL6j8JVZYRTNMVS-0e42HwzdiMuBP1PpJpyuC8PBSoa3D0SYyG6Sm5p53-2Pq_ZpCuW_duUiVN6BWubv5jfCjYNoF_6-SGbQK9X5](https://www.google.com/goto?url=CAESVgHrOzAVW-rMpyjvVL6j8JVZYRTNMVS-0e42HwzdiMuBP1PpJpyuC8PBSoa3D0SYyG6Sm5p53-2Pq_ZpCuW_duUiVN6BWubv5jfCjYNoF_6-SGbQK9X5)" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQgU96BAg9EAw" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=CAESVgHrOzAVW-rMpyjvVL6j8JVZYRTNMVS-0e42HwzdiMuBP1PpJpyuC8PBSoa3D0SYyG6Sm5p53-2Pq_ZpCuW_duUiVN6BWubv5jfCjYNoF_6-SGbQK9X5&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQgU96BAg9EAw&amp;uoh=1"><div class="wLAgVc" style="display:flex;flex-direction:column;align-items:center;justify-content:center"><div class="VDgVie btku5b FR7ZSc OJeuxf sjVJQd"><div class="niO4u KnB5rb"><span class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"></path></svg></span></div><div class="QuU3Wb"><span>Website</span></div></div></div></a><a href="[/maps/dir//Cherrypik+Software+Inc.,+TITANIUM+CITY+CENTER+BUSINESS+PARK,+D-806,+100+Feet+Anand+Nagar+Rd,+behind+Titanium+Mall,+opp.+Seema+Hall,+Ahmedabad,+Gujarat+380015/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e85fed0d48123:0xb1c096ac5be08e53?sa=X&amp;ved=1t:57443&amp;ictx=111](https://www.google.com/maps/dir//Cherrypik+Software+Inc.,+TITANIUM+CITY+CENTER+BUSINESS+PARK,+D-806,+100+Feet+Anand+Nagar+Rd,+behind+Titanium+Mall,+opp.+Seema+Hall,+Ahmedabad,+Gujarat+380015/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e85fed0d48123:0xb1c096ac5be08e53?sa=X&ved=1t:57443&ictx=111)" style="cursor:pointer" data-url="/maps/dir//Cherrypik+Software+Inc.,+TITANIUM+CITY+CENTER+BUSINESS+PARK,+D-806,+100+Feet+Anand+Nagar+Rd,+behind+Titanium+Mall,+opp.+Seema+Hall,+Ahmedabad,+Gujarat+380015/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e85fed0d48123:0xb1c096ac5be08e53?sa=X&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ48ADegQIKhAA" tabindex="0" class="yYlJEf Q7PwXb VDgVie brKmxb" aria-describedby="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_51" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=/maps/dir//Cherrypik%2BSoftware%2BInc.,%2BTITANIUM%2BCITY%2BCENTER%2BBUSINESS%2BPARK,%2BD-806,%2B100%2BFeet%2BAnand%2BNagar%2BRd,%2Bbehind%2BTitanium%2BMall,%2Bopp.%2BSeema%2BHall,%2BAhmedabad,%2BGujarat%2B380015/data%3D!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e85fed0d48123:0xb1c096ac5be08e53%3Fsa%3DX%26ved%3D1t:57443%26ictx%3D111&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ48ADegQIPRAO"><div><div class="VDgVie btku5b FR7ZSc OJeuxf sjVJQd"><div class="niO4u KnB5rb"><span style="height:24px" class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24" viewBox="0 0 24 24" width="24"><g><rect fill="none" height="24" width="24"></rect></g><g><path d="m21.41 10.59-7.99-8c-.78-.78-2.05-.78-2.83 0l-8.01 8c-.78.78-.78 2.05 0 2.83l8.01 8c.78.78 2.05.78 2.83 0l7.99-8c.79-.79.79-2.05 0-2.83zM13.5 14.5V12H10v3H8v-4c0-.55.45-1 1-1h4.5V7.5L17 11l-3.5 3.5z"></path></g></svg></span></div><div class="QuU3Wb"><span>Directions</span></div></div></div></a></div></div></div><div class="dNtXMe"></div><div jscontroller="AtSb" class="w7Dbne" data-record-click-time="false" id="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_53" jsdata="zt2wNd;_;jpzYaqPyDYOQ4-EP2K6kuAg20 WDO8Ff;_;jpzYaqPyDYOQ4-EP2K6kuAg21" jsaction="rcuQ6b:npT2md;mouseover:UI3Kjd;mouseleave:Tx5Rb;focusin:UI3Kjd;focusout:Tx5Rb;e3EWke:kN9HDb;v1Cdnb:pFRkQb" data-hveid="CDcQAA"><div jsname="jXK9ad" class="uMdZh tIxNaf"><div class="VkpGBb"><div jscontroller="IKqJbf" class="mTwRT" jsdata="XUxeGc;_;jpzYaqPyDYOQ4-EP2K6kuAg26" jsshadow=""><div jsname="ZfUr6c" id="pv-/g/1tdbctm5" jsslot="" role="button" tabindex="0" jsaction="IEAdff;W9aZQc:XX6jIe" data-hveid="CDcQAQ" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ1YkKegQINxAB"><div class="cXedhc"><div class="vwVdIc vyFC0c"><div><div jsname="MZArnb" class="rllt__details"><div class="dbg0pd" aria-level="3" role="heading"><span class="OSrXXb">I vision infotech Ahmedabad</span></div><div><span><span class="Y0A0hc" aria-label="Rated 4.7 out of 5, 71 user reviews" role="img"><span class="yi40Hd YrbPuc" aria-hidden="true">4.7</span><span aria-hidden="true" class="z3HNkc" aria-label="Rated 4.7 out of 5," role="img"><span aria-hidden="true"><span class="gTPtFb" style="background:linear-gradient(to right, currentcolor 62px, #8e9099 0%)"></span></span></span><span class="RDApEe YrbPuc" aria-hidden="true">(71)</span></span></span> &middot; Software company</div><div>Himalaya Arcade, B-409, lake, opp. Vastrapur &middot; 099782 70863</div><div><span><span style="color:rgba(109,213,140,1.0)">Open</span> · Closes 6:30 pm</span></div><div class="pJ3Ci"><div class="Ozf5lb"><span class="ncRHuf"><span>On-site services</span><span class="r3PLsf">&middot;<wbr></span></span><span class="ncRHuf"><span>Online appointments</span></span></div></div></div></div></div></div></div></div><a class="yYlJEf Q7PwXb L48Cpd brKmxb" aria-describedby="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_53" href="[/goto?url=CAESUQHrOzAV32meqjszFrkIoT-RWpNOdG9nHuUtnwax1_nezL3PciMaePpL6eObO4nzzMtRJyUYikmu8IrCaAScQD6ZfJVqV0Ev2Q_DK_wNZLc7gg](https://www.google.com/goto?url=CAESUQHrOzAV32meqjszFrkIoT-RWpNOdG9nHuUtnwax1_nezL3PciMaePpL6eObO4nzzMtRJyUYikmu8IrCaAScQD6ZfJVqV0Ev2Q_DK_wNZLc7gg)" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQgU96BAg3EAw" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=CAESUQHrOzAV32meqjszFrkIoT-RWpNOdG9nHuUtnwax1_nezL3PciMaePpL6eObO4nzzMtRJyUYikmu8IrCaAScQD6ZfJVqV0Ev2Q_DK_wNZLc7gg&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQgU96BAg3EAw&amp;uoh=1"><div class="wLAgVc" style="display:flex;flex-direction:column;align-items:center;justify-content:center"><div class="VDgVie btku5b FR7ZSc OJeuxf sjVJQd"><div class="niO4u KnB5rb"><span class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"></path></svg></span></div><div class="QuU3Wb"><span>Website</span></div></div></div></a><a href="[/maps/dir//I+vision+infotech+Ahmedabad,+Himalaya+Arcade,+B-409,+lake,+opp.+Vastrapur,+Vastrapur,+Ahmedabad,+Gujarat+380015/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e835eae6bc821:0x881cbbcfa2fe91e8?sa=X&amp;ved=1t:57443&amp;ictx=111](https://www.google.com/maps/dir//I+vision+infotech+Ahmedabad,+Himalaya+Arcade,+B-409,+lake,+opp.+Vastrapur,+Vastrapur,+Ahmedabad,+Gujarat+380015/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e835eae6bc821:0x881cbbcfa2fe91e8?sa=X&ved=1t:57443&ictx=111)" style="cursor:pointer" data-url="/maps/dir//I+vision+infotech+Ahmedabad,+Himalaya+Arcade,+B-409,+lake,+opp.+Vastrapur,+Vastrapur,+Ahmedabad,+Gujarat+380015/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e835eae6bc821:0x881cbbcfa2fe91e8?sa=X&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ48ADegQILRAA" tabindex="0" class="yYlJEf Q7PwXb VDgVie brKmxb" aria-describedby="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_53" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=/maps/dir//I%2Bvision%2Binfotech%2BAhmedabad,%2BHimalaya%2BArcade,%2BB-409,%2Blake,%2Bopp.%2BVastrapur,%2BVastrapur,%2BAhmedabad,%2BGujarat%2B380015/data%3D!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e835eae6bc821:0x881cbbcfa2fe91e8%3Fsa%3DX%26ved%3D1t:57443%26ictx%3D111&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ48ADegQINxAO"><div><div class="VDgVie btku5b FR7ZSc OJeuxf sjVJQd"><div class="niO4u KnB5rb"><span style="height:24px" class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24" viewBox="0 0 24 24" width="24"><g><rect fill="none" height="24" width="24"></rect></g><g><path d="m21.41 10.59-7.99-8c-.78-.78-2.05-.78-2.83 0l-8.01 8c-.78.78-.78 2.05 0 2.83l8.01 8c.78.78 2.05.78 2.83 0l7.99-8c.79-.79.79-2.05 0-2.83zM13.5 14.5V12H10v3H8v-4c0-.55.45-1 1-1h4.5V7.5L17 11l-3.5 3.5z"></path></g></svg></span></div><div class="QuU3Wb"><span>Directions</span></div></div></div></a></div></div></div><div class="dNtXMe"></div><div jscontroller="AtSb" class="w7Dbne" data-record-click-time="false" id="tsuid_jpzYaqPyDYOQ4-
+;}).call(this);</script> <link href="[#ZnpjSd](https://www.google.com/search?q=php+based+companies+in+ahmedabad&sca_esv=7e69963a3bb46de9&udm=local&biw=1526&bih=839&sxsrf=APpeQnvLVpR5djVYAHyn85hvsbMwqCE7zA%3A1792580493455&ei=jZvYavexG6-XseMPuNqnoQY&ved=0ahUKEwi3rKzc-sqXAxWvS2wGHTjtKWQ4FBDh1QMIEA&uact=5&oq=php+based+companies+in+ahmedabad&gs_lp=EhZnd3Mtd2l6LW1vZGVsZXNzLWxvY2FsIiBwaHAgYmFzZWQgY29tcGFuaWVzIGluIGFobWVkYWJhZDIGEAAYFhgeMgUQABjvBTIFEAAY7wUyBRAAGO8FSNYXUL0IWJsWcAF4AJABAJgBxAKgAdwRqgEHMC4yLjUuMrgBA8gBAPgBAZgCCqACgxLCAgUQIRigAcICBRAhGJ8FmAMAiAYBkgcHMS4yLjUuMqAH8R-yBwcwLjIuNS4yuAeAEsIHBTAuOS4xyAcVgAgB&sclient=gws-wiz-modeless-local#ZnpjSd)" blocking="render" rel="expect"> <style>::view-transition-old(sb){height:100%}::view-transition-new(sb){height:100%}@keyframes sb-slide-down-fade-in{0%{transform:scale(.5) translateY(-50px);opacity:0}20%{opacity:0}to{transform:scale(1) translateY(0);opacity:1}}@keyframes sb-slide-up-fade-out{0%{transform:scale(1) translateY(0);opacity:1}20%{opacity:0}to{transform:scale(.5) translateY(-50px);opacity:0}}@keyframes ubi-fade-in{0%{transform:translateY(-20px);opacity:0}20%{opacity:0}to{transform:translateY(0);opacity:1}}@keyframes ubi-fade-out{0%{transform:translateY(0);opacity:1}20%{opacity:0}to{transform:translateY(-20px);opacity:0}}html:active-view-transition-type(aimc)::view-transition-new(sb),html:active-view-transition-type(aimc)::view-transition-old(sb){height:100%}html:active-view-transition-type(aimc)::view-transition-old(sb):only-child{animation:sb-slide-up-fade-out .5s cubic-bezier(.38,.72,0,1) forwards}html:active-view-transition-type(aimc)::view-transition-new(sb):only-child{animation:sb-slide-down-fade-in .5s cubic-bezier(.38,.72,0,1) forwards}html:active-view-transition-type(aimc)::view-transition-new(mb),html:active-view-transition-type(aimc)::view-transition-old(mb){width:auto;animation-duration:.5s;animation-timing-function:cubic-bezier(.38,.72,0,1)}html:active-view-transition-type(aimc)::view-transition-group(*){transform-origin:top left}html:active-view-transition-type(aimc)::view-transition-new(ubi),html:active-view-transition-type(aimc)::view-transition-old(ubi){width:100%;height:100%;animation-duration:.5s;animation-timing-function:cubic-bezier(.38,.72,0,1)}html:active-view-transition-type(aimc)::view-transition-old(ubi):only-child{animation:ubi-fade-out .5s cubic-bezier(.38,.72,0,1)}html:active-view-transition-type(aimc)::view-transition-new(ubi):only-child{animation:ubi-fade-in .5s cubic-bezier(.38,.72,0,1)}@view-transition{navigation:auto}:root::view-transition-group(root){animation:none}:root::view-transition-old(root){animation:none;opacity:0}:root::view-transition-new(root){animation:none;opacity:1}html,body,h1,input,select{font-family:Arial,sans-serif,Noto Color Emoji}body,h1{font-size:var(--Mhs7de);}h1{font-weight:normal;margin:0;padding:0}h3{font-weight:normal;margin:0;padding:0;font-size:20px;line-height:1.272}body{margin:0;background:var(--xhUGwc);color:var(--YLNNHc);}a{color:var(--JKqx2);text-decoration:none;-webkit-tap-highlight-color:rgba(255,255,255,.1)}a:visited{color:#c58af9}a:hover{text-decoration:underline}a:hover h3{text-decoration:underline}a.a-no-hover-decoration:hover,a.a-no-hover-decoration:hover h3{text-decoration:none}cite,cite a:link,cite a:visited{color:#bdc1c6;font-style:normal}button{margin:0}ol li{list-style:none}ol,ul,li{margin:0;padding:0}input{font-size:var(--Mhs7de)}em{font-weight:bold;font-style:normal}.aCOpRe em,.yXK7lf em,.p4wth em,.ycrdod em{}.z1asCe{display:inline-block;fill:currentColor;height:24px;line-height:24px;position:relative;width:24px}.z1asCe svg{display:block;height:100%;width:100%}:root{}.ynAwRc{color:var(--JKqx2)}a:visited .ynAwRc,a:visited.ynAwRc{color:#c58af9}.JIFdL{color:#8ab4f8}.NUnG9d{color:var(--YLNNHc);font-family:var(--YfiKf);font-size:var(--gOs6Bf);font-weight:var(--MzKBpd);line-height:var(--punZlc)}.kqEaA{color:var(--IXoxUe);font-family:var(--LI4Bo);font-size:var(--Mhs7de);font-weight:var(--ofwUBc);line-height:var(--XWv1if)}.N8MDs{font-family:Arial,sans-serif,Noto Color Emoji;font-weight:300}.z8gr9e{color:var(--bbQxAb)}.x2sBq{color:#f28b82}.tGXccd{color:#81c995}.XEI2lf{color:#e8eaf2}.Q7PwXb{text-decoration:none}.NnEaBd{text-align:right}.xLQxIf{text-transform:capitalize}.uKdaQe{text-transform:lowercase}.MUmB9{text-transform:none}.xpdclps,.xpdxpnd{overflow:hidden}.xpdclps,.xpdxpnd{-webkit-transition:max-height 0.3s}.xpdxpnd,.xpdopen .xpdclps,.xpdopen .xpdxpnd.xpdnoxpnd{max-height:0}.xpdopen .xpdxpnd{max-height:none}.xpdopen .xpdbox .xpdxpnd,.xpdopen .xpdbox.xpdopen .xpdclps{max-height:0}.xpdopen .xpdbox.xpdopen .xpdxpnd,.xpdopen .xpdbox .xpdclps{max-height:none}.xpdclose .k5nfEc{display:none}html:not(.zAoYTe) [tabindex],html:not(.zAoYTe) [href],html:not(.zAoYTe) button,html:not(.zAoYTe) iframe,html:not(.zAoYTe) input,html:not(.zAoYTe) select,html:not(.zAoYTe) textarea{outline:0}.bNg8Rb{clip:rect(1px,1px,1px,1px);height:1px;overflow:hidden;position:absolute;white-space:nowrap;width:1px;user-select:none;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none}.btku5b{display:inline-block;vertical-align:middle;cursor:pointer}.btku5b,.brKmxb:focus-visible{outline:0;-webkit-tap-highlight-color:transparent}.niO4u::before,.niO4u::after{position:absolute;top:0;left:0;width:100%;height:100%;border-radius:inherit}.btku5b:not([disabled]):hover .niO4u::after,.btku5b:not([disabled]):active .niO4u::after{content:'';z-index:-1}.btku5b:focus-visible .niO4u::after,.brKmxb:focus-visible .niO4u::after{content:'';outline:2px solid var(--Pa8Wlb);outline-offset:3px}.niO4u{display:flex;justify-content:center;position:relative;align-items:center;width:100%;z-index:0;box-sizing:border-box;padding:calc(8px - 1px) calc(16px - 1px);border:1px solid transparent;border-radius:9999px}.niO4u::before{content:'';height:48px;margin-top:-24px;top:50%}@media (forced-colors:active){.niO4u{border-color:ButtonBorder}}.btku5b[disabled]{cursor:auto}.btku5b[disabled] .niO4u{color:rgb(from var(--pEa0Bc) r g b/0.38)}.FR7ZSc[disabled]:not(.dmKIje):not([selected]) .niO4u,.zqrO0[disabled]:not(.dmKIje):not([selected]) .niO4u,.GQ0bde[disabled]:not(.dmKIje):not([selected]) .niO4u,.fqiILb.fqiILb[selected][disabled] .niO4u{border-color:var(--kloG3)}.r69FZ[disabled] .niO4u,.Bmegof[disabled] .niO4u,.expUPd[disabled] .niO4u,.qVhvac.qVhvac[selected][disabled] .niO4u{background:var(--YaIeMb)}@media (forced-colors:active){.btku5b.btku5b[disabled]{opacity:1;color:GrayText}.btku5b.btku5b.btku5b.btku5b.btku5b.btku5b[disabled] .niO4u{outline:1px solid GrayText}}.qVhvac[selected]{color:var(--xPpiM)}.qVhvac[selected]:hover .niO4u::after{background:rgb(from var(--Nsm0ce) r g b/0.08)}.qVhvac[selected] .niO4u{background:var(--KIZPne);border-color:transparent}.qVhvac[selected]:active .niO4u::after{background:rgb(from var(--Nsm0ce) r g b/0.24)}.vVVcqf{container-name:rhs;container-type:inline-size;grid-column:span 7/-2}.vVVcqf{display:none}@media (min-width:800px){.vVVcqf{display:block}}body[data-sv-shown="1"] .TQc1id[data-csic="1"]{opacity:0;visibility:hidden;transition:opacity 150ms cubic-bezier(0.2,0,0,1),visibility 0s 150ms}#rhs{position:relative;padding-bottom:15px;}#rhs .VjDLd{border:1px solid #050607;padding-left:17px;padding-right:16px;position:relative;box-sizing:border-box}.s6JM6d .SwlyWb{display:none}#rhs .VjDLd{width:100%}.N4Xssf.vVVcqf,.TQc1id.N4Xssf{width:var(--rhs-width)}.k5T88b .nmrhhd{background:none !important;display:none !important}.N4Xssf .SwlyWb{background:none !important;display:none !important}.srp.DfE4Hf{--rhs-width:457px}.GLcBOb{color:var(--IXoxUe);font-size:14px;font-family:Google Sans,Arial,sans-serif,Noto Color Emoji;position:relative;}.dURPMd{margin-top:6px}.KpqFHb .dURPMd{display:grid;grid-template-columns:repeat(12,minmax(0,1fr))}@media (min-width:940px){.KpqFHb .dURPMd{grid-template-columns:repeat(16,minmax(0,1fr))}}.yhQgZb{grid-column:1/-1}.V9qXjb{grid-column:1/span 12}.Fgyi2e{flex:1;}.Fgyi2e:empty{min-height:54px;}.wZQcA{position:relative;height:0;z-index:1;top:42px;}.wZQcA .BO2cCe{border-bottom:1px solid var(--Aqn7xd);}.rZj61{margin-top:-12px;}.beZ0tf{display:flex}.BdqKIe .o0VWn{background-color:var(--xhUGwc)}.GG4mbd{padding-top:6px;max-width:861px;}.mjAqnb{margin-left:-12px;}.rQTE8b{display:flex;min-width:max-content;width:100%;justify-content:space-between;flex:1}.rQTE8b .R0DW9c{z-index:200}.O1uzAe{margin-left:-12px}.yeKjxb{display:flex;align-items:center;margin-right:8px}.mOKdDc{cursor:pointer}a.C6AK7c,a.C6AK7c:link,a.C6AK7c:visited,a.C6AK7c:hover,a.C6AK7c:active{-webkit-tap-highlight-color:transparent;text-decoration:none}a.C6AK7c.wbH0pd{-webkit-tap-highlight-color:rgba(255,255,255,.1)}.mXwfNd{display:flex;min-height:48px;padding:0 12px;align-items:end;}.R1QWuf{display:inline-block;white-space:nowrap;width:fit-content;font-family:var(--qR8X0);font-size:var(--hbmnje);line-height:var(--CbdmE);border-bottom:3px solid transparent;padding-bottom:8px}.R1QWuf,.M5dSnd{color:#80868b;font-weight:500;}.R1QWuf,.M5dSnd{color:#9c9ea6}[selected] .R1QWuf,[selected] .M5dSnd{border-bottom-color:var(--YLNNHc);}[selected] .R1QWuf,[selected] .M5dSnd,.mXwfNd:hover .R1QWuf,.mXwfNd:hover .M5dSnd,.rNHry:hover .R1QWuf,.mTpL7c:hover .R1QWuf,.mTpL7c:hover .M5dSnd,[aria-expanded="true"] .R1QWuf,[aria-expanded="true"] .M5dSnd{color:var(--YLNNHc);}.mVH5Fc{display:flex;align-items:center;padding-bottom:8px;border-bottom:3px solid transparent}.mVH5Fc .R1QWuf{padding-bottom:0;border-bottom:0}.rNHry .mXwfNd,.rNHry .R1QWuf{padding:0;border-bottom:0;min-height:auto}.FXBAof{padding-left:2px}[dir='ltr'],[dir='rtl']{unicode-bidi:-webkit-isolate;unicode-bidi:isolate}bdo[dir='ltr'],bdo[dir='rtl']{unicode-bidi:bidi-override;unicode-bidi:-webkit-isolate-override;unicode-bidi:isolate-override}.EE3Upf.lVm3ye.TElO2c.OSrXXb>a{font-size:18px !important}@-webkit-keyframes qs-timer {0%{}}html{scrollbar-gutter:stable}.YNk70c{display:grid;column-gap:20px}.YNk70c:not(.B2Ogle){min-width:684px}.YNk70c{grid-template-columns:minmax(0,1fr) repeat(12,36px) minmax(0,1fr)}@media (max-width:691px){.YNk70c.B2Ogle{grid-template-columns:0px repeat(12,minmax(10px,1fr)) 0px}}@media (min-width:800px){.YNk70c{grid-template-columns:minmax(0,1fr) repeat(14,36px) minmax(0,1fr)}}@media (min-width:940px){.YNk70c{grid-template-columns:minmax(0,1fr) repeat(16,36px) minmax(0,1fr)}}@media (min-width:1164px){.YNk70c{grid-template-columns:minmax(0,210px) repeat(20,36px) minmax(0,210px)}}@media (min-width:1560px){.YNk70c{grid-template-columns:minmax(0,210px) repeat(20,36px) minmax(0,1fr)}}.bzXtMb{grid-column:1/-1;max-width:100vw}.SLPe5b{grid-column:2/-2}.ufC5Cb{container-type:inline-size;grid-column:2/span 12}.KpqFHb .vVVcqf{grid-column:span 3/-2}@media (min-width:940px){.KpqFHb .ufC5Cb{grid-column:2/span 16}}.P3mIxe{grid-column:2/-1}.SxCvHe{grid-column:1}@media (max-width:799.98px){.cKhQJf .SxCvHe{background:var(--xhUGwc);box-shadow:10px 0 15px -15px rgba(23,23,23,0.6);margin-top:45px;top:72px;width:190px}.cKhQJf .SxCvHe .Pl4aJc{padding-right:20px}.cKhQJf .appbar{z-index:125}}@media (max-width:799.98px){.jBpNZc{width:0;overflow:hidden}}.OtcOmd .EjQTId{transition:grid-template-columns 250ms cubic-bezier(0,0,.1,1)}.OtcOmd .cKhQJf .EjQTId,.OtcOmd.cKhQJf .EjQTId{transition:grid-template-columns 300ms cubic-bezier(0,0,.1,1)}.OtcOmd .EjQTId .SxCvHe{transition:transform 250ms cubic-bezier(0,0,.1,1),opacity 250ms cubic-bezier(0,0,.1,1)}.OtcOmd .cKhQJf .EjQTId .SxCvHe,.OtcOmd.cKhQJf .EjQTId .SxCvHe{transition:transform 300ms cubic-bezier(0,0,.1,1),opacity 300ms cubic-bezier(0,0,.1,1)}.EjQTId .SxCvHe{transform:translate(0%);opacity:0;pointer-events:none}@media (min-width:1164px){.EjQTId .SxCvHe{transform:translate(-100%)}}.w3yrN.cKhQJf .SxCvHe{transform:translate(0%);opacity:1;pointer-events:auto}@media (min-width:800px){.cKhQJf .EjQTId.YNk70c{grid-template-columns:minmax(170px,170px) repeat(14,36px) minmax(0,1fr)}}@media (min-width:940px){.cKhQJf .EjQTId.YNk70c{grid-template-columns:minmax(170px,170px) repeat(16,36px) minmax(0,1fr)}}@media (min-width:1164px){.cKhQJf .EjQTId.YNk70c{grid-template-columns:minmax(170px,210px) repeat(20,36px) minmax(0,1fr)}}.srp:not(.w3yrN) .SxCvHe{display:none}@media (min-width:1300px){.w3yrN .EjQTId.YNk70c{grid-template-columns:minmax(170px,210px) repeat(20,36px) minmax(0,210px)}}@media (min-width:1560px){.cKhQJf .EjQTId.YNk70c{grid-template-columns:minmax(210px,210px) repeat(20,36px) minmax(0,1fr)}}.JpWqif .appbar .YNk70c,.JpWqif .GyAeWb.YNk70c,.JpWqif #bGmlqc .YNk70c,.JpWqif .M8OgIe .YNk70c,.JpWqif .CuvrIe{grid-template-columns:minmax(160px,1fr) repeat(12,36px) minmax(0,1fr)}@media (min-width:800px){.JpWqif .appbar .YNk70c,.JpWqif .GyAeWb.YNk70c,.JpWqif #bGmlqc .YNk70c,.JpWqif .M8OgIe .YNk70c,.JpWqif .CuvrIe{grid-template-columns:minmax(160px,1fr) repeat(14,36px) minmax(0,1fr)}}@media (min-width:940px){.JpWqif .appbar .YNk70c,.JpWqif .GyAeWb.YNk70c,.JpWqif #bGmlqc .YNk70c,.JpWqif .M8OgIe .YNk70c,.JpWqif .CuvrIe{grid-template-columns:minmax(160px,1fr) repeat(16,36px) minmax(0,1fr)}}@media (min-width:1164px){.JpWqif .appbar .YNk70c,.JpWqif .GyAeWb.YNk70c,.JpWqif #bGmlqc .YNk70c,.JpWqif .M8OgIe .YNk70c,.JpWqif .CuvrIe{grid-template-columns:minmax(160px,210px) repeat(20,36px) minmax(160px,210px)}}@media (min-width:1560px){.JpWqif .appbar .YNk70c,.JpWqif .GyAeWb.YNk70c,.JpWqif #bGmlqc .YNk70c,.JpWqif .M8OgIe .YNk70c,.JpWqif .CuvrIe{grid-template-columns:minmax(160px,210px) repeat(20,36px) minmax(0,1fr)}}.ufC5Cb{grid-column:2/span 8}.vVVcqf.vVVcqf{display:block;grid-column:10/-1}.GyAeWb{}.srp{--center-abs-margin:180px;--center-width:652px;--rhs-margin:76px;--rhs-width:372px;--lhs-refinements-width:0px;--lhs-margin:24px;--lhs-width:calc(var(--center-abs-margin) - var(--lhs-margin) - var(--center-margin));--center-margin:24px;position:relative;min-height:100vh;}@media (min-width:1475px) and (max-width:1675px){.srp{--center-abs-margin:calc(25vw + -188.75px)}}@media (min-width:1675px){.srp{--center-abs-margin:230px}}@media (min-width:1124px) and (max-width:1300px){.srp{--center-abs-margin:calc((100vw - 1068px)/2)}}@media (max-width:1124px){.srp{--center-abs-margin:28px}}.eqAnXb{font-size:medium;font-weight:normal;}.main{width:100%;}.s6JM6d{position:relative;flex:0 auto;}.e9EfHf{font-family:Arial,sans-serif,Noto Color Emoji;clear:both;margin-left:0;box-sizing:border-box;min-height:100vh;padding-top:8px;}.appbar{position:relative;-webkit-box-sizing:border-box;}</style> </head><body jsmodel="hspDDf JfINdf" class="srp" jscontroller="Eox39d" data-dt="1" marginheight="3" topmargin="3" jsaction="rcuQ6b:npT2md" id="gsr"><style>.wYq63b{display:flex;left:0;position:absolute;top:0;z-index:1001}.S6VXfe{align-items:center;background-color:var(--xhUGwc);border-radius:0 2px 2px 0;box-shadow:0 2px 2px 0 rgba(0,0,0,.16),0 0 0 1px rgba(0,0,0,.08);display:flex;margin:80px auto 8px 0;overflow:hidden}.gyPpGe,.gyPpGe:visited,.qlVNAd{border:2px solid rgba(255,255,255,.16);border-radius:2px;color:#c58af9;cursor:pointer;display:inline-block;font-size:var(--hbmnje);line-height:20px;margin:6px 11px;min-height:32px;text-decoration:underline;text-align:center;width:106px}.gyPpGe:not(:focus){clip:rect(1px,1px,1px,1px);overflow:hidden;position:absolute;padding:0}.xrOgrb{padding-top:16px}.CvDJxb{width:100%;z-index:128;position:relative;padding:10px 0;}#gb{min-width:unset;position:relative}.tsf{flex-grow:1;max-width:861px;}.NDnoQ{display:flex;justify-content:space-between;}.Q3DXx{display:flex}.Efnghe{padding-left:16px}.Q3DXx #gb,.Q3DXx #gb>div{float:none}.Efnghe{padding-top:2px}.CvDJxb iframe{color-scheme:light}.A8SBwf{--client-adapter-margin-base:var(--center-abs-margin);}.A8SBwf{position:relative;margin-top:0;margin-right:auto;margin-bottom:0;margin-left:auto}.SDkEP{flex:1;display:flex;padding:0 4px 0 0}.iblpc{display:flex;align-items:center;padding-right:6px;padding-left:14px;margin-top:-2px;margin-top:0;height:50px;}.A8SBwf,.IormK{box-sizing:border-box;width:100%;}.RNNXgb{display:flex;z-index:3;position:relative;min-height:50px;border:1px solid #4d5156;background:var(--aYn2S);box-shadow:none;border-radius:26px;margin:0 auto;box-sizing:border-box;width:100%;}@media (max-width:939.98px){html .A8SBwf{padding-left:0}}@media (min-width:940px) and (max-width:1460px){html .A8SBwf{margin-left:136px;width:calc(100% - 136px)}}@media (min-width:1461px){html .A8SBwf{margin-left:-20px}}.logo{position:absolute;top:6px;left:0;padding:4px 44px 0 24px;left:-160px;}@media (max-width:939.98px){.logo{visibility:hidden}.FgNLaf{display:block;width:36px;height:36px;align-self:center;padding-left:8px}@media (max-width:639.98px) and (min-width:499.98px){.aypyie .ywK6Rd,.aypyie .HZVG1b,.aypyie .BKRPef .ACRAdd{display:none}.aypyie .BKRPef{padding-right:0}}.minidiv .FgNLaf{height:32px;width:32px;padding-right:4px}.sbfc .FgNLaf,.emcav .FgNLaf,.BgPPrc .FgNLaf{display:none}.sbfc .SDkEP,.emcav .SDkEP,.BgPPrc .SDkEP{padding-left:14px}.SDkEP .iblpc{padding-left:3px;padding-right:0}.sbfc .iblpc,.emcav .iblpc,.BgPPrc .iblpc{padding-left:0}}.iblpc span{display:none}@media (min-width:1461px){.sbfc.A8SBwf,.emcav.A8SBwf,.BgPPrc.A8SBwf{width:calc(100% + 27px)}}@media (min-width:940px){.sbfc.A8SBwf,.emcav.A8SBwf,.BgPPrc.A8SBwf{transform:translateX(-27px)}}@media (min-width:940px) and (max-width:1460px){.sbfc.A8SBwf,.emcav.A8SBwf,.BgPPrc.A8SBwf{width:calc(100% - 109px)}}@media (min-width:0) and (max-width:1460px){.emcav.A8SBwf.pD4qTd{width:988px}}@media (min-width:1461px){.emcav.A8SBwf.pD4qTd{width:1148px}}#logo{overflow:hidden;position:relative;display:block}.hvhmMe{margin:auto}.Ty0Rrc{color:#9aa0a6}.gLFyf,.svBvU{font:16px Google Sans,Arial,sans-serif,Noto Color Emoji;line-height:40px;font-size:16px;flex:100%;line-height:39px}textarea.gLFyf,.svBvU{line-height:22px;border-bottom:8px solid transparent;padding-top:14px;overflow-x:hidden}textarea.gLFyf{white-space:nowrap;overflow:hidden}.gLFyf{resize:none;background-color:transparent;border:none;margin:0;padding:0 0 3px;color:var(--YLNNHc);word-wrap:break-word;outline:none;display:flex;-webkit-tap-highlight-color:transparent}.a4bIc{display:flex;flex-wrap:wrap;flex:1;}.svBvU{color:transparent;white-space:pre;position:absolute;pointer-events:none;scrollbar-width:none}.svBvU span{text-decoration:#f28b82 dotted underline}.gLFyf::placeholder{color:#a0a2ab;}.gLFyf.OVWmAd{display:block;position:absolute}.LNRLRe{white-space:nowrap;margin:20px;font-size:var(--Mhs7de);font-weight:bold;line-height:normal;color:#e8eaf2}.AeLhAe{font-weight:normal;border:1px solid #fff;border-radius:3px;padding:1px 3px 0 3px}.dRYYxd{display:flex;flex:0 0 auto;align-items:stretch;flex-direction:row;height:50px;color:var(--bbQxAb)}.ywK6Rd{background-color:inherit;display:flex;align-self:center}.ywK6Rd{height:100%}.BKRPef{background:transparent;align-items:center;flex:1 0 auto;flex-direction:row;display:flex;cursor:pointer;}.vOY7J{background:transparent;border:0;align-items:center;flex:1 0 auto;cursor:pointer;display:none;height:100%;line-height:44px;outline-offset:-2px;padding:0 12px;}.M2vV3{display:flex}.ExCKkf{height:100%;vertical-align:middle;outline:none;color:inherit}.BKRPef{padding-right:4px}.ACRAdd{border-left:1px solid #4d5156;height:65%;display:none}.ACRAdd.M2vV3{display:block}.fzj3ad{flex:1 0 auto;display:flex;cursor:pointer;align-items:center;border:0;background:transparent;padding:0 8px;width:24px;line-height:44px;}.ByCvB{height:24px;width:24px;vertical-align:middle}.etxtjc{flex:1 0 auto;display:flex;cursor:pointer;align-items:center;border:0;background:transparent;padding:0 8px;width:24px;line-height:44px;}.hWdRGb{height:24px;width:24px;vertical-align:middle}.Tg7LZd{height:50px;width:44px;background:transparent;border:none;cursor:pointer;flex:0 0 auto;padding:0 13px 0 0}html:not(.zAoYTe) .Tg7LZd:focus{outline:none}.DO7Hj{background:none;color:var(--bbQxAb);height:24px;width:24px;margin:auto}.UUbT9{position:absolute;text-align:left;z-index:989;cursor:default;-webkit-user-select:none;width:100%;margin-top:-1px;font-family:Google Sans,Arial,sans-serif,Noto Color Emoji;}.UUbT9 b{font-family:Google Sans,Arial,sans-serif,Noto Color Emoji;font-weight:700}.aajZCb{display:flex;flex-direction:column;margin:0;padding:0;overflow:hidden;box-sizing:border-box;background:var(--aYn2S);border-radius:0 0 26px 26px;box-shadow:0 4px 6px 0 #171717;border:1px solid #4d5156;border-top:0;padding-bottom:4px}.gDtRnb{display:flex;flex:1 1 auto;min-height:0;overflow-y:auto}.erkvQe{padding-bottom:16px;flex:auto;overflow-x:hidden}.RjPuVb{height:1px;margin:0 26px 0 0}.eemHY,.xtSCL,.lh87ke:link,.lh87ke:visited{flex-shrink:0}.xtSCL{border-top:1px solid #4d5156;margin:0 14px;padding-bottom:4px}.ky4hfd{display:none}.RK9gM{background-color:var(--TMYS9);color:var(--EpFNW);font-family:Google Sans,Roboto,Arial,sans-serif;padding:18px 60px 18px 12px;position:relative}@media (forced-colors:active){.RK9gM:not(.EXhexd){outline:1px solid ButtonBorder}.RK9gM.EXhexd .pbgWk{outline:1px solid ButtonBorder}}#shJ2Vb{display:none}.OBMEnb{padding:0;margin:0}.OBMEnb:not(:first-child){padding-top:8px}.G43f7e{display:flex;flex-direction:column;min-width:0;padding:0;margin:0;list-style:none}#ynRric{display:none}.ynRric{list-style-type:none;flex-direction:column;color:var(--IXoxUe);font-family:Google Sans,Arial,sans-serif,Noto Color Emoji;font-weight:500;font-size:var(--ZNg88);margin:0 20px 0 16px;padding:8px 0 8px 0;line-height:16px;width:100%}.ynRric{letter-spacing:0;text-transform:none}.sbct{display:flex;flex-direction:column;min-width:0;overflow:hidden;max-height:none;padding:0}.eIPGRd{flex:auto;display:flex;align-items:center;margin:0 20px 0 14px}.pcTkSc{display:flex;flex:auto;flex-direction:column;min-width:0;max-height:none;padding:6px 0}.sbic{display:flex;align-items:center;margin-right:14px}.ClJ9Yb{display:flex;align-items:center;line-height:16px;font-size:12px;color:#9aa0a6;margin-top:2px;padding-right:8px;min-width:0}.wM6W7d{display:flex;font-size:16px;color:#e8eaed;flex:auto;align-items:center;word-break:break-word;padding-right:8px}.wM6W7d span{flex:auto}.AQZ9Vd{display:flex;align-self:stretch}.zjKSsb{background:var(--TMYS9);border-radius:50%;margin-right:6px;width:6px;height:6px}@media (forced-colors:active){.ClJ9Yb .zjKSsb{background-color:CanvasText}}#YMXe{display:none}.x6vvNd{width:20px;height:20px;fill:#9aa0a6}@media (hover:hover){.sbai{visibility:hidden}.sbhl .sbai{visibility:inherit}}#d6ItKb{display:none}.AB2Fdd{display:flex}.ZDHp{position:relative;margin:20px;display:flex}.ZDHp .SHFPkb{margin-bottom:12px}.ZDHp .HrUlUc,.ZDHp .PnfqLc{font-size:18px;line-height:24px}.ZDHp .bTSf5c{line-height:var(--XWv1if);font-size:var(--Mhs7de);margin-bottom:6px}.ZDHp .HrUlUc,.ZDHp .PnfqLc{overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical}.kZtr1b{display:flex;flex-direction:column;flex-grow:1;min-width:0}.XAFD5c{width:200px;height:200px;background-color:#2c2e35;border-radius:20px;margin-left:20px;flex-shrink:0;background-position:center;background-repeat:no-repeat;background-size:contain}.ZDHp .lnnVSe{font-size:18px;flex-grow:1}.ZDHp .HrUlUc,.ZDHp .PnfqLc{display:flex;flex-direction:column}.j0GJWd{margin-left:20px}.EOLKOc{width:calc(50% - 1px)}.iQxPRb{display:flex;gap:2px}.EOLKOc:first-child{border-bottom-left-radius:20px}.EOLKOc:last-child{border-bottom-right-radius:20px}.AZNDm{border-top-right-radius:20px;border-top-left-radius:20px}.MagqMc .ZFiwCf{background-color:#2c2e35;border:1px solid var(--gS5jXb);width:100%}.MagqMc.U48fD{padding:0;margin-top:16px}.MagqMc .Bi9oQd{display:none}.MagqMc{padding:0}.MagqMc:hover .LGwnxb{color:var(--YLNNHc)}.U48fD{display:block;padding:16px;padding-top:0;margin-top:16px;position:relative;-webkit-tap-highlight-color:transparent;cursor:pointer;line-height:18px;text-overflow:ellipsis;white-space:nowrap}.ZFiwCf{display:flex;align-items:center;justify-content:center;position:relative;z-index:0;margin:0 auto;width:100%;border-radius:18px;outline:1px solid transparent;color:var(--bcxd3b);background-color:var(--MV2sG);font-size:var(--hbmnje);font-family:var(--qR8X0);line-height:var(--CbdmE);font-weight:var(--Oycjt);max-width:372px;min-height:40px;border-radius:20px}@media (forced-colors:active){.ZFiwCf{border:1px solid transparent}}.ZFiwCf::after{position:absolute;top:0;left:0;width:100%;height:100%;border-radius:inherit;z-index:-1}.ZFiwCf:hover::after{content:'';background-color:rgb(from #e8eaf2 r g b/0.0824)}.ZFiwCf:active::after{content:'';background-color:rgb(from #e8eaf2 r g b/0.224)}.Bi9oQd{background-color:var(--gS5jXb);margin-top:18px;position:absolute;border:0;height:1px;left:0;width:100%;margin-top:20px}.w2fKdd.w2fKdd svg{width:auto}.w2fKdd{color:var(--amnPwe)}.LGwnxb{-webkit-line-clamp:1;word-break:break-all;width:auto;padding-left:0;padding-right:8px;max-width:calc(100% - 64px)}.LGwnxb:empty{padding-right:0}.LGwnxb span,.LGwnxb div{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;width:auto}#TN4rFf{display:none}.IDVnvc{display:inline-block;overflow:hidden;max-width:223px;border-radius:16px;height:178px;margin:-2px -10px 2px 10px}.OBMEnb:only-child .IDVnvc{margin-right:calc(25% - 113px)}.cRV9hb{width:90px;padding:6px}.cRV9hb .pcTkSc{font-family:Arial,sans-serif,Noto Color Emoji;overflow:hidden;margin-top:4px;padding:0}.cRV9hb .pcTkSc .wM6W7d{font-family:Google Sans,Arial,sans-serif,Noto Color Emoji;font-size:var(--Mhs7de);line-height:18px;padding:0;color:var(--YLNNHc)}.cRV9hb .pcTkSc .ClJ9Yb{line-height:16px;font-size:12px;font-family:var(--YfiKf);display:none;display:flex}.cRV9hb .pcTkSc .wM6W7d span,.cRV9hb .pcTkSc .ClJ9Yb span{overflow:hidden;text-overflow:ellipsis;-webkit-box-orient:vertical;display:-webkit-box;white-space:normal}.cRV9hb .pcTkSc .wM6W7d span{-webkit-line-clamp:2}.cRV9hb .pcTkSc .ClJ9Yb span{-webkit-line-clamp:2}.aVbWac{background:#fff;border-radius:12px;height:90px}@media (max-width:1300px){.A8SBwf:not(.pD4qTd) .IDVnvc{height:167px}.A8SBwf:not(.pD4qTd) .cRV9hb{width:79px}.A8SBwf:not(.pD4qTd) .aVbWac{height:79px}.A8SBwf:not(.pD4qTd) .aVbWac .sbic.vYOkbe{height:79px;width:79px}}.WzNHm{font-size:11px;line-height:12px;overflow:hidden;bottom:4px;margin-top:0;position:absolute;right:20px;color:var(--IXoxUe)}.c58wS{display:flex;position:relative;}.fLciMb{border-radius:50%;color:#e8eaed;cursor:pointer;height:24px;margin-top:4px;padding:8px;width:24px}.fLciMb:hover{background-color:#2c2e35;text-decoration:none}#gb{height:0;padding-left:16px;padding-right:16px;width:unset}</style><style>.gb_y{display:-webkit-box;display:-webkit-flex;display:flex;-webkit-box-pack:end;-webkit-justify-content:flex-end;justify-content:flex-end;width:100%}.gb_z{box-sizing:border-box;height:48px;padding:4px}.gb_A,.gb_B,.gb_C{-webkit-tap-highlight-color:rgba(0,0,0,0);-webkit-tap-highlight-color:transparent;box-sizing:border-box;float:right;outline:none}.gb_D{box-sizing:border-box;display:inline-block;height:48px;outline:none;padding:4px;position:relative}.gb_E{display:none}.gb_F{display:block}.gb_H,.gb_I,.gb_J{fill:currentColor;color:#444746;color:var(--og-svg-color,var(--gm3-sys-color-on-surface-variant,#444746))}.gb_K .gb_H,.gb_K .gb_I,.gb_K .gb_J{--gm3-sys-color-on-surface-variant:#c4c7c5;--gm3-sys-color-on-surface-variant-rgb:196,199,197;color:#c4c7c5;color:var(--og-svg-color,var(--gm3-sys-color-on-surface-variant,#444746))}.gb_L .gb_C,.gb_M .gb_C,.gb_N .gb_C{cursor:pointer;padding:8px}.gb_O,.gb_P{display:none}.gb_y a.gb_A{border-radius:100px;background:#0b57d0;background:var(--gm3-sys-color-primary,#0b57d0);box-sizing:border-box;color:#fff;color:var(--gm3-sys-color-on-primary,#fff);display:inline-block;font-size:14px;font-weight:500;min-height:40px;outline:none;padding:10px 12px;text-align:center;text-decoration:none;white-space:normal;line-height:18px;position:relative;font-family:Google Sans Text,Roboto,Helvetica,Arial,sans-serif;min-width:85px}.gb_A:after{content:"";inset:-4px 0;position:absolute}.gb_y.gb_K a.gb_A{--gm3-sys-color-on-secondary-fixed:#001d35;--gm3-sys-color-on-secondary-fixed-rgb:0,29,53;--gm3-sys-color-secondary-fixed:#c2e7ff;--gm3-sys-color-secondary-fixed-rgb:194,231,255;background:#c2e7ff;background:var(--gm3-sys-color-secondary-fixed,#c2e7ff);color:#001d35;color:var(--gm3-sys-color-on-secondary-fixed,#001d35)}.gb_4{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;max-height:40px;max-width:100%;overflow:hidden;overflow-wrap:break-word;pointer-events:none;word-break:break-word}.gb_V{fill:#1a73e8;margin:4px}.gb_K .gb_V{fill:#8ab4f8}@media (max-width:640px){.gb_y a.gb_A{min-width:75px}}.gb_X,.gb_Z{position:absolute}.gb_Z{right:0;top:0}.gb_X{right:-1px;top:-1px;width:42px}.gb_C{background-color:transparent;background-position:50%;background-repeat:no-repeat;border:0;display:inline-block;height:40px;padding:4px;position:relative;width:40px}.gb_0{border-radius:50%}.gb_1,.gb_C .gb_2.gb_3{display:none}.gb_2{display:none}.gb_Q,.gb_R{display:none}sentinel{}@font-face{font-family:'Noto Color Emoji';font-style:normal;font-weight:400;src:url(//fonts.gstatic.com/l/font?kit=Yq6P-KqIXTD0t4D9z1ESnKM3-HpFabt0B9NCbApLdGkN-Le66x_YHo73OOwmFCzY9mNlm3ynxmc5ecKzapk6YFmhb-TuLDM1aq7KSfUEVUf2yyX7PBEgby6zM1wsQcY-CtQtOu3qzRf9qffZVQyKGrgWVSCwciT4brzETceV3zs2F1Nr-hdHkg0__ioCtiwPMLviYsEzERVoFHRdaPiNu6PFGvGSsKtBFtRq6xI6v-vzk0MOspjLoL7CEr2jNtsX02fbFtmR8wLjtnJpSWIZRO_3Ajr-ieiGWOJCCd02qg2UeyUZCBcbJ3atTflBz3btlCMfn5eFxqmrJSw4fAWe4DrSY_XFX_gYOCG3sqgYQ5MeewrDZBJLF8jnl3rSC-nGR_OaXluRo7R0hQgj0pFi3G4KGT7IYwQ1ONpfwj5Hkh8Ax_-Ar4CKBzW-SvjLulACIn6KWXkiSwDcZ0ihf-8LX4yJFtI1Ieb_lK8DfYQrGEs8FQAy3svCyUa8K4Inwp8TEbo5TIP1RPScBMkPowWrS_9WDLBAnak9rLdzNX2A55kwtwexq7W3t3rklvh-XX2iJ_pps_gytkFsk2qWuK5Kd9IJWEkGQcdHdi9AdvP-bqMdr-aBUv0J1nkMKqpgLZ915D-0NkNDW15uvDV4lMrxv-32flNHI3CTDwthV3OTk3lqjnjpRALBlw&skey=a373f7129eaba270&v=v38)format('woff2');unicode-range:U+1f1e6-1f1ff,U+1f3f4,U+e0020-e007f;}body {--google-font-color-notocoloremoji:colrv1;}@font-face{font-family:'Google Sans';font-style:normal;font-weight:400 700;font-feature-settings:"calt" 0,"liga" 0;font-display:optional;src:url(//fonts.gstatic.com/s/googlesans/v29/4UaGrENHsxJlGDuGo1OIlL3Owp4.woff2)format('woff2');unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;}</style><script nonce="mlyUHrAL_7pdw8M3GTN-Iw">(function(){var w=["Google Sans",[400,500,700]];(function(){for(var a=0;a<w.length;a+=2)for(var b=w[a],e=w[a+1],d=0,c=void 0;c=e[d];++d)b==="Noto Color Emoji"?document.fonts.load(c+" 10pt "+b,"\ud83c\uddfa\ud83c\uddf8").catch(function(){}):document.fonts.load(c+" 10pt "+b).catch(function(){})})();})();(function(){setTimeout(function(){var a=document.querySelector(".medCX");a&&a.classList.remove("medCX")},1E4);}).call(this);</script><noscript><style>table,div,span,p{display:none}</style><meta content="0;url=/httpservice/retry/enablejs?sei=jpzYaqPyDYOQ4-EP2K6kuAg" http-equiv="refresh"><div style="display:block">Please click <a href="/httpservice/retry/enablejs?sei=jpzYaqPyDYOQ4-EP2K6kuAg">here</a> if you are not redirected within a few seconds.</div></noscript><div jscontroller="EufiNb" class="wYq63b" data-ved="0ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ7LoDCAQ"><div class="S6VXfe"><a jsname="BKxS1e" class="gyPpGe" role="link" tabindex="0" jsaction="i3viod;focus:a0Q7Qd" data-ved="0ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ67oDCAU">Skip to main content</a><a jsname="KI37ad" class="gyPpGe" href="[https://support.google.com/websearch/answer/181196?hl=en-IN](https://support.google.com/websearch/answer/181196?hl=en-IN)" jsaction="focus:a0Q7Qd" data-ved="0ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQwcMDCAY" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;url=https://support.google.com/websearch/answer/181196%3Fhl%3Den-IN&amp;ved=0ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQwcMDCAY&amp;opi=89978449">Accessibility help</a></div></div><div class="xrOgrb"></div><span jscontroller="Zby8rf" class="LoygGf" data-cls="VHFyob" data-h="70" data-mode="6" style="height:70px" jsaction="rcuQ6b:npT2md;MDuPYe:pcqARd"><div jsname="P9ya7d" class="Xx7Mif E5eFb" style="height:70px"><div class="CvDJxb YNk70c" id="searchform"><div class="NDnoQ P3mIxe"><form class="tsf" action="/search" id="tsf" autocomplete="off" data-submitfalse="q" method="GET" name="f" role="search"> <div jsmodel="b5W85 vNzKHd" jsdata="MuIEvd;_;jpzYaqPyDYOQ4-EP2K6kuAg1"> <div jscontroller="cnjECf" jsmodel="kjkykd EPRt9d LM7wx Qlyryb EtCx8b Ip3Erc L97mud zmptHf CoyuFb YHnUBc" class="A8SBwf aypyie" data-alt="true" data-biboe="false" data-blu="https://lens.google.com" data-expids="" data-hp="false" jsaction="lX6RWd:w3Wsmc;aaFXSd:k0wtTd;ocDSvd:duwfG;XmGRxb:mVw6nb;R6Slyc:F3goue;FU8dpd:VH3XBb;DkpM0b:d3sQLd;IQOavd:dFyQEf;XzZZPe:jI3wzf;Aghsf:AVsnlb;iHd9U:Q7Cnrc;f5hEHe:G0jgYd;vmxUb:j3bJnb;XBqW7:ihYaWc;UkQk6c:VSb4De;nTzfpf:YPRawb;CudXPd:iu9yrc;TsIFpc:aGAD7e;R2c5O:LuRugf;qiCkJd:ANdidc;Q3vWPd:FtWxqb;NOg9L:HLgh3;zLdLw:eaGBS;H9muVd:J4e6lb;S8pxKe:u3rcXd;hBEIVb:nUZ9le;acb7qb:H8sTz;by9jW:LGmyb;rcuQ6b:npT2md"><div class="logo"><a aria-label="Go to Google Home" href="[https://www.google.com/webhp?hl=en&amp;sa=X&amp;ved=0ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQPAgI](https://www.google.com/webhp?hl=en&sa=X&ved=0ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQPAgI)" title="Go to Google Home" id="logo" data-hveid="8"><svg aria-hidden="true" height="30" viewBox="0 0 92 30" width="92" xmlns="http://www.w3.org/2000/svg"><path fill="#e8eaf2" d="M83.4 23.08a7.4 7.4 0 0 0 6.34-3.52l-2.3-1.5a4.8 4.8 0 0 1-3.9 2.2 4.6 4.6 0 0 1-3.99-2.4l10.33-4.39a7 7 0 0 0-.28-1.07c-1.23-3.16-3.38-4.6-6.28-4.6-4.42 0-7.43 3.22-7.43 7.68 0 4.56 3.17 7.6 7.5 7.6m-4.51-7.61v-.17c0-2.93 1.68-4.9 4.32-4.9 1.26 0 2.39.57 3.15 1.9zM74.3 2.41h-3.08v20.23h3.08zM61.77 29.2q7.18 0 7.17-8.22V8.23h-2.93v1.8h-.06c-.92-1.43-2.66-2.23-4.62-2.23-4.24 0-6.82 3.23-6.82 7.54 0 4.3 2.51 7.46 6.93 7.46a5.5 5.5 0 0 0 4.47-2.26h.1v1.31c0 2.9-1.5 4.6-4.29 4.6-1.82 0-3.03-1-3.92-2.68l-2.66 1.17c1.4 2.96 3.4 4.26 6.63 4.26m0-9.2c-2.59 0-4.24-1.9-4.24-4.75 0-2.74 1.64-4.71 4.25-4.71s4.23 1.83 4.23 4.7c0 2.9-1.7 4.76-4.24 4.76m-16.01 3.1c4.44 0 7.6-3.24 7.6-7.72 0-4.4-3.12-7.67-7.6-7.67-4.24 0-7.57 3-7.57 7.67 0 4.45 3.15 7.73 7.57 7.73m0-2.68c-2.68 0-4.56-2.2-4.56-5.04s1.98-4.99 4.56-4.99c2.73 0 4.57 2.2 4.57 5 0 2.87-1.88 5.03-4.57 5.03M29.33 23.1c4.41 0 7.6-3.23 7.6-7.72 0-4.4-3.12-7.67-7.6-7.67-4.23 0-7.57 3-7.57 7.67 0 4.45 3.15 7.73 7.57 7.73m0-2.68c-2.68 0-4.56-2.2-4.56-5.04s1.98-4.99 4.56-4.99c2.73 0 4.57 2.2 4.57 5 0 2.87-1.88 5.03-4.57 5.03M10.35 23.1c5.89.06 9.9-3.9 9.9-9.98q0-.75-.14-1.7h-9.8v2.93h6.87c-.36 3.83-3.06 5.82-6.76 5.82-4.15 0-7.33-3.12-7.33-7.66 0-4.47 3.03-7.6 7.33-7.6 2.16 0 3.76.67 5.35 2.3l2.05-2.14c-1.8-2.1-4.4-3.1-7.44-3.1-5.9 0-10.49 4.43-10.49 10.5 0 5.8 4.43 10.58 10.46 10.64"></path></svg></a></div><div jsname="RNNXgb" class="RNNXgb" data-ved="0ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ3tUDCAk"><a class="FgNLaf" href="[https://www.google.com/webhp?hl=en&amp;ictx=0&amp;sa=X&amp;ved=0ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQpYkNCAo](https://www.google.com/webhp?hl=en&ictx=0&sa=X&ved=0ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQpYkNCAo)" id="_jpzYaqPyDYOQ4-EP2K6kuAg_1" data-hveid="10"></a><div class="SDkEP"><div jsname="uFMOof" class="iblpc"><div class="hvhmMe"><span class="Ty0Rrc z1asCe" style="height:20px;line-height:20px;width:20px"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M784-120L532-372q-30,24-69,38t-83,14q-109,0-184.5-75.5T120-580t75.5-184.5T380-840t184.5,75.5T640-580q0,44-14,83t-38,69L840-176l-56,56ZM380-400q75,0 127.5-52.5T560-580T507.5-707.5T380-760T252.5-707.5T200-580t52.5,127.5T380-400Z"></path></svg></span></div></div><div jscontroller="vZr2rb" jsname="gLFyf" class="a4bIc" data-mnr="4" jsaction="KjsqPd;input:Lg5SV;blur:fpfTEe;paste:V64iSc;mousedown:LhvU2e"><div jsname="vdLsw" class="svBvU"></div><div jsname="aJyGR" jscontroller="xMclgd" class="gLFyf OVWmAd" jsaction="rcuQ6b:npT2md"><g-snackbar jsname="nH91he" jscontroller="OZLguc" style="display:none" data-dismiss="" jsshadow=""><div jsname="sM5MNb" aria-live="polite" class="jhZvod"><div jsname="Ng57nc" class="Wu0v9b v0rrvd" data-ved="0ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ4G8ICw"><div class="b77HKf"><div jsname="bN97Pc" class="rIxsve" jsslot="" style="display:none"><span class="Txngnb wHYlTd yUTMj LNRLRe">Press <span class="AeLhAe">/</span> to jump to the search box</span></div></div></div></div></g-snackbar></div><textarea jsname="yZiJbe" class="gLFyf" aria-controls="Alh6id" aria-owns="Alh6id" maxlength="2048" aria-label="Search" placeholder="" aria-autocomplete="both" aria-expanded="false" aria-haspopup="false" autocapitalize="off" autocomplete="off" autocorrect="off" id="ti6dpd" name="q" role="combobox" rows="1" spellcheck="false" data-ved="0ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ39UDCAw">php based companies in ahmedabad</textarea></div><div class="dRYYxd"> <div jscontroller="PymCCe" jsname="RP0xob" class="BKRPef"> <div class="vOY7J M2vV3" jsname="pkjasb" aria-label="Clear" role="button" tabindex="0" jsaction="AVsnlb;rcuQ6b:npT2md" data-ved="0ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ05YFCA0"> <span jsname="itVqKe" class="ExCKkf z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M256-200l-56-56L424-480L200-704l56-56L480-536L704-760l56,56L536-480L760-256l-56,56L480-424L256-200Z"></path></svg></span> </div> <span jsname="s1VaRe" class="ACRAdd M2vV3"></span> </div> <div jsname="UdfVXc" class="ywK6Rd"><div jscontroller="unV4T" jsname="F7uqIe" class="fzj3ad" aria-label="Search by voice" role="button" tabindex="0" jsaction="h5M12e;rcuQ6b:npT2md;KHxBOb:EANhx;HINvVc:OUwavc;hATt5e:AkD3se;CQJmec:efDZmf" data-ved="0ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQvs8DCA4"><svg class="ByCvB" aria-hidden="true" focusable="false" viewbox="0 -960 960 960" xmlns="http://www.w3.org/2000/svg"><path d="M480-400q-50 0-85-35t-35-85v-240q0-50 35-85t85-35q50 0 85 35t35 85v240q0 50-35 85t-85 35Zm-40 280v-123q-104-14-172-93t-68-184h80q0 83 58.5 141.5T480-320q83 0 141.5-58.5T680-520h80q0 105-68 184t-172 93v123h-80Z" fill="currentColor"></path></svg></div><div jscontroller="lpsUAf" jsname="R5mgy" class="etxtjc" data-is-images-mode="false" aria-label="Search by image" role="button" tabindex="0" jsaction="rcuQ6b:npT2md;h5M12e;AMruCe:Zpug7c" data-ved="0ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQhqEICA8"><svg class="hWdRGb" aria-hidden="true" focusable="false" viewbox="0 -960 960 960" xmlns="http://www.w3.org/2000/svg"><path d="M480-320q-50 0-85-35t-35-85q0-50 35-85t85-35q50 0 85 35t35 85q0 50-35 85t-85 35Zm240 160q-33 0-56.5-23.5T640-240q0-33 23.5-56.5T720-320q33 0 56.5 23.5T800-240q0 33-23.5 56.5T720-160Zm-440 40q-66 0-113-47t-47-113v-80h80v80q0 33 23.5 56.5T280-200h200v80H280Zm480-320v-160q0-33-23.5-56.5T680-680H280q-33 0-56.5 23.5T200-600v120h-80v-120q0-66 47-113t113-47h80l40-80h160l40 80h80q66 0 113 47t47 113v160h-80Z" fill="currentColor"></path></svg></div></div></div></div><button class="HZVG1b Tg7LZd" jsaction="pointerdown:trigger.acb7qb" jsname="Tg7LZd" aria-label="Search" type="submit" data-ved="0ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ4dUDCBA"> <div class="DO7Hj"> <span class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M784-120L532-372q-30,24-69,38t-83,14q-109,0-184.5-75.5T120-580t75.5-184.5T380-840t184.5,75.5T640-580q0,44-14,83t-38,69L840-176l-56,56ZM380-400q75,0 127.5-52.5T560-580T507.5-707.5T380-760T252.5-707.5T200-580t52.5,127.5T380-400Z"></path></svg></span> </div> </button><div jsname="mvaK7d" class="M8H8pb" data-ved="0ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ4d8ICBE"></div></div><div jscontroller="Dvn7fe" jsname="UUbT9" class="UUbT9 EyBRub" style="display:none" jsaction="mouseout:ItzDCd;mouseleave:MWfikb;hBEIVb:nUZ9le;ldyIye:CmVOgc" data-ved="0ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ4tUDCBI"><div jscontroller="Wo3n8" jsname="aadvhe" jsmodel=" d5EhJe" data-bkt="searchbox" data-fhs="" data-maindata='[null,null,null,"autocomplete_user_feedback_kp_id",null,11,null,null,null,null,null,5010715,"searchbox",null,"AutocompletePrediction",null,null,null,null,11]' data-ofbl="114,120,134" data-pid="5010715" jsaction="kPzEO: MlP2je;qjLxRc: FbhRG;w8f1fc: hRwSgb;kq2wxf: s5CUif;aIJAdf: UhDUnd;rwuG3b: KGQHJd;BqbTbe: naa5ve;kYAKrf: CqUGrf;hwhRRe: KyxjCd;rcuQ6b: npT2md" jsdata="vST7rb;_;jpzYaqPyDYOQ4-EP2K6kuAg2 zEIyGd;_;"><div id="_jpzYaqPyDYOQ4-EP2K6kuAg_5"><div jsname="GkjeIf" id="_jpzYaqPyDYOQ4-EP2K6kuAg_7" data-jiis="up" data-async-type="kp_feedback" class="yp" data-ved="0ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ68cECBM"></div></div></div><div jscontroller="P10Owf" class="RK9gM ky4hfd" aria-label="Choose what you're giving feedback on" jsdata="vST7rb;_;jpzYaqPyDYOQ4-EP2K6kuAg2" role="dialog" tabindex="-1" jsaction="kPzEO:MlP2je;qjLxRc:MlP2je;w8f1fc:hRwSgb;kq2wxf:s5CUif" data-ved="0ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQlokGCBQ"><div class="pbgWk" id="_jpzYaqPyDYOQ4-EP2K6kuAg_9"></div></div><div jsname="RjPuVb" class="RjPuVb"></div><div jsname="aajZCb" class="aajZCb"><div class="xtSCL"></div><div class="gDtRnb" id="Alh6id" role="presentation"><div jsname="erkvQe" class="erkvQe"></div><div jsname="tovEib" class="e1R9Ud" role="presentation"></div></div><div jsname="E80e9e" class="OBMEnb" id="shJ2Vb" role="presentation"><ul jsname="bw4e9b" class="G43f7e" role="listbox"></ul></div><div class="ynRric" id="ynRric" role="presentation"></div><li data-view-type="1" class="sbct PZPZlf" id="YMXe" role="presentation" data-attrid="AutocompletePrediction" data-entityid="autocomplete_user_feedback_kp_id"><div class="eIPGRd"><div class="sbic"><svg class="x6vvNd" aria-hidden="true" viewBox="0 -960 960 960"></svg></div><div class="pcTkSc"><div class="lnnVSe" aria-atomic="true" role="option"><div class="wM6W7d"><span></span></div><div class="ClJ9Yb"><div class="zjKSsb"></div><span class="dKU7sc"></span></div><div class="a5RLac"><span></span></div></div></div><div class="AQZ9Vd" aria-atomic="true" role="button"><div class="sbai" role="presentation">Delete</div></div></div></li><li class="AB2Fdd" data-view-type="9" id="d6ItKb" role="presentation"><div class="eIPGRd"><div class="ZDHp" style="display:none" role="presentation"><div class="kZtr1b"><div class="lnnVSe" aria-atomic="true" role="option"><div class="SHFPkb"></div><div class="bTSf5c"></div><div class="PnfqLc"></div><div class="HrUlUc"></div></div><div jsname="EFD5jf" class="MagqMc U48fD" style="display:none" aria-label="See more" role="button" tabindex="0"><hr class="Bi9oQd" aria-hidden="true"><div class="ZFiwCf"><span class="LGwnxb JGD2rd"><span>See more</span></span><span class="w2fKdd z1asCe" style="height:20px;line-height:20px;width:20px"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M504-480L320-664l56-56L616-480L376-240l-56-56L504-480Z"></path></svg></span></div></div></div><span class="XAFD5c" style="display:none"></span><div class="j0GJWd" style="display:none"><div><img class="uHGFVd AZNDm" alt="" style="display:none"></div><div class="iQxPRb"><img class="uHGFVd EOLKOc" alt="" style="display:none"><img class="uHGFVd EOLKOc" alt="" style="display:none"></div></div></div></div></li><li class="IDVnvc PZPZlf" data-view-type="6" id="TN4rFf" role="presentation" data-attrid="AutocompletePrediction" data-entityid="autocomplete_user_feedback_kp_id"><div class="cRV9hb"><div class="aVbWac"><div class="sbic"></div></div><div class="pcTkSc" role="presentation"><div class="lnnVSe" aria-atomic="true" role="option"><div class="wM6W7d"><span></span></div><div class="ClJ9Yb"><span class="dKU7sc"></span></div></div></div></div></li></div><div jsname="JUypV"><div class="WzNHm mWcf0e" jscontroller="gSZvdb" data-dccl="false" role="button" tabindex="0" jsaction="i5KCU" jsdata="vST7rb;_;jpzYaqPyDYOQ4-EP2K6kuAg2" data-ved="0ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ6scECBc"><div class="VfL2Y LRZwuc">Report inappropriate predictions</div></div></div></div></div> <script nonce="mlyUHrAL_7pdw8M3GTN-Iw">(function(){
+var a=this||self;var c=document.querySelector("form");if(c){var d=function(b){b.key!=="Enter"||b.shiftKey||(b.preventDefault(),c.submit&&c.submit())};c.addEventListener("keydown",d);a.sbmlhf=d};}).call(this);</script> </div> <div id="tophf" data-st-u="tophf"><input name="sca_esv" value="7e69963a3bb46de9" type="hidden"><input name="udm" value="local" type="hidden"><input name="biw" value="1526" type="hidden"><input name="bih" value="839" type="hidden"><input name="sxsrf" value="APpeQnvUJ1-btSeGe6n8-VVdiwsHHbMeSw:1792580750235" type="hidden"><input value="jpzYaqPyDYOQ4-EP2K6kuAg" name="ei" type="hidden"></div></form><div class="Q3DXx Efnghe"><div class="c58wS"><div jscontroller="w4UyN" class="fLciMb" data-oam="" id="og-te" aria-label="Settings" role="button" tabindex="0" jsaction="rcuQ6b:npT2md;noGWuc;mouseenter:eGiyHb;focus:eGiyHb;focusin:eGiyHb;mouseleave:LfDNce;focusout:LfDNce" data-ved="0ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ6psICBg"><div data-noaftde="" id="_jpzYaqPyDYOQ4-EP2K6kuAg_11"></div></div></div><span class="gb" style="display:none"></span><div jscontroller="SJpD2c" jsname="uZkjhb" data-cca="" data-so="" jsaction="rcuQ6b:npT2md;YQNWc:MMAZpe;zWO23b:FPeyVe" data-ved="0ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQnJQPCBk"><header class="gb_y gb_K gb_Pd" id="gb" role="none"><div class="gb_L gb_Hd gb_aa" data-ogsr-fb="true" data-ogsr-alt="" id="gbwa"><div class="gb_D"><a class="gb_C" aria-label="Google apps" href="[https://www.google.co.in/intl/en/about/products?tab=wh](https://www.google.co.in/intl/en/about/products?tab=wh)" aria-expanded="false" role="button" tabindex="0"><svg class="gb_H" aria-hidden="true" focusable="false" viewbox="0 0 24 24"><path d="M6,8c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2zM12,20c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2zM6,20c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2zM6,14c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2zM12,14c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2zM16,6c0,1.1 0.9,2 2,2s2,-0.9 2,-2 -0.9,-2 -2,-2 -2,0.9 -2,2zM12,8c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2zM18,14c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2zM18,20c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2z"></path><image src="[https://ssl.gstatic.com/gb/images/bar/al-icon.png](https://ssl.gstatic.com/gb/images/bar/al-icon.png)" alt="" height="24" width="24" style="border:none;display:none \9"></image></svg></a></div></div><div class="gb_z" data-ogsr-up=""><a class="gb_A" aria-label="Sign in" href="[https://accounts.google.com/ServiceLogin?hl=en&amp;passive=true&amp;continue=https://www.google.com/search%3Fq%3Dphp%2Bbased%2Bcompanies%2Bin%2Bahmedabad%26sca_esv%3D7e69963a3bb46de9%26udm%3Dlocal%26biw%3D1526%26bih%3D839%26sxsrf%3DAPpeQnvLVpR5djVYAHyn85hvsbMwqCE7zA%253A1792580493455%26ei%3DjZvYavexG6-XseMPuNqnoQY%26ved%3D0ahUKEwi3rKzc-sqXAxWvS2wGHTjtKWQ4FBDh1QMIEA%26uact%3D5%26oq%3Dphp%2Bbased%2Bcompanies%2Bin%2Bahmedabad%26gs_lp%3DEhZnd3Mtd2l6LW1vZGVsZXNzLWxvY2FsIiBwaHAgYmFzZWQgY29tcGFuaWVzIGluIGFobWVkYWJhZDIGEAAYFhgeMgUQABjvBTIFEAAY7wUyBRAAGO8FSNYXUL0IWJsWcAF4AJABAJgBxAKgAdwRqgEHMC4yLjUuMrgBA8gBAPgBAZgCCqACgxLCAgUQIRigAcICBRAhGJ8FmAMAiAYBkgcHMS4yLjUuMqAH8R-yBwcwLjIuNS4yuAeAEsIHBTAuOS4xyAcVgAgB%26sclient%3Dgws-wiz-modeless-local&amp;ec=futura_srp_og_si_72236_p](https://accounts.google.com/ServiceLogin?hl=en&passive=true&continue=https://www.google.com/search%3Fq%3Dphp%2Bbased%2Bcompanies%2Bin%2Bahmedabad%26sca_esv%3D7e69963a3bb46de9%26udm%3Dlocal%26biw%3D1526%26bih%3D839%26sxsrf%3DAPpeQnvLVpR5djVYAHyn85hvsbMwqCE7zA%253A1792580493455%26ei%3DjZvYavexG6-XseMPuNqnoQY%26ved%3D0ahUKEwi3rKzc-sqXAxWvS2wGHTjtKWQ4FBDh1QMIEA%26uact%3D5%26oq%3Dphp%2Bbased%2Bcompanies%2Bin%2Bahmedabad%26gs_lp%3DEhZnd3Mtd2l6LW1vZGVsZXNzLWxvY2FsIiBwaHAgYmFzZWQgY29tcGFuaWVzIGluIGFobWVkYWJhZDIGEAAYFhgeMgUQABjvBTIFEAAY7wUyBRAAGO8FSNYXUL0IWJsWcAF4AJABAJgBxAKgAdwRqgEHMC4yLjUuMrgBA8gBAPgBAZgCCqACgxLCAgUQIRigAcICBRAhGJ8FmAMAiAYBkgcHMS4yLjUuMqAH8R-yBwcwLjIuNS4yuAeAEsIHBTAuOS4xyAcVgAgB%26sclient%3Dgws-wiz-modeless-local&ec=futura_srp_og_si_72236_p)" target="_top"><span class="gb_4">Sign in</span></a></div></header><div jsname="nSxrjf" style="display:none" data-ved="0ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQtsANCBo"></div><div jsname="NG1V7d" style="display:none" data-ved="0ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ8JsICBs"></div><div jsname="IZKNDc" style="display:none" data-ved="0ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ8ZsICBw"></div><div jsname="tP7ayb" style="display:none" data-ved="0ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ65sICB0"></div><div jsname="uO6mde" style="display:none" data-ved="0ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ8psICB4"></div></div></div></div></div></div></span><span class="kp-collapsed-osrp kpshf line gsr" style="display:none"></span><div jsmodel="" class="main" id="main"><div jsmodel="QPRQHf ROaKxe" class="e9EfHf" id="cnt"><div id="sfcnt"></div><div class="Fgyi2e wZQcA"><span jscontroller="uUzMF" jsaction="rcuQ6b:npT2md" data-c="3"><div jsname="KbJTVc" class="zLSRge" style="z-index:999"></div></span></div><div id="ZnpjSd"></div><style>:root{--COEmY:var(--YLNNHc);--xhUGwc:#22242a}:root{--vZe0jb:#515a7b;--nwXobb:var(--vZe0jb);--VuZXBd:#eef0ff;--uLz37c:#c3c6d6;--jINu6c:#eef0ff;--TyVYld:#8ab4f8;--ZEpPmd:#515a7b;--QWaaaf:var(--ZEpPmd);--DEeStf:#242832;--TSWZIb:#2c303d;--BRLwE:#3a3f50;--gS5jXb:#42444d;--Aqn7xd:#5a5c66;--EpFNW:#1f1f1f;--Xqboce:#fff;--IXoxUe:#a7a9b2;--bbQxAb:#ced0d9;--YLNNHc:#e8eaf2;--TMYS9:#a8c7fa;--JKqx2:#99c3ff;--rrJJUc:#a8c7fa;--mXZkqc:#42444d;--JclFj:#5a5c66;--Nsm0ce:#a8c7fa;--vdwxpe:#0b57d0;--ywz01c:#fdd663;--XKMDxc:#2c2e35;--aYn2S:#363840;--Lm570b:#42444d}:root{--amnPwe:#a7a9b2;--ZXiaGf:#202124;--EoKObe:#fff;--cIehld:var(--xhUGwc);--ONhrGd:#42444d;--gVUKcd:rgba(0,0,0,0.6);--jwFC2e:#203da0;--yTtsEf:#c4eed0}.Xx7Mif{contain:style;position:relative}.E5eFb{width:100%;contain:size style}.LoygGf{width:100%;display:block}.CTOaxb{position:fixed;top:0;left:0;contain:size layout style}.OMqmfd{position:sticky;top:0}.zLSRge{border-bottom:1px solid var(--gS5jXb)}.AX1Qf{position:absolute;left:50vw;width:1px;height:2px;visibility:hidden;pointer-events:none}.oDzakc{display:inline-block;float:left}.wXpfVb{position:relative;top:-1px;width:100%;height:0}:root{--nkmQOe:Arial,sans-serif,Noto Color Emoji;--a9X0Jc:24px;--z3BFIe:16px;--XWliwc:400;--LI4Bo:Arial,sans-serif,Noto Color Emoji;--XWv1if:22px;--Mhs7de:14px;--ofwUBc:400;--YfiKf:Arial,sans-serif,Noto Color Emoji;--punZlc:16px;--gOs6Bf:12px;--MzKBpd:400;--IT7y3c:Google Sans,Arial,sans-serif,Noto Color Emoji;--hPDMFf:36px;--Ia70Xd:28px;--Vyi8yc:400;--Aoh9Xe:Google Sans,Arial,sans-serif,Noto Color Emoji;--qYGXw:28px;--qpdFp:20px;--JT4IPc:400;--rTk0E:Google Sans,Arial,sans-serif,Noto Color Emoji;--Ok3irf:24px;--uBdgTe:18px;--Zf9Xnd:400;--qR8X0:Google Sans,Arial,sans-serif,Noto Color Emoji;--CbdmE:20px;--hbmnje:14px;--Oycjt:500;--qBwyqb:Arial,sans-serif,Noto Color Emoji;--nUOqEc:16px;--cMTvjf:12px;--CUS15e:500;--Eou8Yc:Google Sans,Arial,sans-serif,Noto Color Emoji;--qWZYEc:26px;--GiToJf:20px;--p2Lqxe:400;--ztTqPe:Google Sans,Arial,sans-serif,Noto Color Emoji;--C74x2e:24px;--gyu5L:16px;--Yoa6qd:400;--lI1Trc:Arial,sans-serif,Noto Color Emoji;--HIyEKc:18px;--ZNg88:14px;--qjVU3d:400}.mWcf0e{cursor:pointer}@media (forced-colors:active){.CNbPnc{background-color:ButtonFace;border:1px solid transparent;border-color:ButtonBorder;color:ButtonText}}.VfL2Y{position:relative;margin:-4px 0;padding:4px 0}.YQpX9d{cursor:pointer;position:relative;margin:0;padding:4px 0}.LRZwuc{display:inline-block}.BJ1Ird .LRZwuc{display:block}.nKHyTc{color:var(--IXoxUe);float:right;font-size:var(--gOs6Bf);line-height:var(--punZlc);padding-bottom:4px}.eDGqNd{color:var(--IXoxUe);float:right;font-size:var(--gOs6Bf);line-height:var(--punZlc)}.BJ1Ird,.k62gjb .W7GCoc:hover,.k62gjb:hover{text-decoration:underline}.JGD2rd{display:-webkit-box;overflow:hidden;text-overflow:ellipsis;white-space:normal!important;-webkit-box-orient:vertical}@media (max-width:360px){.JGD2rd{word-break:break-word!important;-webkit-line-clamp:3!important}}.v0rrvd{padding-bottom:16px}.jhZvod{bottom:0;height:0;position:fixed;z-index:999;left:16px;right:auto}.Wu0v9b{box-sizing:border-box;visibility:hidden;position:relative}@media (min-width:569px) and (min-height:569px){.jhZvod{text-align:center}.Wu0v9b{display:inline-block;max-width:568px;min-width:288px;text-align:left}}.zJUuqf{margin-bottom:4px}.AB4Wff{margin-left:16px}@keyframes g-snackbar-show{0%{pointer-events:none;transform:translateY(0)}to{transform:translateY(-100%)}}@keyframes g-snackbar-hide{0%{transform:translateY(-100%)}to{transform:translateY(0)}}@keyframes g-snackbar-show-content{0%{opacity:0}}@keyframes g-snackbar-hide-content{to{opacity:0}}.LH3wG{bottom:0;height:0;position:fixed;z-index:999}.yK6jqe{box-sizing:border-box;visibility:hidden}.rTYTNb{animation:g-snackbar-hide .4s cubic-bezier(0.4,0,0.2,1) both;visibility:inherit}.UewPMd.UewPMd{animation:g-snackbar-show .5s cubic-bezier(0.4,0,0.2,1) both;visibility:inherit}.b77HKf{background-color:#3c4043;padding:0 24px}@media (forced-colors:active){.b77HKf{border:1px solid CanvasText}}.rIxsve{align-items:center;display:flex}.UewPMd .rIxsve{animation:g-snackbar-show-content .35s cubic-bezier(0.4,0,0.2,1) .15s both}.Txngnb.Txngnb{line-height:20px}.Txngnb{color:#e8eaf2;flex:1 1 auto;margin:14px 0;word-break:break-word}@media (min-width:569px) and (min-height:569px){.LH3wG{text-align:center}.yK6jqe{display:inline-block;max-width:568px;min-width:288px;text-align:left}.b77HKf{border-radius:8px}}.LH3wG{left:0;right:0}.yK6jqe{position:relative}.mqsAne{margin-bottom:env(safe-area-inset-bottom)}html:active-view-transition-type(sb) .RNNXgb{view-transition-name:sb}.M8H8pb{position:absolute;top:0;left:0;right:0;padding:inherit}.M8H8pb{width:100%}.A8SBwf.BgPPrc .XWrYL{display:block;margin-right:8px}.yUTMj{font-family:Arial,sans-serif,Noto Color Emoji;font-weight:400}.wHYlTd{font-family:var(--LI4Bo);font-size:var(--Mhs7de);line-height:var(--XWv1if)}.DpgmK,.Enb9pe,.FAoEle,.LwDUdc,.MTIaKb,.RlTCPd,.RoOVmf,.V3Ezn,.Vnob4b,.YKUhfb,.aVsZpf,.bbxTBb,.caNvfd,.dIfvQd,.iQMtqe,.kJSB8,.mYuoaf,.tUr4Kc,.uNnvb,.wPNfjb{--Yi4Nb:var(--mXZkqc);--pEa0Bc:var(--bbQxAb);--kloG3:var(--mXZkqc);--YaIeMb:var(--XKMDxc);--Pa8Wlb:var(--Nsm0ce);--izGsqb:var(--Nsm0ce);--d5F9Lb:var(--EpFNW);--todMNc:var(--EpFNW);--p9J9c:var(--Nsm0ce)}:root{--KIZPne:#34517d;--xPpiM:#eef0ff;--Ehh4mf:var(--Nsm0ce)}:root{--pEa0Bc:#bfbfbf;--Pa8Wlb:#336ef3;--YaIeMb:#28292a;--Yi4Nb:#444746;--ngPXTb:var(--rrJJUc);--hwEqod:var(--jINu6c);--kloG3:#444746;--lv6yU:#a8c7fa;--Wmwad:#b1c5ff;--vWq1if:var(--jINu6c);--Ijc2tf:#2c303d;--VeLyLc:#eef0ff;--fuvksc:#a8c7fa;--gJjJk:#b1c5ff;--LMFHUd:var(--jINu6c);--Zia6nf:var(--BRLwE);--y01ou:#eef0ff;--p9J9c:#a8c7fa;--MoaHse:#b1c5ff;--CRMNZd:var(--jINu6c);--izGsqb:#336ef3;--d5F9Lb:#ffffff;--todMNc:#ffffff;--NoaQW:#090f28;--qdHZF:rgba(0,0,0,.6);--V9ysqf:#fff;--PBxOKe:#22242a;--MV2sG:var(--XKMDxc);--bcxd3b:var(--YLNNHc);--D9aNi:rgba(232,232,232,0.08)}</style><script nonce="mlyUHrAL_7pdw8M3GTN-Iw">(function(){google.tick("load","sct",void 0,"SearchBodyStart");}).call(this);</script><style>.FJCJfd{border:none;box-shadow:0px 1px 3px rgba(95,99,104,0.64)}.XVMlrc{text-decoration:none;cursor:pointer}.XVMlrc:hover{text-decoration:none}.olrp5b{display:flex}.mTpL7c{display:inline-block}.mTpL7c:not([disabled]){cursor:pointer}.R0DW9c:not(.vpR9sb){display:none}.R0DW9c{position:relative}.vH6rvf{padding:8px 0;z-index:100;opacity:0;top:0;position:absolute;background:var(--aYn2S);border-radius:8px;overflow:hidden}@media (forced-colors:active){.vH6rvf{outline:1px solid}}.bsmXxe{display:contents}.LJefwf{display:none}</style><div class="Fgyi2e rZj61" data-st-cnt="fb"><div data-st-tgt="fb" data-hveid="CBIQAA" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ96AJegQIEhAA"><div class="YNk70c"><div class="GG4mbd P3mIxe" jscontroller="O63OXd" role="navigation" tabindex="-1" jsaction="rcuQ6b:npT2md;YcfJ:rWvwbc;"><div class="rQTE8b" data-hveid="CBIQAQ" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQjMEKegQIEhAB"><div class="beZ0tf O1uzAe" role="list"><div jsname="xBNgKe" role="listitem" data-hveid="CBIQAg" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQtoAJKAB6BAgSEAI"><div><div class="olrp5b" data-fbs="ABfTbFVyMZGZf1hfvX9uKjN_-G8cn05EoNqnRUpRtqDK_L3JtTXKTzUG4jnwGMDgCQgjtI7w-shaL8a7GoBTWkGqEZw3vgCV-YCHddODkgrurr9Y-JCOYbmjDvp8VJThlTYIItLUuot_-Wn95hcwoixnrebQ0N5yYbznQrFNWFtPaZY5WN0SZCRx5DwUJ0p8t4m0tYVITextFopM2MGmttCLnI9S21T84A"><a class="XVMlrc C6AK7c" data-mstk-u="" data-vt-mb="" href="[/search?q=php+based+companies+in+ahmedabad&amp;sca_esv=7e69963a3bb46de9&amp;biw=1526&amp;bih=839&amp;sxsrf=APpeQnvUJ1-btSeGe6n8-VVdiwsHHbMeSw:1792580750235&amp;udm=50&amp;fbs=ABfTbFVyMZGZf1hfvX9uKjN_-G8cn05EoNqnRUpRtqDK_L3JtTXKTzUG4jnwGMDgCQgjtI7w-shaL8a7GoBTWkGqEZw3vgCV-YCHddODkgrurr9Y-JCOYbmjDvp8VJThlTYIItLUuot_-Wn95hcwoixnrebQ0N5yYbznQrFNWFtPaZY5WN0SZCRx5DwUJ0p8t4m0tYVITextFopM2MGmttCLnI9S21T84A&amp;vsint=&amp;aep=1&amp;ntc=1&amp;cs=1&amp;sa=X&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ2J8OegQIEhAD](https://www.google.com/search?q=php+based+companies+in+ahmedabad&sca_esv=7e69963a3bb46de9&biw=1526&bih=839&sxsrf=APpeQnvUJ1-btSeGe6n8-VVdiwsHHbMeSw:1792580750235&udm=50&fbs=ABfTbFVyMZGZf1hfvX9uKjN_-G8cn05EoNqnRUpRtqDK_L3JtTXKTzUG4jnwGMDgCQgjtI7w-shaL8a7GoBTWkGqEZw3vgCV-YCHddODkgrurr9Y-JCOYbmjDvp8VJThlTYIItLUuot_-Wn95hcwoixnrebQ0N5yYbznQrFNWFtPaZY5WN0SZCRx5DwUJ0p8t4m0tYVITextFopM2MGmttCLnI9S21T84A&vsint=&aep=1&ntc=1&cs=1&sa=X&ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ2J8OegQIEhAD)" tabindex="0" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ2J8OegQIEhAD"><div class="mXwfNd"><div class="mVH5Fc"><span class="R1QWuf"><span jsname="KliEFc">AI Mode</span></span></div></div></a></div></div></div><div role="listitem" data-hveid="CBgQAA" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQtoAJKAB6BAgYEAA"><a jsname="pxBnId" class="C6AK7c" href="[/search?sca_esv=7e69963a3bb46de9&amp;biw=1526&amp;bih=839&amp;sxsrf=APpeQnvUJ1-btSeGe6n8-VVdiwsHHbMeSw:1792580750235&amp;q=php+based+companies+in+ahmedabad&amp;source=lnms&amp;fbs=ABfTbFVyMZGZf1hfvX9uKjN_-G8cn05EoNqnRUpRtqDK_L3JtTXKTzUG4jnwGMDgCQgjtI7w-shaL8a7GoBTWkGqEZw3vgCV-YCHddODkgrurr9Y-JCOYbmjDvp8VJThlTYIItLUuot_-Wn95hcwoixnrebQ0N5yYbznQrFNWFtPaZY5WN0SZCRx5DwUJ0p8t4m0tYVITextFopM2MGmttCLnI9S21T84A&amp;sa=X&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ0pQJegQIGBAB](https://www.google.com/search?sca_esv=7e69963a3bb46de9&biw=1526&bih=839&sxsrf=APpeQnvUJ1-btSeGe6n8-VVdiwsHHbMeSw:1792580750235&q=php+based+companies+in+ahmedabad&source=lnms&fbs=ABfTbFVyMZGZf1hfvX9uKjN_-G8cn05EoNqnRUpRtqDK_L3JtTXKTzUG4jnwGMDgCQgjtI7w-shaL8a7GoBTWkGqEZw3vgCV-YCHddODkgrurr9Y-JCOYbmjDvp8VJThlTYIItLUuot_-Wn95hcwoixnrebQ0N5yYbznQrFNWFtPaZY5WN0SZCRx5DwUJ0p8t4m0tYVITextFopM2MGmttCLnI9S21T84A&sa=X&ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ0pQJegQIGBAB)" jsaction="" data-hveid="CBgQAQ" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ0pQJegQIGBAB"><div jsname="xBNgKe" class="mXwfNd"><span class="R1QWuf">All</span></div></a></div><div role="listitem" data-hveid="CBwQAA" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQtoAJKAB6BAgcEAA"><a jsname="pxBnId" class="C6AK7c" href="[/search?sca_esv=7e69963a3bb46de9&amp;biw=1526&amp;bih=839&amp;sxsrf=APpeQnvUJ1-btSeGe6n8-VVdiwsHHbMeSw:1792580750235&amp;udm=forums&amp;fbs=ABfTbFVyMZGZf1hfvX9uKjN_-G8cn05EoNqnRUpRtqDK_L3JtTXKTzUG4jnwGMDgCQgjtI7w-shaL8a7GoBTWkGqEZw3vgCV-YCHddODkgrurr9Y-JCOYbmjDvp8VJThlTYIItLUuot_-Wn95hcwoixnrebQ0N5yYbznQrFNWFtPaZY5WN0SZCRx5DwUJ0p8t4m0tYVITextFopM2MGmttCLnI9S21T84A&amp;q=php+based+companies+in+ahmedabad&amp;sa=X&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQs6gLegQIHBAB](https://www.google.com/search?sca_esv=7e69963a3bb46de9&biw=1526&bih=839&sxsrf=APpeQnvUJ1-btSeGe6n8-VVdiwsHHbMeSw:1792580750235&udm=forums&fbs=ABfTbFVyMZGZf1hfvX9uKjN_-G8cn05EoNqnRUpRtqDK_L3JtTXKTzUG4jnwGMDgCQgjtI7w-shaL8a7GoBTWkGqEZw3vgCV-YCHddODkgrurr9Y-JCOYbmjDvp8VJThlTYIItLUuot_-Wn95hcwoixnrebQ0N5yYbznQrFNWFtPaZY5WN0SZCRx5DwUJ0p8t4m0tYVITextFopM2MGmttCLnI9S21T84A&q=php+based+companies+in+ahmedabad&sa=X&ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQs6gLegQIHBAB)" jsaction="" data-hveid="CBwQAQ" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQs6gLegQIHBAB"><div jsname="xBNgKe" class="mXwfNd"><span class="R1QWuf">Forums</span></div></a></div><div role="listitem" data-hveid="CB0QAA" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQtoAJegQIHRAA"><a class="C6AK7c" aria-disabled="true" role="link" tabindex="0" data-hveid="CB0QAQ" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ850MegQIHRAB"><div jsname="xBNgKe" aria-current="page" selected="" class="mXwfNd"><span class="R1QWuf">Places</span></div></a></div><div role="listitem" data-hveid="CBoQAA" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQtoAJKAB6BAgaEAA"><a jsname="pxBnId" class="C6AK7c" href="[/search?sca_esv=7e69963a3bb46de9&amp;biw=1526&amp;bih=839&amp;sxsrf=APpeQnvUJ1-btSeGe6n8-VVdiwsHHbMeSw:1792580750235&amp;udm=39&amp;fbs=ABfTbFVyMZGZf1hfvX9uKjN_-G8cn05EoNqnRUpRtqDK_L3JtTXKTzUG4jnwGMDgCQgjtI7w-shaL8a7GoBTWkGqEZw3vgCV-YCHddODkgrurr9Y-JCOYbmjDvp8VJThlTYIItLUuot_-Wn95hcwoixnrebQ0N5yYbznQrFNWFtPaZY5WN0SZCRx5DwUJ0p8t4m0tYVITextFopM2MGmttCLnI9S21T84A&amp;q=php+based+companies+in+ahmedabad&amp;sa=X&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQs6gLegQIGhAB](https://www.google.com/search?sca_esv=7e69963a3bb46de9&biw=1526&bih=839&sxsrf=APpeQnvUJ1-btSeGe6n8-VVdiwsHHbMeSw:1792580750235&udm=39&fbs=ABfTbFVyMZGZf1hfvX9uKjN_-G8cn05EoNqnRUpRtqDK_L3JtTXKTzUG4jnwGMDgCQgjtI7w-shaL8a7GoBTWkGqEZw3vgCV-YCHddODkgrurr9Y-JCOYbmjDvp8VJThlTYIItLUuot_-Wn95hcwoixnrebQ0N5yYbznQrFNWFtPaZY5WN0SZCRx5DwUJ0p8t4m0tYVITextFopM2MGmttCLnI9S21T84A&q=php+based+companies+in+ahmedabad&sa=X&ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQs6gLegQIGhAB)" jsaction="" data-hveid="CBoQAQ" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQs6gLegQIGhAB"><div jsname="xBNgKe" class="mXwfNd"><span class="R1QWuf">Short videos</span></div></a></div><div role="listitem" data-hveid="CBsQAA" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQtoAJKAB6BAgbEAA"><a jsname="pxBnId" class="C6AK7c" href="[/search?sca_esv=7e69963a3bb46de9&amp;biw=1526&amp;bih=839&amp;sxsrf=APpeQnvUJ1-btSeGe6n8-VVdiwsHHbMeSw:1792580750235&amp;udm=web&amp;fbs=ABfTbFVyMZGZf1hfvX9uKjN_-G8cn05EoNqnRUpRtqDK_L3JtTXKTzUG4jnwGMDgCQgjtI7w-shaL8a7GoBTWkGqEZw3vgCV-YCHddODkgrurr9Y-JCOYbmjDvp8VJThlTYIItLUuot_-Wn95hcwoixnrebQ0N5yYbznQrFNWFtPaZY5WN0SZCRx5DwUJ0p8t4m0tYVITextFopM2MGmttCLnI9S21T84A&amp;q=php+based+companies+in+ahmedabad&amp;sa=X&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQs6gLegQIGxAB](https://www.google.com/search?sca_esv=7e69963a3bb46de9&biw=1526&bih=839&sxsrf=APpeQnvUJ1-btSeGe6n8-VVdiwsHHbMeSw:1792580750235&udm=web&fbs=ABfTbFVyMZGZf1hfvX9uKjN_-G8cn05EoNqnRUpRtqDK_L3JtTXKTzUG4jnwGMDgCQgjtI7w-shaL8a7GoBTWkGqEZw3vgCV-YCHddODkgrurr9Y-JCOYbmjDvp8VJThlTYIItLUuot_-Wn95hcwoixnrebQ0N5yYbznQrFNWFtPaZY5WN0SZCRx5DwUJ0p8t4m0tYVITextFopM2MGmttCLnI9S21T84A&q=php+based+companies+in+ahmedabad&sa=X&ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQs6gLegQIGxAB)" jsaction="" data-hveid="CBsQAQ" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQs6gLegQIGxAB"><div jsname="xBNgKe" class="mXwfNd"><span class="R1QWuf">Web</span></div></a></div><div role="listitem" data-hveid="CBkQAA" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQtoAJKAB6BAgZEAA"><a jsname="pxBnId" class="C6AK7c" href="[/travel/flights?sca_esv=7e69963a3bb46de9&amp;biw=1526&amp;bih=839&amp;output=search&amp;q=php+based+companies+in+ahmedabad&amp;source=lnms&amp;fbs=ABfTbFVyMZGZf1hfvX9uKjN_-G8cn05EoNqnRUpRtqDK_L3JtTXKTzUG4jnwGMDgCQgjtI7w-shaL8a7GoBTWkGqEZw3vgCV-YCHddODkgrurr9Y-JCOYbmjDvp8VJThlTYIItLUuot_-Wn95hcwoixnrebQ0N5yYbznQrFNWFtPaZY5WN0SZCRx5DwUJ0p8t4m0tYVITextFopM2MGmttCLnI9S21T84A&amp;ved=1t:200715&amp;ictx=111](https://www.google.com/travel/flights?sca_esv=7e69963a3bb46de9&biw=1526&bih=839&output=search&q=php+based+companies+in+ahmedabad&source=lnms&fbs=ABfTbFVyMZGZf1hfvX9uKjN_-G8cn05EoNqnRUpRtqDK_L3JtTXKTzUG4jnwGMDgCQgjtI7w-shaL8a7GoBTWkGqEZw3vgCV-YCHddODkgrurr9Y-JCOYbmjDvp8VJThlTYIItLUuot_-Wn95hcwoixnrebQ0N5yYbznQrFNWFtPaZY5WN0SZCRx5DwUJ0p8t4m0tYVITextFopM2MGmttCLnI9S21T84A&ved=1t:200715&ictx=111)" jsaction="" data-hveid="CBkQAQ" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQi6AMegQIGRAB" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=/travel/flights%3Fsca_esv%3D7e69963a3bb46de9%26biw%3D1526%26bih%3D839%26output%3Dsearch%26q%3Dphp%2Bbased%2Bcompanies%2Bin%2Bahmedabad%26source%3Dlnms%26fbs%3DABfTbFVyMZGZf1hfvX9uKjN_-G8cn05EoNqnRUpRtqDK_L3JtTXKTzUG4jnwGMDgCQgjtI7w-shaL8a7GoBTWkGqEZw3vgCV-YCHddODkgrurr9Y-JCOYbmjDvp8VJThlTYIItLUuot_-Wn95hcwoixnrebQ0N5yYbznQrFNWFtPaZY5WN0SZCRx5DwUJ0p8t4m0tYVITextFopM2MGmttCLnI9S21T84A%26ved%3D1t:200715%26ictx%3D111&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQi6AMegQIGRAB"><div jsname="xBNgKe" class="mXwfNd"><span class="R1QWuf">Flights</span></div></a></div><div role="listitem" jscontroller="eBYPP" jsaction="keydown:uYT2Vb;UBsZj:gk6SMd;JkcjMe:AOJsKd;UszG1b:Seb4Qb;r4FAn:TvD9Pc" jsshadow=""><div class="mTpL7c" aria-controls="_jpzYaqPyDYOQ4-EP2K6kuAg_32" jsname="oYxtQd" jsaction="gq6u4d;" aria-expanded="false" role="button" tabindex="0" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ7p0OegQIEhAF"><div aria-label="More filters" class="mXwfNd"><div class="mVH5Fc"><span class="R1QWuf">More</span><span class="FXBAof M5dSnd z1asCe" style="height:16px;line-height:16px;width:16px"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 -960 960 960"><path d="M480-360L280-560H680L480-360Z"></path></svg></span></div></div></div><div jsname="H9P06b" class="R0DW9c"><div class="vH6rvf FJCJfd" data-mw="280" jsname="xl07Ob" id="_jpzYaqPyDYOQ4-EP2K6kuAg_32" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ750OegQIEhAG"><div class="bsmXxe" id="jpzYaqPyDYOQ4-EP2K6kuAg__16" role="none"></div><div class="bsmXxe" id="jpzYaqPyDYOQ4-EP2K6kuAg__17" role="none"></div><div class="bsmXxe" id="jpzYaqPyDYOQ4-EP2K6kuAg__18" role="none"></div><div class="bsmXxe" id="jpzYaqPyDYOQ4-EP2K6kuAg__19" role="none"></div></div></div></div></div><div class="yeKjxb" data-noaftde="" id="_jpzYaqPyDYOQ4-EP2K6kuAg_35"></div></div></div></div><div jsname="wKal9e"></div></div><span class="LJefwf"></span></div><style>.rfiSsc{position:relative;}.sBbkle{display:flex;height:max-content}.TrmO7{white-space:nowrap;flex:1;min-width:0;position:relative;z-index:126;padding-top:8px;margin-bottom:-8px;}.xhjkHe{position:relative;display:flex;flex:1;}@media (min-width:1460px){.aAbqZ .xhjkHe{margin-left:-20px;max-width:861px}}.xhjkHe .TrmO7{width:0}@media (max-width:1435px){.xhjkHe.CEXVle:not(.YoVbHc){width:calc(100% - 155px)}}@media (max-width:1300px){.xhjkHe.YoVbHc{width:calc(var(--center-width) + 4px)}}.nPDzT{align-items:center;display:inline-flex}.sBbkle{justify-content:space-between}.bqHHPb{line-height:initial}header .bqHHPb,[data-isc] .bqHHPb{box-shadow:0px 1px 3px rgba(23,23,23,0.24)}header .bqHHPb.SWDl0d,[data-isc] .bqHHPb.SWDl0d{height:unset}.wtAAQb{display:none;visibility:hidden}</style><div class="rfiSsc YNk70c"><div class="sBbkle P3mIxe" role="navigation"><div class="xhjkHe"><div class="TrmO7" data-st-cnt="mode"><div aria-labelledby="_jpzYaqPyDYOQ4-EP2K6kuAg_43" data-st-tgt="mode" data-zru="1" role="navigation"><style>.GKS7s:hover,.Ps6jAe:hover .GKS7s,.Ps6jAe:hover .XAHwbe{background-color:var(--aYn2S)}.IUOThf{display:flex;-ms-overflow-style:none;gap:6px;overflow-x:scroll;overflow-y:hidden;scrollbar-width:none;white-space:nowrap}.IUOThf::-webkit-scrollbar{display:none}.PHj8of{flex-direction:column;display:flex}.FpfXM{flex:1;align-items:center;display:flex;margin-left:-17px;position:relative;padding-top:4px;padding-bottom:8px;}.SvoXfb{box-sizing:border-box;align-items:center;appearance:none;background-color:transparent;border:none;border-radius:50%;cursor:pointer;display:flex;height:36px;justify-content:center;opacity:0;outline:none;margin-right:0;position:absolute;width:36px;visibility:hidden;z-index:201;}.SvoXfb:hover{background-color:var(--XKMDxc)}.x5f7Bc{fill:var(--amnPwe);height:24px;width:24px}.SvoXfb:hover>.x5f7Bc{fill:var(--bbQxAb)}.SvoXfb.vezEod .x5f7Bc{transform:scale(-1)}.F9Idpe{background:linear-gradient(to right, transparent 0%, var(--xhUGwc) 60%, var(--xhUGwc));height:100%;opacity:0;margin-right:0;position:absolute;visibility:hidden;width:100px;pointer-events:none;z-index:200;}.F9Idpe.Iy1nvd{background:linear-gradient(to left, transparent 0%, var(--xhUGwc) 60%, var(--xhUGwc))}.Iy1nvd{left:-16px}.vezEod{right:0}.vBfb5{opacity:1;visibility:visible}.nPDzT{-webkit-tap-highlight-color:transparent;position:relative;align-items:center;outline:none;display:inline-flex;}.nPDzT:focus-visible div:first-child{outline:-webkit-focus-ring-color auto 1px}a.nPDzT,a.nPDzT:link,a.nPDzT:visited,a.nPDzT:hover,a.nPDzT:active{text-decoration:none}.FMKtTb{font-family:Google Sans,Arial,sans-serif,Noto Color Emoji;font-size:14px;width:fit-content}.FMKtTb span{display:inline-block}.GKS7s{display:flex;align-items:center;height:36px;justify-content:center;box-shadow:inset 0 0 0 1px #444746;background:var(--xhUGwc);border-radius:20px;min-width:38px;cursor:pointer;}[selected].GKS7s{box-shadow:unset;border-radius:22px;outline:solid 2px var(--xhUGwc);background:#394457;}.GKS7s .FMKtTb,.GKS7s .RWhoyd.mol54e{color:var(--YLNNHc)}@media (forced-colors:active),(prefers-contrast:more){.GKS7s .FMKtTb,.FMKtTb.bSsRe,.UqcIvb.bSsRe{color:var(--YLNNHc) !important}[selected].GKS7s.Jtxj4e{border-color:var(--Nsm0ce) !important}}.UqcIvb{margin:0 16px;}[selected].GKS7s{background-color:#34517d;border-color:#34517d}</style><div jsname="IZrYQ" class="ZeeOc"><div id="bqHHPb" class="bqHHPb SWDl0d"><div jscontroller="GElbSc" data-d="" data-epu="" data-mpc="4" data-o="" data-ptr="" data-rlp="14" data-rsi="8" data-shbg="var(--xhUGwc)" data-sz="0" data-tfr="" id="hdtb-sc" jsaction="rcuQ6b:npT2md; YcfJ:rWvwbc; sIMx0:PSOd0d;" data-id="trc" class="fMHynf Jb8vdb boECb" data-hveid="CB8QAA" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ96AJegQIHxAA"><div class="PHj8of J1AhHd"><div jscontroller="fcDBE" jsname="QcAYrd" class="zp6Lyf FpfXM" id="UpCcGe" jsaction="rcuQ6b:npT2md" jsshadow=""><div class="IUOThf" role="list" jsslot="" data-hveid="CB8QAQ" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQjcEKegQIHxAB"><div role="listitem" data-hveid="CB4QAA" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQtoAJKAB6BAgeEAA"><a href="[/search?sca_esv=7e69963a3bb46de9&amp;biw=1526&amp;bih=839&amp;sxsrf=APpeQnvUJ1-btSeGe6n8-VVdiwsHHbMeSw:1792580750235&amp;q=online+appointments+php+based+companies+in+ahmedabad&amp;uds=AJ5uw1_a2D0D09lxm8gpKKOTUn4rHUzhDI4nhMYM1fmcm88QP40WKwc5XBCyfXSmXHv9JvRUva_IX1Zwp6EhOvT9_f_-EDhEiwjXOAGrCiJhfB9xUrN_oxA76LIQCF5FwNmp1HNR0ZuHFOXspUCl2Dw3HTYiJErehesx2N4aewIway2ZLAMNiRIJMGxlhMHjmT5fpRyGKodAe7Ixq9L1GITofRDJh7lP_A1m1M2ujLXDEMi6MmVG6Ir8IVyc90JT78qpRSw0Vgjpx1fpiAUrSfyo1REzGRXmgQ&amp;udm=local&amp;sa=X&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQxKsJKAB6BAgeEAE&amp;ictx=0](https://www.google.com/search?sca_esv=7e69963a3bb46de9&biw=1526&bih=839&sxsrf=APpeQnvUJ1-btSeGe6n8-VVdiwsHHbMeSw:1792580750235&q=online+appointments+php+based+companies+in+ahmedabad&uds=AJ5uw1_a2D0D09lxm8gpKKOTUn4rHUzhDI4nhMYM1fmcm88QP40WKwc5XBCyfXSmXHv9JvRUva_IX1Zwp6EhOvT9_f_-EDhEiwjXOAGrCiJhfB9xUrN_oxA76LIQCF5FwNmp1HNR0ZuHFOXspUCl2Dw3HTYiJErehesx2N4aewIway2ZLAMNiRIJMGxlhMHjmT5fpRyGKodAe7Ixq9L1GITofRDJh7lP_A1m1M2ujLXDEMi6MmVG6Ir8IVyc90JT78qpRSw0Vgjpx1fpiAUrSfyo1REzGRXmgQ&udm=local&sa=X&ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQxKsJKAB6BAgeEAE&ictx=0)" aria-label="Add Online appointments" class="nPDzT T3FoJb" jsname="VIftV" role="link" data-hveid="CB4QAQ" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQxKsJKAB6BAgeEAE"><div jsname="bVqjv" class="GKS7s"><span class="FMKtTb UqcIvb bSsRe" jsname="pIvPIe">Online appointments</span></div></a></div><div role="listitem" data-hveid="CCEQAA" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQtoAJKAB6BAghEAA"><a href="[/search?sca_esv=7e69963a3bb46de9&amp;biw=1526&amp;bih=839&amp;sxsrf=APpeQnvUJ1-btSeGe6n8-VVdiwsHHbMeSw:1792580750235&amp;q=php+based+companies+in+ahmedabad+open+now&amp;uds=AJ5uw1_a2D0D09lxm8gpKKOTUn4r4dYQz9Ne4RKr47YXKBHKZTZkb35DlXpztuXnePjc4ifK6B9DDLTfl4vFwSJTppdIBiAOzIclZpppyzt8NpBjAoO7CC7QeuWbVk97EfeA1oadI2fEbw4qTcRGXUzF5RqojwyKxTtnwJXDnnkFbLEIRE8eVIu5lrGoFQImOwlej4jEBELCv3SyJ54yZhUIWRebsBQkfA&amp;udm=local&amp;sa=X&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQxKsJKAF6BAghEAE&amp;ictx=0](https://www.google.com/search?sca_esv=7e69963a3bb46de9&biw=1526&bih=839&sxsrf=APpeQnvUJ1-btSeGe6n8-VVdiwsHHbMeSw:1792580750235&q=php+based+companies+in+ahmedabad+open+now&uds=AJ5uw1_a2D0D09lxm8gpKKOTUn4r4dYQz9Ne4RKr47YXKBHKZTZkb35DlXpztuXnePjc4ifK6B9DDLTfl4vFwSJTppdIBiAOzIclZpppyzt8NpBjAoO7CC7QeuWbVk97EfeA1oadI2fEbw4qTcRGXUzF5RqojwyKxTtnwJXDnnkFbLEIRE8eVIu5lrGoFQImOwlej4jEBELCv3SyJ54yZhUIWRebsBQkfA&udm=local&sa=X&ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQxKsJKAF6BAghEAE&ictx=0)" aria-label="Add Open now" class="nPDzT T3FoJb" jsname="VIftV" role="link" data-hveid="CCEQAQ" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQxKsJKAF6BAghEAE"><div jsname="bVqjv" class="GKS7s"><span class="FMKtTb UqcIvb bSsRe" jsname="pIvPIe">Open now</span></div></a></div><div role="listitem" data-hveid="CCAQAA" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQtoAJKAB6BAggEAA"><a href="[/search?sca_esv=7e69963a3bb46de9&amp;biw=1526&amp;bih=839&amp;sxsrf=APpeQnvUJ1-btSeGe6n8-VVdiwsHHbMeSw:1792580750235&amp;q=top+rated+php+based+companies+in+ahmedabad&amp;uds=AJ5uw1_a2D0D09lxm8gpKKOTUn4ruGODu5hizmYiHrjAqLglX_1OJXgTcj-6edHNA7T-w73dQGGm76sDY8RlriPqp-fqMJk0bCYsmzZ_UFtdfxDfz3OgmLC9jRAYnUC7OwXbhmvfcUaDzYvm1-sqs8eXmF4IjORYoLYQasYchEBrzPyQvfxD879G3d6dUBxpP2ZB49pLeNyji4a5pA2vOpwhgrEJoJAqWg&amp;udm=local&amp;sa=X&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQxKsJKAJ6BAggEAE&amp;ictx=0](https://www.google.com/search?sca_esv=7e69963a3bb46de9&biw=1526&bih=839&sxsrf=APpeQnvUJ1-btSeGe6n8-VVdiwsHHbMeSw:1792580750235&q=top+rated+php+based+companies+in+ahmedabad&uds=AJ5uw1_a2D0D09lxm8gpKKOTUn4ruGODu5hizmYiHrjAqLglX_1OJXgTcj-6edHNA7T-w73dQGGm76sDY8RlriPqp-fqMJk0bCYsmzZ_UFtdfxDfz3OgmLC9jRAYnUC7OwXbhmvfcUaDzYvm1-sqs8eXmF4IjORYoLYQasYchEBrzPyQvfxD879G3d6dUBxpP2ZB49pLeNyji4a5pA2vOpwhgrEJoJAqWg&udm=local&sa=X&ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQxKsJKAJ6BAggEAE&ictx=0)" aria-label="Add Top rated" class="nPDzT T3FoJb" jsname="VIftV" role="link" data-hveid="CCAQAQ" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQxKsJKAJ6BAggEAE"><div jsname="bVqjv" class="GKS7s"><span class="FMKtTb UqcIvb bSsRe" jsname="pIvPIe">Top rated</span></div></a></div></div><div jsname="dS5Bb" class="F9Idpe Iy1nvd"></div><button jsname="ggE0ke" class="Iy1nvd SvoXfb" jsaction="click: VeAzv" aria-hidden="true" tabindex="-1" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQmbMJegQIHxAC"><svg class="x5f7Bc" aria-hidden="true" focusable="false" viewbox="0 0 48 48"><path d="M28.05 36 16 23.95 28.05 11.9l2.15 2.15-9.9 9.9 9.9 9.9Z"></path></svg></button><div jsname="HbXMbc" class="F9Idpe vezEod vBfb5"></div><button jsname="xpqF6b" class="vezEod SvoXfb" jsaction="click: NfCDXd" aria-hidden="true" tabindex="-1" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQmrMJegQIHxAD"><svg class="x5f7Bc" aria-hidden="true" focusable="false" viewbox="0 0 48 48"><path d="M28.05 36 16 23.95 28.05 11.9l2.15 2.15-9.9 9.9 9.9 9.9Z"></path></svg></button></div></div></div></div></div></div></div></div></div></div><span class="wtAAQb"></span><div data-st-cnt="ee" id="easter-egg"><div class="YNk70c" data-st-tgt="ee"></div></div><h1 class="bNg8Rb">Search Results</h1><style>.Qe0THe{z-index:1101;position:absolute;top:-1000px}@keyframes pulse-animation {0%{opacity:1}50%{animation-timing-function:cubic-bezier(0,0,1,1);opacity:0.5}100%{opacity:1}}</style><div jscontroller="HYSCof" data-push-down-results="true" data-st-u="top_nav" id="top_nav" jsdata="Z1JpA;_;jpzYaqPyDYOQ4-EP2K6kuAg3" role="presentation" jsaction="rcuQ6b:npT2md"><div class="GLcBOb" id="hdtb"><div jscontroller="sHZ92c" id="tn_jpzYaqPyDYOQ4-EP2K6kuAg_1" jsaction="rcuQ6b:npT2md;L7T4N:iA74Xe"></div></div></div><div id="before-appbar"><div id="_jpzYaqPyDYOQ4-EP2K6kuAg_16"></div></div><div class="Qe0THe OLKT8d" id="lb"></div><div class="appbar" data-st-cnt="appbar" id="appbar"><div data-st-tgt="appbar"><style>.c4bKff{min-height:12px;-webkit-transition:height .22s ease-in-out}</style><div style="margin-top:12px"></div><div style="position:relative"><div class="c4bKff" id="slim_appbar"></div></div></div></div> <div id="_jpzYaqPyDYOQ4-EP2K6kuAg_20" role="presentation"></div> <div class="YNk70c CuvrIe EjQTId"><div class="SLPe5b"><div data-iatvcap="1" data-st-cnt="atvcap" id="atvcap"></div></div></div><div class="NbTBrb YNk70c EjQTId GyAeWb tXI1nd" id="rcnt"><div class="s6JM6d ufC5Cb EYIWQc" id="center_col" data-csic="1" role="main"><style>.VDgVie{text-align:center}.OSrXXb{overflow:hidden;text-overflow:ellipsis}.cHaqb{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.sjVJQd{font-family:var(--qR8X0);font-size:var(--hbmnje);font-weight:var(--Oycjt);line-height:var(--CbdmE)}.YrbPuc{color:var(--IXoxUe);font-family:var(--LI4Bo);font-size:var(--Mhs7de);font-weight:var(--ofwUBc);line-height:var(--XWv1if)}.oPWl9c{color:var(--IXoxUe);font-family:Arial,sans-serif,Noto Color Emoji;font-size:12px;font-weight:400;line-height:20px}.BjWz4c{color:var(--IXoxUe);font-family:var(--YfiKf);font-size:var(--gOs6Bf);font-weight:var(--MzKBpd);line-height:var(--punZlc)}.cj1ht{color:var(--bbQxAb);font-family:var(--YfiKf);font-size:var(--gOs6Bf);font-weight:var(--MzKBpd);line-height:var(--punZlc)}.FR7ZSc{color:var(--ngPXTb)}.FR7ZSc .niO4u{background:transparent;border-color:var(--Yi4Nb)}.FR7ZSc:hover .niO4u:after{background:rgb(from var(--lv6yU) r g b / 0.0824)}.FR7ZSc:active .niO4u:after{background:rgb(from var(--lv6yU) r g b / 0.224)}.QuU3Wb{margin-top:6px}.B6OMee.B6OMee{width:calc(16px + var(--CbdmE));height:calc(16px + var(--CbdmE))}.TcBmm.TcBmm{width:calc(16px + var(--nUOqEc));height:calc(16px + var(--nUOqEc))}.KnB5rb.KnB5rb{width:calc(24px + var(--CbdmE));height:calc(24px + var(--CbdmE))}.OJeuxf.OJeuxf .niO4u{margin:0 auto;padding:0}.OJeuxf .niO4u:before{width:48px;margin-left:-24px;left:50%}@media screen and (forced-colors:active){.PnYFnf,.z3HNkc span{forced-color-adjust:none}}.z3HNkc{display:inline-block}.z3HNkc .gTPtFb{color:var(--ywz01c);clip-path:polygon(6px 0,4.31px 3.98px,0 4.34px,3.28px 7.18px,2.29px 11.4px,6px 9.16px,9.71px 11.4px,8.72px 7.18px,12px 4.34px,7.69px 3.98px,6px 0,20px 0,18.31px 3.98px,14px 4.34px,17.28px 7.18px,16.29px 11.4px,20px 9.16px,23.71px 11.4px,22.72px 7.18px,26px 4.34px,21.69px 3.98px,20px 0,34px 0,32.31px 3.98px,28px 4.34px,31.28px 7.18px,30.29px 11.4px,34px 9.16px,37.71px 11.4px,36.72px 7.18px,40px 4.34px,35.69px 3.98px,34px 0,48px 0,46.31px 3.98px,42px 4.34px,45.28px 7.18px,44.29px 11.4px,48px 9.16px,51.71px 11.4px,50.72px 7.18px,54px 4.34px,49.69px 3.98px,48px 0,62px 0,60.31px 3.98px,56px 4.34px,59.28px 7.18px,58.29px 11.4px,62px 9.16px,65.71px 11.4px,64.72px 7.18px,68px 4.34px,63.69px 3.98px,62px 0);display:inline-block;zoom:var(--google-fs);width:68px;height:11.4px}.Y0A0hc{display:inline-block}.yi40Hd{margin-right:4px}.RDApEe{margin-left:4px}.RDApEe.YrbPuc,.yi40Hd.YrbPuc{line-height:unset}.CJHX3e{padding-bottom:12px;padding-top:12px}.ouy7Mc{padding-left:16px;padding-right:16px}.QOVtNe{color:var(--amnPwe);cursor:pointer;height:24px;position:absolute;width:24px;z-index:2}.AVvGRc{padding:2px 0 0 10px;padding:0;position:relative;transition:transform cubic-bezier(0.0,0.0,0.2,1) .3s,opacity cubic-bezier(0.0,0.0,0.2,1) .3s;transition:transform cubic-bezier(0.0,0.0,0.2,1) .3s,opacity cubic-bezier(0.0,0.0,0.2,1) .3s;width:523px}.QOVtNe{right:16px}.szCabc{opacity:0;transform:translateY(500px);transform:translateY(500px)}@media (max-width:939.98px){}.R4aD0e{background:var(--xhUGwc);border-radius:12px;box-shadow:0 1px 6px 0 rgba(32,33,36,.28);height:calc(100% - 100px);overflow-x:hidden;overflow-y:scroll;overscroll-behavior:contain;position:fixed;top:146px;width:fit-content;z-index:130;box-shadow:0 1px 6px 0 rgba(0,0,0,.65)}.Ph7k9c{color:#fdd663}.elrcId{padding-bottom:0;border:0;padding-left:0;background:var(--xhUGwc)}.elrcId{background-color:var(--xhUGwc)}.VkpGBb .mTwRT{display:table-cell}.yYlJEf:visited,#gsr .yYlJEf:active{color:var(--JKqx2)}.uMdZh:active,.rllt__local-item-selected{}@media (max-width:799.98px){.rllt__details .uDyWh{white-space:normal;-webkit-line-clamp:none;max-height:none}}.uMdZh{border-width:0;font-size:var(--Mhs7de);line-height:1.58;color:var(--IXoxUe);position:relative}.rllt__borderless{border-top-width:0}.VkpGBb{display:table;table-layout:fixed;width:100%;max-height:106px;min-height:58px}.yYlJEf{display:table-cell;padding:8px 0;width:84px;text-align:center;vertical-align:middle;}.yYlJEf:active{background:#16171a}@media (max-width:683.98px){.ixix9e .uMdZh .cXedhc{padding-left:0}}@media (max-width:799.98px){.VkpGBb{max-height:none}.rllt__details .uDyWh{white-space:normal;-webkit-line-clamp:none;max-height:none}}.uMdZh .cXedhc:hover .dbg0pd{text-decoration:underline}.dbg0pd{align-items:center;color:var(--YLNNHc);display:flex;font-family:Google Sans,Arial,sans-serif,Noto Color Emoji;font-size:var(--uBdgTe);margin-bottom:-1px;white-space:nowrap;padding-bottom:1px;line-height:20px}.pJ3Ci,.rllt__details .pJ3Ci,.rllt__details .pJ3Ci div{white-space:normal;word-break:break-word}.tIxNaf .rllt__details{white-space:nowrap}.rllt__details{white-space:normal}.rllt__details div{white-space:inherit;overflow:inherit;text-overflow:inherit}.rllt__details>div{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.cXedhc{align-items:stretch;color:var(--IXoxUe);display:flex;cursor:pointer}.vyFC0c{display:block;overflow:hidden;z-index:2}.vwVdIc{flex-grow:1;padding:16px 0 16px 0}.yYlJEf:not(:last-child) .wLAgVc{border-right:0}.FyvIhd{display:table;table-layout:fixed;min-height:16px;line-height:19px}.uDyWh{display:table-cell;vertical-align:center}.NmuOpc{display:table-cell;vertical-align:top;width:22px}.NJiz{display:inline-block;height:16px;width:16px;vertical-align:middle}.Ozf5lb{display:flex;flex-wrap:wrap;align-items:flex-start;align-content:flex-start}.ncRHuf{line-height:19px;max-width:100%}.r3PLsf{margin:0 4px}.tZ3wY{padding-top:1px}.JZfDId{margin-bottom:2px}.rllt__details .dSEeSc{line-height:inherit}.rllt__details .klVkgd{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}.dNtXMe{border-top:1px solid var(--gS5jXb);position:relative;z-index:1}</style><div id="taw"><div id="oFNiHe" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQL3oECAoQAw"></div><div id="tvcap"><div data-aqid="jpzYasrzEq-P88EPmenl4Qg" id="tads" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQGHoECAoQBA"><div class="GUyUUb" data-hb="t" data-vcap="1"><div></div></div><div class="GUyUUb" data-hb="t" data-vcap="1"><div></div></div></div></div></div><div class="eqAnXb" id="gevUs"><div id="topstuff"></div><div id="search"><div data-hveid="CAoQBg" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQGnoECAoQBg"><div class="dURPMd" eid="jpzYaqPyDYOQ4-EP2K6kuAg" data-async-context="query:php%20based%20companies%20in%20ahmedabad" id="rso"><div class="MjjYud"><div data-hveid="CEoQAA"><div class="R4aD0e szCabc AVvGRc" style="display:none" leid="jpzYaqPyDYOQ4-EP2K6kuAg" jscontroller="Q9yHb" jsaction="rcuQ6b:npT2md;e3EWke:kN9HDb;nXSRmc:dCbI6d;bEG0zf:JeisMe;NRnNtc:ZgFhbe" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ8UF6BAhKEAE"><div jsname="gVXRMe" class="QOVtNe" style="top:24px" jsaction="plIjzf" aria-label="Close" role="button" tabindex="0" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQoPMBegQIShAC"><span class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"></path></svg></span></div><async-local-kp jsname="C2o4Ve" jscontroller="nXizP" jsaction="rcuQ6b:npT2md"> <div jsname="C2o4Ve" id="akp_tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_64" data-jiis="up" data-async-type="lcl_akp" class="yp"></div> </async-local-kp></div><div class="tF5xGd"></div><div jscontroller="Xt48yf" jsdata="oLUYVb;_;jpzYaqPyDYOQ4-EP2K6kuAg46" jsaction="rcuQ6b:npT2md"><div class="elrcId wHYlTd ouy7Mc CJHX3e"><span class="Ph7k9c"><span>Vijayadashami might affect these hours</span></span></div></div><div><div jsname="X3FFBc"><div class="dNtXMe"></div><div jscontroller="AtSb" class="w7Dbne" data-record-click-time="false" id="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_45" jsdata="zt2wNd;_;jpzYaqPyDYOQ4-EP2K6kuAg23 WDO8Ff;_;jpzYaqPyDYOQ4-EP2K6kuAg21" jsaction="rcuQ6b:npT2md;mouseover:UI3Kjd;mouseleave:Tx5Rb;focusin:UI3Kjd;focusout:Tx5Rb;e3EWke:kN9HDb;v1Cdnb:pFRkQb" data-hveid="CDsQAA"><div jsname="jXK9ad" class="uMdZh tIxNaf rllt__borderless"><div class="VkpGBb"><div jscontroller="IKqJbf" class="mTwRT" jsdata="XUxeGc;_;jpzYaqPyDYOQ4-EP2K6kuAg38" jsshadow=""><div jsname="ZfUr6c" id="pv-/g/11c425qc8q" jsslot="" role="button" tabindex="0" jsaction="IEAdff;W9aZQc:XX6jIe" data-hveid="CDsQAQ" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ1YkKegQIOxAB"><div class="cXedhc"><div class="vwVdIc vyFC0c"><div><div jsname="MZArnb" class="rllt__details"><div class="dbg0pd" aria-level="3" role="heading"><span class="OSrXXb">Maxgen Technologies Pvt.Ltd</span></div><div><span><span class="Y0A0hc" aria-label="Rated 4.7 out of 5, 1.6K user reviews" role="img"><span class="yi40Hd YrbPuc" aria-hidden="true">4.7</span><span aria-hidden="true" class="z3HNkc" aria-label="Rated 4.7 out of 5," role="img"><span aria-hidden="true"><span class="gTPtFb" style="background:linear-gradient(to right, currentcolor 62px, #8e9099 0%)"></span></span></span><span class="RDApEe YrbPuc" aria-hidden="true">(1.6K)</span></span></span> &middot; Software company</div><div>Abhijeet 3, 603, Netaji Rd, near Pantaloons &middot; 090990 39845</div><div><span><span style="color:rgba(109,213,140,1.0)">Open</span> / Closes 6:30 pm</span></div></div></div></div></div></div></div><a class="yYlJEf Q7PwXb L48Cpd brKmxb" aria-describedby="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_45" href="[/goto?url=CAESWwHrOzAVlvmzIEZRd-wNm4h_BdwGwC3bnIdRtYIGSoTkqPe4phlFVsGz5L7GcBN4s3g7PeDK8fuQrH7Ttt0MCnJduH14Jf-NbvBCVULqgEv5RX0D0TZGbtrFeDM](https://www.google.com/goto?url=CAESWwHrOzAVlvmzIEZRd-wNm4h_BdwGwC3bnIdRtYIGSoTkqPe4phlFVsGz5L7GcBN4s3g7PeDK8fuQrH7Ttt0MCnJduH14Jf-NbvBCVULqgEv5RX0D0TZGbtrFeDM)" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQgU96BAg7EAo" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=CAESWwHrOzAVlvmzIEZRd-wNm4h_BdwGwC3bnIdRtYIGSoTkqPe4phlFVsGz5L7GcBN4s3g7PeDK8fuQrH7Ttt0MCnJduH14Jf-NbvBCVULqgEv5RX0D0TZGbtrFeDM&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQgU96BAg7EAo&amp;uoh=1"><div class="wLAgVc" style="display:flex;flex-direction:column;align-items:center;justify-content:center"><div class="VDgVie btku5b FR7ZSc OJeuxf sjVJQd"><div class="niO4u KnB5rb"><span class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"></path></svg></span></div><div class="QuU3Wb"><span>Website</span></div></div></div></a><a href="[/maps/dir//Maxgen+Technologies+Pvt.Ltd,+Abhijeet+3,+603,+Netaji+Rd,+near+Pantaloons,+Mithakhali,+Ellisbridge,+Ahmedabad,+Gujarat+380006/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e84ac54a18239:0x558f4eb0ff0df853?sa=X&amp;ved=1t:57443&amp;ictx=111](https://www.google.com/maps/dir//Maxgen+Technologies+Pvt.Ltd,+Abhijeet+3,+603,+Netaji+Rd,+near+Pantaloons,+Mithakhali,+Ellisbridge,+Ahmedabad,+Gujarat+380006/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e84ac54a18239:0x558f4eb0ff0df853?sa=X&ved=1t:57443&ictx=111)" style="cursor:pointer" data-url="/maps/dir//Maxgen+Technologies+Pvt.Ltd,+Abhijeet+3,+603,+Netaji+Rd,+near+Pantaloons,+Mithakhali,+Ellisbridge,+Ahmedabad,+Gujarat+380006/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e84ac54a18239:0x558f4eb0ff0df853?sa=X&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ48ADegQIIxAA" tabindex="0" class="yYlJEf Q7PwXb VDgVie brKmxb" aria-describedby="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_45" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=/maps/dir//Maxgen%2BTechnologies%2BPvt.Ltd,%2BAbhijeet%2B3,%2B603,%2BNetaji%2BRd,%2Bnear%2BPantaloons,%2BMithakhali,%2BEllisbridge,%2BAhmedabad,%2BGujarat%2B380006/data%3D!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e84ac54a18239:0x558f4eb0ff0df853%3Fsa%3DX%26ved%3D1t:57443%26ictx%3D111&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ48ADegQIOxAM"><div><div class="VDgVie btku5b FR7ZSc OJeuxf sjVJQd"><div class="niO4u KnB5rb"><span style="height:24px" class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24" viewBox="0 0 24 24" width="24"><g><rect fill="none" height="24" width="24"></rect></g><g><path d="m21.41 10.59-7.99-8c-.78-.78-2.05-.78-2.83 0l-8.01 8c-.78.78-.78 2.05 0 2.83l8.01 8c.78.78 2.05.78 2.83 0l7.99-8c.79-.79.79-2.05 0-2.83zM13.5 14.5V12H10v3H8v-4c0-.55.45-1 1-1h4.5V7.5L17 11l-3.5 3.5z"></path></g></svg></span></div><div class="QuU3Wb"><span>Directions</span></div></div></div></a></div></div></div><div class="dNtXMe"></div><div jscontroller="AtSb" class="w7Dbne" data-record-click-time="false" id="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_44" jsdata="zt2wNd;_;jpzYaqPyDYOQ4-EP2K6kuAg14 WDO8Ff;_;jpzYaqPyDYOQ4-EP2K6kuAg21" jsaction="rcuQ6b:npT2md;mouseover:UI3Kjd;mouseleave:Tx5Rb;focusin:UI3Kjd;focusout:Tx5Rb;e3EWke:kN9HDb;v1Cdnb:pFRkQb" data-hveid="CDkQAA"><div jsname="jXK9ad" class="uMdZh tIxNaf"><div class="VkpGBb"><div jscontroller="IKqJbf" class="mTwRT" jsdata="XUxeGc;_;jpzYaqPyDYOQ4-EP2K6kuAg34" jsshadow=""><div jsname="ZfUr6c" id="pv-/g/12cnxb05r" jsslot="" role="button" tabindex="0" jsaction="IEAdff;W9aZQc:XX6jIe" data-hveid="CDkQAQ" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ1YkKegQIORAB"><div class="cXedhc"><div class="vwVdIc vyFC0c"><div><div jsname="MZArnb" class="rllt__details"><div class="dbg0pd" aria-level="3" role="heading"><span class="OSrXXb">Sapphire Software Solutions</span></div><div><span><span class="Y0A0hc" aria-label="Rated 4.8 out of 5, 925 user reviews" role="img"><span class="yi40Hd YrbPuc" aria-hidden="true">4.8</span><span aria-hidden="true" class="z3HNkc" aria-label="Rated 4.8 out of 5," role="img"><span aria-hidden="true"><span class="gTPtFb" style="background:linear-gradient(to right, currentcolor 70px, #8e9099 0%)"></span></span></span><span class="RDApEe YrbPuc" aria-hidden="true">(925)</span></span></span> &middot; Software company</div><div>Ganesh Meridian, C-102/103, Sarkhej - Gandhinagar Hwy, opp. Kargil Petrol Pump &middot; 090999 76034</div><div><span><span style="color:rgba(109,213,140,1.0)">Open</span> / Closes 7 pm</span></div></div></div></div></div></div></div><a class="yYlJEf Q7PwXb L48Cpd brKmxb" aria-describedby="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_44" href="[/goto?url=CAESWgHrOzAVW9Axz1C-SP7ygzGjo55jpuLxhfzMmUFI7ihGwNw4DODU9yoaiBBWqxYTegPBwkZYatgE5bHiZLh2Ly6umqeOG4NHeqFXanVmsQFZfV0RA3djyUJP6A](https://www.google.com/goto?url=CAESWgHrOzAVW9Axz1C-SP7ygzGjo55jpuLxhfzMmUFI7ihGwNw4DODU9yoaiBBWqxYTegPBwkZYatgE5bHiZLh2Ly6umqeOG4NHeqFXanVmsQFZfV0RA3djyUJP6A)" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQgU96BAg5EAo" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=CAESWgHrOzAVW9Axz1C-SP7ygzGjo55jpuLxhfzMmUFI7ihGwNw4DODU9yoaiBBWqxYTegPBwkZYatgE5bHiZLh2Ly6umqeOG4NHeqFXanVmsQFZfV0RA3djyUJP6A&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQgU96BAg5EAo&amp;uoh=1"><div class="wLAgVc" style="display:flex;flex-direction:column;align-items:center;justify-content:center"><div class="VDgVie btku5b FR7ZSc OJeuxf sjVJQd"><div class="niO4u KnB5rb"><span class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"></path></svg></span></div><div class="QuU3Wb"><span>Website</span></div></div></div></a><a href="[/maps/dir//Sapphire+Software+Solutions,+Ganesh+Meridian,+C-102%2F103,+Sarkhej+-+Gandhinagar+Hwy,+opp.+Kargil+Petrol+Pump,+Ahmedabad,+Gujarat+380060/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e834be1f0a9db:0x7f499e4a46ae9349?sa=X&amp;ved=1t:57443&amp;ictx=111](https://www.google.com/maps/dir//Sapphire+Software+Solutions,+Ganesh+Meridian,+C-102%2F103,+Sarkhej+-+Gandhinagar+Hwy,+opp.+Kargil+Petrol+Pump,+Ahmedabad,+Gujarat+380060/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e834be1f0a9db:0x7f499e4a46ae9349?sa=X&ved=1t:57443&ictx=111)" style="cursor:pointer" data-url="/maps/dir//Sapphire+Software+Solutions,+Ganesh+Meridian,+C-102%2F103,+Sarkhej+-+Gandhinagar+Hwy,+opp.+Kargil+Petrol+Pump,+Ahmedabad,+Gujarat+380060/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e834be1f0a9db:0x7f499e4a46ae9349?sa=X&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ48ADegQIKRAA" tabindex="0" class="yYlJEf Q7PwXb VDgVie brKmxb" aria-describedby="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_44" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=/maps/dir//Sapphire%2BSoftware%2BSolutions,%2BGanesh%2BMeridian,%2BC-102%252F103,%2BSarkhej%2B-%2BGandhinagar%2BHwy,%2Bopp.%2BKargil%2BPetrol%2BPump,%2BAhmedabad,%2BGujarat%2B380060/data%3D!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e834be1f0a9db:0x7f499e4a46ae9349%3Fsa%3DX%26ved%3D1t:57443%26ictx%3D111&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ48ADegQIORAM"><div><div class="VDgVie btku5b FR7ZSc OJeuxf sjVJQd"><div class="niO4u KnB5rb"><span style="height:24px" class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24" viewBox="0 0 24 24" width="24"><g><rect fill="none" height="24" width="24"></rect></g><g><path d="m21.41 10.59-7.99-8c-.78-.78-2.05-.78-2.83 0l-8.01 8c-.78.78-.78 2.05 0 2.83l8.01 8c.78.78 2.05.78 2.83 0l7.99-8c.79-.79.79-2.05 0-2.83zM13.5 14.5V12H10v3H8v-4c0-.55.45-1 1-1h4.5V7.5L17 11l-3.5 3.5z"></path></g></svg></span></div><div class="QuU3Wb"><span>Directions</span></div></div></div></a></div></div></div><div class="dNtXMe"></div><div jscontroller="AtSb" class="w7Dbne" data-record-click-time="false" id="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_46" jsdata="zt2wNd;_;jpzYaqPyDYOQ4-EP2K6kuAg24 WDO8Ff;_;jpzYaqPyDYOQ4-EP2K6kuAg21" jsaction="rcuQ6b:npT2md;mouseover:UI3Kjd;mouseleave:Tx5Rb;focusin:UI3Kjd;focusout:Tx5Rb;e3EWke:kN9HDb;v1Cdnb:pFRkQb" data-hveid="CDgQAA"><div jsname="jXK9ad" class="uMdZh tIxNaf"><div class="VkpGBb"><div jscontroller="IKqJbf" class="mTwRT" jsdata="XUxeGc;_;jpzYaqPyDYOQ4-EP2K6kuAg28" jsshadow=""><div jsname="ZfUr6c" id="pv-/g/11ggbm0q21" jsslot="" role="button" tabindex="0" jsaction="IEAdff;W9aZQc:XX6jIe" data-hveid="CDgQAQ" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ1YkKegQIOBAB"><div class="cXedhc"><div class="vwVdIc vyFC0c"><div><div jsname="MZArnb" class="rllt__details"><div class="dbg0pd" aria-level="3" role="heading"><span class="OSrXXb">Infikey Technologies Private Limited</span></div><div><span><span class="Y0A0hc" aria-label="Rated 4.7 out of 5, 100 user reviews" role="img"><span class="yi40Hd YrbPuc" aria-hidden="true">4.7</span><span aria-hidden="true" class="z3HNkc" aria-label="Rated 4.7 out of 5," role="img"><span aria-hidden="true"><span class="gTPtFb" style="background:linear-gradient(to right, currentcolor 62px, #8e9099 0%)"></span></span></span><span class="RDApEe YrbPuc" aria-hidden="true">(100)</span></span></span> &middot; Software company</div><div>KRISH CUBICAL, BLOCK- B/901, nr. Govardhan Party Plot &middot; 063515 84506</div><div><span><span style="color:rgba(109,213,140,1.0)">Open</span> / Closes 8 pm</span></div><div class="pJ3Ci"><div class="Ozf5lb"><span class="ncRHuf"><span>On-site services</span><span class="r3PLsf">&middot;<wbr></span></span><span class="ncRHuf"><span>Online appointments</span></span></div></div></div></div></div></div></div></div><a class="yYlJEf Q7PwXb L48Cpd brKmxb" aria-describedby="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_46" href="[/goto?url=CAESVAHrOzAVZuJGZYCX91nxXXtf2ON3XuGin5X6pAOpQXsj1XFJsD-XTGSzvKxpcP9ZVlFH56EPg_I3a1VfJcUohnEO0flvmpTXDPiA55Xbx0eSvqAmUw](https://www.google.com/goto?url=CAESVAHrOzAVZuJGZYCX91nxXXtf2ON3XuGin5X6pAOpQXsj1XFJsD-XTGSzvKxpcP9ZVlFH56EPg_I3a1VfJcUohnEO0flvmpTXDPiA55Xbx0eSvqAmUw)" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQgU96BAg4EAw" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=CAESVAHrOzAVZuJGZYCX91nxXXtf2ON3XuGin5X6pAOpQXsj1XFJsD-XTGSzvKxpcP9ZVlFH56EPg_I3a1VfJcUohnEO0flvmpTXDPiA55Xbx0eSvqAmUw&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQgU96BAg4EAw&amp;uoh=1"><div class="wLAgVc" style="display:flex;flex-direction:column;align-items:center;justify-content:center"><div class="VDgVie btku5b FR7ZSc OJeuxf sjVJQd"><div class="niO4u KnB5rb"><span class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"></path></svg></span></div><div class="QuU3Wb"><span>Website</span></div></div></div></a><a href="[/maps/dir//Infikey+Technologies+Private+Limited,+KRISH+CUBICAL,+BLOCK-+B%2F901,+nr.+Govardhan+Party+Plot,+Ahmedabad,+Gujarat+380059/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e9b5894bfffff:0x249c21f81988473f?sa=X&amp;ved=1t:57443&amp;ictx=111](https://www.google.com/maps/dir//Infikey+Technologies+Private+Limited,+KRISH+CUBICAL,+BLOCK-+B%2F901,+nr.+Govardhan+Party+Plot,+Ahmedabad,+Gujarat+380059/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e9b5894bfffff:0x249c21f81988473f?sa=X&ved=1t:57443&ictx=111)" style="cursor:pointer" data-url="/maps/dir//Infikey+Technologies+Private+Limited,+KRISH+CUBICAL,+BLOCK-+B%2F901,+nr.+Govardhan+Party+Plot,+Ahmedabad,+Gujarat+380059/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e9b5894bfffff:0x249c21f81988473f?sa=X&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ48ADegQILhAA" tabindex="0" class="yYlJEf Q7PwXb VDgVie brKmxb" aria-describedby="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_46" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=/maps/dir//Infikey%2BTechnologies%2BPrivate%2BLimited,%2BKRISH%2BCUBICAL,%2BBLOCK-%2BB%252F901,%2Bnr.%2BGovardhan%2BParty%2BPlot,%2BAhmedabad,%2BGujarat%2B380059/data%3D!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e9b5894bfffff:0x249c21f81988473f%3Fsa%3DX%26ved%3D1t:57443%26ictx%3D111&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ48ADegQIOBAO"><div><div class="VDgVie btku5b FR7ZSc OJeuxf sjVJQd"><div class="niO4u KnB5rb"><span style="height:24px" class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24" viewBox="0 0 24 24" width="24"><g><rect fill="none" height="24" width="24"></rect></g><g><path d="m21.41 10.59-7.99-8c-.78-.78-2.05-.78-2.83 0l-8.01 8c-.78.78-.78 2.05 0 2.83l8.01 8c.78.78 2.05.78 2.83 0l7.99-8c.79-.79.79-2.05 0-2.83zM13.5 14.5V12H10v3H8v-4c0-.55.45-1 1-1h4.5V7.5L17 11l-3.5 3.5z"></path></g></svg></span></div><div class="QuU3Wb"><span>Directions</span></div></div></div></a></div></div></div><div class="dNtXMe"></div><div jscontroller="AtSb" class="w7Dbne" data-record-click-time="false" id="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_63" jsdata="zt2wNd;_;jpzYaqPyDYOQ4-EP2K6kuAg47 WDO8Ff;_;jpzYaqPyDYOQ4-EP2K6kuAg21" jsaction="rcuQ6b:npT2md;mouseover:UI3Kjd;mouseleave:Tx5Rb;focusin:UI3Kjd;focusout:Tx5Rb;e3EWke:kN9HDb;v1Cdnb:pFRkQb" data-hveid="CEsQAA"><div jsname="jXK9ad" class="uMdZh tIxNaf"><div class="VkpGBb"><div jscontroller="IKqJbf" class="mTwRT" jsdata="XUxeGc;_;jpzYaqPyDYOQ4-EP2K6kuAg53" jsshadow=""><div jsname="ZfUr6c" id="pv-/g/11bxfmvhq8" jsslot="" role="button" tabindex="0" jsaction="IEAdff;W9aZQc:XX6jIe" data-hveid="CEsQAQ" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ1YkKegQISxAB"><div class="cXedhc"><div class="vwVdIc vyFC0c"><div><div jsname="MZArnb" class="rllt__details"><div class="dbg0pd" aria-level="3" role="heading"><span class="OSrXXb">WayToWeb Pvt Ltd.</span></div><div><span><span class="Y0A0hc" aria-label="Rated 4.5 out of 5, 911 user reviews" role="img"><span class="yi40Hd YrbPuc" aria-hidden="true">4.5</span><span aria-hidden="true" class="z3HNkc" aria-label="Rated 4.5 out of 5," role="img"><span aria-hidden="true"><span class="gTPtFb" style="background:linear-gradient(to right, currentcolor 62px, #8e9099 0%)"></span></span></span><span class="RDApEe YrbPuc" aria-hidden="true">(911)</span></span></span> &middot; Software company</div><div>Samedh Complex, 402, Chimanlal Girdharlal Rd, near associate Petrol Pump, above Panjab National Bank &middot; 079 4004 1819</div><div><span><span style="color:rgba(109,213,140,1.0)">Open</span> / Closes 7 pm</span></div><div class="pJ3Ci"><div class="Ozf5lb"><span class="ncRHuf"><span>On-site services</span></span></div></div></div></div></div></div></div></div><a class="yYlJEf Q7PwXb L48Cpd brKmxb" aria-describedby="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_63" href="[/goto?url=CAESVQHrOzAVccK46sUqbGeJjpNfXmCrx5T8eNQJNSZEiffsgoEzjxijO2KyEhxrzoFYJovoLw_rEHfMyGwb1OtxYeJD9ctloU8JGg_IZNl5pVZTBYyhJqA](https://www.google.com/goto?url=CAESVQHrOzAVccK46sUqbGeJjpNfXmCrx5T8eNQJNSZEiffsgoEzjxijO2KyEhxrzoFYJovoLw_rEHfMyGwb1OtxYeJD9ctloU8JGg_IZNl5pVZTBYyhJqA)" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQgU96BAhLEAw" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=CAESVQHrOzAVccK46sUqbGeJjpNfXmCrx5T8eNQJNSZEiffsgoEzjxijO2KyEhxrzoFYJovoLw_rEHfMyGwb1OtxYeJD9ctloU8JGg_IZNl5pVZTBYyhJqA&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQgU96BAhLEAw&amp;uoh=1"><div class="wLAgVc" style="display:flex;flex-direction:column;align-items:center;justify-content:center"><div class="VDgVie btku5b FR7ZSc OJeuxf sjVJQd"><div class="niO4u KnB5rb"><span class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"></path></svg></span></div><div class="QuU3Wb"><span>Website</span></div></div></div></a><a href="[/maps/dir//WayToWeb+Pvt+Ltd.,+Samedh+Complex,+402,+Chimanlal+Girdharlal+Rd,+near+associate+Petrol+Pump,+above+Panjab+National+Bank,+Ahmedabad,+Gujarat+380006/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e84f68d560049:0x84fd6f2a7cdedca?sa=X&amp;ved=1t:57443&amp;ictx=111](https://www.google.com/maps/dir//WayToWeb+Pvt+Ltd.,+Samedh+Complex,+402,+Chimanlal+Girdharlal+Rd,+near+associate+Petrol+Pump,+above+Panjab+National+Bank,+Ahmedabad,+Gujarat+380006/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e84f68d560049:0x84fd6f2a7cdedca?sa=X&ved=1t:57443&ictx=111)" style="cursor:pointer" data-url="/maps/dir//WayToWeb+Pvt+Ltd.,+Samedh+Complex,+402,+Chimanlal+Girdharlal+Rd,+near+associate+Petrol+Pump,+above+Panjab+National+Bank,+Ahmedabad,+Gujarat+380006/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e84f68d560049:0x84fd6f2a7cdedca?sa=X&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ48ADegQINRAA" tabindex="0" class="yYlJEf Q7PwXb VDgVie brKmxb" aria-describedby="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_63" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=/maps/dir//WayToWeb%2BPvt%2BLtd.,%2BSamedh%2BComplex,%2B402,%2BChimanlal%2BGirdharlal%2BRd,%2Bnear%2Bassociate%2BPetrol%2BPump,%2Babove%2BPanjab%2BNational%2BBank,%2BAhmedabad,%2BGujarat%2B380006/data%3D!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e84f68d560049:0x84fd6f2a7cdedca%3Fsa%3DX%26ved%3D1t:57443%26ictx%3D111&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ48ADegQISxAO"><div><div class="VDgVie btku5b FR7ZSc OJeuxf sjVJQd"><div class="niO4u KnB5rb"><span style="height:24px" class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24" viewBox="0 0 24 24" width="24"><g><rect fill="none" height="24" width="24"></rect></g><g><path d="m21.41 10.59-7.99-8c-.78-.78-2.05-.78-2.83 0l-8.01 8c-.78.78-.78 2.05 0 2.83l8.01 8c.78.78 2.05.78 2.83 0l7.99-8c.79-.79.79-2.05 0-2.83zM13.5 14.5V12H10v3H8v-4c0-.55.45-1 1-1h4.5V7.5L17 11l-3.5 3.5z"></path></g></svg></span></div><div class="QuU3Wb"><span>Directions</span></div></div></div></a></div></div></div><div class="dNtXMe"></div><div jscontroller="AtSb" class="w7Dbne" data-record-click-time="false" id="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_47" jsdata="zt2wNd;_;jpzYaqPyDYOQ4-EP2K6kuAg12 WDO8Ff;_;jpzYaqPyDYOQ4-EP2K6kuAg21" jsaction="rcuQ6b:npT2md;mouseover:UI3Kjd;mouseleave:Tx5Rb;focusin:UI3Kjd;focusout:Tx5Rb;e3EWke:kN9HDb;v1Cdnb:pFRkQb" data-hveid="CD4QAA"><div jsname="jXK9ad" class="uMdZh tIxNaf"><div class="VkpGBb"><div jscontroller="IKqJbf" class="mTwRT" jsdata="XUxeGc;_;jpzYaqPyDYOQ4-EP2K6kuAg36" jsshadow=""><div jsname="ZfUr6c" id="pv-/g/1tgpwllq" jsslot="" role="button" tabindex="0" jsaction="IEAdff;W9aZQc:XX6jIe" data-hveid="CD4QAQ" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ1YkKegQIPhAB"><div class="cXedhc"><div class="vwVdIc vyFC0c"><div><div jsname="MZArnb" class="rllt__details"><div class="dbg0pd" aria-level="3" role="heading"><span class="OSrXXb">Infilon Technologies</span></div><div><span><span class="Y0A0hc" aria-label="Rated 4.6 out of 5, 99 user reviews" role="img"><span class="yi40Hd YrbPuc" aria-hidden="true">4.6</span><span aria-hidden="true" class="z3HNkc" aria-label="Rated 4.6 out of 5," role="img"><span aria-hidden="true"><span class="gTPtFb" style="background:linear-gradient(to right, currentcolor 62px, #8e9099 0%)"></span></span></span><span class="RDApEe YrbPuc" aria-hidden="true">(99)</span></span></span> &middot; Software company</div><div>Shivalik Shilp 2, 1101-1105, Judges Bunglow Rd, opp. Keshavbaug Party plot &middot; 081607 63895</div><div><span><span style="color:rgba(109,213,140,1.0)">Open</span> / Closes 8:15 pm</span></div></div></div></div></div></div></div><a class="yYlJEf Q7PwXb L48Cpd brKmxb" aria-describedby="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_47" href="[/goto?url=CAESUAHrOzAVJp1N8jhsTy_21SNJPW3ZN0aCQLc8VsFIIiI85W9vJfWANsDrsKqK7URQ_ZX9YG-YaBXweaZoZ5L3FtBwc7Ie7mVBq_8WHK4QE8hu](https://www.google.com/goto?url=CAESUAHrOzAVJp1N8jhsTy_21SNJPW3ZN0aCQLc8VsFIIiI85W9vJfWANsDrsKqK7URQ_ZX9YG-YaBXweaZoZ5L3FtBwc7Ie7mVBq_8WHK4QE8hu)" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQgU96BAg-EAo" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=CAESUAHrOzAVJp1N8jhsTy_21SNJPW3ZN0aCQLc8VsFIIiI85W9vJfWANsDrsKqK7URQ_ZX9YG-YaBXweaZoZ5L3FtBwc7Ie7mVBq_8WHK4QE8hu&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQgU96BAg-EAo&amp;uoh=1"><div class="wLAgVc" style="display:flex;flex-direction:column;align-items:center;justify-content:center"><div class="VDgVie btku5b FR7ZSc OJeuxf sjVJQd"><div class="niO4u KnB5rb"><span class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"></path></svg></span></div><div class="QuU3Wb"><span>Website</span></div></div></div></a><a href="[/maps/dir//Infilon+Technologies,+Shivalik+Shilp+2,+1101-1105,+Judges+Bunglow+Rd,+opp.+Keshavbaug+Party+plot,+Satellite,+Ahmedabad,+Gujarat+380015/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e84f466a8194f:0xbdcde14274fb0096?sa=X&amp;ved=1t:57443&amp;ictx=111](https://www.google.com/maps/dir//Infilon+Technologies,+Shivalik+Shilp+2,+1101-1105,+Judges+Bunglow+Rd,+opp.+Keshavbaug+Party+plot,+Satellite,+Ahmedabad,+Gujarat+380015/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e84f466a8194f:0xbdcde14274fb0096?sa=X&ved=1t:57443&ictx=111)" style="cursor:pointer" data-url="/maps/dir//Infilon+Technologies,+Shivalik+Shilp+2,+1101-1105,+Judges+Bunglow+Rd,+opp.+Keshavbaug+Party+plot,+Satellite,+Ahmedabad,+Gujarat+380015/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e84f466a8194f:0xbdcde14274fb0096?sa=X&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ48ADegQIJRAA" tabindex="0" class="yYlJEf Q7PwXb VDgVie brKmxb" aria-describedby="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_47" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=/maps/dir//Infilon%2BTechnologies,%2BShivalik%2BShilp%2B2,%2B1101-1105,%2BJudges%2BBunglow%2BRd,%2Bopp.%2BKeshavbaug%2BParty%2Bplot,%2BSatellite,%2BAhmedabad,%2BGujarat%2B380015/data%3D!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e84f466a8194f:0xbdcde14274fb0096%3Fsa%3DX%26ved%3D1t:57443%26ictx%3D111&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ48ADegQIPhAM"><div><div class="VDgVie btku5b FR7ZSc OJeuxf sjVJQd"><div class="niO4u KnB5rb"><span style="height:24px" class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24" viewBox="0 0 24 24" width="24"><g><rect fill="none" height="24" width="24"></rect></g><g><path d="m21.41 10.59-7.99-8c-.78-.78-2.05-.78-2.83 0l-8.01 8c-.78.78-.78 2.05 0 2.83l8.01 8c.78.78 2.05.78 2.83 0l7.99-8c.79-.79.79-2.05 0-2.83zM13.5 14.5V12H10v3H8v-4c0-.55.45-1 1-1h4.5V7.5L17 11l-3.5 3.5z"></path></g></svg></span></div><div class="QuU3Wb"><span>Directions</span></div></div></div></a></div></div></div><div class="dNtXMe"></div><div jscontroller="AtSb" class="w7Dbne" data-record-click-time="false" id="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_62" jsdata="zt2wNd;_;jpzYaqPyDYOQ4-EP2K6kuAg45 WDO8Ff;_;jpzYaqPyDYOQ4-EP2K6kuAg21" jsaction="rcuQ6b:npT2md;mouseover:UI3Kjd;mouseleave:Tx5Rb;focusin:UI3Kjd;focusout:Tx5Rb;e3EWke:kN9HDb;v1Cdnb:pFRkQb" data-hveid="CEgQAA"><div jsname="jXK9ad" class="uMdZh tIxNaf"><div class="VkpGBb"><div jscontroller="IKqJbf" class="mTwRT" jsdata="XUxeGc;_;jpzYaqPyDYOQ4-EP2K6kuAg50" jsshadow=""><div jsname="ZfUr6c" id="pv-/g/1ptymryxl" jsslot="" role="button" tabindex="0" jsaction="IEAdff;W9aZQc:XX6jIe" data-hveid="CEgQAQ" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ1YkKegQISBAB"><div class="cXedhc"><div class="vwVdIc vyFC0c"><div><div jsname="MZArnb" class="rllt__details"><div class="dbg0pd" aria-level="3" role="heading"><span class="OSrXXb">PearlInfo - Software development company</span></div><div><span><span class="Y0A0hc" aria-label="Rated 4.9 out of 5, 385 user reviews" role="img"><span class="yi40Hd YrbPuc" aria-hidden="true">4.9</span><span aria-hidden="true" class="z3HNkc" aria-label="Rated 4.9 out of 5," role="img"><span aria-hidden="true"><span class="gTPtFb" style="background:linear-gradient(to right, currentcolor 70px, #8e9099 0%)"></span></span></span><span class="RDApEe YrbPuc" aria-hidden="true">(385)</span></span></span> &middot; Software company</div><div>Law Garden, 602, SiliconTower B/h Samartheshwar Mahadev, Netaji Rd &middot; 094260 62643</div><div><span><span style="color:rgba(109,213,140,1.0)">Open</span> / Closes 7 pm</span></div><div class="pJ3Ci"><div class="Ozf5lb"><span class="ncRHuf"><span>On-site services</span><span class="r3PLsf">&middot;<wbr></span></span><span class="ncRHuf"><span>Online appointments</span></span></div></div></div></div></div></div></div></div><a class="yYlJEf Q7PwXb L48Cpd brKmxb" aria-describedby="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_62" href="[/goto?url=CAESTQHrOzAVvnrcAL3yflNobs64UwlQxaEKs9_D7SwOovawrBS2TmYVM_UEJnoZf_qjKbKvCV0Hq3FSt1nr4ExXiwudO0L-n5fM3JVe9YCv](https://www.google.com/goto?url=CAESTQHrOzAVvnrcAL3yflNobs64UwlQxaEKs9_D7SwOovawrBS2TmYVM_UEJnoZf_qjKbKvCV0Hq3FSt1nr4ExXiwudO0L-n5fM3JVe9YCv)" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQgU96BAhIEAw" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=CAESTQHrOzAVvnrcAL3yflNobs64UwlQxaEKs9_D7SwOovawrBS2TmYVM_UEJnoZf_qjKbKvCV0Hq3FSt1nr4ExXiwudO0L-n5fM3JVe9YCv&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQgU96BAhIEAw&amp;uoh=1"><div class="wLAgVc" style="display:flex;flex-direction:column;align-items:center;justify-content:center"><div class="VDgVie btku5b FR7ZSc OJeuxf sjVJQd"><div class="niO4u KnB5rb"><span class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"></path></svg></span></div><div class="QuU3Wb"><span>Website</span></div></div></div></a><a href="[/maps/dir//PearlInfo+-+Software+development+company,+Law+Garden,+602,+SiliconTower+B%2Fh+Samartheshwar+Mahadev,+Netaji+Rd,+Ahmedabad,+Gujarat+380006/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e858dae1c9941:0x46fc395d93fb4aa8?sa=X&amp;ved=1t:57443&amp;ictx=111](https://www.google.com/maps/dir//PearlInfo+-+Software+development+company,+Law+Garden,+602,+SiliconTower+B%2Fh+Samartheshwar+Mahadev,+Netaji+Rd,+Ahmedabad,+Gujarat+380006/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e858dae1c9941:0x46fc395d93fb4aa8?sa=X&ved=1t:57443&ictx=111)" style="cursor:pointer" data-url="/maps/dir//PearlInfo+-+Software+development+company,+Law+Garden,+602,+SiliconTower+B%2Fh+Samartheshwar+Mahadev,+Netaji+Rd,+Ahmedabad,+Gujarat+380006/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e858dae1c9941:0x46fc395d93fb4aa8?sa=X&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ48ADegQINBAA" tabindex="0" class="yYlJEf Q7PwXb VDgVie brKmxb" aria-describedby="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_62" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=/maps/dir//PearlInfo%2B-%2BSoftware%2Bdevelopment%2Bcompany,%2BLaw%2BGarden,%2B602,%2BSiliconTower%2BB%252Fh%2BSamartheshwar%2BMahadev,%2BNetaji%2BRd,%2BAhmedabad,%2BGujarat%2B380006/data%3D!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e858dae1c9941:0x46fc395d93fb4aa8%3Fsa%3DX%26ved%3D1t:57443%26ictx%3D111&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ48ADegQISBAO"><div><div class="VDgVie btku5b FR7ZSc OJeuxf sjVJQd"><div class="niO4u KnB5rb"><span style="height:24px" class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24" viewBox="0 0 24 24" width="24"><g><rect fill="none" height="24" width="24"></rect></g><g><path d="m21.41 10.59-7.99-8c-.78-.78-2.05-.78-2.83 0l-8.01 8c-.78.78-.78 2.05 0 2.83l8.01 8c.78.78 2.05.78 2.83 0l7.99-8c.79-.79.79-2.05 0-2.83zM13.5 14.5V12H10v3H8v-4c0-.55.45-1 1-1h4.5V7.5L17 11l-3.5 3.5z"></path></g></svg></span></div><div class="QuU3Wb"><span>Directions</span></div></div></div></a></div></div></div><div class="dNtXMe"></div><div jscontroller="AtSb" class="w7Dbne" data-record-click-time="false" id="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_61" jsdata="zt2wNd;_;jpzYaqPyDYOQ4-EP2K6kuAg44 WDO8Ff;_;jpzYaqPyDYOQ4-EP2K6kuAg21" jsaction="rcuQ6b:npT2md;mouseover:UI3Kjd;mouseleave:Tx5Rb;focusin:UI3Kjd;focusout:Tx5Rb;e3EWke:kN9HDb;v1Cdnb:pFRkQb" data-hveid="CEcQAA"><div jsname="jXK9ad" class="uMdZh tIxNaf"><div class="VkpGBb"><div jscontroller="IKqJbf" class="mTwRT" jsdata="XUxeGc;_;jpzYaqPyDYOQ4-EP2K6kuAg52" jsshadow=""><div jsname="ZfUr6c" id="pv-/g/11f3bqf7yc" jsslot="" role="button" tabindex="0" jsaction="IEAdff;W9aZQc:XX6jIe" data-hveid="CEcQAQ" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ1YkKegQIRxAB"><div class="cXedhc"><div class="vwVdIc vyFC0c"><div><div jsname="MZArnb" class="rllt__details"><div class="dbg0pd" aria-level="3" role="heading"><span class="OSrXXb">Budventure Technologies Pvt Ltd</span></div><div><span><span class="Y0A0hc" aria-label="Rated 4.9 out of 5, 112 user reviews" role="img"><span class="yi40Hd YrbPuc" aria-hidden="true">4.9</span><span aria-hidden="true" class="z3HNkc" aria-label="Rated 4.9 out of 5," role="img"><span aria-hidden="true"><span class="gTPtFb" style="background:linear-gradient(to right, currentcolor 70px, #8e9099 0%)"></span></span></span><span class="RDApEe YrbPuc" aria-hidden="true">(112)</span></span></span> &middot; Software company</div><div>303, Vedanta, opp. Usmanpura &middot; 078618 04025</div><div><span><span style="color:rgba(109,213,140,1.0)">Open</span> / Closes 9 pm</span></div></div></div></div></div></div></div><a class="yYlJEf Q7PwXb L48Cpd brKmxb" aria-describedby="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_61" href="[/goto?url=CAESWgHrOzAV5tAe1hUTRhvAI5kxkQA-Pspyogu0hoJFL9pZmMufe09XbwzD6hxjekLne9n7-AYtUwSev5F-9o4QvfvxLmSB4-R1asyGVlnZfSvd2Qzv9aWhrmMw1g](https://www.google.com/goto?url=CAESWgHrOzAV5tAe1hUTRhvAI5kxkQA-Pspyogu0hoJFL9pZmMufe09XbwzD6hxjekLne9n7-AYtUwSev5F-9o4QvfvxLmSB4-R1asyGVlnZfSvd2Qzv9aWhrmMw1g)" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQgU96BAhHEAo" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=CAESWgHrOzAV5tAe1hUTRhvAI5kxkQA-Pspyogu0hoJFL9pZmMufe09XbwzD6hxjekLne9n7-AYtUwSev5F-9o4QvfvxLmSB4-R1asyGVlnZfSvd2Qzv9aWhrmMw1g&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQgU96BAhHEAo&amp;uoh=1"><div class="wLAgVc" style="display:flex;flex-direction:column;align-items:center;justify-content:center"><div class="VDgVie btku5b FR7ZSc OJeuxf sjVJQd"><div class="niO4u KnB5rb"><span class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"></path></svg></span></div><div class="QuU3Wb"><span>Website</span></div></div></div></a><a href="[/maps/dir//303,+Vedanta,+Budventure+Technologies+Pvt+Ltd,+opp.+Usmanpura,+Garden,+Usmanpura,+Ahmedabad,+Gujarat+380009/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e84f6675e6231:0x518095a3e48fdf16?sa=X&amp;ved=1t:57443&amp;ictx=111](https://www.google.com/maps/dir//303,+Vedanta,+Budventure+Technologies+Pvt+Ltd,+opp.+Usmanpura,+Garden,+Usmanpura,+Ahmedabad,+Gujarat+380009/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e84f6675e6231:0x518095a3e48fdf16?sa=X&ved=1t:57443&ictx=111)" style="cursor:pointer" data-url="/maps/dir//303,+Vedanta,+Budventure+Technologies+Pvt+Ltd,+opp.+Usmanpura,+Garden,+Usmanpura,+Ahmedabad,+Gujarat+380009/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e84f6675e6231:0x518095a3e48fdf16?sa=X&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ48ADegQIMxAA" tabindex="0" class="yYlJEf Q7PwXb VDgVie brKmxb" aria-describedby="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_61" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=/maps/dir//303,%2BVedanta,%2BBudventure%2BTechnologies%2BPvt%2BLtd,%2Bopp.%2BUsmanpura,%2BGarden,%2BUsmanpura,%2BAhmedabad,%2BGujarat%2B380009/data%3D!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e84f6675e6231:0x518095a3e48fdf16%3Fsa%3DX%26ved%3D1t:57443%26ictx%3D111&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ48ADegQIRxAM"><div><div class="VDgVie btku5b FR7ZSc OJeuxf sjVJQd"><div class="niO4u KnB5rb"><span style="height:24px" class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24" viewBox="0 0 24 24" width="24"><g><rect fill="none" height="24" width="24"></rect></g><g><path d="m21.41 10.59-7.99-8c-.78-.78-2.05-.78-2.83 0l-8.01 8c-.78.78-.78 2.05 0 2.83l8.01 8c.78.78 2.05.78 2.83 0l7.99-8c.79-.79.79-2.05 0-2.83zM13.5 14.5V12H10v3H8v-4c0-.55.45-1 1-1h4.5V7.5L17 11l-3.5 3.5z"></path></g></svg></span></div><div class="QuU3Wb"><span>Directions</span></div></div></div></a></div></div></div><div class="dNtXMe"></div><div jscontroller="AtSb" class="w7Dbne" data-record-click-time="false" id="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_60" jsdata="zt2wNd;_;jpzYaqPyDYOQ4-EP2K6kuAg43 WDO8Ff;_;jpzYaqPyDYOQ4-EP2K6kuAg21" jsaction="rcuQ6b:npT2md;mouseover:UI3Kjd;mouseleave:Tx5Rb;focusin:UI3Kjd;focusout:Tx5Rb;e3EWke:kN9HDb;v1Cdnb:pFRkQb" data-hveid="CEYQAA"><div jsname="jXK9ad" class="uMdZh tIxNaf"><div class="VkpGBb"><div jscontroller="IKqJbf" class="mTwRT" jsdata="XUxeGc;_;jpzYaqPyDYOQ4-EP2K6kuAg49" jsshadow=""><div jsname="ZfUr6c" id="pv-/g/11f3nm5yn6" jsslot="" role="button" tabindex="0" jsaction="IEAdff;W9aZQc:XX6jIe" data-hveid="CEYQAQ" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ1YkKegQIRhAB"><div class="cXedhc"><div class="vwVdIc vyFC0c"><div><div jsname="MZArnb" class="rllt__details"><div class="dbg0pd" aria-level="3" role="heading"><span class="OSrXXb">Rushkar Technology Pvt. Ltd</span></div><div><span><span class="Y0A0hc" aria-label="Rated 4.6 out of 5, 113 user reviews" role="img"><span class="yi40Hd YrbPuc" aria-hidden="true">4.6</span><span aria-hidden="true" class="z3HNkc" aria-label="Rated 4.6 out of 5," role="img"><span aria-hidden="true"><span class="gTPtFb" style="background:linear-gradient(to right, currentcolor 62px, #8e9099 0%)"></span></span></span><span class="RDApEe YrbPuc" aria-hidden="true">(113)</span></span></span> &middot; Software company</div><div>B-512, Titenium City Center &middot; 078628 49759</div><div><span><span style="color:rgba(109,213,140,1.0)">Open 24 hours</span></span></div><div class="pJ3Ci"><div class="Ozf5lb"><span class="ncRHuf"><span>On-site services</span><span class="r3PLsf">&middot;<wbr></span></span><span class="ncRHuf"><span>Online appointments</span></span></div></div></div></div></div></div></div></div><a class="yYlJEf Q7PwXb L48Cpd brKmxb" aria-describedby="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_60" href="[/goto?url=CAESdQHrOzAVJjNx1QGKVrqGgoMNFKG4yB-KcVykuNxDhxjRKtaueGQqNL7z36n7VPjzCRKOJDUsk8AvAiUCrLIQGGYJaCl47wR_V7Jr5TnF8KlXBVYPYV4NSVt8nccmeVXsFTgOi_J9xQ8-rVlQI-c-ZTPvxC9pRA](https://www.google.com/goto?url=CAESdQHrOzAVJjNx1QGKVrqGgoMNFKG4yB-KcVykuNxDhxjRKtaueGQqNL7z36n7VPjzCRKOJDUsk8AvAiUCrLIQGGYJaCl47wR_V7Jr5TnF8KlXBVYPYV4NSVt8nccmeVXsFTgOi_J9xQ8-rVlQI-c-ZTPvxC9pRA)" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQgU96BAhGEAw" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=CAESdQHrOzAVJjNx1QGKVrqGgoMNFKG4yB-KcVykuNxDhxjRKtaueGQqNL7z36n7VPjzCRKOJDUsk8AvAiUCrLIQGGYJaCl47wR_V7Jr5TnF8KlXBVYPYV4NSVt8nccmeVXsFTgOi_J9xQ8-rVlQI-c-ZTPvxC9pRA&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQgU96BAhGEAw&amp;uoh=1"><div class="wLAgVc" style="display:flex;flex-direction:column;align-items:center;justify-content:center"><div class="VDgVie btku5b FR7ZSc OJeuxf sjVJQd"><div class="niO4u KnB5rb"><span class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"></path></svg></span></div><div class="QuU3Wb"><span>Website</span></div></div></div></a><a href="[/maps/dir//Rushkar+Technology+Pvt.+Ltd,+B-512,+Titenium+City+Center,+Satellite,+Ahmedabad,+Gujarat+380015/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e84d50c28d7d3:0x4b2bc63dc8e8b107?sa=X&amp;ved=1t:57443&amp;ictx=111](https://www.google.com/maps/dir//Rushkar+Technology+Pvt.+Ltd,+B-512,+Titenium+City+Center,+Satellite,+Ahmedabad,+Gujarat+380015/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e84d50c28d7d3:0x4b2bc63dc8e8b107?sa=X&ved=1t:57443&ictx=111)" style="cursor:pointer" data-url="/maps/dir//Rushkar+Technology+Pvt.+Ltd,+B-512,+Titenium+City+Center,+Satellite,+Ahmedabad,+Gujarat+380015/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e84d50c28d7d3:0x4b2bc63dc8e8b107?sa=X&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ48ADegQIMhAA" tabindex="0" class="yYlJEf Q7PwXb VDgVie brKmxb" aria-describedby="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_60" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=/maps/dir//Rushkar%2BTechnology%2BPvt.%2BLtd,%2BB-512,%2BTitenium%2BCity%2BCenter,%2BSatellite,%2BAhmedabad,%2BGujarat%2B380015/data%3D!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e84d50c28d7d3:0x4b2bc63dc8e8b107%3Fsa%3DX%26ved%3D1t:57443%26ictx%3D111&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ48ADegQIRhAO"><div><div class="VDgVie btku5b FR7ZSc OJeuxf sjVJQd"><div class="niO4u KnB5rb"><span style="height:24px" class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24" viewBox="0 0 24 24" width="24"><g><rect fill="none" height="24" width="24"></rect></g><g><path d="m21.41 10.59-7.99-8c-.78-.78-2.05-.78-2.83 0l-8.01 8c-.78.78-.78 2.05 0 2.83l8.01 8c.78.78 2.05.78 2.83 0l7.99-8c.79-.79.79-2.05 0-2.83zM13.5 14.5V12H10v3H8v-4c0-.55.45-1 1-1h4.5V7.5L17 11l-3.5 3.5z"></path></g></svg></span></div><div class="QuU3Wb"><span>Directions</span></div></div></div></a></div></div></div><div class="dNtXMe"></div><div jscontroller="AtSb" class="w7Dbne" data-record-click-time="false" id="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_50" jsdata="zt2wNd;_;jpzYaqPyDYOQ4-EP2K6kuAg13 WDO8Ff;_;jpzYaqPyDYOQ4-EP2K6kuAg21" jsaction="rcuQ6b:npT2md;mouseover:UI3Kjd;mouseleave:Tx5Rb;focusin:UI3Kjd;focusout:Tx5Rb;e3EWke:kN9HDb;v1Cdnb:pFRkQb" data-hveid="CEAQAA"><div jsname="jXK9ad" class="uMdZh tIxNaf"><div class="VkpGBb"><div jscontroller="IKqJbf" class="mTwRT" jsdata="XUxeGc;_;jpzYaqPyDYOQ4-EP2K6kuAg35" jsshadow=""><div jsname="ZfUr6c" id="pv-/g/11bbx0f11x" jsslot="" role="button" tabindex="0" jsaction="IEAdff;W9aZQc:XX6jIe" data-hveid="CEAQAQ" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ1YkKegQIQBAB"><div class="cXedhc"><div class="vwVdIc vyFC0c"><div><div jsname="MZArnb" class="rllt__details"><div class="dbg0pd" aria-level="3" role="heading"><span class="OSrXXb">Elision Technologies Pvt. Ltd.</span></div><div><span><span class="Y0A0hc" aria-label="Rated 4.7 out of 5, 253 user reviews" role="img"><span class="yi40Hd YrbPuc" aria-hidden="true">4.7</span><span aria-hidden="true" class="z3HNkc" aria-label="Rated 4.7 out of 5," role="img"><span aria-hidden="true"><span class="gTPtFb" style="background:linear-gradient(to right, currentcolor 62px, #8e9099 0%)"></span></span></span><span class="RDApEe YrbPuc" aria-hidden="true">(253)</span></span></span> &middot; Software company</div><div>626, East Wing, Stratum @ Venus Grounds, Jhansi Ki Rani &middot; 070416 49394</div><div><span><span style="color:rgba(109,213,140,1.0)">Open</span> / Closes 10 pm</span></div><div class="pJ3Ci"><div class="Ozf5lb"><span class="ncRHuf"><span>On-site services</span></span></div></div></div></div></div></div></div></div><a class="yYlJEf Q7PwXb L48Cpd brKmxb" aria-describedby="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_50" href="[/goto?url=CAESUwHrOzAVioKnVd7_eeZv3bTIhVCqslwIvLgJHbjc02udGv63C7U-D_8R801rDk9CGig3sP3unZVGITNfa6UdogwxlfvuOwqCSSRbSL6f_7UAXKYK](https://www.google.com/goto?url=CAESUwHrOzAVioKnVd7_eeZv3bTIhVCqslwIvLgJHbjc02udGv63C7U-D_8R801rDk9CGig3sP3unZVGITNfa6UdogwxlfvuOwqCSSRbSL6f_7UAXKYK)" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQgU96BAhAEAw" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=CAESUwHrOzAVioKnVd7_eeZv3bTIhVCqslwIvLgJHbjc02udGv63C7U-D_8R801rDk9CGig3sP3unZVGITNfa6UdogwxlfvuOwqCSSRbSL6f_7UAXKYK&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQgU96BAhAEAw&amp;uoh=1"><div class="wLAgVc" style="display:flex;flex-direction:column;align-items:center;justify-content:center"><div class="VDgVie btku5b FR7ZSc OJeuxf sjVJQd"><div class="niO4u KnB5rb"><span class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"></path></svg></span></div><div class="QuU3Wb"><span>Website</span></div></div></div></a><a href="[/maps/dir//626,+Elision+Technologies+Pvt.+Ltd.,+East+Wing,+Stratum+@+Venus+Grounds,+Jhansi+Ki+Rani,+Nehru+Nagar,+Ahmedabad,+Gujarat+380015/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e85027cdeea97:0x5fb54adc5d661468?sa=X&amp;ved=1t:57443&amp;ictx=111](https://www.google.com/maps/dir//626,+Elision+Technologies+Pvt.+Ltd.,+East+Wing,+Stratum+@+Venus+Grounds,+Jhansi+Ki+Rani,+Nehru+Nagar,+Ahmedabad,+Gujarat+380015/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e85027cdeea97:0x5fb54adc5d661468?sa=X&ved=1t:57443&ictx=111)" style="cursor:pointer" data-url="/maps/dir//626,+Elision+Technologies+Pvt.+Ltd.,+East+Wing,+Stratum+@+Venus+Grounds,+Jhansi+Ki+Rani,+Nehru+Nagar,+Ahmedabad,+Gujarat+380015/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e85027cdeea97:0x5fb54adc5d661468?sa=X&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ48ADegQIJBAA" tabindex="0" class="yYlJEf Q7PwXb VDgVie brKmxb" aria-describedby="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_50" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=/maps/dir//626,%2BElision%2BTechnologies%2BPvt.%2BLtd.,%2BEast%2BWing,%2BStratum%2B%40%2BVenus%2BGrounds,%2BJhansi%2BKi%2BRani,%2BNehru%2BNagar,%2BAhmedabad,%2BGujarat%2B380015/data%3D!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e85027cdeea97:0x5fb54adc5d661468%3Fsa%3DX%26ved%3D1t:57443%26ictx%3D111&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ48ADegQIQBAO"><div><div class="VDgVie btku5b FR7ZSc OJeuxf sjVJQd"><div class="niO4u KnB5rb"><span style="height:24px" class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24" viewBox="0 0 24 24" width="24"><g><rect fill="none" height="24" width="24"></rect></g><g><path d="m21.41 10.59-7.99-8c-.78-.78-2.05-.78-2.83 0l-8.01 8c-.78.78-.78 2.05 0 2.83l8.01 8c.78.78 2.05.78 2.83 0l7.99-8c.79-.79.79-2.05 0-2.83zM13.5 14.5V12H10v3H8v-4c0-.55.45-1 1-1h4.5V7.5L17 11l-3.5 3.5z"></path></g></svg></span></div><div class="QuU3Wb"><span>Directions</span></div></div></div></a></div></div></div><div class="dNtXMe"></div><div jscontroller="AtSb" class="w7Dbne" data-record-click-time="false" id="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_59" jsdata="zt2wNd;_;jpzYaqPyDYOQ4-EP2K6kuAg42 WDO8Ff;_;jpzYaqPyDYOQ4-EP2K6kuAg21" jsaction="rcuQ6b:npT2md;mouseover:UI3Kjd;mouseleave:Tx5Rb;focusin:UI3Kjd;focusout:Tx5Rb;e3EWke:kN9HDb;v1Cdnb:pFRkQb" data-hveid="CEUQAA"><div jsname="jXK9ad" class="uMdZh tIxNaf"><div class="VkpGBb"><div jscontroller="IKqJbf" class="mTwRT" jsdata="XUxeGc;_;jpzYaqPyDYOQ4-EP2K6kuAg48" jsshadow=""><div jsname="ZfUr6c" id="pv-/g/11fzb0hl8n" jsslot="" role="button" tabindex="0" jsaction="IEAdff;W9aZQc:XX6jIe" data-hveid="CEUQAQ" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ1YkKegQIRRAB"><div class="cXedhc"><div class="vwVdIc vyFC0c"><div><div jsname="MZArnb" class="rllt__details"><div class="dbg0pd" aria-level="3" role="heading"><span class="OSrXXb">Sparks to Ideas</span></div><div><span><span class="Y0A0hc" aria-label="Rated 4.7 out of 5, 2.8K user reviews" role="img"><span class="yi40Hd YrbPuc" aria-hidden="true">4.7</span><span aria-hidden="true" class="z3HNkc" aria-label="Rated 4.7 out of 5," role="img"><span aria-hidden="true"><span class="gTPtFb" style="background:linear-gradient(to right, currentcolor 62px, #8e9099 0%)"></span></span></span><span class="RDApEe YrbPuc" aria-hidden="true">(2.8K)</span></span></span> &middot; Software company</div><div>406, Akshat Complex, Sarkhej - Gandhinagar Hwy, near pakwan hotel, opp. Rajpath Rangoli Road &middot; 095102 03204</div><div><span><span style="color:rgba(109,213,140,1.0)">Open</span> / Closes 7 pm</span></div><div class="pJ3Ci"><div class="FyvIhd dSEeSc"><span class="NmuOpc"><div class="NJiz JZfDId"> <svg class="tZ3wY" height="16" width="16" aria-hidden="true" viewBox="0 0 10.169 10.169" xmlns="http://www.w3.org/2000/svg"> <circle cx="5.084" cy="5.085" fill="#a0c3ff" r="5.0843"></circle> <circle cx="5.133" cy="3.811" fill="#4374e0" r="2.014"></circle> <ellipse cx="5.064" cy="8.165" fill="#4374e0" rx="3.564" ry="1.8067"></ellipse> </svg> </div></span><span class="uDyWh OSrXXb klVkgd"><span>"I have completed my internship in <b>PHP</b> technology and the mentorship is good."</span></span></div></div></div></div></div></div></div></div><a class="yYlJEf Q7PwXb L48Cpd brKmxb" aria-describedby="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_59" href="[/goto?url=CAESVgHrOzAVFXRUjzr9cLty-o_6gF0Z6prYpK2Cp03PC4P4OjGZGryWcw8ZCDnYl9PCEFGVsGEDe6QezTT924b9OSNbL7BqnNh-FHFKuNttdebJzjtb5QzC](https://www.google.com/goto?url=CAESVgHrOzAVFXRUjzr9cLty-o_6gF0Z6prYpK2Cp03PC4P4OjGZGryWcw8ZCDnYl9PCEFGVsGEDe6QezTT924b9OSNbL7BqnNh-FHFKuNttdebJzjtb5QzC)" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQgU96BAhFEAw" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=CAESVgHrOzAVFXRUjzr9cLty-o_6gF0Z6prYpK2Cp03PC4P4OjGZGryWcw8ZCDnYl9PCEFGVsGEDe6QezTT924b9OSNbL7BqnNh-FHFKuNttdebJzjtb5QzC&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQgU96BAhFEAw&amp;uoh=1"><div class="wLAgVc" style="display:flex;flex-direction:column;align-items:center;justify-content:center"><div class="VDgVie btku5b FR7ZSc OJeuxf sjVJQd"><div class="niO4u KnB5rb"><span class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"></path></svg></span></div><div class="QuU3Wb"><span>Website</span></div></div></div></a><a href="[/maps/dir//Sparks+to+Ideas,+406,+Akshat+Complex,+Sarkhej+-+Gandhinagar+Hwy,+near+pakwan+hotel,+opp.+Rajpath+Rangoli+Road,+Ahmedabad,+Gujarat+380015/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e9b4922484c6f:0xe077cfffcd90ee87?sa=X&amp;ved=1t:57443&amp;ictx=111](https://www.google.com/maps/dir//Sparks+to+Ideas,+406,+Akshat+Complex,+Sarkhej+-+Gandhinagar+Hwy,+near+pakwan+hotel,+opp.+Rajpath+Rangoli+Road,+Ahmedabad,+Gujarat+380015/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e9b4922484c6f:0xe077cfffcd90ee87?sa=X&ved=1t:57443&ictx=111)" style="cursor:pointer" data-url="/maps/dir//Sparks+to+Ideas,+406,+Akshat+Complex,+Sarkhej+-+Gandhinagar+Hwy,+near+pakwan+hotel,+opp.+Rajpath+Rangoli+Road,+Ahmedabad,+Gujarat+380015/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e9b4922484c6f:0xe077cfffcd90ee87?sa=X&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ48ADegQILxAA" tabindex="0" class="yYlJEf Q7PwXb VDgVie brKmxb" aria-describedby="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_59" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=/maps/dir//Sparks%2Bto%2BIdeas,%2B406,%2BAkshat%2BComplex,%2BSarkhej%2B-%2BGandhinagar%2BHwy,%2Bnear%2Bpakwan%2Bhotel,%2Bopp.%2BRajpath%2BRangoli%2BRoad,%2BAhmedabad,%2BGujarat%2B380015/data%3D!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e9b4922484c6f:0xe077cfffcd90ee87%3Fsa%3DX%26ved%3D1t:57443%26ictx%3D111&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ48ADegQIRRAO"><div><div class="VDgVie btku5b FR7ZSc OJeuxf sjVJQd"><div class="niO4u KnB5rb"><span style="height:24px" class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24" viewBox="0 0 24 24" width="24"><g><rect fill="none" height="24" width="24"></rect></g><g><path d="m21.41 10.59-7.99-8c-.78-.78-2.05-.78-2.83 0l-8.01 8c-.78.78-.78 2.05 0 2.83l8.01 8c.78.78 2.05.78 2.83 0l7.99-8c.79-.79.79-2.05 0-2.83zM13.5 14.5V12H10v3H8v-4c0-.55.45-1 1-1h4.5V7.5L17 11l-3.5 3.5z"></path></g></svg></span></div><div class="QuU3Wb"><span>Directions</span></div></div></div></a></div></div></div><div class="dNtXMe"></div><div jscontroller="AtSb" class="w7Dbne" data-record-click-time="false" id="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_57" jsdata="zt2wNd;_;jpzYaqPyDYOQ4-EP2K6kuAg39 WDO8Ff;_;jpzYaqPyDYOQ4-EP2K6kuAg21" jsaction="rcuQ6b:npT2md;mouseover:UI3Kjd;mouseleave:Tx5Rb;focusin:UI3Kjd;focusout:Tx5Rb;e3EWke:kN9HDb;v1Cdnb:pFRkQb" data-hveid="CEMQAA"><div jsname="jXK9ad" class="uMdZh tIxNaf"><div class="VkpGBb"><div jscontroller="IKqJbf" class="mTwRT" jsdata="XUxeGc;_;jpzYaqPyDYOQ4-EP2K6kuAg40" jsshadow=""><div jsname="ZfUr6c" id="pv-/g/1tt89nh3" jsslot="" role="button" tabindex="0" jsaction="IEAdff;W9aZQc:XX6jIe" data-hveid="CEMQAQ" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ1YkKegQIQxAB"><div class="cXedhc"><div class="vwVdIc vyFC0c"><div><div jsname="MZArnb" class="rllt__details"><div class="dbg0pd" aria-level="3" role="heading"><span class="OSrXXb">Agile Infoways LLC</span></div><div><span><span class="Y0A0hc" aria-label="Rated 4.0 out of 5, 330 user reviews" role="img"><span class="yi40Hd YrbPuc" aria-hidden="true">4.0</span><span aria-hidden="true" class="z3HNkc" aria-label="Rated 4.0 out of 5," role="img"><span aria-hidden="true"><span class="gTPtFb" style="background:linear-gradient(to right, currentcolor 56px, #8e9099 0%)"></span></span></span><span class="RDApEe YrbPuc" aria-hidden="true">(330)</span></span></span> &middot; Software company</div><div>10th Floor, Ashridhar Athens, Shivranjani Cross Rd, opp. Statue of Jhanshi ki Rani &middot; 076220 81234</div><div><span><span style="color:rgba(109,213,140,1.0)">Open</span> / Closes 7 pm</span></div></div></div></div></div></div></div><a class="yYlJEf Q7PwXb L48Cpd brKmxb" aria-describedby="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_57" href="[/goto?url=CAESVgHrOzAVheXEtztH3Ica5eccmav7KBL6Pe3loRE6i44pc_kQHAD_1mZ_83esRf3D5sWpF2Ulty0kU-wSEPbSU-XBlPlz3fSwp2yTx8HZjAcIWif0R3vS](https://www.google.com/goto?url=CAESVgHrOzAVheXEtztH3Ica5eccmav7KBL6Pe3loRE6i44pc_kQHAD_1mZ_83esRf3D5sWpF2Ulty0kU-wSEPbSU-XBlPlz3fSwp2yTx8HZjAcIWif0R3vS)" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQgU96BAhDEAo" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=CAESVgHrOzAVheXEtztH3Ica5eccmav7KBL6Pe3loRE6i44pc_kQHAD_1mZ_83esRf3D5sWpF2Ulty0kU-wSEPbSU-XBlPlz3fSwp2yTx8HZjAcIWif0R3vS&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQgU96BAhDEAo&amp;uoh=1"><div class="wLAgVc" style="display:flex;flex-direction:column;align-items:center;justify-content:center"><div class="VDgVie btku5b FR7ZSc OJeuxf sjVJQd"><div class="niO4u KnB5rb"><span class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"></path></svg></span></div><div class="QuU3Wb"><span>Website</span></div></div></div></a><a href="[/maps/dir//10th+Floor,+Agile+Infoways+LLC,+Ashridhar+Athens,+Shivranjani+Cross+Rd,+opp.+Statue+of+Jhanshi+ki+Rani,+Ahmedabad,+Gujarat+380015/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e848ac8a7faf3:0x891159e5666d4832?sa=X&amp;ved=1t:57443&amp;ictx=111](https://www.google.com/maps/dir//10th+Floor,+Agile+Infoways+LLC,+Ashridhar+Athens,+Shivranjani+Cross+Rd,+opp.+Statue+of+Jhanshi+ki+Rani,+Ahmedabad,+Gujarat+380015/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e848ac8a7faf3:0x891159e5666d4832?sa=X&ved=1t:57443&ictx=111)" style="cursor:pointer" data-url="/maps/dir//10th+Floor,+Agile+Infoways+LLC,+Ashridhar+Athens,+Shivranjani+Cross+Rd,+opp.+Statue+of+Jhanshi+ki+Rani,+Ahmedabad,+Gujarat+380015/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e848ac8a7faf3:0x891159e5666d4832?sa=X&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ48ADegQIMBAA" tabindex="0" class="yYlJEf Q7PwXb VDgVie brKmxb" aria-describedby="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_57" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=/maps/dir//10th%2BFloor,%2BAgile%2BInfoways%2BLLC,%2BAshridhar%2BAthens,%2BShivranjani%2BCross%2BRd,%2Bopp.%2BStatue%2Bof%2BJhanshi%2Bki%2BRani,%2BAhmedabad,%2BGujarat%2B380015/data%3D!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e848ac8a7faf3:0x891159e5666d4832%3Fsa%3DX%26ved%3D1t:57443%26ictx%3D111&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ48ADegQIQxAM"><div><div class="VDgVie btku5b FR7ZSc OJeuxf sjVJQd"><div class="niO4u KnB5rb"><span style="height:24px" class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24" viewBox="0 0 24 24" width="24"><g><rect fill="none" height="24" width="24"></rect></g><g><path d="m21.41 10.59-7.99-8c-.78-.78-2.05-.78-2.83 0l-8.01 8c-.78.78-.78 2.05 0 2.83l8.01 8c.78.78 2.05.78 2.83 0l7.99-8c.79-.79.79-2.05 0-2.83zM13.5 14.5V12H10v3H8v-4c0-.55.45-1 1-1h4.5V7.5L17 11l-3.5 3.5z"></path></g></svg></span></div><div class="QuU3Wb"><span>Directions</span></div></div></div></a></div></div></div><div class="dNtXMe"></div><div jscontroller="AtSb" class="w7Dbne" data-record-click-time="false" id="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_56" jsdata="zt2wNd;_;jpzYaqPyDYOQ4-EP2K6kuAg18 WDO8Ff;_;jpzYaqPyDYOQ4-EP2K6kuAg21" jsaction="rcuQ6b:npT2md;mouseover:UI3Kjd;mouseleave:Tx5Rb;focusin:UI3Kjd;focusout:Tx5Rb;e3EWke:kN9HDb;v1Cdnb:pFRkQb" data-hveid="CD8QAA"><div jsname="jXK9ad" class="uMdZh tIxNaf"><div class="VkpGBb"><div jscontroller="IKqJbf" class="mTwRT" jsdata="XUxeGc;_;jpzYaqPyDYOQ4-EP2K6kuAg29" jsshadow=""><div jsname="ZfUr6c" id="pv-/g/11w9d9zvx6" jsslot="" role="button" tabindex="0" jsaction="IEAdff;W9aZQc:XX6jIe" data-hveid="CD8QAQ" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ1YkKegQIPxAB"><div class="cXedhc"><div class="vwVdIc vyFC0c"><div><div jsname="MZArnb" class="rllt__details"><div class="dbg0pd" aria-level="3" role="heading"><span class="OSrXXb">PHP InfoSec</span></div><div><span><span class="Y0A0hc" aria-label="Rated 5.0 out of 5, 3 user reviews" role="img"><span class="yi40Hd YrbPuc" aria-hidden="true">5.0</span><span aria-hidden="true" class="z3HNkc" aria-label="Rated 5.0 out of 5," role="img"><span aria-hidden="true"><span class="gTPtFb" style="background:linear-gradient(to right, currentcolor 70px, #8e9099 0%)"></span></span></span><span class="RDApEe YrbPuc" aria-hidden="true">(3)</span></span></span> &middot; Software company</div><div>Hotel, Shivalik Highstreet, Itc Narmada, 901 &middot; 070467 27299</div><div><span><span style="color:rgba(109,213,140,1.0)">Open</span> / Closes 6 pm</span></div><div class="pJ3Ci"><div class="FyvIhd dSEeSc"><span class="NmuOpc"><div class="NJiz JZfDId"> <svg class="tZ3wY" height="16" width="16" aria-hidden="true" viewBox="0 0 10.169 10.169" xmlns="http://www.w3.org/2000/svg"> <circle cx="5.084" cy="5.085" fill="#a0c3ff" r="5.0843"></circle> <circle cx="5.133" cy="3.811" fill="#4374e0" r="2.014"></circle> <ellipse cx="5.064" cy="8.165" fill="#4374e0" rx="3.564" ry="1.8067"></ellipse> </svg> </div></span><span class="uDyWh OSrXXb klVkgd">"PHP Infosec offers a highly skilled team."</span></div></div></div></div></div></div></div></div><a class="yYlJEf Q7PwXb L48Cpd brKmxb" aria-describedby="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_56" href="[/goto?url=CAESUwHrOzAV40ZgUU4BqNwjbT9knQfPKGg-y8ds5xK4Qj3cpdpgoV30vzefEDg3SxTa0CZcSXN2kMIUqDTOpDu9OR0mdD5rUwnfD2zZfZdjRiaaSjpL](https://www.google.com/goto?url=CAESUwHrOzAV40ZgUU4BqNwjbT9knQfPKGg-y8ds5xK4Qj3cpdpgoV30vzefEDg3SxTa0CZcSXN2kMIUqDTOpDu9OR0mdD5rUwnfD2zZfZdjRiaaSjpL)" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQgU96BAg_EAw" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=CAESUwHrOzAV40ZgUU4BqNwjbT9knQfPKGg-y8ds5xK4Qj3cpdpgoV30vzefEDg3SxTa0CZcSXN2kMIUqDTOpDu9OR0mdD5rUwnfD2zZfZdjRiaaSjpL&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQgU96BAg_EAw&amp;uoh=1"><div class="wLAgVc" style="display:flex;flex-direction:column;align-items:center;justify-content:center"><div class="VDgVie btku5b FR7ZSc OJeuxf sjVJQd"><div class="niO4u KnB5rb"><span class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"></path></svg></span></div><div class="QuU3Wb"><span>Website</span></div></div></div></a><a href="[/maps/dir//PHP+InfoSec,+Hotel,+Shivalik+Highstreet,+Itc+Narmada,+901,+Nr:,+Ahmedabad,+Gujarat+380015/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e85be20f18d35:0x939758a27e7bd4cc?sa=X&amp;ved=1t:57443&amp;ictx=111](https://www.google.com/maps/dir//PHP+InfoSec,+Hotel,+Shivalik+Highstreet,+Itc+Narmada,+901,+Nr:,+Ahmedabad,+Gujarat+380015/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e85be20f18d35:0x939758a27e7bd4cc?sa=X&ved=1t:57443&ictx=111)" style="cursor:pointer" data-url="/maps/dir//PHP+InfoSec,+Hotel,+Shivalik+Highstreet,+Itc+Narmada,+901,+Nr:,+Ahmedabad,+Gujarat+380015/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e85be20f18d35:0x939758a27e7bd4cc?sa=X&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ48ADegQIKBAA" tabindex="0" class="yYlJEf Q7PwXb VDgVie brKmxb" aria-describedby="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_56" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=/maps/dir//PHP%2BInfoSec,%2BHotel,%2BShivalik%2BHighstreet,%2BItc%2BNarmada,%2B901,%2BNr:,%2BAhmedabad,%2BGujarat%2B380015/data%3D!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e85be20f18d35:0x939758a27e7bd4cc%3Fsa%3DX%26ved%3D1t:57443%26ictx%3D111&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ48ADegQIPxAO"><div><div class="VDgVie btku5b FR7ZSc OJeuxf sjVJQd"><div class="niO4u KnB5rb"><span style="height:24px" class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24" viewBox="0 0 24 24" width="24"><g><rect fill="none" height="24" width="24"></rect></g><g><path d="m21.41 10.59-7.99-8c-.78-.78-2.05-.78-2.83 0l-8.01 8c-.78.78-.78 2.05 0 2.83l8.01 8c.78.78 2.05.78 2.83 0l7.99-8c.79-.79.79-2.05 0-2.83zM13.5 14.5V12H10v3H8v-4c0-.55.45-1 1-1h4.5V7.5L17 11l-3.5 3.5z"></path></g></svg></span></div><div class="QuU3Wb"><span>Directions</span></div></div></div></a></div></div></div><div class="dNtXMe"></div><div jscontroller="AtSb" class="w7Dbne" data-record-click-time="false" id="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_55" jsdata="zt2wNd;_;jpzYaqPyDYOQ4-EP2K6kuAg17 WDO8Ff;_;jpzYaqPyDYOQ4-EP2K6kuAg21" jsaction="rcuQ6b:npT2md;mouseover:UI3Kjd;mouseleave:Tx5Rb;focusin:UI3Kjd;focusout:Tx5Rb;e3EWke:kN9HDb;v1Cdnb:pFRkQb" data-hveid="CEEQAA"><div jsname="jXK9ad" class="uMdZh tIxNaf"><div class="VkpGBb"><div jscontroller="IKqJbf" class="mTwRT" jsdata="XUxeGc;_;jpzYaqPyDYOQ4-EP2K6kuAg32" jsshadow=""><div jsname="ZfUr6c" id="pv-/g/1tfxwdzw" jsslot="" role="button" tabindex="0" jsaction="IEAdff;W9aZQc:XX6jIe" data-hveid="CEEQAQ" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ1YkKegQIQRAB"><div class="cXedhc"><div class="vwVdIc vyFC0c"><div><div jsname="MZArnb" class="rllt__details"><div class="dbg0pd" aria-level="3" role="heading"><span class="OSrXXb">NicheTech Computer Solutions Private Limited</span></div><div><span><span class="Y0A0hc" aria-label="Rated 4.7 out of 5, 178 user reviews" role="img"><span class="yi40Hd YrbPuc" aria-hidden="true">4.7</span><span aria-hidden="true" class="z3HNkc" aria-label="Rated 4.7 out of 5," role="img"><span aria-hidden="true"><span class="gTPtFb" style="background:linear-gradient(to right, currentcolor 62px, #8e9099 0%)"></span></span></span><span class="RDApEe YrbPuc" aria-hidden="true">(178)</span></span></span> &middot; Software company</div><div>409, Shital Varsha Complex, Cross Road &middot; 095121 80005</div><div><span><span style="color:rgba(109,213,140,1.0)">Open</span> / Closes 7 pm</span></div></div></div></div></div></div></div><a class="yYlJEf Q7PwXb L48Cpd brKmxb" aria-describedby="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_55" href="[/goto?url=CAESWwHrOzAVotbYk6Jmp1u2GQ3FA0RZxjeLa-_TDJX1sxeWb_irBBToU1YKBKoVSCxr9JdxR3xOXIl9EEfOZ4NiNXwDZhjsPxvqxZuqqNfwdgyEJLPH_0f_Vn1Y3CE](https://www.google.com/goto?url=CAESWwHrOzAVotbYk6Jmp1u2GQ3FA0RZxjeLa-_TDJX1sxeWb_irBBToU1YKBKoVSCxr9JdxR3xOXIl9EEfOZ4NiNXwDZhjsPxvqxZuqqNfwdgyEJLPH_0f_Vn1Y3CE)" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQgU96BAhBEAo" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=CAESWwHrOzAVotbYk6Jmp1u2GQ3FA0RZxjeLa-_TDJX1sxeWb_irBBToU1YKBKoVSCxr9JdxR3xOXIl9EEfOZ4NiNXwDZhjsPxvqxZuqqNfwdgyEJLPH_0f_Vn1Y3CE&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQgU96BAhBEAo&amp;uoh=1"><div class="wLAgVc" style="display:flex;flex-direction:column;align-items:center;justify-content:center"><div class="VDgVie btku5b FR7ZSc OJeuxf sjVJQd"><div class="niO4u KnB5rb"><span class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"></path></svg></span></div><div class="QuU3Wb"><span>Website</span></div></div></div></a><a href="[/maps/dir//NicheTech+Computer+Solutions+Private+Limited,+409,+Shital+Varsha+Complex,+Cross+Road,+Shivranjani,+Ahmedabad,+Gujarat+380015/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e84ce4a953913:0x8cd1bf81df9a0903?sa=X&amp;ved=1t:57443&amp;ictx=111](https://www.google.com/maps/dir//NicheTech+Computer+Solutions+Private+Limited,+409,+Shital+Varsha+Complex,+Cross+Road,+Shivranjani,+Ahmedabad,+Gujarat+380015/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e84ce4a953913:0x8cd1bf81df9a0903?sa=X&ved=1t:57443&ictx=111)" style="cursor:pointer" data-url="/maps/dir//NicheTech+Computer+Solutions+Private+Limited,+409,+Shital+Varsha+Complex,+Cross+Road,+Shivranjani,+Ahmedabad,+Gujarat+380015/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e84ce4a953913:0x8cd1bf81df9a0903?sa=X&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ48ADegQILBAA" tabindex="0" class="yYlJEf Q7PwXb VDgVie brKmxb" aria-describedby="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_55" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=/maps/dir//NicheTech%2BComputer%2BSolutions%2BPrivate%2BLimited,%2B409,%2BShital%2BVarsha%2BComplex,%2BCross%2BRoad,%2BShivranjani,%2BAhmedabad,%2BGujarat%2B380015/data%3D!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e84ce4a953913:0x8cd1bf81df9a0903%3Fsa%3DX%26ved%3D1t:57443%26ictx%3D111&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ48ADegQIQRAM"><div><div class="VDgVie btku5b FR7ZSc OJeuxf sjVJQd"><div class="niO4u KnB5rb"><span style="height:24px" class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24" viewBox="0 0 24 24" width="24"><g><rect fill="none" height="24" width="24"></rect></g><g><path d="m21.41 10.59-7.99-8c-.78-.78-2.05-.78-2.83 0l-8.01 8c-.78.78-.78 2.05 0 2.83l8.01 8c.78.78 2.05.78 2.83 0l7.99-8c.79-.79.79-2.05 0-2.83zM13.5 14.5V12H10v3H8v-4c0-.55.45-1 1-1h4.5V7.5L17 11l-3.5 3.5z"></path></g></svg></span></div><div class="QuU3Wb"><span>Directions</span></div></div></div></a></div></div></div><div class="dNtXMe"></div><div jscontroller="AtSb" class="w7Dbne" data-record-click-time="false" id="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_54" jsdata="zt2wNd;_;jpzYaqPyDYOQ4-EP2K6kuAg22 WDO8Ff;_;jpzYaqPyDYOQ4-EP2K6kuAg21" jsaction="rcuQ6b:npT2md;mouseover:UI3Kjd;mouseleave:Tx5Rb;focusin:UI3Kjd;focusout:Tx5Rb;e3EWke:kN9HDb;v1Cdnb:pFRkQb" data-hveid="CEIQAA"><div jsname="jXK9ad" class="uMdZh tIxNaf"><div class="VkpGBb"><div jscontroller="IKqJbf" class="mTwRT" jsdata="XUxeGc;_;jpzYaqPyDYOQ4-EP2K6kuAg30" jsshadow=""><div jsname="ZfUr6c" id="pv-/g/11gf1y407g" jsslot="" role="button" tabindex="0" jsaction="IEAdff;W9aZQc:XX6jIe" data-hveid="CEIQAQ" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ1YkKegQIQhAB"><div class="cXedhc"><div class="vwVdIc vyFC0c"><div><div jsname="MZArnb" class="rllt__details"><div class="dbg0pd" aria-level="3" role="heading"><span class="OSrXXb">Precise Developers</span></div><div><span><span class="Y0A0hc" aria-label="Rated 4.9 out of 5, 49 user reviews" role="img"><span class="yi40Hd YrbPuc" aria-hidden="true">4.9</span><span aria-hidden="true" class="z3HNkc" aria-label="Rated 4.9 out of 5," role="img"><span aria-hidden="true"><span class="gTPtFb" style="background:linear-gradient(to right, currentcolor 70px, #8e9099 0%)"></span></span></span><span class="RDApEe YrbPuc" aria-hidden="true">(49)</span></span></span> &middot; Software company</div><div>B-1001, PNTC, Times Of India Press Rd &middot; 063548 55130</div><div><span><span style="color:rgba(109,213,140,1.0)">Open 24 hours</span></span></div><div class="pJ3Ci"><div class="Ozf5lb"><span class="ncRHuf"><span>On-site services</span><span class="r3PLsf">&middot;<wbr></span></span><span class="ncRHuf"><span>Online appointments</span></span></div></div></div></div></div></div></div></div><a class="yYlJEf Q7PwXb L48Cpd brKmxb" aria-describedby="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_54" href="[/goto?url=CAESVgHrOzAVhz-1TXwPfSEwCjz1uoB8BUGFarE4DaY27AmuloyjLGXK2XiOWaWpwMXFjIprmDjzJdNgRCMZDnMawyFgOAwRVwRzWDvzYO6HTO2DnrfvqSyy](https://www.google.com/goto?url=CAESVgHrOzAVhz-1TXwPfSEwCjz1uoB8BUGFarE4DaY27AmuloyjLGXK2XiOWaWpwMXFjIprmDjzJdNgRCMZDnMawyFgOAwRVwRzWDvzYO6HTO2DnrfvqSyy)" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQgU96BAhCEAw" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=CAESVgHrOzAVhz-1TXwPfSEwCjz1uoB8BUGFarE4DaY27AmuloyjLGXK2XiOWaWpwMXFjIprmDjzJdNgRCMZDnMawyFgOAwRVwRzWDvzYO6HTO2DnrfvqSyy&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQgU96BAhCEAw&amp;uoh=1"><div class="wLAgVc" style="display:flex;flex-direction:column;align-items:center;justify-content:center"><div class="VDgVie btku5b FR7ZSc OJeuxf sjVJQd"><div class="niO4u KnB5rb"><span class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"></path></svg></span></div><div class="QuU3Wb"><span>Website</span></div></div></div></a><a href="[/maps/dir//B-1001,+PNTC,+Precise+Developers,+Times+Of+India+Press+Rd,+Prahlad+Nagar,+Ahmedabad,+Gujarat+380015/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e8461d6c1956d:0x70afee0af3f381ac?sa=X&amp;ved=1t:57443&amp;ictx=111](https://www.google.com/maps/dir//B-1001,+PNTC,+Precise+Developers,+Times+Of+India+Press+Rd,+Prahlad+Nagar,+Ahmedabad,+Gujarat+380015/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e8461d6c1956d:0x70afee0af3f381ac?sa=X&ved=1t:57443&ictx=111)" style="cursor:pointer" data-url="/maps/dir//B-1001,+PNTC,+Precise+Developers,+Times+Of+India+Press+Rd,+Prahlad+Nagar,+Ahmedabad,+Gujarat+380015/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e8461d6c1956d:0x70afee0af3f381ac?sa=X&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ48ADegQIJhAA" tabindex="0" class="yYlJEf Q7PwXb VDgVie brKmxb" aria-describedby="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_54" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=/maps/dir//B-1001,%2BPNTC,%2BPrecise%2BDevelopers,%2BTimes%2BOf%2BIndia%2BPress%2BRd,%2BPrahlad%2BNagar,%2BAhmedabad,%2BGujarat%2B380015/data%3D!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e8461d6c1956d:0x70afee0af3f381ac%3Fsa%3DX%26ved%3D1t:57443%26ictx%3D111&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ48ADegQIQhAO"><div><div class="VDgVie btku5b FR7ZSc OJeuxf sjVJQd"><div class="niO4u KnB5rb"><span style="height:24px" class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24" viewBox="0 0 24 24" width="24"><g><rect fill="none" height="24" width="24"></rect></g><g><path d="m21.41 10.59-7.99-8c-.78-.78-2.05-.78-2.83 0l-8.01 8c-.78.78-.78 2.05 0 2.83l8.01 8c.78.78 2.05.78 2.83 0l7.99-8c.79-.79.79-2.05 0-2.83zM13.5 14.5V12H10v3H8v-4c0-.55.45-1 1-1h4.5V7.5L17 11l-3.5 3.5z"></path></g></svg></span></div><div class="QuU3Wb"><span>Directions</span></div></div></div></a></div></div></div><div class="dNtXMe"></div><div jscontroller="AtSb" class="w7Dbne" data-record-click-time="false" id="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_51" jsdata="zt2wNd;_;jpzYaqPyDYOQ4-EP2K6kuAg19 WDO8Ff;_;jpzYaqPyDYOQ4-EP2K6kuAg21" jsaction="rcuQ6b:npT2md;mouseover:UI3Kjd;mouseleave:Tx5Rb;focusin:UI3Kjd;focusout:Tx5Rb;e3EWke:kN9HDb;v1Cdnb:pFRkQb" data-hveid="CD0QAA"><div jsname="jXK9ad" class="uMdZh tIxNaf"><div class="VkpGBb"><div jscontroller="IKqJbf" class="mTwRT" jsdata="XUxeGc;_;jpzYaqPyDYOQ4-EP2K6kuAg31" jsshadow=""><div jsname="ZfUr6c" id="pv-/g/11h4pjwll2" jsslot="" role="button" tabindex="0" jsaction="IEAdff;W9aZQc:XX6jIe" data-hveid="CD0QAQ" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ1YkKegQIPRAB"><div class="cXedhc"><div class="vwVdIc vyFC0c"><div><div jsname="MZArnb" class="rllt__details"><div class="dbg0pd" aria-level="3" role="heading"><span class="OSrXXb">Cherrypik Software Inc.</span></div><div><span><span class="Y0A0hc" aria-label="Rated 4.7 out of 5, 15 user reviews" role="img"><span class="yi40Hd YrbPuc" aria-hidden="true">4.7</span><span aria-hidden="true" class="z3HNkc" aria-label="Rated 4.7 out of 5," role="img"><span aria-hidden="true"><span class="gTPtFb" style="background:linear-gradient(to right, currentcolor 62px, #8e9099 0%)"></span></span></span><span class="RDApEe YrbPuc" aria-hidden="true">(15)</span></span></span> &middot; Software company</div><div>TITANIUM CITY CENTER BUSINESS PARK, D-806, 100 Feet Anand Nagar Rd, behind Titanium Mall, opp. Seema Hall &middot; 094082 56596</div><div><span><span style="color:rgba(109,213,140,1.0)">Open</span> / Closes 7 pm</span></div><div class="pJ3Ci"><div class="Ozf5lb"><span class="ncRHuf"><span>On-site services</span><span class="r3PLsf">&middot;<wbr></span></span><span class="ncRHuf"><span>Online appointments</span></span></div></div></div></div></div></div></div></div><a class="yYlJEf Q7PwXb L48Cpd brKmxb" aria-describedby="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_51" href="[/goto?url=CAESVgHrOzAVW-rMpyjvVL6j8JVZYRTNMVS-0e42HwzdiMuBP1PpJpyuC8PBSoa3D0SYyG6Sm5p53-2Pq_ZpCuW_duUiVN6BWubv5jfCjYNoF_6-SGbQK9X5](https://www.google.com/goto?url=CAESVgHrOzAVW-rMpyjvVL6j8JVZYRTNMVS-0e42HwzdiMuBP1PpJpyuC8PBSoa3D0SYyG6Sm5p53-2Pq_ZpCuW_duUiVN6BWubv5jfCjYNoF_6-SGbQK9X5)" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQgU96BAg9EAw" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=CAESVgHrOzAVW-rMpyjvVL6j8JVZYRTNMVS-0e42HwzdiMuBP1PpJpyuC8PBSoa3D0SYyG6Sm5p53-2Pq_ZpCuW_duUiVN6BWubv5jfCjYNoF_6-SGbQK9X5&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQgU96BAg9EAw&amp;uoh=1"><div class="wLAgVc" style="display:flex;flex-direction:column;align-items:center;justify-content:center"><div class="VDgVie btku5b FR7ZSc OJeuxf sjVJQd"><div class="niO4u KnB5rb"><span class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"></path></svg></span></div><div class="QuU3Wb"><span>Website</span></div></div></div></a><a href="[/maps/dir//Cherrypik+Software+Inc.,+TITANIUM+CITY+CENTER+BUSINESS+PARK,+D-806,+100+Feet+Anand+Nagar+Rd,+behind+Titanium+Mall,+opp.+Seema+Hall,+Ahmedabad,+Gujarat+380015/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e85fed0d48123:0xb1c096ac5be08e53?sa=X&amp;ved=1t:57443&amp;ictx=111](https://www.google.com/maps/dir//Cherrypik+Software+Inc.,+TITANIUM+CITY+CENTER+BUSINESS+PARK,+D-806,+100+Feet+Anand+Nagar+Rd,+behind+Titanium+Mall,+opp.+Seema+Hall,+Ahmedabad,+Gujarat+380015/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e85fed0d48123:0xb1c096ac5be08e53?sa=X&ved=1t:57443&ictx=111)" style="cursor:pointer" data-url="/maps/dir//Cherrypik+Software+Inc.,+TITANIUM+CITY+CENTER+BUSINESS+PARK,+D-806,+100+Feet+Anand+Nagar+Rd,+behind+Titanium+Mall,+opp.+Seema+Hall,+Ahmedabad,+Gujarat+380015/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e85fed0d48123:0xb1c096ac5be08e53?sa=X&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ48ADegQIKhAA" tabindex="0" class="yYlJEf Q7PwXb VDgVie brKmxb" aria-describedby="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_51" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=/maps/dir//Cherrypik%2BSoftware%2BInc.,%2BTITANIUM%2BCITY%2BCENTER%2BBUSINESS%2BPARK,%2BD-806,%2B100%2BFeet%2BAnand%2BNagar%2BRd,%2Bbehind%2BTitanium%2BMall,%2Bopp.%2BSeema%2BHall,%2BAhmedabad,%2BGujarat%2B380015/data%3D!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e85fed0d48123:0xb1c096ac5be08e53%3Fsa%3DX%26ved%3D1t:57443%26ictx%3D111&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ48ADegQIPRAO"><div><div class="VDgVie btku5b FR7ZSc OJeuxf sjVJQd"><div class="niO4u KnB5rb"><span style="height:24px" class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24" viewBox="0 0 24 24" width="24"><g><rect fill="none" height="24" width="24"></rect></g><g><path d="m21.41 10.59-7.99-8c-.78-.78-2.05-.78-2.83 0l-8.01 8c-.78.78-.78 2.05 0 2.83l8.01 8c.78.78 2.05.78 2.83 0l7.99-8c.79-.79.79-2.05 0-2.83zM13.5 14.5V12H10v3H8v-4c0-.55.45-1 1-1h4.5V7.5L17 11l-3.5 3.5z"></path></g></svg></span></div><div class="QuU3Wb"><span>Directions</span></div></div></div></a></div></div></div><div class="dNtXMe"></div><div jscontroller="AtSb" class="w7Dbne" data-record-click-time="false" id="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_53" jsdata="zt2wNd;_;jpzYaqPyDYOQ4-EP2K6kuAg20 WDO8Ff;_;jpzYaqPyDYOQ4-EP2K6kuAg21" jsaction="rcuQ6b:npT2md;mouseover:UI3Kjd;mouseleave:Tx5Rb;focusin:UI3Kjd;focusout:Tx5Rb;e3EWke:kN9HDb;v1Cdnb:pFRkQb" data-hveid="CDcQAA"><div jsname="jXK9ad" class="uMdZh tIxNaf"><div class="VkpGBb"><div jscontroller="IKqJbf" class="mTwRT" jsdata="XUxeGc;_;jpzYaqPyDYOQ4-EP2K6kuAg26" jsshadow=""><div jsname="ZfUr6c" id="pv-/g/1tdbctm5" jsslot="" role="button" tabindex="0" jsaction="IEAdff;W9aZQc:XX6jIe" data-hveid="CDcQAQ" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ1YkKegQINxAB"><div class="cXedhc"><div class="vwVdIc vyFC0c"><div><div jsname="MZArnb" class="rllt__details"><div class="dbg0pd" aria-level="3" role="heading"><span class="OSrXXb">I vision infotech Ahmedabad</span></div><div><span><span class="Y0A0hc" aria-label="Rated 4.7 out of 5, 71 user reviews" role="img"><span class="yi40Hd YrbPuc" aria-hidden="true">4.7</span><span aria-hidden="true" class="z3HNkc" aria-label="Rated 4.7 out of 5," role="img"><span aria-hidden="true"><span class="gTPtFb" style="background:linear-gradient(to right, currentcolor 62px, #8e9099 0%)"></span></span></span><span class="RDApEe YrbPuc" aria-hidden="true">(71)</span></span></span> &middot; Software company</div><div>Himalaya Arcade, B-409, lake, opp. Vastrapur &middot; 099782 70863</div><div><span><span style="color:rgba(109,213,140,1.0)">Open</span> / Closes 6:30 pm</span></div><div class="pJ3Ci"><div class="Ozf5lb"><span class="ncRHuf"><span>On-site services</span><span class="r3PLsf">&middot;<wbr></span></span><span class="ncRHuf"><span>Online appointments</span></span></div></div></div></div></div></div></div></div><a class="yYlJEf Q7PwXb L48Cpd brKmxb" aria-describedby="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_53" href="[/goto?url=CAESUQHrOzAV32meqjszFrkIoT-RWpNOdG9nHuUtnwax1_nezL3PciMaePpL6eObO4nzzMtRJyUYikmu8IrCaAScQD6ZfJVqV0Ev2Q_DK_wNZLc7gg](https://www.google.com/goto?url=CAESUQHrOzAV32meqjszFrkIoT-RWpNOdG9nHuUtnwax1_nezL3PciMaePpL6eObO4nzzMtRJyUYikmu8IrCaAScQD6ZfJVqV0Ev2Q_DK_wNZLc7gg)" data-ved="2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQgU96BAg3EAw" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=CAESUQHrOzAV32meqjszFrkIoT-RWpNOdG9nHuUtnwax1_nezL3PciMaePpL6eObO4nzzMtRJyUYikmu8IrCaAScQD6ZfJVqV0Ev2Q_DK_wNZLc7gg&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQgU96BAg3EAw&amp;uoh=1"><div class="wLAgVc" style="display:flex;flex-direction:column;align-items:center;justify-content:center"><div class="VDgVie btku5b FR7ZSc OJeuxf sjVJQd"><div class="niO4u KnB5rb"><span class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"></path></svg></span></div><div class="QuU3Wb"><span>Website</span></div></div></div></a><a href="[/maps/dir//I+vision+infotech+Ahmedabad,+Himalaya+Arcade,+B-409,+lake,+opp.+Vastrapur,+Vastrapur,+Ahmedabad,+Gujarat+380015/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e835eae6bc821:0x881cbbcfa2fe91e8?sa=X&amp;ved=1t:57443&amp;ictx=111](https://www.google.com/maps/dir//I+vision+infotech+Ahmedabad,+Himalaya+Arcade,+B-409,+lake,+opp.+Vastrapur,+Vastrapur,+Ahmedabad,+Gujarat+380015/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e835eae6bc821:0x881cbbcfa2fe91e8?sa=X&ved=1t:57443&ictx=111)" style="cursor:pointer" data-url="/maps/dir//I+vision+infotech+Ahmedabad,+Himalaya+Arcade,+B-409,+lake,+opp.+Vastrapur,+Vastrapur,+Ahmedabad,+Gujarat+380015/data=!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e835eae6bc821:0x881cbbcfa2fe91e8?sa=X&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ48ADegQILRAA" tabindex="0" class="yYlJEf Q7PwXb VDgVie brKmxb" aria-describedby="tsuid_jpzYaqPyDYOQ4-EP2K6kuAg_53" ping="/url?sa=t&amp;source=web&amp;rct=j&amp;opi=89978449&amp;url=/maps/dir//I%2Bvision%2Binfotech%2BAhmedabad,%2BHimalaya%2BArcade,%2BB-409,%2Blake,%2Bopp.%2BVastrapur,%2BVastrapur,%2BAhmedabad,%2BGujarat%2B380015/data%3D!4m6!4m5!1m1!4e2!1m2!1m1!1s0x395e835eae6bc821:0x881cbbcfa2fe91e8%3Fsa%3DX%26ved%3D1t:57443%26ictx%3D111&amp;ved=2ahUKEwij8eTW-8qXAxUDyDgGHVgXCYcQ48ADegQINxAO"><div><div class="VDgVie btku5b FR7ZSc OJeuxf sjVJQd"><div class="niO4u KnB5rb"><span style="height:24px" class="z1asCe"><svg focusable="false" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" enable-background="new 0 0 24 24" height="24" viewBox="0 0 24 24" width="24"><g><rect fill="none" height="24" width="24"></rect></g><g><path d="m21.41 10.59-7.99-8c-.78-.78-2.05-.78-2.83 0l-8.01 8c-.78.78-.78 2.05 0 2.83l8.01 8c.78.78 2.05.78 2.83 0l7.99-8c.79-.79.79-2.05 0-2.83zM13.5 14.5V12H10v3H8v-4c0-.55.45-1 1-1h4.5V7.5L17 11l-3.5 3.5z"></path></g></svg></span></div><div class="QuU3Wb"><span>Directions</span></div></div></div></a></div></div></div><div class="dNtXMe"></div><div jscontroller="AtSb" class="w7Dbne" data-record-click-time="false" id="tsuid_jpzYaqPyDYOQ4-
 <truncated 397507 bytes>
 
 NOTE: The output was truncated because it was too long. Use a more targeted query or a smaller range to get the information you need.
@@ -7804,7 +7804,7 @@ The scraper now stays locked on Google's Local Places tab across all pages.
 
 ---
 
-### 2. High-Speed Concurrent AI Enrichment (3x–4x Speedup)
+### 2. High-Speed Concurrent AI Enrichment (3x-4x Speedup)
 
 We completely overhauled the AI enrichment pipeline:
 
@@ -7866,7 +7866,7 @@ From the HTML you pasted:
 | **Company Name** | `<div class="dbg0pd" ...><span class="OSrXXb">Maxgen Technologies Pvt.Ltd</span>` | `card.find("span", class_="OSrXXb")` | `"Maxgen Technologies Pvt.Ltd"` |
 | **Rating** | `<span class="yi40Hd YrbPuc">4.7</span>` | `card.find("span", class_="yi40Hd")` | `4.7` |
 | **Review Count** | `<span class="RDApEe YrbPuc">(1.6K)</span>` | `card.find("span", class_="RDApEe")` | `1600` |
-| **Address & Phone** | `<div>Abhijeet 3, 603, Netaji Rd ... · 090990 39845</div>` | Sibling `div` text parsing & regex | Address + Phone (`090990 39845`) |
+| **Address & Phone** | `<div>Abhijeet 3, 603, Netaji Rd ... / 090990 39845</div>` | Sibling `div` text parsing & regex | Address + Phone (`090990 39845`) |
 | **Website Link** | `<a href="/goto?url=CAESWwHrOzAVlvmzIEZR..."><div class="QuU3Wb"><span>Website</span></div></a>` | `card.find("a", href=lambda h: "/goto?url=" in h)` | Follows Google redirect $\rightarrow$ `maxgentechnologies.com` |
 | **Directions** | `<a href="/maps/dir//Maxgen+Technologies+Pvt.Ltd...">` | `card.find("a", href=lambda h: "/maps/dir/" in h)` | Location URL |
 
@@ -7875,7 +7875,7 @@ From the HTML you pasted:
 ### Crucial Confirmation from your DOM
 
 1. **`a#pnnext` is completely absent**:
-   In your DOM, there is **no `a#pnnext`**. Google retired the old `pnnext` button inside the Places (`udm=local`) view. That is why the old scraper failed on Page 2—it tried to find `a#pnnext` which simply does not exist in the DOM anymore.
+   In your DOM, there is **no `a#pnnext`**. Google retired the old `pnnext` button inside the Places (`udm=local`) view. That is why the old scraper failed on Page 2 - it tried to find `a#pnnext` which simply does not exist in the DOM anymore.
 
 2. **Pagination is URL-driven (`&start=20`)**:
    As proven in your search URLs:
@@ -7922,16 +7922,16 @@ We executed the test for **`keyword="PHP based companies"`**, **`city="surat"`**
 ```
 
 #### Extracted Companies across Pages 1 & 2:
-1. **Codeline Infotech** (`codelineinfotech.com`) — Rating: 5.0
-2. **CoderKube Technologies** (`coderkube.com`) — Rating: 4.6
-3. **Vision Infotech** (`visioninfotech.net`) — Rating: 4.8
-4. **Honest Software Solution** (`honestsoftwaresolution.com`) — Rating: 4.9
-5. **ATinfotech** (`atinfotech.com`) — Rating: 4.9
-6. **Highsense** (`highsense.in`) — Rating: 4.9
-7. **Narola Infotech** (`narolainfotech.com`) — Rating: 4.1
-8. **Netsol IT Solutions Pvt. Ltd.** (`netsolitsolution.com`) — Rating: 4.4
-9. **Bigscal Technologies Pvt. Ltd.** (`bigscal.com`) — Rating: 4.3
-10. **Rain Infotech** (`raininfotech.com`) — Rating: 4.8
+1. **Codeline Infotech** (`codelineinfotech.com`)  -  Rating: 5.0
+2. **CoderKube Technologies** (`coderkube.com`)  -  Rating: 4.6
+3. **Vision Infotech** (`visioninfotech.net`)  -  Rating: 4.8
+4. **Honest Software Solution** (`honestsoftwaresolution.com`)  -  Rating: 4.9
+5. **ATinfotech** (`atinfotech.com`)  -  Rating: 4.9
+6. **Highsense** (`highsense.in`)  -  Rating: 4.9
+7. **Narola Infotech** (`narolainfotech.com`)  -  Rating: 4.1
+8. **Netsol IT Solutions Pvt. Ltd.** (`netsolitsolution.com`)  -  Rating: 4.4
+9. **Bigscal Technologies Pvt. Ltd.** (`bigscal.com`)  -  Rating: 4.3
+10. **Rain Infotech** (`raininfotech.com`)  -  Rating: 4.8
 *(+ 30 more companies from Page 2)*
 
 ---
@@ -8494,18 +8494,18 @@ payload can we use this to bypass the the google captcha?
 
 #### Assistant Implementation & Final Response
 
-### **YES! It works 100% — and it extracted 120 companies in 7 seconds!**
+### **YES! It works 100%  -  and it extracted 120 companies in 7 seconds!**
 
 We took the exact headers and cookies you provided and executed a test across all **6 pages** for **"PHP based companies surat"**. 
 
 #### **Test Execution Results:**
 ```text
-Page 1 (start=0):   Found 20 listings  [✓ 200 OK]
-Page 2 (start=20):  Found 20 listings  [✓ 200 OK]
-Page 3 (start=40):  Found 20 listings  [✓ 200 OK]
-Page 4 (start=60):  Found 20 listings  [✓ 200 OK]
-Page 5 (start=80):  Found 20 listings  [✓ 200 OK]
-Page 6 (start=100): Found 20 listings  [✓ 200 OK]
+Page 1 (start=0):   Found 20 listings  [[v] 200 OK]
+Page 2 (start=20):  Found 20 listings  [[v] 200 OK]
+Page 3 (start=40):  Found 20 listings  [[v] 200 OK]
+Page 4 (start=60):  Found 20 listings  [[v] 200 OK]
+Page 5 (start=80):  Found 20 listings  [[v] 200 OK]
+Page 6 (start=100): Found 20 listings  [[v] 200 OK]
 
 TOTAL Extracted across 6 pages: 120 companies in 6.8 seconds!
 ```
@@ -8589,7 +8589,7 @@ The updated HTTP headers, anti-abuse tokens, and direct link parsing logic are w
   - **Page 5/6**: 19 genuine companies
   - **Page 6/6**: 18 genuine companies
   - **Total Extracted**: **115 genuine companies**
-- **Live Status**: `RUNNING (73% complete)` — Currently enriching company **#59/115** ([uniqualitech.com](https://uniqualitech.com/)) with website crawling, Groq technical profiling, and direct email extraction into Neon PostgreSQL.
+- **Live Status**: `RUNNING (73% complete)`  -  Currently enriching company **#59/115** ([uniqualitech.com](https://uniqualitech.com/)) with website crawling, Groq technical profiling, and direct email extraction into Neon PostgreSQL.
 
 ---
 
@@ -8661,12 +8661,12 @@ Here is the breakdown of how [multi-site-scraper](https://github.com/vorarahul47
 
 After analyzing [gshopping/gscraper_pg.py](https://github.com/vorarahul4700/multi-site-scraper/blob/main/gshopping/gscraper_pg.py), [resolve_redirects.py](https://github.com/vorarahul4700/multi-site-scraper/blob/main/resolve_redirects.py), and [scripts/trigger_partitions.py](https://github.com/vorarahul4700/multi-site-scraper/blob/main/scripts/trigger_partitions.py):
 
-| Mechanism in `multi-site-scraper` | How It Works There | Why It’s Better |
+| Mechanism in `multi-site-scraper` | How It Works There | Why It's Better |
 | :--- | :--- | :--- |
 | **1. Dedicated DB Batch Writer Queue** (`db_queue = queue.Queue()`) | Worker threads never write directly to PostgreSQL/MySQL. They push parsed data to a thread-safe queue. A single background thread (`PostgresBatchWriter`) commits in bulk batches every few seconds. | Prevents SSL connection drops, eliminates PgBouncer lock contention, and stops workers from blocking on database I/O. |
 | **2. Dynamic DB Claim Queue** (`claim_pending_products_from_db`) | Workers atomically claim pending items (`UPDATE ... WHERE status = 'pending' LIMIT N`) using a unique `worker_id` and TTL. | Multiple parallel processes or threads work off the same database without duplicating work or stepping on each other. |
 | **3. High-Throughput ThreadPoolExecutor** | Used in `resolve_redirects.py` and `gscraper_pg.py` (`max_workers=10-25`) with `as_completed()` for concurrent HTTP requests. | Maximizes network bandwidth without waiting on single URLs. |
-| **4. Partitioned Cloud Runners (`trigger_partitions.py`)** | Splits large workloads into chunks (using SQL `NTILE` buckets) and dispatches multiple parallel GitHub Actions workflow runs. | Horizontal cloud scaling — 4 runners complete a 100-item workload in 1/4th the time. |
+| **4. Partitioned Cloud Runners (`trigger_partitions.py`)** | Splits large workloads into chunks (using SQL `NTILE` buckets) and dispatches multiple parallel GitHub Actions workflow runs. | Horizontal cloud scaling  -  4 runners complete a 100-item workload in 1/4th the time. |
 
 ---
 
@@ -8674,7 +8674,7 @@ After analyzing [gshopping/gscraper_pg.py](https://github.com/vorarahul4700/mult
 
 In our current [cloud_worker.py](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/cloud_worker.py) and [enricher.py](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/enricher.py):
 1. **Coupled Crawling & AI**: For each company, a worker crawls the site (network I/O), waits for LLM analysis (API I/O), and then writes to Neon DB (database I/O) in a single synchronous chain.
-2. **Individual Remote DB Roundtrips**: Each company update opens a database session and executes separate `SELECT` / `INSERT` / `COMMIT` statements over remote SSL, adding 200–400ms latency per company.
+2. **Individual Remote DB Roundtrips**: Each company update opens a database session and executes separate `SELECT` / `INSERT` / `COMMIT` statements over remote SSL, adding 200-400ms latency per company.
 3. **Single Runner Bottleneck**: All 115 companies are processed sequentially or in small semaphore batches on a single runner.
 
 ---
@@ -8684,22 +8684,22 @@ In our current [cloud_worker.py](file:///c:/Users/vorar/OneDrive/Desktop/gScrapp
 We can implement this in two high-speed stages:
 
 #### Stage A: Decoupled 2-Stage Pipeline with Batch DB Writer (In-Process)
-1. **Stage 1 — Rapid Async Web Crawler (15–20 workers)**:
+1. **Stage 1  -  Rapid Async Web Crawler (15-20 workers)**:
    - Crawl all 100+ company websites concurrently using `httpx` and `asyncio.gather()`.
    - All candidate emails (`hr@`, `careers@`, etc.) and clean website text are harvested across all 115 companies in **~5 to 8 seconds**.
-2. **Stage 2 — Multi-Model Groq AI Consumer Pool**:
+2. **Stage 2  -  Multi-Model Groq AI Consumer Pool**:
    - Stream the crawled text to our round-robin Groq pool (`qwen/qwen3.8-27b`, `openai/gpt-oss-20b`, `openai/gpt-oss-120b`).
    - Each model runs concurrently at its maximum token rate without waiting on web crawlers.
-3. **Stage 3 — Background `NeonBatchWriter`**:
+3. **Stage 3  -  Background `NeonBatchWriter`**:
    - Finished enriched profiles and emails are pushed into a `queue.Queue()`.
-   - A background daemon thread commits batches of 15–20 companies at a time to Neon PostgreSQL, cutting database latency by **90%**.
+   - A background daemon thread commits batches of 15-20 companies at a time to Neon PostgreSQL, cutting database latency by **90%**.
 
 #### Stage B: Multi-Runner Cloud Partitioning (Horizontal Scaling)
-- Following `trigger_partitions.py`, when a job requests 4+ pages (80–120+ companies), the system can dispatch 2 to 3 parallel GitHub Actions runners (or a GitHub Actions matrix):
-  - Runner 1 handles companies 1–40
-  - Runner 2 handles companies 41–80
-  - Runner 3 handles companies 81–120
-- **Total end-to-end runtime**: Drops from ~3–4 minutes down to **under 45 seconds**.
+- Following `trigger_partitions.py`, when a job requests 4+ pages (80-120+ companies), the system can dispatch 2 to 3 parallel GitHub Actions runners (or a GitHub Actions matrix):
+  - Runner 1 handles companies 1-40
+  - Runner 2 handles companies 41-80
+  - Runner 3 handles companies 81-120
+- **Total end-to-end runtime**: Drops from ~3-4 minutes down to **under 45 seconds**.
 
 ---
 
@@ -8710,11 +8710,11 @@ Would you like me to start by implementing **Stage A (the decoupled Fast Web Cra
 
 ---
 
-### Turn 176: [12:59:10] ✓ Successfully enriched & verified: Solwin Infotech (0 emails found) ...
+### Turn 176: [12:59:10] [v] Successfully enriched & verified: Solwin Infotech (0 emails found) ...
 
 #### User Prompt
 ```text
-[12:59:10] ✓ Successfully enriched & verified: Solwin Infotech (0 emails found)
+[12:59:10] [v] Successfully enriched & verified: Solwin Infotech (0 emails found)
 [12:59:12] [81/115] Deep AI Enriching: Fablead Developers Technolab (fableadtechnolabs.com)...
 [AI Agent Error] analyze_company failed: Error code: 429 - {'error': {'message': 'Rate limit reached for model `openai/gpt-oss-20b` in organization `org_01krt1w0sget6sbydjb8gyx36g` service tier `on_demand` on tokens per minute (TPM): Limit 8000, Used 6354, Requested 3864. Please try again in 16.634999999s. Need more tokens? Upgrade to Dev Tier today at [https://console.groq.com/settings/billing](https://console.groq.com/settings/billing)', 'type': 'tokens', 'code': 'rate_limit_exceeded'}}
 
@@ -8722,7 +8722,7 @@ waht if i provide you with multiple groq APIs will it work? for parallel job
 ```
 
 #### Actions & Tools Executed
-- Tools utilized: `view_file`
+- Tools used: `view_file`
 
 #### Assistant Implementation & Final Response
 
@@ -8733,7 +8733,7 @@ waht if i provide you with multiple groq APIs will it work? for parallel job
 ### Why Multiple Groq Keys Work:
 Groq enforces free-tier rate limits **per organization/account**:
 - **1 Key** = 8,000 Tokens/Minute (TPM) $\rightarrow$ Can safely support ~2 parallel workers
-- **2 Keys** = 16,000 TPM $\rightarrow$ Can support **4–5 parallel workers** (2x speed)
+- **2 Keys** = 16,000 TPM $\rightarrow$ Can support **4-5 parallel workers** (2x speed)
 - **3 Keys** = 24,000 TPM $\rightarrow$ Can support **8 parallel workers** (4x speed)
 - **4 Keys** = 32,000 TPM $\rightarrow$ Can support **12+ parallel workers** (6x speed)
 
@@ -8785,10 +8785,10 @@ If you create 5 keys inside the same account, they all share that same **8,000 T
 
 ### Best Ways to Scale for Free:
 
-1. **2–3 Separate Free Groq Accounts**:
+1. **2-3 Separate Free Groq Accounts**:
    - Sign up with 1 or 2 other Google/GitHub accounts at [console.groq.com](https://console.groq.com).
    - Each new account gets its own independent **8,000 TPM** organization.
-   - 3 accounts = **24,000 TPM** (enough for 6–8 parallel workers).
+   - 3 accounts = **24,000 TPM** (enough for 6-8 parallel workers).
 
 2. **Add Google Gemini Free API (Recommended Alternative)**:
    - Google AI Studio provides **15 RPM and up to 1 Million tokens/minute completely free** for `gemini-1.5-flash` or `gemini-2.0-flash`.
@@ -9122,7 +9122,7 @@ I believe the issues found are incorrect
 
 #### Assistant Implementation & Final Response
 
-Look closely at your screenshot — **your app is ALREADY in Production!**
+Look closely at your screenshot  -  **your app is ALREADY in Production!**
 
 > **Publishing status: In production**  
 > **OAuth user cap: 2 users / 100 user cap**
@@ -9170,7 +9170,7 @@ In your Google Cloud Console verification prompt:
 ---
 
 ### When Would You Ever Need Full Verification?
-Only if you buy a custom domain (e.g. `outreachpilot.com` or `outreachpilot.ai` for $5–$10) and want to remove the *"Advanced $\rightarrow$ Go to OutreachPilot"* click for general public strangers:
+Only if you buy a custom domain (e.g. `outreachpilot.com` or `outreachpilot.ai` for $5-$10) and want to remove the *"Advanced $\rightarrow$ Go to OutreachPilot"* click for general public strangers:
 1. Add custom domain to Render.
 2. Verify the custom domain in [Google Search Console](https://search.google.com/search-console) via a DNS TXT record.
 3. Submit a 60-second YouTube unlisted video showing OAuth sign-in and sending an email.
@@ -9190,7 +9190,7 @@ when the scrapping workflow is completed it automatically calls the enrich workf
 ```
 
 #### Actions & Tools Executed
-- Tools utilized: `view_file`
+- Tools used: `view_file`
 
 #### Assistant Implementation & Final Response
 
@@ -9283,7 +9283,7 @@ lest apply this changes also lets make one more change in resume analysing i don
 like what is this 
 ### 1. Engineering Archetype
 
-Rahul is a performance‑focused backend engineer with a strong e‑commerce DNA. He demonstrates maturity by profiling, indexing, and refactoring legacy Magento 1 code, while also building end‑to‑end scraping pipelines and a mobile‑first expense tracker, indicating a hybrid full‑stack mindset.
+Rahul is a performance-focused backend engineer with a strong e-commerce DNA. He demonstrates maturity by profiling, indexing, and refactoring legacy Magento 1 code, while also building end-to-end scraping pipelines and a mobile-first expense tracker, indicating a hybrid full-stack mindset.
 
 
 
@@ -9297,23 +9297,23 @@ Rahul is a performance‑focused backend engineer with a strong e‑commerce DNA
 
 - **DevOps & Tooling:** Git, GitHub Actions (parallel runners), FTP automation, Railway, CI/CD pipelines
 
-- **Scraping & Anti‑Bot:** curl_cffi, FlareSolverr, undetected‑chromedriver, Cloudflare/recaptcha handling
+- **Scraping & Anti-Bot:** curl_cffi, FlareSolverr, undetected-chromedriver, Cloudflare/recaptcha handling
 
 
 
 ### 3. Key Accomplishments & Scale
 
-- Cut a Magento cron job from 25 min to 15 min by eliminating redundant queries and adding indexes, directly reducing server cost and improving report freshness.
+- Cut a Magento cron job from 25 min to 15 min by eliminating redundant queries and adding indexes, directly reducing server cost and improving report freshness.
 
-- Engineered a multi‑site price scraper that processes >10 k SKUs per run, runs entirely on GitHub Actions, and bulk‑loads into PostgreSQL with zero‑duplicate guarantees.
+- Engineered a multi-site price scraper that processes >10 k SKUs per run, runs entirely on GitHub Actions, and bulk-loads into PostgreSQL with zero-duplicate guarantees.
 
-- Delivered a Flutter expense‑tracker that parses SMS/PDF statements on‑device, handling Unicode edge‑cases and providing real‑time budgeting insights to end users.
+- Delivered a Flutter expense-tracker that parses SMS/PDF statements on-device, handling Unicode edge-cases and providing real-time budgeting insights to end users.
 
 
 
 ### 4. Strategic Job Fit
 
-Rahul’s blend of backend optimization, API‑centric scraping, and front‑end mobile experience aligns perfectly with a Full‑Stack Engineer role that demands end‑to‑end ownership of data pipelines, UI/UX delivery, and performance tuning in fast‑moving commerce or SaaS environments.
+Rahul's blend of backend optimization, API-centric scraping, and front-end mobile experience aligns perfectly with a Full-Stack Engineer role that demands end-to-end ownership of data pipelines, UI/UX delivery, and performance tuning in fast-moving commerce or SaaS environments.
 see the images i provieded is my resume based on that the context it returns is too small i guess
 ```
 
@@ -9339,8 +9339,8 @@ All requested changes have been implemented, tested, and pushed to `main` (commi
 Previously, the prompt in [ai_agent.py](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/ai_agent.py) explicitly instructed the LLM to output a *"concise (200-300 words)"* evaluation and capped `max_tokens` at 800. This caused the model to produce a brief, generic 4-paragraph summary that omitted key accomplishments from your resume. Additionally, there was no copy button on the UI candidate card.
 
 #### What we changed:
-1. **Comprehensive Technical Candidate Dossier Prompt**:
-   - Instructed the model to generate a rich, 600–800 word technical dossier.
+1. **Detailed Technical Candidate Dossier Prompt**:
+   - Instructed the model to generate a rich, 600-800 word technical dossier.
    - Increased `max_tokens` from `800` to `2200` to prevent truncation.
    - Structured the evaluation into five deep sections reflecting your actual experience:
      - **Executive Engineering Archetype & Core Identity**: Technical depth across backend systems, database modeling, and hybrid mobile/edge systems.
@@ -9352,7 +9352,7 @@ Previously, the prompt in [ai_agent.py](file:///c:/Users/vorar/OneDrive/Desktop/
      - **Problem-Solving Rigor & Optimization Philosophy**: How you handle anti-scraping defenses without dedicated servers, optimize legacy systems (Magento 1) alongside modern stacks, and maintain zero-duplicate database guarantees.
      - **Strategic Job Fit & Positioning Narrative**: Immediate Day-1 impact for backend, data pipeline, and hybrid full-stack engineering roles.
 2. **Interactive "Copy Analysis" Button**:
-   - Added `#btn-copy-profile-analysis` in [templates/index.html](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/templates/index.html) right next to the *Comprehensive Candidate Evaluation Dossier* header.
+   - Added `#btn-copy-profile-analysis` in [templates/index.html](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/templates/index.html) right next to the *Detailed Candidate Evaluation Dossier* header.
    - Expanded the view container height (`max-h-96`) for comfortable reading.
    - Added clipboard copying with green visual feedback (`Copied!` with checkmark) in [static/js/app.js](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/static/js/app.js).
 
@@ -9384,7 +9384,7 @@ flowchart TD
    - Added automatic migration and backfill logic in `init_db()` so existing records in Neon DB are safely updated without downtime.
 2. **Fast Scout Runner** in [cloud_worker.py](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/cloud_worker.py):
    - Rapidly harvests Google Places listings and inserts genuine companies as `enrichment_status = 'PENDING'`.
-   - Completes the scout job in ~10–15 seconds so your UI immediately shows all discovered listings.
+   - Completes the scout job in ~10-15 seconds so your UI immediately shows all discovered listings.
    - Dispatches `cloud_enrich.yml` via GitHub Actions REST API so enrichment begins immediately.
 3. **Dedicated Auto-Healing Worker** in [cloud_enrich.py](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/cloud_enrich.py):
    - Claims batches of pending or failed URLs (`attempts < 3`).
@@ -9438,7 +9438,7 @@ Because it used **`.textContent`**, the browser treated the text as raw literal 
 
 2. **Clean Text for the "Copy Analysis" Button**:
    - When you click **Copy Analysis** (or **Copy Report** in the company modal), the clipboard automatically cleans up the Markdown syntax via `stripMarkdownForCopy()`.
-   - When you paste into **Gmail**, **LinkedIn**, **WhatsApp**, or **Notion**, you get clean, readable text with neat bullet dots (`•`) and clean section headers without any messy `**`, `###`, or `--` characters.
+   - When you paste into **Gmail**, **LinkedIn**, **WhatsApp**, or **Notion**, you get clean, readable text with neat bullet dots (`-`) and clean section headers without any messy `**`, `###`, or `--` characters.
 
 ---
 
@@ -9496,7 +9496,7 @@ All issues have been resolved, verified, and pushed to `main` ([commit `01f95fc`
   3. Added a bulletproof fallback check: if the subject or body is ever empty, a tailored candidate pitch is synthesized immediately so **it can never be blank again**.
   4. Tested and regenerated Astniq Solutions' pitch in the database:
      * **Subject:** `Full-Stack Engineer inquiry - Rahul Vora`
-     * **Body:** `Hi Astniq Solutions team, I’ve been following your work in digital transformation, particularly your focus on scalable cloud-native architectures...`
+     * **Body:** `Hi Astniq Solutions team, I've been following your work in digital transformation, particularly your focus on scalable cloud-native architectures...`
 
 ---
 
@@ -9519,15 +9519,15 @@ All issues have been resolved, verified, and pushed to `main` ([commit `01f95fc`
 
 ---
 
-### Turn 187: { "summary": "TechEasify builds end‑to‑end digital marketing and e‑commerce solu...
+### Turn 187: { "summary": "TechEasify builds end-to-end digital marketing and e-commerce solu...
 
 #### User Prompt
 ```text
 {
 
-"summary": "TechEasify builds end‑to‑end digital marketing and e‑commerce solutions—including paid‑media, SEO, AI‑driven ChatGPT ads, and custom Shopify/e‑commerce development—for mid‑market brands in India and abroad.",
+"summary": "TechEasify builds end-to-end digital marketing and e-commerce solutions - including paid-media, SEO, AI-driven ChatGPT ads, and custom Shopify/e-commerce development - for mid-market brands in India and abroad.",
 
-"detailed_analysis": "### 1. Executive Business Overview & Value Proposition\nTechEasify positions itself as a 360° digital marketing and development agency that turns clicks into customers. Founded in 2012 in Surat, Gujarat, the firm now serves over 85 brands across sectors such as healthcare, hospitality, real‑estate, and education. Their core promise is a results‑first, data‑driven approach that blends performance marketing (Meta, Google, Amazon, ChatGPT ads) with organic growth (AI‑enhanced SEO) and full‑stack web/e‑commerce development (Shopify, custom marketplaces). By offering a single roof for ad spend, creative, analytics, and site delivery, they reduce vendor friction for clients and claim transparent reporting that focuses on leads and sales rather than vanity metrics.\n\n### 2. Architecture & Technical Infrastructure\nWhile the website does not expose a detailed tech stack, several clues reveal the underlying architecture:\n- Front‑end: The site’s responsive design, fast load times, and modern UI suggest a JavaScript framework—most likely React (or Next.js) for component‑based rendering, paired with Tailwind CSS or similar utility‑first styling.\n- CMS / Content Layer: Repeated “Knowledge Hub”, “Blogs”, and “Case Studies” sections imply a headless CMS (e.g., Contentful, Sanity, or a WordPress‑based API) feeding content to the front‑end.\n- Back‑end Services: The agency builds Shopify, custom e‑commerce, and Amazon Marketplace integrations, indicating heavy use of Node.js/Express for API orchestration, Python for AI/SEO tooling, and Ruby on Rails for legacy Shopify apps. Database choices likely include PostgreSQL for relational data and MongoDB for flexible content storage.\n- Cloud & DevOps: References to “fast, responsive, conversion‑focused websites” and “scalable e‑commerce” point to hosting on AWS (EC2, S3, CloudFront) or Google Cloud Platform. CI/CD pipelines are probably managed via GitHub Actions or GitLab CI, with containerization using Docker and orchestration via Kubernetes for larger client deployments.\n- Analytics & Tracking: Integration with Google Analytics 4, Meta Pixel, Amazon Attribution, and Hotjar for behavior analytics. The AI‑SEO and ChatGPT ad services likely leverage OpenAI APIs, Google BERT, or custom LLM pipelines.\n- Marketing Automation: Email marketing stacks such as Mailchimp, Klaviyo, or SendGrid are used for drip campaigns, while Zapier or Make (Integromat) may automate lead flow between ad platforms and CRMs (e.g., HubSpot, Zoho CRM).\n- Project Management & Collaboration: Internal workflows probably rely on Jira, Asana, or ClickUp, with design assets stored in Figma or Adobe XD.\n\n### 3. Core Products & Solutions\n1. Performance Marketing Suite – Managed Meta, Google, Amazon, and ChatGPT ad campaigns, offering audience targeting, bid optimization, and ROAS reporting.\n2. AI‑Enhanced SEO & Content – Proprietary AI tools that generate SEO‑friendly copy, perform keyword clustering, and monitor SERP changes.\n3. E‑commerce Development – End‑to‑end Shopify store builds, custom marketplace platforms, and quick‑commerce solutions that integrate inventory, payment gateways, and Amazon catalog management.\n4. Full‑Stack Web Development – Responsive, conversion‑optimized websites built on React/Next.js with headless CMS back‑ends, SEO‑ready architecture, and mobile‑first performance.\n5. Retention & Email Automation – Segmented email flows, automated follow‑ups, and lifecycle marketing to boost customer LTV.\n\n### 4. Engineering Needs & Growth Challenges\n- Scalability of Ad‑Tech Pipelines: Managing 100K+ campaigns demands robust data pipelines, real‑time reporting dashboards, and automated bid‑adjustment algorithms. Engineers with expertise in big‑data (Snowflake, BigQuery) and stream processing (Kafka, Flink) can streamline these workflows.\n- AI/ML Model Ops: Their AI‑SEO and ChatGPT ad products require continuous model training, prompt engineering, and cost‑effective inference. Skills in MLOps (MLflow, Kubeflow), GPU‑accelerated serving, and prompt‑tuning are high‑value.\n- Shopify & Marketplace Integration: Maintaining dozens of custom Shopify apps and Amazon catalog syncs creates API‑rate‑limit and data‑consistency challenges. Engineers proficient in GraphQL, RESTful micro‑services, and webhooks can improve reliability.\n- Performance & Security: High‑traffic e‑commerce sites need core‑web‑vitals optimization, CDN edge caching, and PCI‑compliant security. Front‑end performance engineers and DevSecOps specialists can raise conversion rates and reduce breach risk.\n- Talent Pipeline: The agency’s client‑facing nature requires cross‑functional teams that blend marketing insight with engineering execution. Hiring full‑stack developers who understand ad‑tech metrics, as well as data analysts fluent in SQL/Looker, will close the skill gap.\n\n### 5. High‑Impact Cold Outreach Angles\n- “Optimizing 100K+ Campaign Data Streams” – Pitch a proven framework for building real‑time analytics dashboards using BigQuery + Looker Studio, reducing reporting latency from days to minutes.\n- “AI‑Powered SEO Automation” – Share a case study where you integrated OpenAI GPT‑4 with a custom keyword‑ranking pipeline, boosting organic traffic by 30% in 3 months.\n- “Shopify App Performance at Scale” – Offer to audit their existing Shopify extensions for GraphQL query efficiency and suggest edge‑caching strategies via Cloudflare Workers.\n- “MLOps for ChatGPT Ads” – Highlight experience setting up Kubeflow pipelines that automate prompt testing and cost‑per‑click (CPC) prediction models, delivering a faster go‑to‑market for new ad formats.\n- “Security Hardening for PCI‑Compliant Stores” – Demonstrate expertise in OWASP best practices, automated vulnerability scanning (Snyk, Dependabot), and CI/CD security gates.\nThese angles align directly with TechEasify’s service pillars and showcase immediate ROI for their
+"detailed_analysis": "### 1. Executive Business Overview & Value Proposition\nTechEasify positions itself as a 360° digital marketing and development agency that turns clicks into customers. Founded in 2012 in Surat, Gujarat, the firm now serves over 85 brands across sectors such as healthcare, hospitality, real-estate, and education. Their core promise is a results-first, data-driven approach that blends performance marketing (Meta, Google, Amazon, ChatGPT ads) with organic growth (AI-enhanced SEO) and full-stack web/e-commerce development (Shopify, custom marketplaces). By offering a single roof for ad spend, creative, analytics, and site delivery, they reduce vendor friction for clients and claim transparent reporting that focuses on leads and sales rather than vanity metrics.\n\n### 2. Architecture & Technical Infrastructure\nWhile the website does not expose a detailed tech stack, several clues reveal the underlying architecture:\n- Front-end: The site's responsive design, fast load times, and modern UI suggest a JavaScript framework - most likely React (or Next.js) for component-based rendering, paired with Tailwind CSS or similar utility-first styling.\n- CMS / Content Layer: Repeated "Knowledge Hub", "Blogs", and "Case Studies" sections imply a headless CMS (e.g., Contentful, Sanity, or a WordPress-based API) feeding content to the front-end.\n- Back-end Services: The agency builds Shopify, custom e-commerce, and Amazon Marketplace integrations, indicating heavy use of Node.js/Express for API orchestration, Python for AI/SEO tooling, and Ruby on Rails for legacy Shopify apps. Database choices likely include PostgreSQL for relational data and MongoDB for flexible content storage.\n- Cloud & DevOps: References to "fast, responsive, conversion-focused websites" and "scalable e-commerce" point to hosting on AWS (EC2, S3, CloudFront) or Google Cloud Platform. CI/CD pipelines are probably managed via GitHub Actions or GitLab CI, with containerization using Docker and orchestration via Kubernetes for larger client deployments.\n- Analytics & Tracking: Integration with Google Analytics 4, Meta Pixel, Amazon Attribution, and Hotjar for behavior analytics. The AI-SEO and ChatGPT ad services likely use OpenAI APIs, Google BERT, or custom LLM pipelines.\n- Marketing Automation: Email marketing stacks such as Mailchimp, Klaviyo, or SendGrid are used for drip campaigns, while Zapier or Make (Integromat) may automate lead flow between ad platforms and CRMs (e.g., HubSpot, Zoho CRM).\n- Project Management & Collaboration: Internal workflows probably rely on Jira, Asana, or ClickUp, with design assets stored in Figma or Adobe XD.\n\n### 3. Core Products & Solutions\n1. Performance Marketing Suite - Managed Meta, Google, Amazon, and ChatGPT ad campaigns, offering audience targeting, bid optimization, and ROAS reporting.\n2. AI-Enhanced SEO & Content - Proprietary AI tools that generate SEO-friendly copy, perform keyword clustering, and monitor SERP changes.\n3. E-commerce Development - End-to-end Shopify store builds, custom marketplace platforms, and quick-commerce solutions that integrate inventory, payment gateways, and Amazon catalog management.\n4. Full-Stack Web Development - Responsive, conversion-optimized websites built on React/Next.js with headless CMS back-ends, SEO-ready architecture, and mobile-first performance.\n5. Retention & Email Automation - Segmented email flows, automated follow-ups, and lifecycle marketing to boost customer LTV.\n\n### 4. Engineering Needs & Growth Challenges\n- Scalability of Ad-Tech Pipelines: Managing 100K+ campaigns demands reliable data pipelines, real-time reporting dashboards, and automated bid-adjustment algorithms. Engineers with expertise in big-data (Snowflake, BigQuery) and stream processing (Kafka, Flink) can simplify these workflows.\n- AI/ML Model Ops: Their AI-SEO and ChatGPT ad products require continuous model training, prompt engineering, and cost-effective inference. Skills in MLOps (MLflow, Kubeflow), GPU-accelerated serving, and prompt-tuning are high-value.\n- Shopify & Marketplace Integration: Maintaining dozens of custom Shopify apps and Amazon catalog syncs creates API-rate-limit and data-consistency challenges. Engineers proficient in GraphQL, RESTful micro-services, and webhooks can improve reliability.\n- Performance & Security: High-traffic e-commerce sites need core-web-vitals optimization, CDN edge caching, and PCI-compliant security. Front-end performance engineers and DevSecOps specialists can raise conversion rates and reduce breach risk.\n- Talent Pipeline: The agency's client-facing nature requires cross-functional teams that blend marketing insight with engineering execution. Hiring full-stack developers who understand ad-tech metrics, as well as data analysts fluent in SQL/Looker, will close the skill gap.\n\n### 5. High-Impact Cold Outreach Angles\n- "Optimizing 100K+ Campaign Data Streams" - Pitch a proven framework for building real-time analytics dashboards using BigQuery + Looker Studio, reducing reporting latency from days to minutes.\n- "AI-Powered SEO Automation" - Share a case study where you integrated OpenAI GPT-4 with a custom keyword-ranking pipeline, boosting organic traffic by 30% in 3 months.\n- "Shopify App Performance at Scale" - Offer to audit their existing Shopify extensions for GraphQL query efficiency and suggest edge-caching strategies via Cloudflare Workers.\n- "MLOps for ChatGPT Ads" - Highlight experience setting up Kubeflow pipelines that automate prompt testing and cost-per-click (CPC) prediction models, delivering a faster go-to-market for new ad formats.\n- "Security Hardening for PCI-Compliant Stores" - Demonstrate expertise in OWASP best practices, automated vulnerability scanning (Snyk, Dependabot), and CI/CD security gates.\nThese angles align directly with TechEasify's service pillars and showcase immediate ROI for their
 
 why AI enrichment is like this?
 ```
@@ -9545,17 +9545,17 @@ There were **three fundamental flaws** in how the previous company analysis prom
 ---
 
 #### 1. Excessive Word Count Forcing Wild Hallucinations
-* **The issue:** The prompt instructed the AI: *"Perform a thorough, comprehensive technical intelligence analysis (500 to 700 words)"*.
+* **The issue:** The prompt instructed the AI: *"Perform a thorough, detailed technical intelligence analysis (500 to 700 words)"*.
 * **What happened:** TechEasify is a local digital marketing agency offering SEO, Meta ads, and Shopify stores. Its website copy is relatively brief (~150 words). 
 * Because the AI was **forced to reach 700 words**, it ran out of real facts after 50 words and started **hallucinating an entire enterprise Fortune 500 stack out of thin air**:
-  * It invented *Kafka, Flink, Snowflake, BigQuery, Kubeflow, MLflow, Kubernetes, Docker, Ruby on Rails, MongoDB*, and *OWASP Snyk*—none of which a mid-market marketing agency uses.
+  * It invented *Kafka, Flink, Snowflake, BigQuery, Kubeflow, MLflow, Kubernetes, Docker, Ruby on Rails, MongoDB*, and *OWASP Snyk* - none of which a mid-market marketing agency uses.
   * It even explicitly admitted this flaw in the report: *"While the website does not expose a detailed tech stack, several clues reveal..."* and then continued to speculate.
 
 ---
 
 #### 2. Token Budget Exhaustion (Cutting Off Mid-Sentence)
 * Look at the very last line of the analysis you shared:
-  > *`...delivering a faster go‑to‑market for new ad formats. - “Security Hardening for PCI‑Compliant Stores” – Demonstrate expertise in OWASP best practices, automated vulnerability scanning (Snyk, Dependabot), and CI/CD security gates. These angles align directly with TechEasify’s service pillars and showcase immediate ROI for their`*
+  > *`...delivering a faster go-to-market for new ad formats. - "Security Hardening for PCI-Compliant Stores" - Demonstrate expertise in OWASP best practices, automated vulnerability scanning (Snyk, Dependabot), and CI/CD security gates. These angles align directly with TechEasify's service pillars and showcase immediate ROI for their`*
 * **What happened:** Because the prompt demanded an overly long essay inside a single JSON string, the output hit the token limit before the model could complete the JSON object. It ran out of tokens and **abruptly truncated mid-sentence**.
 
 ---
@@ -9576,8 +9576,8 @@ In [ai_agent.py](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/ai_agent.py):
    * Instructed the AI to strictly report technologies, CMS, and services **actually detected or stated** on the company's site (e.g. Shopify, WordPress, PHP, JavaScript, Meta/Google Ads).
    * Explicitly forbade hallucinating enterprise architectures (Kafka, Kubernetes, Kubeflow, Snowflake) for agencies or local businesses.
 
-2. **Right-Sized, High-Impact Length (250–350 Words):**
-   * Replaced the bloated 700-word essay with a crisp, actionable **250–350 word** technical brief.
+2. **Right-Sized, High-Impact Length (250-350 Words):**
+   * Replaced the bloated 700-word essay with a crisp, actionable **250-350 word** technical brief.
    * This leaves ample token headroom so every section and sentence is **fully completed without ever cutting off mid-sentence**.
 
 3. **Realistic, Practical Outreach Hooks:**
@@ -9596,7 +9596,7 @@ enrich with AI button click checks the google login currect if google login is n
 ```
 
 #### Actions & Tools Executed
-- Tools utilized: `view_file`, `grep_search`
+- Tools used: `view_file`, `grep_search`
 
 #### Assistant Implementation & Final Response
 
@@ -9640,7 +9640,7 @@ This error happens because the URL your app is currently redirecting to is not l
    * `https://www.outreachpilot.in/auth/google/callback`
    * `https://outreachpilot-nfdj.onrender.com/auth/google/callback`
    * `http://localhost:8000/auth/google/callback` *(for local testing)*
-5. Click **Save** at the bottom. *(Google changes can take 2–5 minutes to propagate).*
+5. Click **Save** at the bottom. *(Google changes can take 2-5 minutes to propagate).*
 
 ---
 
@@ -9697,7 +9697,7 @@ This is the exact step Google Cloud required when they previously rejected `onre
   * Under **Environment**, update:
     * `GOOGLE_REDIRECT_URI`: `https://outreachpilot.in/auth/google/callback`
 * **In Local `.env` ([c:\Users\vorar\OneDrive\Desktop\outreachPilot\.env](file:///c:/Users/vorar/OneDrive/Desktop/outreachPilot/.env)):**
-  * Keep `GOOGLE_REDIRECT_URI=http://localhost:8000/auth/google/callback` so your local development keeps working seamlessly.
+  * Keep `GOOGLE_REDIRECT_URI=http://localhost:8000/auth/google/callback` so your local development keeps working smoothly.
 
 ---
 
@@ -9769,7 +9769,7 @@ There is a typo in your Google Cloud Console configuration visible in your scree
 In your second screenshot under **Authorized redirect URIs**, look closely at **URIs 3**:
 
 ```text
-❌ Current (Typo with two slashes):
+[x] Current (Typo with two slashes):
 https://outreachpilot.in//auth/google/callback
                         ^^
 ```
@@ -9800,7 +9800,7 @@ Since they don't match character-for-character, Google blocks it with:
 3. Click the blue **SAVE** button at the bottom of the page.
 
 4. > [!NOTE]
-   > **Google Propagation Delay**: Google OAuth changes typically take **2 to 5 minutes** to propagate across Google's global servers. Wait 2–3 minutes after clicking Save, then open an incognito window or refresh `https://outreachpilot.in` and sign in.
+   > **Google Propagation Delay**: Google OAuth changes typically take **2 to 5 minutes** to propagate across Google's global servers. Wait 2-3 minutes after clicking Save, then open an incognito window or refresh `https://outreachpilot.in` and sign in.
 
 ---
 
@@ -9836,7 +9836,7 @@ We have redesigned and relocated all notification and error messages so they are
    - **Success Messages**: Vibrant emerald badge and glow (`border-emerald-500 text-emerald-100`).
 
 3. **User-Friendly Dismissal & Animation:**
-   - Smooth slide-down animation from the top (`-translate-y-4` → `translate-y-0`).
+   - Smooth slide-down animation from the top (`-translate-y-4` -> `translate-y-0`).
    - Added an instant **`×` close button** on every toast so users can dismiss notifications at will without waiting.
    - Longer automatic display duration for errors (5.5s) to allow comfortable reading.
 
@@ -9940,7 +9940,7 @@ Pushed to repository on branch `main` (`e0697ae`).
 #### User Prompt
 ```text
 for company enrichment we w will use this prompt 
-Act as a senior business research analyst. I need a comprehensive company profile for Codeline Infotech based on their website, [https://www.codelineinfotech.com/](https://www.codelineinfotech.com/), and any other authoritative public sources like LinkedIn or [Clutch.co](https://clutch.co/).
+Act as a senior business research analyst. I need a detailed company profile for Codeline Infotech based on their website, [https://www.codelineinfotech.com/](https://www.codelineinfotech.com/), and any other authoritative public sources like LinkedIn or [Clutch.co](https://clutch.co/).
 Please browse the website thoroughly, including the Home, About Us, Services, Portfolio, and Contact pages. Then, extract and structure the following information into a detailed report:
 1. Company Overview & Identity:
 Official name, founding year, and headquarters location.
@@ -9984,11 +9984,11 @@ We have updated the company enrichment pipeline to use your exact prompt and rep
 
 ### What Was Updated:
 
-1. **6-Part Comprehensive Business Research Dossier ([ai_agent.py](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/ai_agent.py)):**
+1. **6-Part Detailed Business Research Dossier ([ai_agent.py](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/ai_agent.py)):**
    - Updated `analyze_company` to adopt the persona of a senior business research analyst.
    - Structured the output (`detailed_analysis`) into your exact 6 sections with markdown headings and bullet points:
      - **`### 1. Company Overview & Identity`**: Official name, founding year, headquarters, stated mission / core value proposition, and key company stats (years in business, team size, delivered projects, client count).
-     - **`### 2. Services & Expertise`**: Comprehensive list of services and any specialized proprietary platforms or built products (e.g., custom platforms or SaaS).
+     - **`### 2. Services & Expertise`**: Detailed list of services and any specialized proprietary platforms or built products (e.g., custom platforms or SaaS).
      - **`### 3. Technology Stack & Languages`**: Categorized breakdown of Programming Languages, Frontend Frameworks, Backend Frameworks, Databases & Cloud Infrastructure, and Design/Tools.
      - **`### 4. Industries & Client Portfolio`**: Explicitly served industry verticals and named clients, delivered case studies, or portfolio projects.
      - **`### 5. Development Process & Engagement Model`**: Lifecycle phases (Discovery, Design, Development, Testing, Deployment) and client collaboration/support models.
@@ -10002,7 +10002,7 @@ We have updated the company enrichment pipeline to use your exact prompt and rep
      - **Portfolio / Projects (`/portfolio`, `/projects`, `/our-work`)**
      - **Contact (`/contact`, `/contact-us`)**
      - **Careers (`/careers`)**
-   - Increased clean text aggregation limit up to 12,000 characters so the model has comprehensive source context across all subpages.
+   - Increased clean text aggregation limit up to 12,000 characters so the model has detailed source context across all subpages.
    - Increased `max_tokens` to `2200` to ensure complete, thorough output without truncation.
 
 Pushed to repository on branch `main` (`156143c`).
@@ -10499,7 +10499,7 @@ Because `gmail.send` is classified by Google as a "Restricted / Sensitive Scope"
 ### Why did you see this screen just now?
 - Previously, the login URL used `prompt="select_account"`, which silently skipped the consent screen (and therefore never issued the `refresh_token`, causing your 1-hour expiration error earlier).
 - When we updated it to `prompt="consent"`, Google deliberately presented the consent dialog to issue your permanent **`refresh_token`**.
-- As the developer and owner (`vorarahul111@gmail.com`), clicking **"Advanced" → "Go to OutreachPilot (unsafe)"** is the official way to grant access. 
+- As the developer and owner (`vorarahul111@gmail.com`), clicking **"Advanced" -> "Go to OutreachPilot (unsafe)"** is the official way to grant access. 
 
 Once you click through and grant permission once, Google will store your permanent `refresh_token`, your connection will stay permanently authorized, and you can send emails with attachments smoothly!
 
@@ -10525,7 +10525,7 @@ You have already completed the first step (**Branding Verified** in Screenshot 2
 
 Here are the exact remaining steps:
 1. In [Google Cloud Console](https://console.cloud.google.com/apis/credentials/consent):
-   - Go to **OAuth consent screen** → **Scopes**.
+   - Go to **OAuth consent screen** -> **Scopes**.
    - Make sure `https://www.googleapis.com/auth/gmail.send` is listed under **Sensitive / Restricted Scopes**.
 2. Click **"Submit for Verification"** (or **"Prepare for verification"**).
 3. Google will ask for two things:
@@ -10535,11 +10535,11 @@ Here are the exact remaining steps:
      - The sign-in flow showing your Google Client ID visible in the browser address bar.
      - The Pitch Preview modal.
      - Clicking "Send with Resume" and showing the sent email arriving in the inbox with the attachment.
-4. Google typically approves this within **2–3 business days**. Once approved, the warning screen is **permanently gone for every user in the world**.
+4. Google typically approves this within **2-3 business days**. Once approved, the warning screen is **permanently gone for every user in the world**.
 
 ---
 
-### Option 2: Switch to "Testing" Status (Immediate — For You & Your Test Users)
+### Option 2: Switch to "Testing" Status (Immediate  -  For You & Your Test Users)
 If OutreachPilot is currently for you, your team, or up to 100 test users:
 
 1. Look at your **Screenshot 3**:
@@ -10560,7 +10560,7 @@ As you mentioned earlier, SMTP is an alternative that completely bypasses OAuth:
 - **No warning screen ever.**
 - Supports PDF attachments natively using Python's `smtplib`.
 - **How it works**:
-  1. Go to your Google Account → Security → 2-Step Verification → **App passwords** ([myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords)).
+  1. Go to your Google Account -> Security -> 2-Step Verification -> **App passwords** ([myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords)).
   2. Generate a 16-letter App Password for "OutreachPilot".
   3. We add `SMTP_USER` and `SMTP_PASSWORD` to your backend. Emails are dispatched directly through `smtp.gmail.com:587`.
 
@@ -10581,7 +10581,7 @@ in this right?
 ```
 
 #### Actions & Tools Executed
-- Tools utilized: `view_file`
+- Tools used: `view_file`
 
 #### Assistant Implementation & Final Response
 
@@ -10649,8 +10649,8 @@ Upload it to YouTube as **Unlisted**, copy the link, paste it into the **`YouTub
 
 ---
 
-### 💡 Don't want to record a video right now? (Instant Shortcut)
-If you want to use the app immediately without recording a video or waiting 2–3 days for Google's review team:
+###  Don't want to record a video right now? (Instant Shortcut)
+If you want to use the app immediately without recording a video or waiting 2-3 days for Google's review team:
 1. In the left menu, click **Audience** (or OAuth consent screen).
 2. Click **`Back to testing`**.
 3. Add your email (`vorarahul111@gmail.com`) under **Test users**.
@@ -10788,7 +10788,7 @@ Here is the complete **A to Z directory** of every single page, screen, sub-view
 
 ---
 
-# 📑 Complete A–Z UI Inventory
+# 📑 Complete A-Z UI Inventory
 
 ## 1. Standalone Pages (Route-level URLs)
 
@@ -10800,11 +10800,11 @@ Here is the complete **A to Z directory** of every single page, screen, sub-view
 ### Page B: Privacy Policy (`/privacy` or `templates/privacy.html`)
 * Standalone public legal page required for Google OAuth verification.
 * Contains Google API Limited Use compliance disclosures, data retention policies, and developer contact info.
-* Includes a top navigation header with a `← Back to App` link.
+* Includes a top navigation header with a `<- Back to App` link.
 
 ### Page C: Terms of Service (`/terms` or `templates/terms.html`)
 * Standalone public legal page defining terms of service, CAN-SPAM / anti-spam compliance guidelines, and disclaimers.
-* Includes a top navigation header with a `← Back to App` link.
+* Includes a top navigation header with a `<- Back to App` link.
 
 ---
 
@@ -10958,7 +10958,7 @@ Here is the complete **A to Z directory** of every single page, screen, sub-view
   * Close button (`#login-modal-close`).
 
 ### Modal 2: Company Intelligence Details Modal (`#company-modal`)
-* Comprehensive company inspection popup triggered by clicking any company card.
+* Detailed company inspection popup triggered by clicking any company card.
 * **Header**: Company name (`#cmodal-name`), verified badge (`#cmodal-badge`), official website link (`#cmodal-website`, `#cmodal-domain`), star rating (`#cmodal-rating`), and close button (`#cmodal-close`).
 * **Tabs**: "Overview" tab (`#cmodal-tab-btn-overview`) and "AI Deep Analysis" tab (`#cmodal-tab-btn-ai`).
 * **Overview Tab Content (`#cmodal-panel-overview`)**:
@@ -11090,8 +11090,8 @@ Here is how you need to answer each question on this questionnaire:
 ---
 
 ### Checkboxes:
-- ✅ Check **"I acknowledge that I have read through the verification requirements for submission and my application meets all requirements."**
-- ✅ Check **"I understand that if I am requesting restricted scopes, I am required to complete the Cloud App Security Assessment (CASA)..."**
+- [v] Check **"I acknowledge that I have read through the verification requirements for submission and my application meets all requirements."**
+- [v] Check **"I understand that if I am requesting restricted scopes, I am required to complete the Cloud App Security Assessment (CASA)..."**
 
 ---
 
@@ -11126,7 +11126,7 @@ https://www.youtube.com/watch?v=4oQ9lbJFpwA
 ```
 
 ### Cause 3: Unsaved Changes / Stale Scopes Session
-In your previous screen, the restricted scope had a yellow warning triangle (`⚠️ .../auth/gmail.send`) indicating changes were pending before opening the questionnaire.
+In your previous screen, the restricted scope had a yellow warning triangle (` .../auth/gmail.send`) indicating changes were pending before opening the questionnaire.
 
 ---
 
@@ -11164,7 +11164,7 @@ can you do this?
 ```
 
 #### Actions & Tools Executed
-- Tools utilized: `view_file`, `list_dir`, `call_mcp_tool`
+- Tools used: `view_file`, `list_dir`, `call_mcp_tool`
 
 #### Assistant Implementation & Final Response
 
@@ -11180,7 +11180,7 @@ please make sure the design we makei n the stitch is ultra user freidnly in the 
 ```
 
 #### Actions & Tools Executed
-- Tools utilized: `view_file`, `call_mcp_tool`
+- Tools used: `view_file`, `call_mcp_tool`
 
 #### Assistant Implementation & Final Response
 
@@ -11188,7 +11188,7 @@ Every screen, modal, and standalone sub-view inventoried across the **OutreachPi
 
 > **Stitch Project:** `OutreachPilot - Clean & Ultra-Intuitive Design`  
 > **Project ID:** `8577256108563593913`  
-> **Design System:** `assets/bf9fde664c2a48c6a47f0410030ae98c` (*Linear / Stripe / Vercel-inspired calm dark slate aesthetic — zero neon or eye-fatiguing colors, generous spacing, and modern component patterns*).
+> **Design System:** `assets/bf9fde664c2a48c6a47f0410030ae98c` (*Linear / Stripe / Vercel-inspired calm dark slate aesthetic  -  zero neon or eye-fatiguing colors, generous spacing, and modern component patterns*).
 
 ---
 
@@ -11235,11 +11235,11 @@ also give me all 3 moblie tablet and browser views as well
 ```
 
 #### Actions & Tools Executed
-- Tools utilized: `view_file`, `call_mcp_tool`
+- Tools used: `view_file`, `call_mcp_tool`
 
 #### Assistant Implementation & Final Response
 
-All responsive views—**Desktop (Browser)**, **Tablet (iPad)**, and **Mobile (Smartphone)**—have been generated in **Stitch** under the project:
+All responsive views - **Desktop (Browser)**, **Tablet (iPad)**, and **Mobile (Smartphone)** - have been generated in **Stitch** under the project:
 
 > **Stitch Project:** `OutreachPilot - Clean & Ultra-Intuitive Design`  
 > **Project ID:** `8577256108563593913`  
@@ -11250,13 +11250,13 @@ All responsive views—**Desktop (Browser)**, **Tablet (iPad)**, and **Mobile (S
 ### Responsive Breakdown: Browser, Tablet & Mobile Views
 
 ```
-📱 Mobile View (~390px)         📱 Tablet View (~768-1024px)       🖥️ Desktop / Browser View (1280px+)
+📱 Mobile View (~390px)         📱 Tablet View (~768-1024px)       🖥 Desktop / Browser View (1280px+)
 ┌─────────────────────────┐    ┌──┬────────────────────────┐    ┌──────┬────────────────────────────┐
 │ Top Bar: Brand + Avatar │    │  │ Header: Search & Stats │    │      │ Header + Metric Cards Grid │
 ├─────────────────────────┤    │  ├────────────────────────┤    │      ├────────────────────────────┤
 │ Swipeable KPI Reel      │    │64│ 2-Column Responsive    │    │240px │ 3-Column Company Cards     │
-├─────────────────────────┤    │px│ Company Cards Grid     │    │Side- │ Checkbox • Bio • Email Pill│
-│ Single-Column Cards     │    │  │ (Synthetix, Apex, etc.)│    │bar   │ Tech Stack • Dual Actions  │
+├─────────────────────────┤    │px│ Company Cards Grid     │    │Side- │ Checkbox - Bio - Email Pill│
+│ Single-Column Cards     │    │  │ (Synthetix, Apex, etc.)│    │bar   │ Tech Stack - Dual Actions  │
 │ (Full-width touch CTAs) │    │Rail                      │    │      ├────────────────────────────┤
 ├─────────────────────────┤    │  ├────────────────────────┤    │      │ Floating Bulk Action Dock  │
 │ 4-Tab Thumb Nav Bar     │    │  │ Centered Floating Dock │    │      │                            │
@@ -11272,11 +11272,11 @@ All responsive views—**Desktop (Browser)**, **Tablet (iPad)**, and **Mobile (S
   * **Screen ID:** `3a7c78fc94c14173860820c89df3f207`
   * **Layout:** 240px persistent sidebar, 4-card metric strip, single-line search/filter bar, 3-column company cards, centered floating bulk action bar.
   * **Screenshot:** [View Desktop Browser Design](https://lh3.googleusercontent.com/aida/AEtjO1XvW6Kaa4wlEojynHI-f9loMpnBl4vudQc0ysMxWi49Dcg3PpHVKle78Rn0f8cfNXhb3HHp8hx0kkT_HourxOe5cJ06ka44umuj_ywCc6l0Kpg98hstInC6bz8MiK2xdUiLrmYP_02Yt5f5SJ4Vi5GwoB_dQfrQ8XYytnz3ylN2lxXoRcdAYH43Wkh8tisCy9d1VrafJYVvyLcMnCiyShavnqYVZvP8BToYnqPsZfCsBPwF5j8FLypd9O8)
-* **Tablet View (~768px–1024px):**
+* **Tablet View (~768px-1024px):**
   * **Screen ID:** `0bde128de7754744b665a29764249506`
   * **Layout:** Collapsed 64px compact icon rail (`w-16`), 2-column card grid, compact 4-metric strip, tablet-optimized floating dock.
   * **Screenshot:** [View Tablet Design](https://lh3.googleusercontent.com/aida/AEtjO1V7RbExzI5Mdtp59OG_euSl3Yo0K7AUNFkiOH2JqlEmKocD6Tnhn9TTfcdbn_QDgEhdPf1gT-f3WhXfjq5-FlL5K09DN0116jVGDdVCe9LDGAiMle95xzVa0mHg4mnhJ3Fhsxjyq6gi7YBJLjZTyKhIpOXEeTH7RxmrcIfkYy_sb96CoaFh-l45GbY70NQ0Ece3H8wYmaV8BvoOMf4aJbBz_OFOJOh8KATqtp22m5Ba-S99ZF8r8_mjJ98)
-* **Mobile View (~390px–412px):**
+* **Mobile View (~390px-412px):**
   * **Screen ID:** `17b14518a2eb4e2184d5d940c483e234`
   * **Layout:** Sticky top header with OAuth indicator, swipeable horizontal KPI reel, single-column vertical cards, thumb-friendly 4-tab bottom navigation bar (`min 44px` targets).
   * **Screenshot:** [View Mobile Smartphone Design](https://lh3.googleusercontent.com/aida/AEtjO1UBmiqiG008F3-oe0DRmHI_h3jofv3vfAgSUVFPmM7UG_1AJb3xhWElF-4sAiQy82-r0rSx1peKxpEb5e4dXmwa95pHamNgzuU89lIShAhzgzyhfa25aoD1q-m8MpC41aIF0Khr0DXFGFP3Ic5mGWmR6Z2kNdI3ADjeG4QIRQZJA_gKC-hIE1xUutXTK7DN29uFJo2_SiJ0LxerYTh0GQYXFHvZFVYzMqjv5a_9QujSL_ZzfR6qHldtRxg)
@@ -11288,7 +11288,7 @@ All responsive views—**Desktop (Browser)**, **Tablet (iPad)**, and **Mobile (S
   * **Screen ID:** `8914c106b9c546d5a048f59d17f7ba4d`
   * **Layout:** Top pipeline KPIs, active in-memory resume card with iOS-style slider toggle, 65% pitch review queue, 35% user-isolated recent activity feed.
   * **Screenshot:** [View Desktop Browser Design](https://lh3.googleusercontent.com/aida/AEtjO1UzLqc_cFpT30HIUHW6mL4hIaiQw2cGeVW3G2LPZdRkBmawqKbxWxGAhJIJ1ig_Xfw_3vL2azjBW4jcVawegWuqPzJ5UiM-IhB8j5ia5qUKrGVAabxkKNZeDW4x6LWIgkIKJ0RgUsWvF2qapU83_QgtPIwN5qfCAHXwE5bswZSxDxSHvoYi3_EiTEaaSPtvQ0DZoL3X6DvnM5DZ0F-gvzYXotCxG-ST6heF-55dwYxhzUpDWpQejAWo4g)
-* **Mobile View (~390px–412px):**
+* **Mobile View (~390px-412px):**
   * **Screen ID:** `fa07b24ccc024f6bb29c2a804c7bf96a`
   * **Layout:** Mobile resume control card with tactile toggle switch, swipeable metric chips, stacked pitch review cards with full-width primary buttons, collapsible recent activity drawer.
   * **Screenshot:** [View Mobile Smartphone Design](https://lh3.googleusercontent.com/aida/AEtjO1X36VoM7a4h3fSoDKytu9ewC0iSzssGCuSFCdBjxBO_sSVhlCioP2_rEDiT6IRWWCdJhpreTrJMMDJn9snMoEyrDnSEqD3EEZZCiexKkudFlvWqZO2X4HwyYo4VC1NkyKlNPj6l9RJHa80nX5mMlsNygyJX3DSqiuoeEI5Q7vfM8jmrNSJRu94eBSi99vdK-f00krdP53QOnCI0iqKHDbusjy00UxNPBqzhsGXRbOMXzCyPwEZrd6cEgQ)
@@ -11296,13 +11296,13 @@ All responsive views—**Desktop (Browser)**, **Tablet (iPad)**, and **Mobile (S
 ---
 
 #### 3. Core Feature Screens & Modals (Desktop / Browser)
-* **Scout New Leads & Prospecting Engine:** Screen `e5e622aafc634b04a256bffea1049dcb` — [View Design](https://lh3.googleusercontent.com/aida/AEtjO1VyBU719tKsHRVBmPKTCiOEd-BDf94wOVmjgXOJ8tPcAEBnDC3bfe5m0qjuZpoAqmy7JkGNEdigotEZYvWNK7CZYWPklSouVnME6WZ-k9LEoVEbGrLDOs_-U6F0Mz9weImd_Dcm3oUePaNRySpqtHiZ0KhV1pQxjRislrJgmtCSE9Ofi07p1z2i23EW23AJFwYEmJ1Zp7H_1-7WwIyos5VJEeGmF0myoC575okPrlXyITeqrQ0aCdKttM0)
-* **Candidate Profile & Resume Parsing:** Screen `cb8645db36ec45008de30275f28a51a7` — [View Design](https://lh3.googleusercontent.com/aida/AEtjO1UlSO2jZF8omv0cmrDh1ppT_zLkacOHyV36xV3Ujh-ZH9fY8pH-ordmoiTkdrsXfJ4bnxmKoC29pZ5LJ3P17S6Nmf41GilE7pnOav0iUoSMvrqsQXU96XQGrWU8RiOBHydx3Z579-Js1Vkw0SClBz-S-y_qMs2N6pYQfgDjSBFPTcCULqwWmyPEr9_buxXLZKBLt2cjxiB7NgH-An_5559NZOKyWPE2VGVRFBF1ph1rmJDUxv0qp7uiz5U)
-* **Cold Pitch Preview & Editor Modal:** Screen `c39e7b5038cf4422bafbb5ed74689b6c` — [View Design](https://lh3.googleusercontent.com/aida/AEtjO1V4rU4TTZLi14f6-xpaG2VDMuAy9W5QfZ4iUO1BnyPQgeaRKpazu-5VNfxdglYzPKEGcZatcjMwwGlgp5jjgOfLJBdlh9Vsx7d6ekP3xMtU087mEyn23J3ZcxxKUfiHd111tbaa-dPQV864bE25-KebbrbaYAv4GfxrT17FzF_VTEjn6DR90v2n6ctkZn3AHX4tvvZPogmGsDiQrI5Wy67irWHIV5LmJqPqCc5XFcQsweJer_S88kY-Ju8)
-* **Company Intelligence & AI Deep Analysis Modal:** Screen `945078a84abb4f95b2d9de03fc5ed0f7` — [View Design](https://lh3.googleusercontent.com/aida/AEtjO1U2WJgJrnRc6WjGGT777Av2QBVuBynFxhXhCAObRdgH0P0WGZYeYyk4jcOUBYvrSUPEQ-n10GcmAo81W-DhdD0mVaSYeaBE3PUAp97R_zCUb5KgFGFcyB9fPCgoATsNz00JaZFszTyi-8URY7VBmqU07WL5cUDUVd-nU56eC6EjMbrkhFp-PSvpCTz_ZkZAQRyYk40_yKX_XX2QhscGyXV5Kksha_QParU_SJHSL7I8eHYTbnjlLL7eSPM)
-* **Sent Email Inspection & Audit Modal:** Screen `5a8be9ed3dd6491ea62f0f6c575d76c5` — [View Design](https://lh3.googleusercontent.com/aida/AEtjO1Vf0ZvFZ6yzhqvAFV999qMHi7KGHko0tJVmNi6-plRW8XiJ27W0u3CUrrLpe1afQFs8d8c9WQQtmv9kTxcmaHK3fFMFfmGNw0cDDUUsenoH5lTOoYtBqdITBwZXRpMpmoyDP6zAX-zRkATXW4y8X1g77Y413dbHgreU7nMCC21aq0ht8YqwZMhA-B-qjSaAvEfVa1X9zslUCvxn9X4ttkTsgpTY9dSHEh3JbfFcw_d7c4rGo6uJbTB8Qg)
-* **Google OAuth & Authentication Modal:** Screen `49a63ee8c95f410daccdaba3ad0870fc` — [View Design](https://lh3.googleusercontent.com/aida/AEtjO1WA1Q83RuvUkak0qbGXHBXh9jMoIIUSV2Jr8EzIAzvL2xYfd289cnmMNrAOPmzjcnKyTjts81X4n55-R0B0AaSet3ls40kJ1cwm2FSIEPU3YfWtlRHLmg-Fp6pRptWYMOlHhQExXlsxpZKPOEtyjmYjq3p7kCFdndfVpCYW_HjKzqrVHWp2pdW5LCAh36n-1MLs4sknagPMrMQag0igfHapZxDoZxE9FfLzaa7ta6x7bL7rbe_URqSD4Kw)
-* **Privacy Policy & Google API Disclosure (`/privacy`):** Screen `520c5bc1672e403bb03fe52ef9e13883` — [View Design](https://lh3.googleusercontent.com/aida/AEtjO1WBgAktYR7uETRmCXaQ_S8PEsgwmWPqSxHhZJCIxGIhKs5XZpRJc35CQmv-xJ1raD043RFS90kQRSSJtnKm1XxDAHznwgr4vn35GDhoM8VgpijOMRiHkePKhjLnZuAs8m9FfyM09ny_h0CQ2yjbI6jgdA1mQQRAfBs9HvslALw1hKTGa4WP6bKYaHp-h6TORJ7JXVBahHVGAO2Wt4QZzpSWy6L3aFVY0qj3H7ugErmLRU4eUQ44LQeCKQ)
+* **Scout New Leads & Prospecting Engine:** Screen `e5e622aafc634b04a256bffea1049dcb`  -  [View Design](https://lh3.googleusercontent.com/aida/AEtjO1VyBU719tKsHRVBmPKTCiOEd-BDf94wOVmjgXOJ8tPcAEBnDC3bfe5m0qjuZpoAqmy7JkGNEdigotEZYvWNK7CZYWPklSouVnME6WZ-k9LEoVEbGrLDOs_-U6F0Mz9weImd_Dcm3oUePaNRySpqtHiZ0KhV1pQxjRislrJgmtCSE9Ofi07p1z2i23EW23AJFwYEmJ1Zp7H_1-7WwIyos5VJEeGmF0myoC575okPrlXyITeqrQ0aCdKttM0)
+* **Candidate Profile & Resume Parsing:** Screen `cb8645db36ec45008de30275f28a51a7`  -  [View Design](https://lh3.googleusercontent.com/aida/AEtjO1UlSO2jZF8omv0cmrDh1ppT_zLkacOHyV36xV3Ujh-ZH9fY8pH-ordmoiTkdrsXfJ4bnxmKoC29pZ5LJ3P17S6Nmf41GilE7pnOav0iUoSMvrqsQXU96XQGrWU8RiOBHydx3Z579-Js1Vkw0SClBz-S-y_qMs2N6pYQfgDjSBFPTcCULqwWmyPEr9_buxXLZKBLt2cjxiB7NgH-An_5559NZOKyWPE2VGVRFBF1ph1rmJDUxv0qp7uiz5U)
+* **Cold Pitch Preview & Editor Modal:** Screen `c39e7b5038cf4422bafbb5ed74689b6c`  -  [View Design](https://lh3.googleusercontent.com/aida/AEtjO1V4rU4TTZLi14f6-xpaG2VDMuAy9W5QfZ4iUO1BnyPQgeaRKpazu-5VNfxdglYzPKEGcZatcjMwwGlgp5jjgOfLJBdlh9Vsx7d6ekP3xMtU087mEyn23J3ZcxxKUfiHd111tbaa-dPQV864bE25-KebbrbaYAv4GfxrT17FzF_VTEjn6DR90v2n6ctkZn3AHX4tvvZPogmGsDiQrI5Wy67irWHIV5LmJqPqCc5XFcQsweJer_S88kY-Ju8)
+* **Company Intelligence & AI Deep Analysis Modal:** Screen `945078a84abb4f95b2d9de03fc5ed0f7`  -  [View Design](https://lh3.googleusercontent.com/aida/AEtjO1U2WJgJrnRc6WjGGT777Av2QBVuBynFxhXhCAObRdgH0P0WGZYeYyk4jcOUBYvrSUPEQ-n10GcmAo81W-DhdD0mVaSYeaBE3PUAp97R_zCUb5KgFGFcyB9fPCgoATsNz00JaZFszTyi-8URY7VBmqU07WL5cUDUVd-nU56eC6EjMbrkhFp-PSvpCTz_ZkZAQRyYk40_yKX_XX2QhscGyXV5Kksha_QParU_SJHSL7I8eHYTbnjlLL7eSPM)
+* **Sent Email Inspection & Audit Modal:** Screen `5a8be9ed3dd6491ea62f0f6c575d76c5`  -  [View Design](https://lh3.googleusercontent.com/aida/AEtjO1Vf0ZvFZ6yzhqvAFV999qMHi7KGHko0tJVmNi6-plRW8XiJ27W0u3CUrrLpe1afQFs8d8c9WQQtmv9kTxcmaHK3fFMFfmGNw0cDDUUsenoH5lTOoYtBqdITBwZXRpMpmoyDP6zAX-zRkATXW4y8X1g77Y413dbHgreU7nMCC21aq0ht8YqwZMhA-B-qjSaAvEfVa1X9zslUCvxn9X4ttkTsgpTY9dSHEh3JbfFcw_d7c4rGo6uJbTB8Qg)
+* **Google OAuth & Authentication Modal:** Screen `49a63ee8c95f410daccdaba3ad0870fc`  -  [View Design](https://lh3.googleusercontent.com/aida/AEtjO1WA1Q83RuvUkak0qbGXHBXh9jMoIIUSV2Jr8EzIAzvL2xYfd289cnmMNrAOPmzjcnKyTjts81X4n55-R0B0AaSet3ls40kJ1cwm2FSIEPU3YfWtlRHLmg-Fp6pRptWYMOlHhQExXlsxpZKPOEtyjmYjq3p7kCFdndfVpCYW_HjKzqrVHWp2pdW5LCAh36n-1MLs4sknagPMrMQag0igfHapZxDoZxE9FfLzaa7ta6x7bL7rbe_URqSD4Kw)
+* **Privacy Policy & Google API Disclosure (`/privacy`):** Screen `520c5bc1672e403bb03fe52ef9e13883`  -  [View Design](https://lh3.googleusercontent.com/aida/AEtjO1WBgAktYR7uETRmCXaQ_S8PEsgwmWPqSxHhZJCIxGIhKs5XZpRJc35CQmv-xJ1raD043RFS90kQRSSJtnKm1XxDAHznwgr4vn35GDhoM8VgpijOMRiHkePKhjLnZuAs8m9FfyM09ny_h0CQ2yjbI6jgdA1mQQRAfBs9HvslALw1hKTGa4WP6bKYaHp-h6TORJ7JXVBahHVGAO2Wt4QZzpSWy6L3aFVY0qj3H7ugErmLRU4eUQ44LQeCKQ)
 
 *(Per your instruction: No git commit or push has been performed.)*
 
@@ -11361,7 +11361,7 @@ also are we using reusable components?
 ```
 
 #### Actions & Tools Executed
-- Tools utilized: `view_file`, `list_dir`, `read_url_content`, `call_mcp_tool`
+- Tools used: `view_file`, `list_dir`, `read_url_content`, `call_mcp_tool`
 
 #### Assistant Implementation & Final Response
 
@@ -11420,11 +11420,11 @@ are we done with the design?
 ```
 
 #### Actions & Tools Executed
-- Tools utilized: `view_file`
+- Tools used: `view_file`
 
 #### Assistant Implementation & Final Response
 
-**Not quite yet — we are about 65% through!** 
+**Not quite yet  -  we are about 65% through!** 
 
 Here is our current progress against the Stitch designs:
 
@@ -11438,7 +11438,7 @@ Here is our current progress against the Stitch designs:
 3. **KPI Metrics Cards Strip**:
    * Upgraded with top accent gradient stripes, large tabular figures (`tnum`), and quick-filter buttons.
 4. **Lead Scout Section**:
-   * Modernized search card, streamlined inputs, live search terminal, and results header.
+   * Modernized search card, simplified inputs, live search terminal, and results header.
 5. **Directory Controls & Toolbar**:
    * Sleek filter selects, search bar, admin preview switch, and floating bulk action dock.
 
@@ -11480,7 +11480,7 @@ then create an flow design so we can understand the flow and create the batter u
 
 #### Assistant Implementation & Final Response
 
-Everything is completed to align with your Stitch design, and I have created a comprehensive **Flow & Architecture Design** document.
+Everything is completed to align with your Stitch design, and I have created a detailed **Flow & Architecture Design** document.
 
 ---
 
@@ -11493,7 +11493,7 @@ All screens, components, and templates now match the [Stitch Project (8577256108
   * Inter typography with negative tracking on headings and tabular numbers (`tnum`) for KPIs.
   * Soft 12% alpha-wash semantic badges (Emerald for verified emails, Sky for sent outreach, Amber for ratings).
 * **Main Shell & Directory ([index.html](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/templates/index.html))**:
-  * Brand sidebar with streamlined navigation.
+  * Brand sidebar with simplified navigation.
   * Top KPI Stat Cards with glowing gradient accent bars.
   * Google Lead Scout Card, live terminal progress monitor, and results bar.
   * Directory Toolbar with refined filters, search, and floating multi-select bulk action dock.
@@ -11515,7 +11515,7 @@ All screens, components, and templates now match the [Stitch Project (8577256108
 
 ---
 
-### 2. Comprehensive Flow Design Artifact
+### 2. Detailed Flow Design Artifact
 
 I have documented the complete user journey, screen interactions, and Stitch mockup mapping in the artifact:
 👉 **[ux_flow_and_architecture.md](file:///C:/Users/vorar/.gemini/antigravity-ide/brain/535144eb-8643-4672-97c1-a50d8c6f76d5/ux_flow_and_architecture.md)**
@@ -11616,7 +11616,7 @@ also qqwhy we have seprate tab for scout leads didnt we managed that in a button
 ```
 
 #### Actions & Tools Executed
-- Tools utilized: `read_url_content`
+- Tools used: `read_url_content`
 
 #### Assistant Implementation & Final Response
 
@@ -11651,7 +11651,7 @@ Here is what has been resolved:
 
 ### 1. Fixed Mobile Card Stretchy Layout
 * **Single Column on Mobile (`<640px`)**: Changed `static/css/style.css` to enforce a clean 1-column layout (`grid-template-columns: 1fr !important; gap: 1.25rem !important;`) for both `#companies-container` and `#scout-cards-container`.
-  * **Tablets (`640px – 1023px`)**: 2 columns (`repeat(2, minmax(0, 1fr))`).
+  * **Tablets (`640px - 1023px`)**: 2 columns (`repeat(2, minmax(0, 1fr))`).
   * **Desktop (`≥1024px`)**: 3 columns (`repeat(3, minmax(0, 1fr))`).
 * **Comfortable Padding & Typography**: Mobile cards now have comfortable padding (`1.125rem`) and standard fonts so emails, phone numbers, and badges fit naturally without breaking onto multiple lines.
 * **JSON Summary Sanitizer**: Cleaned company summary parsing in [`static/js/app.js`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/static/js/app.js#L1450-L1465) to strip raw JSON strings (such as `{"summary": "..."}`) into human-readable text.
@@ -11722,7 +11722,7 @@ Here is the breakdown of what caused each issue and the fixes applied:
 ---
 
 ### 4. "Increase the width of error dialog / toast"
-* **What it was**: The authentication / error prompt dialog and toasts were set to narrow containers (`max-w-sm` / `max-w-md`), causing text to wrap tightly into 2–3 cramped lines.
+* **What it was**: The authentication / error prompt dialog and toasts were set to narrow containers (`max-w-sm` / `max-w-md`), causing text to wrap tightly into 2-3 cramped lines.
 * **The Fix**:
   * Widened the Login & Auth Required Modal to **`max-w-lg` (512px)** with generous internal padding (`p-6 sm:p-7`).
   * Widened the global notification & error toast container to **`max-w-2xl` (672px)** so alerts breathe easily on screen.
@@ -11745,7 +11745,7 @@ Here is the breakdown of what caused each issue and the fixes applied:
 
 ---
 
-### 7. "In pitches it shows 0 and 14% response — where the fuck did those 14% come from?"
+### 7. "In pitches it shows 0 and 14% response  -  where the fuck did those 14% come from?"
 * **What it was**: The 4th stat card had static mock text (`14% response` and `14% response rate`) hardcoded in the HTML template from early development.
 * **The Fix**: 
   * Replaced the hardcoded static text with dynamic counters connected to actual campaign data in the database.
@@ -11753,7 +11753,7 @@ Here is the breakdown of what caused each issue and the fixes applied:
 
 ---
 
-### 8. "Card companies everything is just black and white and button in blue tone — add highlighting"
+### 8. "Card companies everything is just black and white and button in blue tone  -  add highlighting"
 * **The Fix**: Added vibrant visual accents to each company card:
   * **Dynamic Monogram Badges**: Replaced plain grey blocks with a 6-color rotating palette (Indigo, Emerald, Amber, Sky Blue, Purple, Rose).
   * **Star Ratings & Reviews**: Displayed live Google Maps star ratings and review counts (e.g. `★ 5.0 (157 reviews)`) with a golden amber star.
@@ -11948,7 +11948,7 @@ The 4 skills are installed in the workspace customization directory (`.agents/sk
 Using **StitchMCP**, a new project titled **"OutreachPilot - Taste & Vercel Crafted UI"** was created with our uploaded [`DESIGN.md`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/DESIGN.md) design system tokens.
 
 #### Screen 1: Landing Home Page & Interactive Pitch Studio
-- **Hero & Display Typography**: Large, confident headline (*"Turn Quiet Signals Into Booked Meetings"*) with tight `-0.04em` letter-spacing, live `v2.4 Active` pulse beacon, and Google OAuth CTAs.
+- **Hero & Display Typography**: Large, confident headline (*"Turn Quiet Signals Into Booked Meetings"*) with tight `-0.04em` letter-spacing, live `v2.4 Active` pulse indicator, and Google OAuth CTAs.
 - **The "One Live Thing"**: An interactive Pitch Studio Sandbox embedded in the hero allowing visitors to toggle lead archetypes (`SaaS Founder`, `VP Engineering`, `Head of Growth`), adjust tone dials, and watch real-time synthesized email outreach with verified deliverability badges (`99.4% Deliverable`).
 - **Telemetry Strip**: Fixed-width, zero-CLS metric counters (`84,200+` Companies, `99.2%` Inbox Rate, `3.4x` Reply Multiplier, `0` Spam Traps).
 
@@ -11962,7 +11962,7 @@ Using **StitchMCP**, a new project titled **"OutreachPilot - Taste & Vercel Craf
 
 #### Screen 2: Companies Directory & Intelligence Command Center
 - **High-Density Intelligence Cards**: Obsidian field containers (`#0B0F17` / `#141A28`) with 1px border illumination, verified recruiter contact pills, real scraped tech stack tags (`Fastify`, `ClickHouse`, `pgvector`), and hiring intent badges.
-- **Floating Action Dock**: Pinned bottom-center dock (`12 Selected • Batch Deep Enrich • ⚡ Generate 12 Pitches • Add to Sequence • Export Cleaned Leads`).
+- **Floating Action Dock**: Pinned bottom-center dock (`12 Selected - Batch Deep Enrich -  Generate 12 Pitches - Add to Sequence - Export Cleaned Leads`).
 
 ![Companies Directory Preview](file:///C:/Users/vorar/.gemini/antigravity-ide/brain/535144eb-8643-4672-97c1-a50d8c6f76d5/companies_directory_preview.png)
 *Craft-styled companies intelligence directory with interactive filter bar and floating action dock.*
@@ -11980,7 +11980,7 @@ A dedicated landing page template has been implemented at:
 1. **Interactive Pitch Studio**: Instant client-side state machine toggling between `SaaS Founder`, `VP Engineering`, and `Head of Growth` with live token updates (`{{recent_funding}}`, `{{tech_stack}}`), tone sliders, and simulated 1-click send feedback.
 2. **Rotating Telemetry Ticker**: Tabular number ticker updating every 4.5 seconds with live stream events.
 3. **Keyboard Quick-Jump**: Pressing `⌘ K` or `Ctrl + K` anywhere jumps directly into the workspace search console.
-4. **Playwright Visual Audit**: Audited with `npx @playwright/cli` — 0 runtime errors, 0 layout shifts.
+4. **Playwright Visual Audit**: Audited with `npx @playwright/cli`  -  0 runtime errors, 0 layout shifts.
 
 ---
 
@@ -12037,7 +12037,7 @@ All prefilled inputs and hardcoded defaults have been removed and set to complet
    - Cleared existing user profile records in Neon PostgreSQL DB so page reload doesn't repopulate old saved roles.
 
 4. **Scout Header & Labels ([`templates/index.html`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/templates/index.html#L366) & [`static/js/app.js`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/static/js/app.js#L706)):**
-   - Replaced hardcoded `"IT Companies" in "Surat"` with an unselected state (`—`) until a search query is actively run.
+   - Replaced hardcoded `"IT Companies" in "Surat"` with an unselected state (` - `) until a search query is actively run.
    - Removed hardcoded string fallbacks in live discovery handlers.
 
 5. **Profile Skills & Achievements ([`templates/index.html`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/templates/index.html#L660)):**
@@ -12049,7 +12049,7 @@ Tested via browser inspection on `http://localhost:8000/`:
 - `#input-keyword`: **Blank**
 - `#input-city`: **Blank**
 - `#input-target-role`: **Blank**
-- `#scout-query-label`: **`—`**
+- `#scout-query-label`: **` - `**
 
 ---
 
@@ -12190,29 +12190,29 @@ I analyzed [tanaloom.com](https://tanaloom.com/) to study its design DNA and ada
 
 ### 2. What Was Built on the Landing Page ([`templates/landing.html`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/templates/landing.html))
 
-1. **Chapter 01 · Origin & Signal Heritage**:
-   - Monospace telemetry definition (`telemetry · /təˈlem.ə.tri/ · noun`).
+1. **Chapter 01 / Origin & Signal Heritage**:
+   - Monospace telemetry definition (`telemetry / /təˈlem.ə.tri/ / noun`).
    - 5-stage historical timeline from the 1935 pulsed echo to Shannon's 1948 mathematical noise filter to modern autonomous intelligence.
 
-2. **Chapter 02 · Live Lead Radar Simulator**:
-   - 4 market niche presets (`AI Startups · SF`, `DevTools · Austin`, `Design · London`, `Fintech · NYC`) + custom keyword scan.
-   - Live sweeping radar beam and instant candidate/decision-maker cards with direct *"Draft Pitch →"* handoff.
+2. **Chapter 02 / Live Lead Radar Simulator**:
+   - 4 market niche presets (`AI Startups / SF`, `DevTools / Austin`, `Design / London`, `Fintech / NYC`) + custom keyword scan.
+   - Live sweeping radar beam and instant candidate/decision-maker cards with direct *"Draft Pitch ->"* handoff.
 
-3. **Chapter 03 · The Pitch Studio Sandbox ("The One Live Thing")**:
+3. **Chapter 03 / The Pitch Studio Sandbox ("The One Live Thing")**:
    - Target role toggles (*Backend Architect*, *Full-Stack Lead*, *AI/ML Engineer*).
    - Tone & density dial (*Technical*, *Executive*, *Collaborative*).
    - Live typewriter email preview with syntax tokens (`{{company_name}}`, `{{tech_stack}}`, `{{specific_achievement}}`).
    - Interactive 1-click **Deliverability Audit** (99.8% primary inbox score, SPF/DKIM/DMARC verification).
 
-4. **Chapter 04 · Carrier Wave · Oscilloscope Spectrum**:
+4. **Chapter 04 / Carrier Wave / Oscilloscope Spectrum**:
    - Real-time animated HTML5 2D Canvas oscilloscope rendering amber and emerald harmonic interference waves.
    - Company presets (`Stripe`, `Linear`, `Vercel`, `Neon`) and live custom input that dynamically re-calculates carrier frequency (`142.8 MHz`), signal-to-noise ratio, and tuned architectural pitch angles.
 
-5. **Chapter 05 · Real-Time Outbound ROI & Pipeline Calculator**:
+5. **Chapter 05 / Real-Time Outbound ROI & Pipeline Calculator**:
    - Interactive range sliders for volume, reply rate, and opportunity size.
    - Animated metrics showing warm replies, meetings booked, and projected career pipeline.
 
-6. **Chapter 06 · The 5 Flight Protocols & Care Instructions**:
+6. **Chapter 06 / The 5 Flight Protocols & Care Instructions**:
    - High-conviction engineering rules: *Zero Ghost Echoes*, *Circadian Pacing*, *Resonance Match*, *Fuel Reserves*, and *Peer-to-Peer Tone*.
 
 7. **Full-Page Interactive Physics Canvas & Dynamic Spotlight**:
@@ -12248,7 +12248,7 @@ templates/index.html
 
 
 
-Removed value="IT Companies" → now empty (value="").
+Removed value="IT Companies" -> now empty (value="").
 
 Retained helpful gray placeholder: e.g. IT Companies, Software Agencies.
 
@@ -12262,7 +12262,7 @@ templates/index.html
 
 
 
-Removed value="Surat" → now empty (value="").
+Removed value="Surat" -> now empty (value="").
 
 Retained helpful gray placeholder: e.g. Surat, Austin, London.
 
@@ -12282,7 +12282,7 @@ app.py
 
 
 
-Removed value="Full-Stack Developer" → now empty (value="").
+Removed value="Full-Stack Developer" -> now empty (value="").
 
 Updated backend user provisioning defaults from "Full-Stack Engineer" to "".
 
@@ -12304,7 +12304,7 @@ static/js/app.js
 
 
 
-Replaced hardcoded "IT Companies" in "Surat" with an unselected state (—) until a search query is actively run.
+Replaced hardcoded "IT Companies" in "Surat" with an unselected state ( - ) until a search query is actively run.
 
 Removed hardcoded string fallbacks in live discovery handlers.
 
@@ -12338,7 +12338,7 @@ in this  did we added required fieilds as well if those ar eblank and i click bu
 
 #### Assistant Implementation & Final Response
 
-Initially, **no** — when the hardcoded defaults and prefilled values were cleared, explicit required validation was not hooked up yet, which meant clicking the buttons would attempt to proceed with empty parameters.
+Initially, **no**  -  when the hardcoded defaults and prefilled values were cleared, explicit required validation was not hooked up yet, which meant clicking the buttons would attempt to proceed with empty parameters.
 
 **Required field enforcement with tactile warnings, visual cues, and focus handling is now fully implemented across the application.**
 
@@ -12438,13 +12438,13 @@ The reason it was showing that user even with `DEV_MODE=false` was due to **two 
 ### What Has Been Fixed
 
 1. **Added True Conditional Rendering in [`templates/index.html`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/templates/index.html)**:
-   * **State 1 — Logged In (`#auth-box-logged-in`)**:
+   * **State 1  -  Logged In (`#auth-box-logged-in`)**:
      * Dynamically computes initials from the actual user's name/email.
      * Displays the actual authenticated email.
      * Shows green dot + `"Google Connected"` and the Sign Out button.
-   * **State 2 — Unauthenticated / Guest Mode (`#auth-box-logged-out`)**:
+   * **State 2  -  Unauthenticated / Guest Mode (`#auth-box-logged-out`)**:
      * Shows a neutral silhouette avatar.
-     * Displays **"Guest Mode"** and *"Sign in to unlock AI"*.
+     * Displays **"Guest Mode"** and *"Sign in to enable AI"*.
      * Displays a golden **"Sign In with Google"** button directing to `/auth/google/login`.
 
 2. **Backend Context Clean-Up in [`app.py`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/app.py)**:
@@ -12552,22 +12552,22 @@ Every interactive element is positioned with predictable muscle memory:
 ├────────────┬───────────────────────────────────────────────────────────────────────────────────────────┤
 │            │  COMPANIES DIRECTORY (349 Verified)                                                       │
 │ 1. Nav Rail│  ┌─────────────────┬─────────────────┬─────────────────┬─────────────────┐               │
-│ • Directory│  │ TOTAL PROSPECTS │ ENRICHED EMAILS │ AI RESEARCHED   │ PITCHED         │ [Live Telemetry│
-│ • Scout    │  │ 349 accounts    │ 173 / 349       │ 349 verified    │ 0 in flight     │  No Fake +12%] │
-│ • Outreach │  └─────────────────┴─────────────────┴─────────────────┴─────────────────┘               │
-│ • Profile  │  [All (349)] [Uncontacted (349)] [Researched (349)] [Pitched (0)] [Excluded (12)]         │
+│ - Directory│  │ TOTAL PROSPECTS │ ENRICHED EMAILS │ AI RESEARCHED   │ PITCHED         │ [Live Telemetry│
+│ - Scout    │  │ 349 accounts    │ 173 / 349       │ 349 verified    │ 0 in flight     │  No Fake +12%] │
+│ - Outreach │  └─────────────────┴─────────────────┴─────────────────┴─────────────────┘               │
+│ - Profile  │  [All (349)] [Uncontacted (349)] [Researched (349)] [Pitched (0)] [Excluded (12)]         │
 │            │  [Search keywords...]  [Tech Stack ▾]  [HQ Location ▾]               [Display: Grid/Table]│
 │            │                                                                                           │
 │            │  ┌───────────────────────────────┐ ┌───────────────────────────────┐                      │
 │            │  │ [ ] Codeline Infotech [VERIF] │ │ [ ] Flyerdigi Solutions[VERIF]│                      │
-│            │  │ Zurich, Switzerland • 85 emp  │ │ Munich, Germany • 120 emp     │                      │
+│            │  │ Zurich, Switzerland - 85 emp  │ │ Munich, Germany - 120 emp     │                      │
 │            │  │ [Python] [FastAPI] [AWS]      │ │ [React] [Node.js] [Docker]    │                      │
-│            │  │ ⚡ Scaled ML pipeline; hiring │ │ ⚡ Migrating ERP to microserv │                      │
+│            │  │  Scaled ML pipeline; hiring │ │  Migrating ERP to microserv │                      │
 │            │  │ [View Intel]    [Draft Pitch] │ │ [View Intel]    [Draft Pitch] │                      │
 │            │  └───────────────────────────────┘ └───────────────────────────────┘                      │
 │            │                                                                                           │
 │ [Settings] │             ┌────────────────────────────────────────────────────────┐                    │
-│ [Profile]  │             │  ● 3 Selected   [⚡ Enrich]   [✨ Generate Pitches]  [✕]│ [Floating Dock]   │
+│ [Profile]  │             │  ● 3 Selected   [ Enrich]   [ Generate Pitches]  [✕]│ [Floating Dock]   │
 └────────────┴─────────────┴────────────────────────────────────────────────────────┴────────────────────┘
 ```
 
@@ -12628,7 +12628,7 @@ no this is still basic i want something out of the box
 ```
 
 #### Actions & Tools Executed
-- Tools utilized: `view_file`
+- Tools used: `view_file`
 
 #### Assistant Implementation & Final Response
 
@@ -12654,24 +12654,24 @@ Standard dashboards make you click a card, open a modal, close it, click another
 │ STAGE 1: LIVE TARGET STREAM (38% Width)  │ STAGE 2: LIVE DOSSIER & DISPATCH STUDIO (62% Width)                   │
 │                                          │                                                                       │
 │ Filter: [All] [Uncontacted] [Researched] │ ┌── TARGET DOSSIER: CODELLINE INFOTECH (Zurich, CH) ────────────────┐ │
-│ ──────────────────────────────────────── │ │ Domain: codeline.io  •  Employees: 85  •  ICP Fit: 98% [VERIFIED] │ │
+│ ──────────────────────────────────────── │ │ Domain: codeline.io  -  Employees: 85  -  ICP Fit: 98% [VERIFIED] │ │
 │                                          │ │ Tech Stack: [Python] [FastAPI] [Next.js] [AWS]                    │ │
-│ ► Codeline Infotech         [98% ICP]    │ │ Live Signal: Recently scaled ML team; hiring DACH backend lead.   │ │
-│   Zurich, CH • 85 emp • Python/AWS       │ ├── VERIFIED DECISION-MAKERS ───────────────────────────────────────┤ │
-│   ⚡ ML pipeline expansion                │ │ [●] Marc Keller — VP of Engineering (marc@codeline.io) [VALID MX] │ │
+│ - Codeline Infotech         [98% ICP]    │ │ Live Signal: Recently scaled ML team; hiring DACH backend lead.   │ │
+│   Zurich, CH - 85 emp - Python/AWS       │ ├── VERIFIED DECISION-MAKERS ───────────────────────────────────────┤ │
+│    ML pipeline expansion                │ │ [●] Marc Keller  -  VP of Engineering (marc@codeline.io) [VALID MX] │ │
 │                                          │ ├── AUTONOMOUS COLD PITCH COMPOSER ─────────────────────────────────┤ │
 │   Flyerdigi Solutions       [94% ICP]    │ │ Tone Dial: [Tactical] [Conversational] [Direct]                   │ │
-│   Munich, DE • 120 emp • React/Docker    │ │ Subject: Engineering collaboration around Python/FastAPI ML stack │ │
-│   ⚡ ERP microservice migration          │ │                                                                   │ │
+│   Munich, DE - 120 emp - React/Docker    │ │ Subject: Engineering collaboration around Python/FastAPI ML stack │ │
+│    ERP microservice migration          │ │                                                                   │ │
 │                                          │ │ Hi Marc, noticed your team in Zurich is scaling ML pipelines with │ │
 │   Synthex Dynamics          [91% ICP]    │ │ FastAPI. Given your recent AWS infrastructure expansion...        │ │
-│   Basel, CH • 210 emp • Go/GraphQL       │ │                                                                   │ │
-│   ⚡ Series B DaCH expansion             │ ├── DISPATCH ENGINE ────────────────────────────────────────────────┤ │
+│   Basel, CH - 210 emp - Go/GraphQL       │ │                                                                   │ │
+│    Series B DaCH expansion             │ ├── DISPATCH ENGINE ────────────────────────────────────────────────┤ │
 │                                          │ │ Sender: connected_user@gmail.com [Active OAuth]                   │ │
-│   Aethelgard Systems        [88% ICP]    │ │ [⚡ Re-Generate Pitch]          [🚀 Send via Gmail Instantly]     │ │
-│   Stockholm, SE • 45 emp • Rust/Kafka    │ └───────────────────────────────────────────────────────────────────┘ │
+│   Aethelgard Systems        [88% ICP]    │ │ [ Re-Generate Pitch]          [ Send via Gmail Instantly]     │ │
+│   Stockholm, SE - 45 emp - Rust/Kafka    │ └───────────────────────────────────────────────────────────────────┘ │
 ├──────────────────────────────────────────┴───────────────────────────────────────────────────────────────────────┤
-│ BOTTOM TELEMETRY DOCK: [3 Selected] • [Batch Enrich] • [Batch Sequence] • [Export CSV] • Radar Velocity: 8.4/s   │
+│ BOTTOM TELEMETRY DOCK: [3 Selected] - [Batch Enrich] - [Batch Sequence] - [Export CSV] - Radar Velocity: 8.4/s   │
 └──────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -12689,18 +12689,18 @@ Instead of standard software cards, the interface is treated as a **physical tac
 
 ```
 ┌──────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
-│ OUTREACHPILOT · STUDIO EDITION                                                Surat / Global · Lead Loom v2.4    │
+│ OUTREACHPILOT / STUDIO EDITION                                                Surat / Global / Lead Loom v2.4    │
 │ "Warp the leads. Weave the outreach."                                                                            │
 ├──────────────────────────────────────────────────────────────────────────────────────────────────────────────────┤
 │ THE CONTROL HEAD: Physical Dial Matrix                                                                           │
-│ [Industry / Target]       [Location / Geo]      [Target Role]          [ICP Strictness]       [⚡ Run Scout]     │
+│ [Industry / Target]       [Location / Geo]      [Target Role]          [ICP Strictness]       [ Run Scout]     │
 │ [ Software Agencies  ]    [ DACH & Nordics ]    [ Full-Stack Lead ]    [ High (90%+)  ]       [ Mechanical Key ] │
 ├──────────────────────────────────────────────────────┬───────────────────────────────────────────────────────────┤
 │ BENTO CELL 1: THE ACTIVE LOOM (Interactive Worktable)│ BENTO CELL 2: VERIFIED YIELD TELEMETRY                    │
 │ Real-time visual canvas showing how signals weave    │ ┌──────────────────────┐ ┌──────────────────────────────┐ │
 │ into personalized pitches:                           │ │ 349 ACCOUNTS         │ │ 173 VALID MAILBOXES          │ │
 │                                                      │ │ Total scouted targets│ │ Tier 1 deliverability lock   │ │
-│ Company Signal  ──►  Tech Stack Match ──► Cold Pitch │ └──────────────────────┘ └──────────────────────────────┘ │
+│ Company Signal  ──-  Tech Stack Match ──- Cold Pitch │ └──────────────────────┘ └──────────────────────────────┘ │
 │ [Codeline Info]      [FastAPI + AWS]      [Generated]│ ┌──────────────────────┐ ┌──────────────────────────────┐ │
 │                                                      │ │ 0 BOUNCES            │ │ 100% AUDITED                 │ │
 │ [Live Interactive Playground: Adjust Sliders & Watch │ │ Zero domain penalty  │ │ Deep intelligence complete   │ │
@@ -12767,7 +12767,7 @@ Here are both out-of-the-box templates generated in Google Stitch for the home p
 *Inspired by Tanaloom's textile weaving metaphor, Teenage Engineering physical hardware, and Swiss modernist typography.*
 
 * **Workflow**: **Physical tactile studio desk ("Warp the leads. Weave the outreach.").**
-  - **Top Control Head**: Physical hardware-style parameter cassette slots (`[Industry]`, `[Location]`, `[Target Role]`, `[ICP Strictness Dial]`) and a mechanical key `[⚡ WEAVE NEW TARGETS]`.
+  - **Top Control Head**: Physical hardware-style parameter cassette slots (`[Industry]`, `[Location]`, `[Target Role]`, `[ICP Strictness Dial]`) and a mechanical key `[ WEAVE NEW TARGETS]`.
   - **The Active Loom (Center Stage)**: An interactive visual worktable showing how live signals weave into tailored cold pitches in real-time with an interactive personalization tension slider.
   - **Bento Telemetry**: Tactile tiles for scouted yield, deliverability seals, and zero-bounce reputation shields.
   - **Samples Archive**: Asymmetric mosaic for discovered specimens and bulk batch sequencing.
@@ -12803,14 +12803,14 @@ create complete desing for the concept B
 
 Here is the complete multi-device design suite generated in Google Stitch for **Concept B: The Artisanal Loom & Bento Workshop**.
 
-This suite covers **Desktop, Tablet, Mobile, and the Expanded Dossier Modal**, all unified under the same calm, tactile design system (Deep Warm Ink Slate, Unbleached Linen / Warm Ecru, and Mineral Moss Green — zero eye strain, zero neon blue, zero harsh orange).
+This suite covers **Desktop, Tablet, Mobile, and the Expanded Dossier Modal**, all unified under the same calm, tactile design system (Deep Warm Ink Slate, Unbleached Linen / Warm Ecru, and Mineral Moss Green  -  zero eye strain, zero neon blue, zero harsh orange).
 
 ---
 
 ### 1. Desktop Experience (1440px+ Canvas)
 * **The Master Workshop**: 
-  - **Top Parameter Cassette Head**: Milled hardware slots for Target Industry, Territory / Region, Role, and ICP Strictness, paired with the tactile mechanical key `[ ⚡ WEAVE NEW TARGETS ]`.
-  - **The Active Loom (Center Stage)**: An interactive visual worktable showing the real-time pipeline: `Signal Input (Codeline)` ──► `Stack Synthesis (FastAPI + AWS)` ──► `Personalized Cold Pitch`, featuring a 3-way tactile tension dial (`[DIRECT]`, `[CONTEXTUAL]`, `[DEEP DOSSIER]`).
+  - **Top Parameter Cassette Head**: Milled hardware slots for Target Industry, Territory / Region, Role, and ICP Strictness, paired with the tactile mechanical key `[  WEAVE NEW TARGETS ]`.
+  - **The Active Loom (Center Stage)**: An interactive visual worktable showing the real-time pipeline: `Signal Input (Codeline)` ──- `Stack Synthesis (FastAPI + AWS)` ──- `Personalized Cold Pitch`, featuring a 3-way tactile tension dial (`[DIRECT]`, `[CONTEXTUAL]`, `[DEEP DOSSIER]`).
   - **Yield & Proof Telemetry**: 4 tactile bento tiles displaying live counts, Tier 1 mailbox lock, and domain reputation shields.
   - **Discovered Swatches Archive**: Asymmetric specimen cards with quick `[VIEW DOSSIER]` and `[WEAVE PITCH]` triggers.
   - **Floating Transport Bar**: Fixed bottom hardware dock for batch weaving and sequence dispatch.
@@ -12819,7 +12819,7 @@ This suite covers **Desktop, Tablet, Mobile, and the Expanded Dossier Modal**, a
 
 ---
 
-### 2. Tablet Experience (768px – 1024px iPad Pro / Android Tablet)
+### 2. Tablet Experience (768px - 1024px iPad Pro / Android Tablet)
 * **Touch-Optimized Precision**:
   - The Parameter Cassette reflows into a 2×2 touch-friendly hardware grid with knurled rotary indicators.
   - The Active Weave Worktable remains front-and-center, with large touch targets for the tension switcher and direct dispatch shuttle.
@@ -12830,10 +12830,10 @@ This suite covers **Desktop, Tablet, Mobile, and the Expanded Dossier Modal**, a
 
 ---
 
-### 3. Mobile Pocket Experience (390px – 430px Flagship Phone)
+### 3. Mobile Pocket Experience (390px - 430px Flagship Phone)
 * **Pocket Operator Hardware Layout** (*Teenage Engineering style*):
   - Compact masthead with live UTC studio clock and active mineral moss LED indicator.
-  - Single-column parameter cassette with full-width tactile push key `[ ⚡ WEAVE NEW TARGETS ]`.
+  - Single-column parameter cassette with full-width tactile push key `[  WEAVE NEW TARGETS ]`.
   - Pocket Active Loom worktable with typewriter-styled pitch preview and direct `[DISPATCH SHUTTLE VIA GMAIL]` trigger.
   - 2×2 compact metric grid for scouted targets and verified mailbox yields.
   - High-density mobile specimen feed.
@@ -12845,8 +12845,8 @@ This suite covers **Desktop, Tablet, Mobile, and the Expanded Dossier Modal**, a
 
 ### 4. Expanded Specimen Dossier & Cold Pitch Modal
 * **Deep Inspection Bay (Triggered when clicking `[VIEW DOSSIER]`)**:
-  - **Left Bay (45%)**: Complete verified company intelligence — Glassdoor ratings, founding year, Series A ownership, detected hiring velocity (`+24% MoM`), 7-component tech stack architecture, and target decision-maker cassette (**Marc Keller, VP of Eng**) with verified email and delivery seal (`TIER 1 VALID MX • 0% BOUNCE RISK • SPF/DKIM PASS`).
-  - **Right Bay (55%)**: Dedicated Cold Pitch Studio with tone switcher (`Tactical`, `Conversational`, `Direct Value`), subject line vector input, monospace typewriter pitch preview (118 tokens, 38s read time, 99.4% in-box score), sender route with Google OAuth verification, and solid ecru action button `[ 🚀 DISPATCH VIA GMAIL INSTANTLY ]`.
+  - **Left Bay (45%)**: Complete verified company intelligence  -  Glassdoor ratings, founding year, Series A ownership, detected hiring velocity (`+24% MoM`), 7-component tech stack architecture, and target decision-maker cassette (**Marc Keller, VP of Eng**) with verified email and delivery seal (`TIER 1 VALID MX - 0% BOUNCE RISK - SPF/DKIM PASS`).
+  - **Right Bay (55%)**: Dedicated Cold Pitch Studio with tone switcher (`Tactical`, `Conversational`, `Direct Value`), subject line vector input, monospace typewriter pitch preview (118 tokens, 38s read time, 99.4% in-box score), sender route with Google OAuth verification, and solid ecru action button `[  DISPATCH VIA GMAIL INSTANTLY ]`.
 
 ![Concept B - Dossier Modal](file:///C:/Users/vorar/.gemini/antigravity-ide/brain/535144eb-8643-4672-97c1-a50d8c6f76d5/concept_b_dossier_modal.png)
 
@@ -12868,7 +12868,7 @@ i hope it only contains those functionality that my product has
 ```
 
 #### Actions & Tools Executed
-- Tools utilized: `view_file`, `list_dir`, `grep_search`
+- Tools used: `view_file`, `list_dir`, `grep_search`
 
 #### Assistant Implementation & Final Response
 
@@ -12885,7 +12885,7 @@ Here is the exact feature-by-feature proof and mapping of how every piece of the
 | UI Component in New Design | Real Backend Endpoint | Underlying File / Service | What It Actually Does |
 | :--- | :--- | :--- | :--- |
 | **Top Parameter Cassette** (Industry & City inputs, Pages, Country) | `POST /api/scrape` | [`scraper_engine.py`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/scraper_engine.py)<br>[`app.py:L339`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/app.py#L339) | Executes your Google Maps headless scraper to discover genuine B2B companies. |
-| **`[ ⚡ Start Lead Scout ]` Key** | `POST /api/scrape`<br>`GET /api/progress` | [`app.py:L430`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/app.py#L430) | Triggers the live scraping task and streams live counts into the terminal monitor. |
+| **`[  Start Lead Scout ]` Key** | `POST /api/scrape`<br>`GET /api/progress` | [`app.py:L430`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/app.py#L430) | Triggers the live scraping task and streams live counts into the terminal monitor. |
 | **Telemetry Metric Strip** (Prospects, Enriched, Researched, Pitched) | `GET /api/companies` | [`db.py:Company`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/db.py#L22)<br>[`app.py:L488`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/app.py#L488) | Queries real database counts for verified prospects, extracted emails, AI-researched signals, and sent pitches (with fake `+12%` permanently removed). |
 | **Segmented Status Bar** (`All`, `Uncontacted`, `Researched`, `Pitched`, `Excluded`) | `GET /api/companies?status=...` | [`app.py:L510`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/app.py#L510) | Filters the local directory by company outreach status without reloading the page. |
 | **Tech Stack & Keyword Dropdowns** | Client-side filter | [`static/js/app.js`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/static/js/app.js) | Dynamically filters discovered companies by detected technologies (Python, React, AWS, Docker, etc.). |
@@ -12893,7 +12893,7 @@ Here is the exact feature-by-feature proof and mapping of how every piece of the
 | **`[View Dossier]` Button** | `GET /api/companies` modal view | [`app.py:L540`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/app.py#L540) | Opens the deep inspection bay showing full company intelligence, verified recruiter contact, and LinkedIn/website links. |
 | **`[Draft Cold Pitch]` Button** | `POST /api/pitch/generate` | [`ai_agent.py:L120`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/ai_agent.py#L120)<br>[`app.py:L1015`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/app.py#L1015) | Calls your Gemini/Claude AI agent to synthesize the company's signals and generate a tailored cold outreach pitch. |
 | **Tone Dial** (`Tactical`, `Conversational`, `Direct`) | `target_role` & prompt modulation | [`ai_agent.py:L145`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/ai_agent.py#L145) | Passes selected tone constraints to your AI prompt to adapt the email style. |
-| **`[ 🚀 Send via Gmail ]` Button** | `POST /api/pitch/{id}/send-direct` | [`outreach.py:L55`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/outreach.py#L55)<br>[`app.py:L1136`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/app.py#L1136) | Dispatches the personalized pitch directly from your connected Google account using Gmail API OAuth. |
+| **`[  Send via Gmail ]` Button** | `POST /api/pitch/{id}/send-direct` | [`outreach.py:L55`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/outreach.py#L55)<br>[`app.py:L1136`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/app.py#L1136) | Dispatches the personalized pitch directly from your connected Google account using Gmail API OAuth. |
 | **Gmail Web & Mailto Fallbacks** | `generate_gmail_web_link()` | [`outreach.py:L53`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/outreach.py#L53) | One-click fallback links if OAuth is offline. |
 | **Floating Batch Dock** (`Enrich`, `Pitch`, `Export CSV`, `Exclude`) | `POST /api/companies/bulk-enrich`<br>`POST /api/pitch/bulk-send`<br>`POST /api/companies/bulk-invalidate` | [`app.py:L755`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/app.py#L755)<br>[`app.py:L856`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/app.py#L856)<br>[`app.py:L1256`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/app.py#L1256) | Executes batch actions on all checked companies: bulk email enrichment, bulk AI pitch generation, CSV download, and bulk exclusion. |
 | **Candidate Profile & Resume Tab** | `POST /api/resume/upload`<br>`GET /api/resume/profile` | [`ai_agent.py:L36`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/ai_agent.py#L36)<br>[`app.py:L908`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/app.py#L908) | Uploads candidate PDF resume, extracts skills & experience, and uses them to ground all AI pitches. |
@@ -13005,7 +13005,7 @@ The landing page in [templates/landing.html](file:///c:/Users/vorar/OneDrive/Des
 
 - **Hardware & Print Typography**: Space Grotesk display headers, DM Sans body text, and JetBrains Mono architectural specifications.
 - **Eye-Restful Color Palette**: Deep warm ink slate (`#111317`, `#16181D`), bone ecru typography (`#EFECE6`), mineral moss verified indicators (`#86B29B`), and architectural bronze (`#A48464`). Strictly zero eye-straining neons.
-- **"The One Live Thing" — Interactive Specimen Inspector**:
+- **"The One Live Thing"  -  Interactive Specimen Inspector**:
   - Live sandbox directly below the hero section.
   - Visitors can toggle between authentic companies from the database (*CodeLine Infotech*, *Sensussoft*, *SolGuruz*).
   - Live tone switching (*Architectural Focus*, *Executive Value*, *Direct Peer*) dynamically synthesizes custom pitches with real-time copy functionality and deliverability metrics.
@@ -13102,8 +13102,8 @@ All requested changes have been implemented, tested, and visually verified in th
 ---
 
 ### Verification & Lint Validation
-- **JavaScript Lint**: `node --check static/js/app.js` — **Passed (0 errors)**.
-- **Python Lint**: `python -m py_compile app.py cloud_worker.py scraper_engine.py` — **Passed (0 errors)**.
+- **JavaScript Lint**: `node --check static/js/app.js`  -  **Passed (0 errors)**.
+- **Python Lint**: `python -m py_compile app.py cloud_worker.py scraper_engine.py`  -  **Passed (0 errors)**.
 - **Visual Validation**: Verified via browser subagent screenshots on both `http://localhost:8000/` and `http://localhost:8000/app`.
 
 ---
@@ -13147,7 +13147,7 @@ Here is a breakdown of what was transformed:
    - **Verified Recruiter Intelligence**: Distinctive highlight for `@ VERIFIED DIRECT EMAIL` (in soft mineral moss `#86B29B`) vs. `@ DOMAIN FALLBACK`.
    - **1-Click Clipboard Copy**: An integrated copy button next to recipient emails with instant checkmark feedback.
    - **Detected Tech Stack & Star Ratings**: Displayed directly on each card (e.g. `Next.js`, `Python`, `AWS`, `Tally`) alongside Google ratings (`★ 5.0 (168)`).
-   - **Calm Tactile Action Buttons**: Replaced the harsh stark-white button wall with `.btn-card-pitch`—a calm dark resting state with subtle border that illuminates on hover, accompanied by a quick **`View Intel`** company inspection button.
+   - **Calm Tactile Action Buttons**: Replaced the harsh stark-white button wall with `.btn-card-pitch` - a calm dark resting state with subtle border that illuminates on hover, accompanied by a quick **`View Intel`** company inspection button.
 
 4. **Multi-Dimensional Filter & View Toolbar**
    - **Status Tabs**: Fast switching across `All (382)`, `Direct Emails (194)`, `Ready to Pitch (382)`, and `Sent (0)`.
@@ -13158,8 +13158,8 @@ Here is a breakdown of what was transformed:
 ---
 
 ### Files Updated & Verified
-- [`templates/index.html`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/templates/index.html) — Redesigned `#section-outreach` workbench header, full-width grid container, toolbar, and the slide-over `#outreach-activity-drawer`.
-- [`static/js/app.js`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/static/js/app.js) — Upgraded `renderPitchesList()` with monogram generation, tech stack chips, email copy handlers, dynamic filter select population, and drawer controls.
+- [`templates/index.html`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/templates/index.html)  -  Redesigned `#section-outreach` workbench header, full-width grid container, toolbar, and the slide-over `#outreach-activity-drawer`.
+- [`static/js/app.js`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/static/js/app.js)  -  Upgraded `renderPitchesList()` with monogram generation, tech stack chips, email copy handlers, dynamic filter select population, and drawer controls.
 
 *All syntax and lint checks verified clean (`python -m py_compile` and `node --check`).*
 
@@ -13208,8 +13208,8 @@ I have made the updates as requested:
 ---
 
 ### Files Modified & Verified
-- [`templates/index.html`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/templates/index.html) — Removed eyebrow badges, removed redundant smaller status pills, expanded search bars.
-- [`static/js/app.js`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/static/js/app.js) — Updated metric card active ring states, tech stack normalization, and filter handlers.
+- [`templates/index.html`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/templates/index.html)  -  Removed eyebrow badges, removed redundant smaller status pills, expanded search bars.
+- [`static/js/app.js`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/static/js/app.js)  -  Updated metric card active ring states, tech stack normalization, and filter handlers.
 
 *Both syntax and lint checks verified clean (`python -m py_compile` & `node --check`).*
 
@@ -13268,16 +13268,16 @@ Here is why:
 
 ### 1. Authorized JavaScript Origins
 Google only checks the **scheme + domain + port**, never the page paths:
-- ✅ `http://localhost:8000`
-- ✅ `http://127.0.0.1:8000`
+- [v] `http://localhost:8000`
+- [v] `http://127.0.0.1:8000`
 *(Path changes like `/app` or `/landing` do not affect origins).*
 
 ---
 
 ### 2. Authorized Redirect URIs
 Google only validates the exact endpoint where it returns the authorization code:
-- ✅ `http://localhost:8000/auth/google/callback`
-- ✅ `http://127.0.0.1:8000/auth/google/callback`
+- [v] `http://localhost:8000/auth/google/callback`
+- [v] `http://127.0.0.1:8000/auth/google/callback`
 
 Because our callback route in [`app.py`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/app.py#L1419) remains **`/auth/google/callback`**, Google's check succeeds without changes. 
 
@@ -13292,7 +13292,7 @@ Once Google finishes and sends the code to `/auth/google/callback`, your backend
 | **Authorized JavaScript origins** | `http://localhost:8000` *(and `http://127.0.0.1:8000`)* |
 | **Authorized redirect URIs** | `http://localhost:8000/auth/google/callback` *(and `http://127.0.0.1:8000/auth/google/callback`)* |
 
-Everything is already configured to work seamlessly.
+Everything is already configured to work smoothly.
 
 ---
 
@@ -13339,10 +13339,10 @@ All three issues have been resolved, styled, and verified directly in the browse
 
 ---
 
-### 3. Icon-Only Dark / Light Mode Switcher (Sun ☀️ / Moon 🌙)
+### 3. Icon-Only Dark / Light Mode Switcher (Sun ☀ / Moon 🌙)
 - **Feature**:
   - Added an icon-only theme toggle button in the sidebar header (`#btn-theme-toggle`) and mobile bar (`#btn-theme-toggle-mobile`) in [templates/index.html](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/templates/index.html#L138).
-  - **Zero text labels**: strictly displays **Sun** (`light_mode` ☀️) in dark mode to switch to light, and **Moon** (`dark_mode` 🌙) in light mode to switch to dark.
+  - **Zero text labels**: strictly displays **Sun** (`light_mode` ☀) in dark mode to switch to light, and **Moon** (`dark_mode` 🌙) in light mode to switch to dark.
   - Added theme switching logic in [static/js/app.js](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/static/js/app.js#L3750) with persistence in `localStorage('pilot_theme')`.
   - Added instant `<head>` initialization script in [index.html:L5-18](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/templates/index.html#L5-L18) preventing any flash of unstyled theme on page reload.
   - Defined full light theme palette in [style.css:L118-180](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/static/css/style.css#L118-L180) featuring warm alabaster canvas (`#F7F6F2`, `#FFFFFF`), deep ink typography (`#14161A`, `#1F2228`), and refined mineral accents.
@@ -13378,7 +13378,7 @@ In standard web standards, the portion after the `#` (`#specimen-lab`) is an **H
    </section>
    ```
 2. **Anchor Links**: In the top navigation bar and hero call-to-action buttons:
-   - Header link: `<a href="#specimen-lab">01 · Specimen Lab</a>`
+   - Header link: `<a href="#specimen-lab">01 / Specimen Lab</a>`
    - Hero button: `<a href="#specimen-lab">Inspect Live Specimen</a>`
 3. **Browser Behavior**: When you click those buttons or open that URL directly, the browser automatically scrolls down to that exact section and appends `#specimen-lab` to the address bar. This is useful because:
    - Users can share or bookmark a direct link straight to the live interactive demo.
@@ -13386,7 +13386,7 @@ In standard web standards, the portion after the `#` (`#specimen-lab`) is an **H
 
 ---
 
-### 2. Comprehensive Changes Made to `/privacy`, `/terms`, and `/landing`
+### 2. Detailed Changes Made to `/privacy`, `/terms`, and `/landing`
 
 All three pages have been redesigned to match the **Artisanal Bento Workshop** design language of the main workspace ([`templates/index.html`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/templates/index.html)):
 
@@ -13453,7 +13453,7 @@ In [`static/js/app.js`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/static
    - **Monograms**: Replaced hardcoded hexes with semantic tokens (`bg-surface-container-high text-on-surface`, `bg-secondary/15 text-secondary`, `bg-tertiary/15 text-tertiary`).
 
 2. **Scout Lead Cards** ([`static/js/app.js:L771-858`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/static/js/app.js#L771-L858)):
-   - Applied the same semantic theme tokens to the Scout Lead cards so they match seamlessly.
+   - Applied the same semantic theme tokens to the Scout Lead cards so they match smoothly.
 
 3. **Tactile Buttons & Pitch Keys** ([`static/css/style.css:L276-310`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/static/css/style.css#L276-L310)):
    - Updated `.btn-card-pitch` and `.btn-tactile-slate` to use `var(--bg-elevated)` and `var(--text-bright)` instead of hardcoded white hover text or dark semi-transparent backgrounds.
@@ -13495,7 +13495,7 @@ The filter bar stretching and horizontal scrolling issue has been resolved:
    - Locked the city dropdowns (`#filter-city-select`, `#outreach-city-select`) to `max-width: 140px !important; width: 140px !important;`.
 
 2. **Option Text Clipping in JavaScript** ([`static/js/app.js:L1391-1445`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/static/js/app.js#L1391-L1445)):
-   - When generating dropdown items, strings exceeding 18 characters are cleanly truncated with `…` (e.g. `Artificial Intell… (12)`), while the full name remains accessible in the `title` tooltip and exact filter `value`.
+   - When generating dropdown items, strings exceeding 18 characters are cleanly truncated with `...` (e.g. `Artificial Intell... (12)`), while the full name remains accessible in the `title` tooltip and exact filter `value`.
 
 3. **Removed Horizontal Scrollbar & Flexible Search** ([`templates/index.html:L523-559`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/templates/index.html#L523-L559), [`templates/index.html:L844-884`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/templates/index.html#L844-L884)):
    - Replaced `flex-nowrap overflow-x-auto` with `flex-wrap lg:flex-nowrap overflow-visible` on both the **Companies** and **Outreach Hub** toolbars.
@@ -13510,7 +13510,7 @@ The filter bar stretching and horizontal scrolling issue has been resolved:
 ```text
 in company card modal techs are dark even in light mode
 also dont mentions anything like this 
-(500–700 words) anywhere 
+(500-700 words) anywhere 
 ALSO MAKE sure each and every text words icons are selectable 
 in company cards the checkbox and exclude icon only should be visible when the user is loggned in as master admin or the its in devmode
 ```
@@ -13537,7 +13537,7 @@ All four requested enhancements have been implemented and verified:
   - Default lead badge now uses `bg-surface-container text-on-surface-variant border border-outline-variant/60 font-mono`.
 
 ### 2. Removal of Word Count Mention
-- **Removed**: `<span class="text-caption text-outline font-mono">(500–700 words)</span>` has been completely excised from [`templates/index.html`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/templates/index.html#L1082-L1088).
+- **Removed**: `<span class="text-caption text-outline font-mono">(500-700 words)</span>` has been completely excised from [`templates/index.html`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/templates/index.html#L1082-L1088).
 - The section title now cleanly displays: **"Technical Intelligence Report"**.
 
 ### 3. Universal Text, Word, and Icon Selectability
@@ -13589,7 +13589,7 @@ I have fixed the issue where button text disappeared on hover in light mode.
 ---
 
 ### What Was Changed
-1. **Robust Light Theme Selector** ([`static/css/style.css`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/static/css/style.css#L118-L122)):
+1. **Reliable Light Theme Selector** ([`static/css/style.css`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/static/css/style.css#L118-L122)):
    - Expanded the selector from `html.light` to `html.light, html:not(.dark), body.light, .light` so light mode design tokens are guaranteed active across all browser states.
 2. **Deterministic Semantic Hover Rules** ([`static/css/style.css`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/static/css/style.css#L250-L315)):
    - Updated `.btn-tactile-slate, .btn-secondary` and `.btn-card-pitch` to use semantic theme tokens (`rgb(var(--color-on-surface))` and `rgb(var(--color-on-primary))`).
@@ -13739,7 +13739,7 @@ All reported issues across mobile/tablet views, theme consistency, tactile UI de
 - **Fix**:
   - In [templates/index.html](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/templates/index.html), replaced hardcoded dark hex values (`#16181D`, `#242830`, `#EFECE6`, `#1C1F26`) on the slide-over drawer with theme tokens (`bg-surface-container-low`, `border-outline-variant/40`, `text-on-surface`, `text-secondary`).
   - In [static/js/app.js](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/static/js/app.js) (`fetchAuditLogs()`), replaced hardcoded dark `slate-950` card styles with `bg-surface-container border border-outline-variant/40 hover:border-outline-variant/80` and `text-on-surface`.
-  - The Activity Stream now adapts seamlessly to both dark mode and light mode.
+  - The Activity Stream now adapts smoothly to both dark mode and light mode.
 
 ---
 
@@ -13901,7 +13901,7 @@ do we have all those 4 series statuscode pages? or error prompts when ever any o
 
 ### 1. Did we have 4-series status code pages & error prompts before?
 **Previously, no.** 
-- **Browser Routes:** Whenever a user navigated to a non-existent URL (e.g., `/dashboard`, `/admin`, or any typo), FastAPI’s default Starlette router returned a raw, unstyled JSON response: `{"detail": "Not Found"}`. There were no branded error pages for 404, 403, 401, or 500.
+- **Browser Routes:** Whenever a user navigated to a non-existent URL (e.g., `/dashboard`, `/admin`, or any typo), FastAPI's default Starlette router returned a raw, unstyled JSON response: `{"detail": "Not Found"}`. There were no branded error pages for 404, 403, 401, or 500.
 - **Frontend API Calls:** Individual `fetch()` calls had scattered `try/catch` blocks, meaning unexpected 403 (Forbidden), 404 (Not Found), 422 (Validation Error), or 429 (Rate Limit) errors were either displayed with generic error text or logged to the console without context-aware toast prompts.
 
 ---
@@ -14049,7 +14049,7 @@ did you actualy tested or checked it
             "invalid_at": null,
             "emails": [],
             "profile": {
-                "summary": "DreamSpot IT Academy is a Rajkot‑based IT training institute offering a range of software development and design courses. Their value proposition centers on unlocking student potential through practical, industry‑led instruction and certified credentials.",
+                "summary": "DreamSpot IT Academy is a Rajkot-based IT training institute offering a range of software development and design courses. Their value proposition centers on unlocking student potential through practical, industry-led instruction and certified credentials.",
                 "industry": "IT Training & Education",
                 "tech_stack": [
                     "JavaScript",
@@ -14195,7 +14195,7 @@ did you actualy tested or checked it
             "invalid_at": null,
             "emails": [],
             "profile": {
-                "summary": "H.B.INSTITUTE - THE TRAINING CENTER is a career-oriented training and support services provider based in Rajkot, India. Their core value proposition is to enhance students' and professionals' skills through career-focused courses and comprehensive support services, including job placement assistance, resume building, and technical portfolio development.",
+                "summary": "H.B.INSTITUTE - THE TRAINING CENTER is a career-oriented training and support services provider based in Rajkot, India. Their core value proposition is to enhance students' and professionals' skills through career-focused courses and detailed support services, including job placement assistance, resume building, and technical portfolio development.",
                 "industry": "Education & Career Training",
                 "tech_stack": [
                     "Tally",
@@ -14208,7 +14208,7 @@ did you actualy tested or checked it
         },
         {
             "id": 382,
-            "name": "FROYO Ventures • A Venture Studio",
+            "name": "FROYO Ventures - A Venture Studio",
             "domain": "froyo.ventures",
             "website_url": "http://www.froyo.ventures/",
             "location_url": "https://www.google.com/maps/search/?api=1&query=FROYO+Ventures+%E2%80%A2+A+Venture+Studio%2C+1007%2C+The+Spire+Near+Sheetal+Park+BRTS+Stop%2C+150+Feet+Ring+Rd%2C+Rajkot+Gujarat+360007",
@@ -14226,7 +14226,7 @@ did you actualy tested or checked it
             "invalid_at": null,
             "emails": [],
             "profile": {
-                "summary": "FROYO Ventures • A Venture Studio's website does not provide explicit details regarding its company overview, services, technology stack, or client portfolio.",
+                "summary": "FROYO Ventures - A Venture Studio's website does not provide explicit details regarding its company overview, services, technology stack, or client portfolio.",
                 "industry": "Not explicitly disclosed on website",
                 "tech_stack": []
             },
@@ -14284,7 +14284,7 @@ did you actualy tested or checked it
                 "infocodecrox@gmail.com"
             ],
             "profile": {
-                "summary": "CodeCrox LLP is a web and app development firm headquartered in Rajkot, India, offering a broad spectrum of services from full‑stack and mobile app development to game development and digital marketing. Leveraging popular frameworks such as React, Node.js, Laravel, and Flutter, the company also runs internship programs across several tech domains, indicating a focus on talent cultivation and project delivery.",
+                "summary": "CodeCrox LLP is a web and app development firm headquartered in Rajkot, India, offering a broad spectrum of services from full-stack and mobile app development to game development and digital marketing. Using popular frameworks such as React, Node.js, Laravel, and Flutter, the company also runs internship programs across several tech domains, indicating a focus on talent cultivation and project delivery.",
                 "industry": "Custom Software & Mobile App Development",
                 "tech_stack": [
                     "ReactJS",
@@ -14325,7 +14325,7 @@ did you actualy tested or checked it
                 "info@brevitysoftware.com"
             ],
             "profile": {
-                "summary": "Brevity Software Solutions Pvt. Ltd. is a global custom software and AI development firm that delivers tailored digital products, Agentic AI solutions, and end‑to‑end technology services. Leveraging a 15‑year track record, they serve clients across multiple continents with expertise in web, mobile, cloud, data, and AI/ML engineering.",
+                "summary": "Brevity Software Solutions Pvt. Ltd. is a global custom software and AI development firm that delivers tailored digital products, Agentic AI solutions, and end-to-end technology services. Using a 15-year track record, they serve clients across multiple continents with expertise in web, mobile, cloud, data, and AI/ML engineering.",
                 "industry": "Custom Software & AI Development",
                 "tech_stack": [
                     ".NET (C#)",
@@ -14426,7 +14426,7 @@ did you actualy tested or checked it
                 "info@designclub.in"
             ],
             "profile": {
-                "summary": "Designclub is a web design and digital marketing agency based in Rajkot, Gujarat, offering end‑to‑end web solutions—from custom website design and WordPress development to social media marketing, branding, hosting, SEO, and custom ERP. Their core promise is to merge aesthetics with business goals, unlocking the web’s power for clients’ growth.",
+                "summary": "Designclub is a web design and digital marketing agency based in Rajkot, Gujarat, offering end-to-end web solutions - from custom website design and WordPress development to social media marketing, branding, hosting, SEO, and custom ERP. Their core promise is to merge aesthetics with business goals, unlocking the web's power for clients' growth.",
                 "industry": "Web Design & Development Services",
                 "tech_stack": [
                     "WordPress",
@@ -14599,7 +14599,7 @@ did you actualy tested or checked it
             "invalid_at": null,
             "emails": [],
             "profile": {
-                "summary": "RudLeo Web Development is an offshore web and mobile application development firm based in Rajkot, Gujarat, India, offering custom web solutions, e-commerce, and product development with a focus on open‑source technologies and responsive design.",
+                "summary": "RudLeo Web Development is an offshore web and mobile application development firm based in Rajkot, Gujarat, India, offering custom web solutions, e-commerce, and product development with a focus on open-source technologies and responsive design.",
                 "industry": "Custom Software & Mobile App Development",
                 "tech_stack": [
                     "PHP",
@@ -14750,7 +14750,7 @@ did you actualy tested or checked it
                 "info@steadywisdomtech.com"
             ],
             "profile": {
-                "summary": "SteadyWisdom Tech Consulting is a multi-disciplinary IT and digital agency based in Rajkot, India, offering 360° services including web and mobile development, branding, and digital marketing. The company positions itself as a comprehensive partner for business strategy, technology consultation, and creative design, with a strong emphasis on client communication and long-term support.",
+                "summary": "SteadyWisdom Tech Consulting is a multi-disciplinary IT and digital agency based in Rajkot, India, offering 360° services including web and mobile development, branding, and digital marketing. The company positions itself as a detailed partner for business strategy, technology consultation, and creative design, with a strong emphasis on client communication and long-term support.",
                 "industry": "IT Consulting, Web & Mobile Development, Digital Marketing, and Branding",
                 "tech_stack": [
                     "PHP",
@@ -14789,7 +14789,7 @@ did you actualy tested or checked it
                 "info@rajeshwarinfotech.com"
             ],
             "profile": {
-                "summary": "Rajeshwar Infotech is a Rajkot-based software development company established in 2018, specializing in custom web and mobile application development, ERP solutions, and SaaS products. With over 8 years of experience and a portfolio of 100+ delivered projects, the firm serves global clients across industries such as education, hospitality, and logistics, leveraging a tech stack primarily centered on PHP, Laravel, and MySQL.",
+                "summary": "Rajeshwar Infotech is a Rajkot-based software development company established in 2018, specializing in custom web and mobile application development, ERP solutions, and SaaS products. With over 8 years of experience and a portfolio of 100+ delivered projects, the firm serves global clients across industries such as education, hospitality, and logistics, using a tech stack primarily centered on PHP, Laravel, and MySQL.",
                 "industry": "Custom Software & Mobile App Development",
                 "tech_stack": [
                     "PHP",
@@ -14974,7 +14974,7 @@ did you actualy tested or checked it
         },
         {
             "id": 358,
-            "name": "Codeksha – IT Training & Internships in Rajkot",
+            "name": "Codeksha - IT Training & Internships in Rajkot",
             "domain": "codeksha.com",
             "website_url": "https://codeksha.com/?utm_source=google&utm_medium=gbp&utm_campaign=JDG&utm_id=business+profile&utm_term=rajkot",
             "location_url": "https://www.google.com/maps/search/?api=1&query=Codeksha+%E2%80%93+IT+Training+%26+Internships+in+Rajkot%2C+RK+Iconic%2C+A-1110%2C+150+Feet+Ring+Rd",
@@ -15032,7 +15032,7 @@ did you actualy tested or checked it
                 "info@shreeacademy.net.in"
             ],
             "profile": {
-                "summary": "Shree Academy, founded in 2012 and based in Rajkot, India, delivers a wide range of computer, digital marketing, language, and professional development courses. Their value proposition centers on affordable, industry‑relevant training with job assistance and certified placements.",
+                "summary": "Shree Academy, founded in 2012 and based in Rajkot, India, delivers a wide range of computer, digital marketing, language, and professional development courses. Their value proposition centers on affordable, industry-relevant training with job assistance and certified placements.",
                 "industry": "Education & Training (IT & Professional Skill Development)",
                 "tech_stack": [
                     "Python",
@@ -15212,7 +15212,7 @@ did you actualy tested or checked it
                 "info@nityamwebtech.com"
             ],
             "profile": {
-                "summary": "Nityam Webtech, founded in 2009 in Rajkot, Gujarat, is an IT services and training firm offering web development, mobile app development, digital marketing, and a suite of technology training programs. Leveraging over a decade of experience, they deliver custom web applications, design services, and industry‑focused training with placement support.",
+                "summary": "Nityam Webtech, founded in 2009 in Rajkot, Gujarat, is an IT services and training firm offering web development, mobile app development, digital marketing, and a suite of technology training programs. Using over a decade of experience, they deliver custom web applications, design services, and industry-focused training with placement support.",
                 "industry": "Custom Software Development & IT Training",
                 "tech_stack": [
                     "PHP",
@@ -15277,7 +15277,7 @@ did you actualy tested or checked it
                 "info@suntechsurat.com"
             ],
             "profile": {
-                "summary": "Sun Technologies, founded in 2001 and based in Surat, Gujarat, provides computer hardware sales, IT services, and a broad range of cybersecurity and infrastructure solutions. Leveraging over two decades of experience, they focus on affordable, customer‑centric services for both individual and corporate clients.",
+                "summary": "Sun Technologies, founded in 2001 and based in Surat, Gujarat, provides computer hardware sales, IT services, and a broad range of cybersecurity and infrastructure solutions. Using over two decades of experience, they focus on affordable, customer-centric services for both individual and corporate clients.",
                 "industry": "Computer Hardware Sales and IT Services",
                 "tech_stack": []
             },
@@ -15333,7 +15333,7 @@ did you actualy tested or checked it
                 "info@logwintech.com"
             ],
             "profile": {
-                "summary": "LogWinTech Pvt. Ltd. is a Surat‑based IT firm founded in 2019 that delivers secure, scalable mobile, web, and desktop solutions. Leveraging a dedicated, growing team, it offers end‑to‑end development services—from UI/UX design to rigorous QA—while maintaining 24/7 global support. The company emphasizes rapid, client‑centric delivery and transparent collaboration across time zones.",
+                "summary": "LogWinTech Pvt. Ltd. is a Surat-based IT firm founded in 2019 that delivers secure, scalable mobile, web, and desktop solutions. Using a dedicated, growing team, it offers end-to-end development services - from UI/UX design to rigorous QA - while maintaining 24/7 global support. The company emphasizes rapid, client-centric delivery and transparent collaboration across time zones.",
                 "industry": "Custom Software & Mobile App Development",
                 "tech_stack": []
             },
@@ -15425,7 +15425,7 @@ did you actualy tested or checked it
         },
         {
             "id": 343,
-            "name": "DIGITAL DREAMS INFOTECH – Accounting Software company in SURAT",
+            "name": "DIGITAL DREAMS INFOTECH - Accounting Software company in SURAT",
             "domain": "digitaldreamsinfotech.com",
             "website_url": "http://www.digitaldreamsinfotech.com/",
             "location_url": "https://www.google.com/maps/search/?api=1&query=DIGITAL+DREAMS+INFOTECH+%E2%80%93+Accounting+Software+company+in+SURAT%2C+Rajhans+Olympia%2C+340-341%2C+Bhatar+Rd%2C+near+Rupali+Neher",
@@ -15446,7 +15446,7 @@ did you actualy tested or checked it
                 "info@digitaldreamsinfotech.com"
             ],
             "profile": {
-                "summary": "Digital Dreams Infotech, based in Surat, India, provides cloud‑based ERP and accounting software (PlusERP) tailored for Indian SMEs across multiple industries. Their platform integrates GST billing, inventory, payroll, POS and finance to simplify operations and ensure compliance.",
+                "summary": "Digital Dreams Infotech, based in Surat, India, provides cloud-based ERP and accounting software (PlusERP) tailored for Indian SMEs across multiple industries. Their platform integrates GST billing, inventory, payroll, POS and finance to simplify operations and ensure compliance.",
                 "industry": "ERP Software & Accounting Solutions for SMEs",
                 "tech_stack": []
             },
@@ -15536,7 +15536,7 @@ did you actualy tested or checked it
                 "info@techvizor.com"
             ],
             "profile": {
-                "summary": "TechVizor is a Surat‑based IT firm founded in 2017 that specializes in custom web, mobile, and SaaS solutions, emphasizing user‑centric design, scalability, and robust security. The company offers a broad portfolio of services including CRM, HRMS, AI‑powered bots, and business automation software, serving diverse industries such as entertainment, healthcare, and e‑commerce.",
+                "summary": "TechVizor is a Surat-based IT firm founded in 2017 that specializes in custom web, mobile, and SaaS solutions, emphasizing user-centric design, scalability, and reliable security. The company offers a broad portfolio of services including CRM, HRMS, AI-powered bots, and business automation software, serving diverse industries such as entertainment, healthcare, and e-commerce.",
                 "industry": "Custom Software & Mobile App Development",
                 "tech_stack": []
             },
@@ -15619,7 +15619,7 @@ did you actualy tested or checked it
                 "vorarahul13@gmail.com"
             ],
             "profile": {
-                "summary": "PixelSoft is a digital organization offering state‑of‑the‑art, cost‑efficient technology solutions, including custom web, mobile, and AI/ML development. They focus on delivering digital success through a full‑stack service portfolio and dedicated development teams.",
+                "summary": "PixelSoft is a digital organization offering state-of-the-art, cost-efficient technology solutions, including custom web, mobile, and AI/ML development. They focus on delivering digital success through a full-stack service portfolio and dedicated development teams.",
                 "industry": "Custom Software & Mobile App Development",
                 "tech_stack": [
                     "iOS",
@@ -15668,7 +15668,7 @@ did you actualy tested or checked it
             "invalid_at": null,
             "emails": [],
             "profile": {
-                "summary": "MakeYourSoftware is an India‑based web design and PHP development firm that delivers custom website, script, and enterprise software solutions across multiple niches. Their core value proposition is to create sales‑driving, responsive web experiences using PHP, WordPress and related technologies for clients worldwide.",
+                "summary": "MakeYourSoftware is an India-based web design and PHP development firm that delivers custom website, script, and enterprise software solutions across multiple niches. Their core value proposition is to create sales-driving, responsive web experiences using PHP, WordPress and related technologies for clients worldwide.",
                 "industry": "Custom Software & Web Development",
                 "tech_stack": [
                     "PHP",
@@ -15772,7 +15772,7 @@ did you actualy tested or checked it
         },
         {
             "id": 332,
-            "name": "IICT Computer Education ️",
+            "name": "IICT Computer Education ",
             "domain": "iictgujarat.odoo.com",
             "website_url": "https://iictgujarat.odoo.com/",
             "location_url": "https://www.google.com/maps/search/?api=1&query=IICT+Computer+Education+%EF%B8%8F%2C+Shahalam+Tolnaka%2C+Classic+Sunny%2C+opp.+M.s+Ground",
@@ -15901,7 +15901,7 @@ did you actualy tested or checked it
             "invalid_at": null,
             "emails": [],
             "profile": {
-                "summary": "Digital Sandip Academy (DSA) is an AI‑powered digital marketing institute based in Ahmedabad offering offline, online, and self‑paced courses. Their value proposition centers on hands‑on training, 1‑on‑1 mentorship, and 100% placement assistance to launch careers in digital marketing.",
+                "summary": "Digital Sandip Academy (DSA) is an AI-powered digital marketing institute based in Ahmedabad offering offline, online, and self-paced courses. Their value proposition centers on hands-on training, 1-on-1 mentorship, and 100% placement assistance to launch careers in digital marketing.",
                 "industry": "Education & Training (Digital Marketing)",
                 "tech_stack": []
             },
@@ -15928,7 +15928,7 @@ did you actualy tested or checked it
             "invalid_at": null,
             "emails": [],
             "profile": {
-                "summary": "Cigma TechnoLab Pvt Ltd is an Ahmedabad‑based technology partner offering custom web, mobile, e‑commerce, and software solutions, complemented by SEO, UI/UX, hosting, and HR‑payroll services. With over 10 years in business, 2000+ projects and a team of 50+ developers, they focus on purpose‑built, performance‑oriented delivery for global clients.",
+                "summary": "Cigma TechnoLab Pvt Ltd is an Ahmedabad-based technology partner offering custom web, mobile, e-commerce, and software solutions, complemented by SEO, UI/UX, hosting, and HR-payroll services. With over 10 years in business, 2000+ projects and a team of 50+ developers, they focus on purpose-built, performance-oriented delivery for global clients.",
                 "industry": "Custom Software & Mobile App Development",
                 "tech_stack": [
                     "PHP",
@@ -16046,7 +16046,7 @@ did you actualy tested or checked it
             "invalid_at": null,
             "emails": [],
             "profile": {
-                "summary": "SetuBridge Technolabs is a leading e‑commerce development agency based in India that delivers custom online solutions across Magento, Shopify, and emerging technologies such as AR/VR and Web2Print. Their value proposition centers on user‑first design, dedicated developer support, and end‑to‑end e‑commerce services from build to run.",
+                "summary": "SetuBridge Technolabs is a leading e-commerce development agency based in India that delivers custom online solutions across Magento, Shopify, and emerging technologies such as AR/VR and Web2Print. Their value proposition centers on user-first design, dedicated developer support, and end-to-end e-commerce services from build to run.",
                 "industry": "E-Commerce Development",
                 "tech_stack": [
                     "Magento",
@@ -16116,7 +16116,7 @@ did you actualy tested or checked it
             "invalid_at": null,
             "emails": [],
             "profile": {
-                "summary": "Third Eye Digital Media is an Ahmedabad‑based animation studio and digital services provider offering a broad mix of animation, web development, and digital marketing solutions. Their value proposition centers on delivering creative visual content and comprehensive online promotion services.",
+                "summary": "Third Eye Digital Media is an Ahmedabad-based animation studio and digital services provider offering a broad mix of animation, web development, and digital marketing solutions. Their value proposition centers on delivering creative visual content and detailed online promotion services.",
                 "industry": "Animation & Digital Media Services",
                 "tech_stack": []
             },
@@ -16170,7 +16170,7 @@ did you actualy tested or checked it
             "invalid_at": null,
             "emails": [],
             "profile": {
-                "summary": "Webential Technologies is a custom software and mobile app development company focused on turning ideas into scalable digital products. Their value proposition centers on end-to-end product design and development, leveraging a diverse technology stack to serve clients across various industries.",
+                "summary": "Webential Technologies is a custom software and mobile app development company focused on turning ideas into scalable digital products. Their value proposition centers on end-to-end product design and development, using a diverse technology stack to serve clients across various industries.",
                 "industry": "Custom Software & Mobile App Development",
                 "tech_stack": [
                     "Python",
@@ -16228,7 +16228,7 @@ did you actualy tested or checked it
                 "vorarahul13@gmail.com"
             ],
             "profile": {
-                "summary": "Vinayak Creation is an Ahmedabad-based IT solutions and digital marketing agency specializing in custom software development, mobile app creation, and AI-driven business automation. They offer a comprehensive suite of services including CRM, ERP, and e-commerce solutions, supported by transparent pricing packages and 24/7 dedicated client support.",
+                "summary": "Vinayak Creation is an Ahmedabad-based IT solutions and digital marketing agency specializing in custom software development, mobile app creation, and AI-driven business automation. They offer a detailed suite of services including CRM, ERP, and e-commerce solutions, supported by transparent pricing packages and 24/7 dedicated client support.",
                 "industry": "Custom Software & Mobile App Development",
                 "tech_stack": [
                     "PHP",
@@ -16355,7 +16355,7 @@ did you actualy tested or checked it
                 "vorarahul13@gmail.com"
             ],
             "profile": {
-                "summary": "Awesome Solutions is an India‑based digital solutions provider offering end‑to‑end web, mobile, digital marketing, cloud, and security services. Their value proposition centers on delivering high‑performance, cost‑effective digital products with 24/7 support and a focus on client satisfaction.",
+                "summary": "Awesome Solutions is an India-based digital solutions provider offering end-to-end web, mobile, digital marketing, cloud, and security services. Their value proposition centers on delivering high-performance, cost-effective digital products with 24/7 support and a focus on client satisfaction.",
                 "industry": "Digital Marketing & Custom Software Development",
                 "tech_stack": [
                     "AWS",
@@ -16419,7 +16419,7 @@ did you actualy tested or checked it
             "invalid_at": null,
             "emails": [],
             "profile": {
-                "summary": "CrossShore Solutions is an agile software development company established in 2010, specializing in custom software, mobile applications, and product engineering. They serve a diverse global client base, including Fortune 500 companies and startups, leveraging a robust technology stack centered on React, Node.js, and major cloud platforms.",
+                "summary": "CrossShore Solutions is an agile software development company established in 2010, specializing in custom software, mobile applications, and product engineering. They serve a diverse global client base, including Fortune 500 companies and startups, using a reliable technology stack centered on React, Node.js, and major cloud platforms.",
                 "industry": "Custom Software & Mobile App Development",
                 "tech_stack": [
                     "PHP",
@@ -16550,8 +16550,8 @@ did you actualy tested or checked it
                 "vorarahul13@gmail.com"
             ],
             "profile": {
-                "summary": "HireFullStackDeveloperIndia provides AI‑driven, full‑stack development services with a pool of 200+ vetted experts, offering end‑to‑end custom web and mobile solutions for businesses worldwide.",
-                "industry": "Custom Software & Full‑Stack Development",
+                "summary": "HireFullStackDeveloperIndia provides AI-driven, full-stack development services with a pool of 200+ vetted experts, offering end-to-end custom web and mobile solutions for businesses worldwide.",
+                "industry": "Custom Software & Full-Stack Development",
                 "tech_stack": [
                     "JavaScript",
                     "Python",
@@ -16646,7 +16646,7 @@ did you actualy tested or checked it
             "invalid_at": null,
             "emails": [],
             "profile": {
-                "summary": "Survey Pacific Private Limited provides data‑driven market research, analytics, and digital consulting services to help global businesses make informed strategic decisions. Their value proposition centers on transforming raw data into actionable insights across multiple industries.",
+                "summary": "Survey Pacific Private Limited provides data-driven market research, analytics, and digital consulting services to help global businesses make informed strategic decisions. Their value proposition centers on transforming raw data into actionable insights across multiple industries.",
                 "industry": "Market Research & Data Analytics",
                 "tech_stack": []
             },
@@ -16812,8 +16812,8 @@ did you actualy tested or checked it
                 "vorarahul13@gmail.com"
             ],
             "profile": {
-                "summary": "DMG IT Engineering & Multimedia Institute, based in Ahmedabad, India, is a government‑recognized, ISO‑9001:2015 & MSME‑certified training institute offering AI‑powered, industry‑focused courses across IT, design, finance and multimedia domains, with over 11 years of experience and 5,000+ alumni.",
-                "industry": "Education & Training – IT, Design & Multimedia",
+                "summary": "DMG IT Engineering & Multimedia Institute, based in Ahmedabad, India, is a government-recognized, ISO-9001:2015 & MSME-certified training institute offering AI-powered, industry-focused courses across IT, design, finance and multimedia domains, with over 11 years of experience and 5,000+ alumni.",
+                "industry": "Education & Training - IT, Design & Multimedia",
                 "tech_stack": [
                     "Python",
                     "PHP",
@@ -16916,7 +16916,7 @@ did you actualy tested or checked it
             "invalid_at": null,
             "emails": [],
             "profile": {
-                "summary": "Wama Software LLP is a custom software and mobile app development company focused on delivering scalable digital solutions. Their value proposition centers on transforming business ideas into robust, AI-powered, and cloud-native products through a structured agile development process.",
+                "summary": "Wama Software LLP is a custom software and mobile app development company focused on delivering scalable digital solutions. Their value proposition centers on transforming business ideas into reliable, AI-powered, and cloud-native products through a structured agile development process.",
                 "industry": "Custom Software & Mobile App Development",
                 "tech_stack": [
                     "Python",
@@ -17045,7 +17045,7 @@ did you actualy tested or checked it
                 "vorarahul13@gmail.com"
             ],
             "profile": {
-                "summary": "Dmatic Solutions is a seasoned bulk messaging provider based in India, offering a unified platform for SMS, WhatsApp, RCS, voice calls, and AI‑powered call center solutions. With over a decade of experience, the company delivers reliable, scalable communication services to businesses worldwide, emphasizing clear pricing, multi‑channel reach, and responsive support.",
+                "summary": "Dmatic Solutions is a seasoned bulk messaging provider based in India, offering a unified platform for SMS, WhatsApp, RCS, voice calls, and AI-powered call center solutions. With over a decade of experience, the company delivers reliable, scalable communication services to businesses worldwide, emphasizing clear pricing, multi-channel reach, and responsive support.",
                 "industry": "Mobile Messaging & Communications",
                 "tech_stack": []
             },
@@ -17188,7 +17188,7 @@ did you actualy tested or checked it
                 "vorarahul13@gmail.com"
             ],
             "profile": {
-                "summary": "Webleonz Technologies is a digital marketing firm that specializes in SEO services tailored to a wide range of industries. Their value proposition centers on delivering industry‑specific search engine optimization to improve online visibility for clients across sectors such as healthcare, real estate, and e‑commerce.",
+                "summary": "Webleonz Technologies is a digital marketing firm that specializes in SEO services tailored to a wide range of industries. Their value proposition centers on delivering industry-specific search engine optimization to improve online visibility for clients across sectors such as healthcare, real estate, and e-commerce.",
                 "industry": "SEO & Digital Marketing",
                 "tech_stack": []
             },
@@ -17218,7 +17218,7 @@ did you actualy tested or checked it
                 "vorarahul13@gmail.com"
             ],
             "profile": {
-                "summary": "PRAXINFO is a custom software and mobile app development firm operating in the UAE and India, offering end‑to‑end digital solutions including mobile, web, UI/UX, e‑commerce, and offshore staffing services.",
+                "summary": "PRAXINFO is a custom software and mobile app development firm operating in the UAE and India, offering end-to-end digital solutions including mobile, web, UI/UX, e-commerce, and offshore staffing services.",
                 "industry": "Custom Software & Mobile App Development",
                 "tech_stack": [
                     "PHP",
@@ -17300,7 +17300,7 @@ did you actualy tested or checked it
                 "vorarahul13@gmail.com"
             ],
             "profile": {
-                "summary": "MG MarketSoft India Pvt. Ltd. is a Danish‑owned IT services subsidiary founded in 2013, delivering cost‑effective custom software, web, and e‑commerce solutions from its Ahmedabad office. Their value proposition centers on experienced programmers, competitive pricing, and a satisfaction‑guarantee, with services ranging from website/webshop development to complex enterprise integrations.",
+                "summary": "MG MarketSoft India Pvt. Ltd. is a Danish-owned IT services subsidiary founded in 2013, delivering cost-effective custom software, web, and e-commerce solutions from its Ahmedabad office. Their value proposition centers on experienced programmers, competitive pricing, and a satisfaction-guarantee, with services ranging from website/webshop development to complex enterprise integrations.",
                 "industry": "Custom Software & Web Development",
                 "tech_stack": [
                     "ASP.NET",
@@ -17337,7 +17337,7 @@ did you actualy tested or checked it
                 "vorarahul13@gmail.com"
             ],
             "profile": {
-                "summary": "Wipra World Wide is an Ahmedabad‑based IT firm founded in 1993, offering customized web, e‑commerce, mobile, and digital marketing solutions along with proprietary software products. With over 700 satisfied customers and a portfolio spanning global and local clients, they focus on delivering tailored digital solutions across multiple industries.",
+                "summary": "Wipra World Wide is an Ahmedabad-based IT firm founded in 1993, offering customized web, e-commerce, mobile, and digital marketing solutions along with proprietary software products. With over 700 satisfied customers and a portfolio spanning global and local clients, they focus on delivering tailored digital solutions across multiple industries.",
                 "industry": "Custom Software Development & IT Services",
                 "tech_stack": []
             },
@@ -17364,7 +17364,7 @@ did you actualy tested or checked it
             "invalid_at": null,
             "emails": [],
             "profile": {
-                "summary": "Softs Solution Service is an Ahmedabad‑based IT training institute and custom solutions provider that focuses on practical, project‑based learning and tailored software services. Their value proposition centers on empowering individuals and businesses with hands‑on technical skills and bespoke IT solutions, backed by experienced trainers and a 100% placement assistance promise.",
+                "summary": "Softs Solution Service is an Ahmedabad-based IT training institute and custom solutions provider that focuses on practical, project-based learning and tailored software services. Their value proposition centers on empowering individuals and businesses with hands-on technical skills and bespoke IT solutions, backed by experienced trainers and a 100% placement assistance promise.",
                 "industry": "IT Training & Custom Software Development",
                 "tech_stack": [
                     "JavaScript",
@@ -17406,8 +17406,8 @@ did you actualy tested or checked it
             "invalid_at": null,
             "emails": [],
             "profile": {
-                "summary": "Viha Digital Commerce Private Limited is an AI‑driven eCommerce and digital solutions provider offering end‑to‑end development, UI/UX, and marketing services. Their core value proposition centers on delivering flexible, secure, and scalable online commerce platforms across multiple technologies.",
-                "industry": "E‑Commerce Development & Digital Marketing",
+                "summary": "Viha Digital Commerce Private Limited is an AI-driven eCommerce and digital solutions provider offering end-to-end development, UI/UX, and marketing services. Their core value proposition centers on delivering flexible, secure, and scalable online commerce platforms across multiple technologies.",
+                "industry": "E-Commerce Development & Digital Marketing",
                 "tech_stack": [
                     "Adobe Commerce (Magento)",
                     "Shopify",
@@ -17616,7 +17616,7 @@ did you actualy tested or checked it
             "invalid_at": null,
             "emails": [],
             "profile": {
-                "summary": "Addon Solutions is a digital solutions provider headquartered in India with delivery capabilities in the USA. They position themselves as a partner that unlocks businesses’ digital potential through mobile, web, and enterprise software development, emphasizing a consult‑implement‑manage approach. Their core offerings span mobile app development, web and custom software, cloud & DevOps, AI/ML, e‑commerce, UI/UX, and remote team building.",
+                "summary": "Addon Solutions is a digital solutions provider headquartered in India with delivery capabilities in the USA. They position themselves as a partner that unlocks businesses' digital potential through mobile, web, and enterprise software development, emphasizing a consult-implement-manage approach. Their core offerings span mobile app development, web and custom software, cloud & DevOps, AI/ML, e-commerce, UI/UX, and remote team building.",
                 "industry": "Custom Software & Mobile App Development",
                 "tech_stack": [
                     ".NET",
@@ -17671,7 +17671,7 @@ did you actualy tested or checked it
                 "vorarahul13@gmail.com"
             ],
             "profile": {
-                "summary": "XCode Web Solutions LLP is a client‑centric software development partner that delivers bespoke mobile, web, AI, and integration solutions using a broad technology stack. With a focus on cost‑effective, agile delivery, the firm serves global clients across diverse industries, offering dedicated talent and end‑to‑end development services.",
+                "summary": "XCode Web Solutions LLP is a client-centric software development partner that delivers bespoke mobile, web, AI, and integration solutions using a broad technology stack. With a focus on cost-effective, agile delivery, the firm serves global clients across diverse industries, offering dedicated talent and end-to-end development services.",
                 "industry": "Custom Software & Mobile App Development",
                 "tech_stack": [
                     ".NET Core",
@@ -17718,8 +17718,8 @@ did you actualy tested or checked it
                 "vorarahul13@gmail.com"
             ],
             "profile": {
-                "summary": "Mobio Solutions is an AI‑powered app and software development firm that helps SMEs, startups and larger enterprises turn business ideas into scalable technology solutions. Their core offerings span AI consulting, custom application development, low‑code/no‑code platforms, and industry‑specific automation tools such as Densy AI.",
-                "industry": "Custom Software & AI‑Powered Application Development",
+                "summary": "Mobio Solutions is an AI-powered app and software development firm that helps SMEs, startups and larger enterprises turn business ideas into scalable technology solutions. Their core offerings span AI consulting, custom application development, low-code/no-code platforms, and industry-specific automation tools such as Densy AI.",
+                "industry": "Custom Software & AI-Powered Application Development",
                 "tech_stack": [
                     "Microsoft Power Platform",
                     "Microsoft Dynamics 365 CE",
@@ -17731,7 +17731,7 @@ did you actualy tested or checked it
                     "SMS Messaging",
                     "Chat & Web Agents",
                     "Social Media Agents",
-                    "Low‑Code/No‑Code Development"
+                    "Low-Code/No-Code Development"
                 ]
             },
             "already_contacted": false,
@@ -17881,7 +17881,7 @@ did you actualy tested or checked it
             "website_url": "https://maticsolutions.co.in/",
             "location_url": "https://www.google.com/maps/search/?api=1&query=Matic+Solutions%2C+207%2C+Aaryan+Work+Spaces%2C+St.+Xavier%E2%80%99s+College+Corner",
             "phone": "098798 72727",
-            "address": "207, Aaryan Work Spaces, St. Xavier’s College Corner",
+            "address": "207, Aaryan Work Spaces, St. Xavier's College Corner",
             "source_query": "PHP based companies in ahmedabad",
             "search_keyword": "PHP based companies in",
             "city": "ahmedabad",
@@ -17984,7 +17984,7 @@ did you actualy tested or checked it
             "invalid_at": null,
             "emails": [],
             "profile": {
-                "summary": "J-INFO Technologies (Jalaram Infotech) is a full‑service IT provider based in Ahmedabad, India, offering domain registration, web hosting, VPS, dedicated servers, and a range of web development and digital marketing services. Their core value proposition centers on delivering end‑to‑end web solutions—from design and e‑commerce to PHP/MySQL application development—supported by dedicated hosting and cloud‑ready infrastructure.",
+                "summary": "J-INFO Technologies (Jalaram Infotech) is a full-service IT provider based in Ahmedabad, India, offering domain registration, web hosting, VPS, dedicated servers, and a range of web development and digital marketing services. Their core value proposition centers on delivering end-to-end web solutions - from design and e-commerce to PHP/MySQL application development - supported by dedicated hosting and cloud-ready infrastructure.",
                 "industry": "Custom Software & Web Development",
                 "tech_stack": [
                     "PHP",
@@ -18046,7 +18046,7 @@ did you actualy tested or checked it
             "invalid_at": null,
             "emails": [],
             "profile": {
-                "summary": "Sumay Infotech, founded in 2019 and headquartered in Ahmedabad, delivers AI‑powered web, mobile, and digital marketing solutions to clients across 7+ countries. With 150+ projects and 40+ global clients, the company emphasizes agile, transparent development and measurable results.",
+                "summary": "Sumay Infotech, founded in 2019 and headquartered in Ahmedabad, delivers AI-powered web, mobile, and digital marketing solutions to clients across 7+ countries. With 150+ projects and 40+ global clients, the company emphasizes agile, transparent development and measurable results.",
                 "industry": "Custom Software & Mobile App Development",
                 "tech_stack": [
                     "WordPress",
@@ -18087,7 +18087,7 @@ did you actualy tested or checked it
             "invalid_at": null,
             "emails": [],
             "profile": {
-                "summary": "TechMayntra IT Solutions is an Ahmedabad-based software development and IT services company with over 14 years of experience, serving 5,000+ global clients. They specialize in full-stack web and mobile application development, e-commerce solutions, and digital marketing, leveraging a broad technology stack including PHP, .NET, React, and Flutter.",
+                "summary": "TechMayntra IT Solutions is an Ahmedabad-based software development and IT services company with over 14 years of experience, serving 5,000+ global clients. They specialize in full-stack web and mobile application development, e-commerce solutions, and digital marketing, using a broad technology stack including PHP, .NET, React, and Flutter.",
                 "industry": "Custom Software & Mobile App Development",
                 "tech_stack": [
                     "PHP",
@@ -18303,11 +18303,11 @@ The **Pitched** count has been updated so it is **strictly scoped to the current
 
 #### 2. Frontend State & Metric Card Updates ([`static/js/app.js`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/static/js/app.js#L1180-L1235) & [`templates/index.html`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/templates/index.html#L504-L515))
 - **When Not Logged In:**
-  - Card displays `—` (no count leaked).
+  - Card displays ` - ` (no count leaked).
   - Badge displays `Sign in`.
   - Subtext displays `Sign in to track your pitches`.
   - Clicking the card opens the Google sign-in modal with the message: *"Please sign in with Google to view and track your sent pitches."*
-  - In the Outreach Hub tab, `Campaigns Sent` displays `—`.
+  - In the Outreach Hub tab, `Campaigns Sent` displays ` - `.
 - **When Logged In:**
   - The card displays only the user's personal count (e.g., `0` if they have not sent any, or their exact count if they have), along with their personal outreach rate percentage.
 
@@ -18328,13 +18328,13 @@ The **Pitched** count has been updated so it is **strictly scoped to the current
      }
    }
    ```
-   *`contacted` is `null` — zero data leaked.*
+   *`contacted` is `null`  -  zero data leaked.*
 
 2. **Browser Test:**
    - Navigated to `http://127.0.0.1:8000/app` in guest mode.
-   - The **Pitched** card displays `—`, the `Sign in` pill, and `Sign in to track your pitches`.
+   - The **Pitched** card displays ` - `, the `Sign in` pill, and `Sign in to track your pitches`.
    - Clicking the card prompts the sign-in modal.
-   - The Outreach Hub **Campaigns Sent** counter displays `—`.
+   - The Outreach Hub **Campaigns Sent** counter displays ` - `.
 
 ---
 
@@ -18376,13 +18376,13 @@ how is this company AI enriched if there is no detailes how the falg of AI enric
    When the crawler hit `lanetteam.com` during the mass run, the website's pages either timed out or returned no extractable text. As a result, `ai_profile_data` was empty (`""`), but the database still set `is_enriched = True`.
 
 2. **Frontend Contradiction:**
-   - Because `company.is_enriched` was `True`, the modal displayed the `[⚡ AI Enriched]` badge.
+   - Because `company.is_enriched` was `True`, the modal displayed the `[ AI Enriched]` badge.
    - However, when the "AI Intel & Report" tab loaded, it checked:
      ```javascript
      if (detailData.profile.detailed_analysis) {
        // render markdown
      } else {
-       // fallback: "Click 'Enrich with AI' below to generate comprehensive intelligence report."
+       // fallback: "Click 'Enrich with AI' below to generate detailed intelligence report."
      }
      ```
    - Since `detailed_analysis` was an empty string `""`, it displayed the fallback prompt, creating a direct conflict with the badge.
@@ -18411,7 +18411,7 @@ If a crawl fails or the LLM returns empty content, the company remains `is_enric
 
 #### 3. Fully Enriched "La Net Team" with Live Intelligence
 - Triggered a live enrichment pass on **La Net Team Software Solutions Pvt. LTD.** (`lanetteam.com`).
-- The system crawled their domain and generated a comprehensive **5,230-character** 6-part dossier:
+- The system crawled their domain and generated a detailed **5,230-character** 6-part dossier:
   - **Company Overview:** Founded 2008, Surat HQ, Menlo Park (USA) presence, 200+ engineers, ISO 9001 certified.
   - **Tech Stack:** Google Cloud, AWS, Microsoft Azure, LLMs, RAG, MLOps, AI Agents, APIs, Tally & ERP integrations.
   - **Services & Client Portfolio:** Custom AI Agents, Enterprise Automation, CRM & ERP.
@@ -18426,7 +18426,7 @@ If a crawl fails or the LLM returns empty content, the company remains `is_enric
 2. **Unenriched Companies (e.g., DigiRivera):**
    - The card displays **Uncontacted**.
    - The modal badge displays **Verified Lead** (no misleading `AI Enriched` badge).
-   - The bottom action button invites the user to **✨ Enrich with AI**, which runs the live analysis on demand.
+   - The bottom action button invites the user to ** Enrich with AI**, which runs the live analysis on demand.
 
 ---
 
@@ -18438,7 +18438,7 @@ If a crawl fails or the LLM returns empty content, the company remains `is_enric
 ```
 
 #### Actions & Tools Executed
-- Tools utilized: `view_file`, `grep_search`
+- Tools used: `view_file`, `grep_search`
 
 #### Assistant Implementation & Final Response
 
@@ -18524,7 +18524,7 @@ what is the font family we are using?
 ```
 
 #### Actions & Tools Executed
-- Tools utilized: `view_file`, `grep_search`
+- Tools used: `view_file`, `grep_search`
 
 #### Assistant Implementation & Final Response
 
@@ -18565,7 +18565,7 @@ do you think  this is the best font family if i will do the SEO in fututure?
 ```
 
 #### Actions & Tools Executed
-- Tools utilized: `view_file`
+- Tools used: `view_file`
 
 #### Assistant Implementation & Final Response
 
@@ -18575,7 +18575,7 @@ do you think  this is the best font family if i will do the SEO in fututure?
 
 ### 1. How Search Engines (Google) View Fonts for SEO
 
-Google’s ranking algorithm does **not** prefer one font name over another (e.g., Google does not rank "Inter" higher than "DM Sans"). 
+Google's ranking algorithm does **not** prefer one font name over another (e.g., Google does not rank "Inter" higher than "DM Sans"). 
 
 What Google **does** measure and rank on is **Page Experience & Core Web Vitals (CWV)**:
 1. **LCP (Largest Contentful Paint):** How fast the hero headline appears to the visitor. If a heavy web font delays this, LCP score drops.
@@ -18599,7 +18599,7 @@ When preparing for full production SEO, implement these best practices:
 
 #### A. Self-Host the Fonts (Eliminate External DNS Lookups)
 Currently, fonts are pulled from `fonts.googleapis.com` and `fonts.gstatic.com`.
-- **SEO Win:** Download the `.woff2` files into `/static/fonts/` and serve them from your own domain. This eliminates 2 external SSL handshakes and can shave **200–400ms off LCP**.
+- **SEO Win:** Download the `.woff2` files into `/static/fonts/` and serve them from your own domain. This eliminates 2 external SSL handshakes and can shave **200-400ms off LCP**.
 
 #### B. Preload the Primary Headline Font
 Add a preload tag in the `<head>` of your public landing page:
@@ -18620,7 +18620,7 @@ The `&display=swap` parameter already present in your tags ensures the browser d
 ---
 
 ### Verdict
-Keep this font family—it fits the product identity and tech aesthetic. When optimizing for SEO speed, **self-host the `.woff2` files** and **preload the hero font** to achieve top Lighthouse and Core Web Vitals scores.
+Keep this font family - it fits the product identity and tech aesthetic. When optimizing for SEO speed, **self-host the `.woff2` files** and **preload the hero font** to achieve top Lighthouse and Core Web Vitals scores.
 
 ---
 
@@ -18654,10 +18654,10 @@ All four SEO typography and performance optimizations have been implemented acro
 
 #### 1. Self-Hosted High-Compression `.woff2` Fonts ([`static/fonts/`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/static/fonts))
 Downloaded the exact latin subset WOFF2 files directly to the server:
-- **`spacegrotesk-latin.woff2`** (Only **21.8 KB**) — Headline & display font
-- **`dmsans-latin.woff2`** (Only **36.1 KB**) — Body & UI font
-- **`jetbrainsmono-latin.woff2`** (Only **30.7 KB**) — Telemetry & specs font
-- **`materialsymbols-outlined.woff2`** — Icon font
+- **`spacegrotesk-latin.woff2`** (Only **21.8 KB**)  -  Headline & display font
+- **`dmsans-latin.woff2`** (Only **36.1 KB**)  -  Body & UI font
+- **`jetbrainsmono-latin.woff2`** (Only **30.7 KB**)  -  Telemetry & specs font
+- **`materialsymbols-outlined.woff2`**  -  Icon font
 
 *Total text typography payload is only **~88 KB**.*
 
@@ -18733,7 +18733,7 @@ Both requests have been completed and verified live:
 
 #### A. Created [`templates/maintenance.html`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/templates/maintenance.html)
 A dedicated, responsive maintenance screen featuring:
-- **Clean Messaging:** *"System Maintenance in Progress — The application workspace is temporarily offline while we perform scheduled platform upgrades. All company datasets, prospect lists, and outreach pipelines are securely preserved."*
+- **Clean Messaging:** *"System Maintenance in Progress  -  The application workspace is temporarily offline while we perform scheduled platform upgrades. All company datasets, prospect lists, and outreach pipelines are securely preserved."*
 - **System Telemetry:** Shows scheduled status and data security assurance (100% backed up).
 - **Navigation Actions:** *"Check Again"* (`reload`) and *"View Landing Page"* (`/`).
 - **Dark & Light Mode Support** with instant theme toggle.
@@ -18765,7 +18765,7 @@ When `maintance_mode = true`:
 ---
 
 ### Verification
-- **404 Page:** Tested via browser subagent—renders clean "404 Page Not Found" with zero robotic chips.
+- **404 Page:** Tested via browser subagent - renders clean "404 Page Not Found" with zero robotic chips.
 - **Maintenance Active:** Tested setting `maintance_mode=true` $\rightarrow$ `/` returned `200 OK` (landing page working), `/app` redirected to `/maintenance` (`503`), and API returned `503`.
 - **Maintenance Inactive:** Removed flag $\rightarrow$ `/app` loads normally (`200 OK`).
 
@@ -18790,7 +18790,7 @@ make sure the teck stack if multi selectable user must be able to select multipl
 
 #### Assistant Implementation & Final Response
 
-Both the **Tech Stack** and **City** dropdown filters are now **multi-selectable**, with seamless real-time filtering across both the UI and the backend database.
+Both the **Tech Stack** and **City** dropdown filters are now **multi-selectable**, with automated real-time filtering across both the UI and the backend database.
 
 ---
 
@@ -18814,7 +18814,7 @@ Both the **Tech Stack** and **City** dropdown filters are now **multi-selectable
 - Uses PostgreSQL `or_` conditions across all selected items with `distinct()` grouping:
   - **Cities:** Matches any company residing in or having an address matching **any** of the selected cities.
   - **Tech Stack:** Matches any company whose detected tech stack contains **any** of the selected technologies.
-- Combined filters work together seamlessly (e.g., Selecting `Python` + `Adobe Photoshop` in `Surat` + `Rajkot` returns companies matching both criteria).
+- Combined filters work together smoothly (e.g., Selecting `Python` + `Adobe Photoshop` in `Surat` + `Rajkot` returns companies matching both criteria).
 
 ---
 
@@ -18840,7 +18840,7 @@ Pitched
 
 send
 
-—
+ - 
 
 Sign in
 
@@ -18891,7 +18891,7 @@ All 14 items have been addressed and verified live in the browser with full dark
 
 #### 4. Error Prompt Width & Zero Pitched Counter ([`static/js/app.js`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/static/js/app.js) & [`templates/index.html`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/templates/index.html))
 - **Error / Toast Prompt Width:** Expanded to `min-w-[340px] sm:min-w-[500px] max-w-2xl` with balanced flex spacing so messages don't awkwardly wrap into tight lines.
-- **Pitched Metric Count:** Replaced the dash (`—`) with **`0`** across both the Companies directory and Outreach Hub when signed out or when 0 pitches have been sent.
+- **Pitched Metric Count:** Replaced the dash (` - `) with **`0`** across both the Companies directory and Outreach Hub when signed out or when 0 pitches have been sent.
 
 #### 5. Unified Card Selection Borders ([`static/js/app.js`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/static/js/app.js))
 - Standardized the active filter ring across all metric cards in both themes to a consistent, elegant border:
@@ -18917,7 +18917,7 @@ All 14 items have been addressed and verified live in the browser with full dark
 - Removed `/landing` as a standalone HTML route; added a 301 permanent redirect from `/landing` directly to `/`.
 
 #### 13. Drastically Upgraded Terms & Privacy Legal Suite ([`templates/terms.html`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/templates/terms.html) & [`templates/privacy.html`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/templates/privacy.html))
-- Transformed both pages from temporary text boxes into a comprehensive, enterprise-grade legal documentation suite:
+- Transformed both pages from temporary text boxes into a detailed, enterprise-grade legal documentation suite:
   - **Sticky Table of Contents:** Quick jump navigation on the left sidebar.
   - **Telemetry Protocol Headers:** Enforced specification chips and jurisdiction details.
   - **Bento Guarantees:** "Zero Data Reselling", "Zero Public AI Model Training", "AES-128-CBC Token Encryption", and the mandatory Google API Limited Use compliance disclosures.
@@ -18998,7 +18998,7 @@ The left sidebar Table of Contents and certification boxes have been **completel
 | Terms of Service (Modular Dark Mode) |
 | :---: |
 | ![Terms Modular Dark](/C:/Users/vorar/.gemini/antigravity-ide/brain/535144eb-8643-4672-97c1-a50d8c6f76d5/verification_terms_modular_dark.png) |
-| *Seamless dark mode support with mineral green accents and warm ink slate cards.* |
+| *Automated dark mode support with mineral green accents and warm ink slate cards.* |
 
 ---
 
@@ -19035,7 +19035,7 @@ The raw native `<select>` pagination dropdown has been replaced with the **custo
 
 2. **Compact Pagination Styling ([`static/css/style.css`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/static/css/style.css))**:
    - Designed a compact hardware variant (`.dropdown-compact`) calibrated for pagination bars (`28px` height, monospace telemetry typography, subtle animated chevron, and rounded menu container).
-   - In **Light Mode**: warm alabaster ecru menu with dark typography, subtle active hover states, and mineral green checkmarks — **zero harsh Windows blue select boxes**.
+   - In **Light Mode**: warm alabaster ecru menu with dark typography, subtle active hover states, and mineral green checkmarks  -  **zero harsh Windows blue select boxes**.
    - In **Dark Mode**: deep charcoal slate menu with mineral green checkmarks and subtle surface borders.
 
 3. **Dynamic Page Size & Real-Time Sync ([`static/js/app.js`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/static/js/app.js) & [`app.py`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/app.py))**:
@@ -19084,7 +19084,7 @@ The artificial chips have been removed and the typography across both the **Term
 
 1. **Removed Telemetry / Protocol Chips**:
    - Completely purged `DATA_PROTECTION // GOOGLE_OAUTH_VERIFIED_2026` and `LEGAL_DIRECTIVE // TERMS_OF_SERVICE_V2.4`.
-   - Replaced with a clean, standard metadata header (`Last Updated: October 24, 2026 • Active & Effective`).
+   - Replaced with a clean, standard metadata header (`Last Updated: October 24, 2026 - Active & Effective`).
 
 2. **Standardized Type Scale & Hierarchy**:
    - **Page Title (`h1`)**: Consistent `text-2xl sm:text-3xl font-bold tracking-tight text-on-surface` (no oversized display styling).
@@ -19173,7 +19173,7 @@ Cloudflare has a **"Add records automatically"** button that configures these wi
 | **MX** | `@` | `route1.mx.cloudflare.net` | `91` | DNS only | Auto |
 | **MX** | `@` | `route2.mx.cloudflare.net` | `68` | DNS only | Auto |
 | **MX** | `@` | `route3.mx.cloudflare.net` | `26` | DNS only | Auto |
-| **TXT** *(SPF)* | `@` | `v=spf1 include:_spf.mx.cloudflare.net ~all` | — | DNS only | Auto |
+| **TXT** *(SPF)* | `@` | `v=spf1 include:_spf.mx.cloudflare.net ~all` |  -  | DNS only | Auto |
 
 > [!NOTE]
 > In Cloudflare DNS, typing `@` in the **Name** field automatically refers to your root domain `outreachpilot.in`.
@@ -19218,10 +19218,10 @@ The requested homepage updates have been completed and verified:
 1. **Removed the "Send via Gmail in App" Button**:
    - Removed the duplicate redirection CTA from the specimen pitch preview action bar. Only the clean, functional **`[Copy Pitch]`** button remains.
 
-2. **Removed "· 0 Templates"**:
+2. **Removed "/ 0 Templates"**:
    - Simplified the telemetry label in the preview terminal footer to:
      ```html
-     ⚡ Contextual Synthesis
+      Contextual Synthesis
      ```
 
 3. **Replaced Real Companies with Realistic Imaginary Entities**:
@@ -19759,7 +19759,7 @@ The `.gitignore` has been rewritten, and all changes have been committed in stru
 
 | Batch & Commit Hash | Scope & Message | Key Files Changed |
 |---|---|---|
-| **Batch 1** (`00bffa0`) | `chore(git): rewrite .gitignore with comprehensive production rules` | [`.gitignore`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/.gitignore) |
+| **Batch 1** (`00bffa0`) | `chore(git): rewrite .gitignore with detailed production rules` | [`.gitignore`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/.gitignore) |
 | **Batch 2** (`c18ef0e`) | `chore(tooling): add playwright cli tooling dependencies and update render deployment configuration` | [`package.json`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/package.json), [`package-lock.json`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/package-lock.json), [`render.yaml`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/render.yaml) |
 | **Batch 3** (`125da7d`) | `refactor(core): harden config security, db connection resilience, and enrichment pipelines` | [`config.py`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/config.py), [`db.py`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/db.py), [`enricher.py`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/enricher.py), [`scraper_engine.py`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/scraper_engine.py), [`cloud_enrich.py`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/cloud_enrich.py), [`cloud_worker.py`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/cloud_worker.py), [`ai_agent.py`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/ai_agent.py) |
 | **Batch 4** (`63ff42d`) | `feat(design-system): implement OutreachPilot Design System 3.0 with offline typography and styling tokens` | [`DESIGN.md`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/DESIGN.md), [`static/css/fonts.css`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/static/css/fonts.css), [`static/fonts/`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/static/fonts/), [`static/favicon.ico`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/static/favicon.ico), [`static/img/favicon.svg`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/static/img/favicon.svg), [`static/css/style.css`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/static/css/style.css) |
@@ -19975,7 +19975,7 @@ Successfully committed and pushed to `origin/main`!
 - **Theme Contrast & Polish**: Resolved light/dark contrast across invalid lead cards, markdown parser fallback, sidebar, and action buttons.
 - **Filter Mapping**: Aligned status chips (`sent`/`contacted`, `ready`/`uncontacted`) with backend query logic.
 
-**Commit**: [`f8a32c5`](https://github.com/vorarahul4700/outreachPilot/commit/f8a32c5) — *feat(ui): update pagination options to 10/20/50/100/200, align rocket_launch branding favicon, and polish theme contrast*
+**Commit**: [`f8a32c5`](https://github.com/vorarahul4700/outreachPilot/commit/f8a32c5)  -  *feat(ui): update pagination options to 10/20/50/100/200, align rocket_launch branding favicon, and polish theme contrast*
 
 ---
 
@@ -20051,7 +20051,7 @@ git push origin main
 
 ### Commit Summary
 - **Commit**: [`480280e`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/static/js/app.js)
-- **Message**: `fix(outreach): streamline outreach pagination and state initialization in app.js`
+- **Message**: `fix(outreach): simplify outreach pagination and state initialization in app.js`
 - **Branch status**: `main` is up to date with `origin/main`, working tree is completely clean.
 
 ---
@@ -20136,7 +20136,7 @@ All tasks have been completed and verified across the application:
 - **Template Integration**: Wired favicon tags uniformly across all 7 templates ([`index.html`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/templates/index.html), [`landing.html`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/templates/landing.html), [`404.html`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/templates/404.html), [`error.html`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/templates/error.html), [`maintenance.html`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/templates/maintenance.html), [`privacy.html`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/templates/privacy.html), and [`terms.html`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/templates/terms.html)).
 
 ### 2. Standardized Pagination Format (`10`, `20`, `50`, `100`, `200`)
-- **Frontend Dropdowns**: Configured all three pagination controls—**Scout Leads**, **Directory Companies**, and **Outreach Pipeline** in [`static/js/app.js`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/static/js/app.js) with options:
+- **Frontend Dropdowns**: Configured all three pagination controls - **Scout Leads**, **Directory Companies**, and **Outreach Pipeline** in [`static/js/app.js`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/static/js/app.js) with options:
   $$\text{10},\ \text{20},\ \text{50},\ \text{100},\ \text{200}$$
   with default set to `20`.
 - **HTML Defaults**: Updated hidden input values and visible labels in [`templates/index.html`](file:///c:/Users/vorar/OneDrive/Desktop/gScrapper/templates/index.html).

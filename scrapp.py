@@ -117,12 +117,12 @@ class UltraFastGoogleLocalScraper:
             for row in rows:
                 text = row.get_text(strip=True)
                 if (
-                    "·" in text
+                    "\u00b7" in text
                     and not re.search(r"^\d\.\d", text)
                     and "Open" not in text
                     and "Closed" not in text
                 ):
-                    parts = text.split("·")
+                    parts = text.split("\u00b7")
                     address_part = parts[0].strip()
                     if "years in business" in address_part and len(parts) > 1:
                         address_part = parts[1].strip()
@@ -224,7 +224,7 @@ class UltraFastGoogleLocalScraper:
                     break
 
         total_time = time.time() - t_start
-        print(f"\n[🚀] Completed {len(all_results)} companies in {total_time:.2f}s total!")
+        print(f"\n[+] Completed {len(all_results)} companies in {total_time:.2f}s total!")
         return all_results
 
 

@@ -113,10 +113,41 @@ def clean_json_response(raw_text: str) -> dict[str, Any]:
         return {}
 
 
+def sanitize_human_text(text: str) -> str:
+    """
+    Cleans text to strictly adhere to natural human writing:
+    - Em dashes and en dashes -> simple hyphen (-)
+    - Curly quotes -> straight quotes (" ')
+    - Unicode ellipsis -> ...
+    - Structural emojis removed
+    - Non-breaking spaces and zero-width characters removed
+    """
+    if not text or not isinstance(text, str):
+        return text or ""
+    
+    cleaned = text
+    cleaned = cleaned.replace("\u2014", " - ").replace("\u2013", "-")
+    cleaned = cleaned.replace("\u201c", '"').replace("\u201d", '"')
+    cleaned = cleaned.replace("\u2018", "'").replace("\u2019", "'")
+    cleaned = cleaned.replace("\u2026", "...")
+    cleaned = cleaned.replace("\u00a0", " ").replace("\u200b", "").replace("\u200c", "").replace("\u200d", "")
+    cleaned = cleaned.replace("\u202f", " ").replace("\u2009", " ").replace("\ufeff", "")
+    cleaned = cleaned.replace("\u2011", "-").replace("\u2010", "-")
+    # Strip emojis and special bullets/crosses using escaped codepoints
+    cleaned = re.sub(
+        r"[\U0001f680\u2728\U0001f4a1\U0001f525\U0001f3af\U0001f4cc\U0001f511\u26a1\U0001f6e0\U0001f4c8\U0001f9e0\U0001f31f\U0001f4bc\U0001f50d\u2705\u274c\u26a0\u2713\u2714\u2717\u2022\u00b7\u25b8\u25b6\u25ba]",
+        "",
+        cleaned
+    )
+    cleaned = re.sub(r" +", " ", cleaned)
+    cleaned = re.sub(r" - - ", " - ", cleaned)
+    return cleaned.strip()
+
+
 def analyze_company(company_name: str, domain: str, scraped_text: str) -> dict[str, Any]:
     """
     Analyzes scraped text from company's website using AI Agent.
-    Generates a comprehensive 6-part business and technical intelligence dossier.
+    Generates a structured 6-part business and technical intelligence dossier.
     """
     if not client:
         return {
@@ -141,7 +172,7 @@ def analyze_company(company_name: str, domain: str, scraped_text: str) -> dict[s
             "tone": ""
         }
 
-    prompt = f"""Act as a senior business research analyst. You are compiling a comprehensive, fact-grounded company profile for "{company_name}" ({domain}) based on their website content (including Home, About Us, Services, Portfolio, and Contact pages).
+    prompt = f"""Act as a senior business research analyst. You are compiling a detailed, fact-grounded company profile for "{company_name}" ({domain}) based on their website content (including Home, About Us, Services, Portfolio, and Contact pages).
 
 Scraped Website Content:
 ---
@@ -242,28 +273,28 @@ CRITICAL ANTI-HALLUCINATION RULES:
 2. ZERO INVENTED DOMAINS: If the candidate never worked in ETL Pipelines, Web Scraping, or Distributed Systems, DO NOT mention or tag them. Base all projects and accomplishments 100% on what is written.
 3. EXTRACT EXACT CANDIDATE NAME: Extract the candidate's actual full name from the top of the resume (e.g. Dhanrajsinh Parmar). Never label them "Candidate" if their name is present.
 
-Step 1 — Identify the resume archetype.
-Classify it as: Fresher/Entry-level, Early-career (1–3 yrs), Mid-level (4–7 yrs), Senior (8+ yrs), Career-switcher, Freelancer/Consultant, Creative/Portfolio-based, or Non-technical/Business. Note the domain based strictly on their actual work.
+Step 1: Identify the resume archetype.
+Classify it as: Fresher/Entry-level, Early-career (1-3 yrs), Mid-level (4-7 yrs), Senior (8+ yrs), Career-switcher, Freelancer/Consultant, Creative/Portfolio-based, or Non-technical/Business. Note the domain based strictly on their actual work.
 
-Step 2 — Extract and structure:
+Step 2: Extract and structure:
 
-Candidate Snapshot — Name, total years of experience, current/most recent role and company, education and CGPA/grade, location and contact signals.
+Candidate Snapshot: Name, total years of experience, current/most recent role and company, education and CGPA/grade, location and contact signals.
 
-Skills Inventory (grouped) — Languages, frameworks, databases, cloud/tools, soft skills. Only include technologies explicitly listed or used in their projects/jobs.
+Skills Inventory (grouped): Languages, frameworks, databases, cloud/tools, soft skills. Only include technologies explicitly listed or used in their projects/jobs.
 
-Experience Highlights — For each role: company, duration, scope. Pull out every quantified achievement (%, time saved, revenue, users, scale) that appears in the text. State the business impact.
+Experience Highlights: For each role: company, duration, scope. Pull out every quantified achievement (%, time saved, revenue, users, scale) that appears in the text. State the business impact.
 
-Project Deep-Dives — For each project: problem, stack, what was built, measurable outcome, complexity.
+Project Deep-Dives: For each project: problem, stack, what was built, measurable outcome, complexity.
 
-Strong Points — The Differentiators — List 4–6 specific, evidence-backed strengths directly proven by their bullets.
+Strong Points (The Differentiators): List 4-6 specific, evidence-backed strengths directly proven by their bullets.
 
-Gaps & Risks — Honest evaluation of gaps relative to the target role ({default_role}).
+Gaps & Risks: Honest evaluation of gaps relative to the target role ({default_role}).
 
-Best-Fit Roles — 3–5 job titles the candidate is realistically competitive for based on their actual resume stack.
+Best-Fit Roles: 3-5 job titles the candidate is realistically competitive for based on their actual resume stack.
 
-ATS Keyword Extract — 20–30 relevant keywords verified in their profile.
+ATS Keyword Extract: 20-30 relevant keywords verified in their profile.
 
-Step 3 — Output format. Return a strictly valid JSON object matching this schema:
+Step 3: Output format. Return a strictly valid JSON object matching this schema:
 {{
   "full_name": "Exact Candidate Full Name",
   "target_role": "{default_role}",
@@ -281,7 +312,7 @@ Step 3 — Output format. Return a strictly valid JSON object matching this sche
   ],
   "best_fit_roles": ["Role 1", "Role 2", "Role 3"],
   "ats_keywords": ["keyword1", "keyword2", "keyword3"],
-  "detailed_profile_analysis": "Comprehensive Markdown report with clear headings matching Step 1 and Step 2. Reference the exact resume bullets. Never invent anything."
+  "detailed_profile_analysis": "Detailed technical report with clear headings matching Step 1 and Step 2. Reference the exact resume bullets. Never invent anything."
 }}
 
 Target Role Context: {default_role}
@@ -449,7 +480,7 @@ Deliverables (must return valid JSON matching this schema):
 
         linkedin = (
             f"Hi {contact_name or company_name + ' team'},\n\n"
-            f"I’m reaching out to explore potential {target_role} opportunities at {company_name}. "
+            f"I am reaching out to explore potential {target_role} opportunities at {company_name}. "
             f"I specialize in {skills} and recently {proof}. Given your work with {comp_tech_focus}, "
             f"I'd love to connect and share my resume{resume_ref} if you have any open engineering roles.\n\n"
             f"Best regards,\n{candidate_name}"

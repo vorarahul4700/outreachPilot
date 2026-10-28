@@ -1,7 +1,7 @@
 /* ==========================================================================
-   OutreachPilot Design System — Artisanal Loom & Bento Workshop
+   OutreachPilot Design System: Artisanal Loom & Bento Workshop
    Theme: Warm Ink Slate, Unbleached Linen Ecru, Mineral Moss & Wood Bronze
-   Tactile Hardware Precision (Teenage Engineering × Swiss Modernism)
+   Tactile Hardware Precision (Teenage Engineering / Swiss Modernism)
    ========================================================================== */
 @import url('fonts.css');
 
@@ -505,7 +505,7 @@ body.light .btn-card-pitch:hover *,
 }
 
 /* ============================================================
-   SIDEBAR — Collapsible Left Navigation (Artisanal Loom Style)
+   SIDEBAR: Collapsible Left Navigation (Artisanal Loom Style)
    ============================================================ */
 #app-sidebar {
   background-color: rgb(var(--color-surface-container-low)) !important;

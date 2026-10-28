@@ -159,14 +159,14 @@ def extract_address_and_phone(card: Any, company_name: str) -> tuple[str, str]:
             continue
 
         # Skip customer review snippet quotes
-        if row_text.startswith('"') or row_text.startswith("“"):
+        if row_text.startswith('"') or row_text.startswith("\u201c"):
             continue
 
-        # Skip rows that are purely rating & category (e.g. "4.8 (269) · Software company")
+        # Skip rows that are purely rating and category (e.g. "4.8 (269) - Software company")
         if re.search(r"^\d\.\d\s*\(\d+\)", row_text):
             continue
 
-        parts = [p.strip() for p in row_text.split("·")]
+        parts = [p.strip() for p in row_text.split("\u00b7")]
 
         # Skip if entire row is business hours
         if all(HOURS_PATTERNS.search(p) or "pm" in p.lower() or "am" in p.lower() for p in parts if p):

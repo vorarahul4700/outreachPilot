@@ -52,8 +52,8 @@ document.addEventListener("DOMContentLoaded", () => {
       .replace(/^#\s*(.*$)/gm, "\n$1\n" + "=".repeat(40))
       .replace(/\*\*(.*?)\*\*/g, "$1")
       .replace(/\*(.*?)\*/g, "$1")
-      .replace(/^\s*[\-\*]\s+/gm, "• ")
-      .replace(/^\s*\-\-\s*/gm, "• ")
+      .replace(/^\s*[\-\*]\s+/gm, "- ")
+      .replace(/^\s*\-\-\s*/gm, "- ")
       .replace(/\n{3,}/g, "\n\n")
       .trim();
   }
@@ -71,7 +71,7 @@ document.addEventListener("DOMContentLoaded", () => {
     html = html.replace(/^### (.*$)/gim, '<h4 class="text-primary font-bold text-xs mt-3 mb-1 uppercase tracking-wider">$1</h4>');
     html = html.replace(/^## (.*$)/gim, '<h3 class="text-on-surface font-bold text-sm mt-3 mb-1.5">$1</h3>');
     html = html.replace(/\*\*(.*?)\*\*/gim, '<strong class="text-on-surface font-semibold">$1</strong>');
-    html = html.replace(/^\- (.*$)/gim, '<div class="flex items-start space-x-1.5 my-1 ml-2"><span class="text-primary font-bold">•</span><span class="text-on-surface-variant">$1</span></div>');
+    html = html.replace(/^\- (.*$)/gim, '<div class="flex items-start space-x-1.5 my-1 ml-2"><span class="text-primary font-bold">-</span><span class="text-on-surface-variant">$1</span></div>');
     html = html.replace(/\n\n/gim, '<div class="h-2"></div>');
     html = html.replace(/\n/gim, '<br>');
     return html;
@@ -799,7 +799,7 @@ document.addEventListener("DOMContentLoaded", () => {
     currentScoutQueryLabel = queryLabel;
 
     if (scoutLeadsCount) scoutLeadsCount.textContent = `${(list || []).length} Leads`;
-    if (scoutQueryLabel) scoutQueryLabel.textContent = queryLabel || '—';
+    if (scoutQueryLabel) scoutQueryLabel.textContent = queryLabel || '-';
 
     if (scoutCardsContainer) scoutCardsContainer.innerHTML = "";
     if (scoutPagination) scoutPagination.classList.add("hidden");
@@ -979,7 +979,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (liveScrapedResults && liveScrapedResults.length > 0) {
       renderScoutResults(liveScrapedResults, queryTag ? `Discovered Leads: ${queryTag}` : "Discovered Leads");
     } else {
-      renderScoutResults([], queryTag ? `Ready to Search: ${queryTag}` : "—");
+      renderScoutResults([], queryTag ? `Ready to Search: ${queryTag}` : "-");
     }
   }
 
@@ -1304,7 +1304,7 @@ document.addEventListener("DOMContentLoaded", () => {
       document.querySelectorAll(".outreach-badge-emails").forEach(el => el.textContent = withEmails);
       document.querySelectorAll(".outreach-badge-ready").forEach(el => el.textContent = Math.max(0, total - userContactedCount));
       document.querySelectorAll(".outreach-badge-sent").forEach(el => {
-        el.textContent = isLoggedIn ? userContactedCount : "—";
+        el.textContent = isLoggedIn ? userContactedCount : "-";
       });
     } else if (Array.isArray(statsOrList)) {
       const validList = statsOrList.filter(c => !c.is_invalid);
@@ -1737,7 +1737,7 @@ document.addEventListener("DOMContentLoaded", () => {
       { value: "15", label: "15 Pages (~300 leads)" },
       { value: "20", label: "20 Pages (~400 leads)" },
       { value: "30", label: "30 Pages (~600 leads)" },
-      { value: "0", label: "⚡ All Available Pages" }
+      { value: "0", label: "All Available Pages" }
     ]);
   }
 
@@ -2545,7 +2545,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 cmodalDetailedAnalysis.dataset.rawText = detailData.profile.detailed_analysis;
                 cmodalDetailedAnalysis.innerHTML = formatMarkdown(detailData.profile.detailed_analysis);
               } else {
-                cmodalDetailedAnalysis.innerHTML = `<span class="text-on-surface-variant italic">Click 'Enrich with AI' below to generate comprehensive intelligence report.</span>`;
+                cmodalDetailedAnalysis.innerHTML = `<span class="text-on-surface-variant italic">Click 'Enrich with AI' below to generate detailed intelligence report.</span>`;
               }
               const stack = detailData.profile.tech_stack || [];
               if (stack.length > 0) {
@@ -2556,7 +2556,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 cmodalTechstack.innerHTML = `<span class="text-on-surface-variant italic text-[11px]">No tech stack detected</span>`;
               }
             } else {
-              cmodalDetailedAnalysis.innerHTML = `<span class="text-on-surface-variant italic">Not enriched yet. Click 'Enrich with AI' below to generate comprehensive intelligence report.</span>`;
+              cmodalDetailedAnalysis.innerHTML = `<span class="text-on-surface-variant italic">Not enriched yet. Click 'Enrich with AI' below to generate detailed intelligence report.</span>`;
             }
 
             if (detailData.emails && detailData.emails.length > 0) {
@@ -2577,7 +2577,7 @@ document.addEventListener("DOMContentLoaded", () => {
         .catch(err => {
           console.warn("Failed to fetch on-demand company intel:", err);
           if (activeModalCompany && activeModalCompany.id === company.id) {
-            cmodalDetailedAnalysis.innerHTML = `<span class="text-on-surface-variant italic">Click 'Enrich with AI' below to generate comprehensive intelligence report.</span>`;
+            cmodalDetailedAnalysis.innerHTML = `<span class="text-on-surface-variant italic">Click 'Enrich with AI' below to generate detailed intelligence report.</span>`;
           }
         });
     }
@@ -4383,7 +4383,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll(".outreach-badge-emails").forEach(el => el.textContent = emailsCount);
     document.querySelectorAll(".outreach-badge-ready").forEach(el => el.textContent = readyCount);
     document.querySelectorAll(".outreach-badge-sent").forEach(el => {
-      el.textContent = isLoggedIn ? sentCount : "—";
+      el.textContent = isLoggedIn ? sentCount : "-";
     });
 
     if (totalCount === 0) {
