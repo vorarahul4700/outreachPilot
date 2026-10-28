@@ -174,13 +174,26 @@ if clean_db_url.startswith("postgres://"):
 elif clean_db_url.startswith("postgresql://") and not clean_db_url.startswith("postgresql+"):
     clean_db_url = clean_db_url.replace("postgresql://", "postgresql+psycopg2://", 1)
 
-connect_args = {"connect_timeout": 15}
+connect_args = {
+    "connect_timeout": 10,
+    "keepalives": 1,
+    "keepalives_idle": 30,
+    "keepalives_interval": 10,
+    "keepalives_count": 5
+}
 if "postgresql" in clean_db_url:
     try:
         parsed_url = urllib.parse.urlparse(clean_db_url)
         if parsed_url.hostname and not parsed_url.hostname.replace(".", "").isdigit():
-            ipv4_addr = socket.gethostbyname(parsed_url.hostname)
-            connect_args["hostaddr"] = ipv4_addr
+            # Try AF_INET getaddrinfo first for reliable IPv4 resolution
+            try:
+                addr_info = socket.getaddrinfo(parsed_url.hostname, 5432, socket.AF_INET, socket.SOCK_STREAM)
+                if addr_info:
+                    connect_args["hostaddr"] = addr_info[0][4][0]
+            except Exception:
+                # If local DNS is unreachable or drops A records, fallback to known AWS ap-southeast-1 pooler IPv4
+                if "neon.tech" in parsed_url.hostname:
+                    connect_args["hostaddr"] = "52.76.246.190"
     except Exception as dns_err:
         print(f"[DB Warning] Could not pre-resolve IPv4 hostaddr: {dns_err}")
 
@@ -188,9 +201,10 @@ try:
     engine = create_engine(
         clean_db_url,
         pool_pre_ping=True,
-        pool_recycle=60,
-        pool_size=10,
-        max_overflow=20,
+        pool_recycle=300,
+        pool_size=15,
+        max_overflow=25,
+        pool_timeout=20,
         connect_args=connect_args
     )
     print(f"[DB] Initialized database engine: {engine.name} ({engine.url.render_as_string(hide_password=True)})")
@@ -202,12 +216,12 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
 def init_db():
-    """Create tables automatically on startup and ensure columns exist"""
+    """Create tables automatically on startup and ensure columns & indexes exist"""
     try:
         Base.metadata.create_all(bind=engine)
         print(f"[DB] Schema initialized successfully on engine: {engine.name}")
 
-        # Safe schema alteration for new columns (PostgreSQL only)
+        # Safe schema alteration & indexing for high-concurrency performance (PostgreSQL only)
         if engine.name == "postgresql":
             with engine.connect() as conn:
                 conn.execute(text("ALTER TABLE companies ADD COLUMN IF NOT EXISTS is_invalid BOOLEAN DEFAULT FALSE;"))
@@ -224,6 +238,15 @@ def init_db():
                 conn.execute(text("ALTER TABLE outreach_logs ADD COLUMN IF NOT EXISTS email_body TEXT;"))
                 conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS resume_link VARCHAR(500);"))
                 conn.execute(text("ALTER TABLE scout_jobs ALTER COLUMN status_message TYPE TEXT;"))
+
+                # Performance indexes for fast querying across tens of thousands of rows
+                conn.execute(text("CREATE INDEX IF NOT EXISTS ix_companies_is_enriched ON companies(is_enriched);"))
+                conn.execute(text("CREATE INDEX IF NOT EXISTS ix_companies_created_at ON companies(created_at DESC);"))
+                conn.execute(text("CREATE INDEX IF NOT EXISTS ix_companies_rating ON companies(rating DESC NULLS LAST);"))
+                conn.execute(text("CREATE INDEX IF NOT EXISTS ix_companies_reviews_count ON companies(reviews_count DESC);"))
+                conn.execute(text("CREATE INDEX IF NOT EXISTS ix_company_emails_company_id ON company_emails(company_id);"))
+                conn.execute(text("CREATE INDEX IF NOT EXISTS ix_company_profiles_company_id ON company_profiles(company_id);"))
+                conn.execute(text("CREATE INDEX IF NOT EXISTS ix_outreach_logs_user_company ON outreach_logs(user_id, company_id);"))
                 conn.commit()
     except Exception as ex:
         print(f"[DB Warning] Could not auto-create/migrate tables: {ex}")

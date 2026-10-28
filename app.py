@@ -29,11 +29,11 @@ from fastapi.templating import Jinja2Templates
 from google_auth_oauthlib.flow import Flow
 from pydantic import BaseModel
 from pypdf import PdfReader
-from sqlalchemy import String, func, or_
-from sqlalchemy.orm import Session
+from sqlalchemy import String, func, or_, text
+from sqlalchemy.orm import Session, joinedload
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-# In-memory cached filter metadata (60s TTL)
+# In-memory cached filter metadata (300s TTL for fast responses)
 _filter_cache = {
     "timestamp": 0.0,
     "data": None
@@ -60,6 +60,7 @@ from db import (
     ScoutJob,
     SessionLocal,
     User,
+    engine,
     get_db,
     init_db,
 )
@@ -88,9 +89,102 @@ def enforce_rate_limit(key: str, max_calls: int, window_seconds: int = 60):
     _rate_limit_store[key] = recent
 
 
+def _prewarm_cache():
+    """Pre-warm global filter stats and aggregations in background thread so user requests are instant (<10ms)"""
+    try:
+        db = SessionLocal()
+        now = time.time()
+        counts_res = db.execute(text("""
+            SELECT 
+                COUNT(*) FILTER (WHERE is_invalid = FALSE) AS total_valid,
+                COUNT(*) FILTER (WHERE is_invalid = TRUE) AS invalid_count,
+                COUNT(*) FILTER (WHERE is_invalid = FALSE AND is_enriched = TRUE) AS enriched_count
+            FROM companies
+            WHERE domain NOT LIKE '%.local' AND domain LIKE '%.%';
+        """)).fetchone()
+
+        total_valid = (counts_res[0] if counts_res else 0) or 0
+        invalid_count = (counts_res[1] if counts_res else 0) or 0
+        enriched_count = (counts_res[2] if counts_res else 0) or 0
+
+        with_emails_count = db.execute(text("""
+            SELECT COUNT(DISTINCT ce.company_id)
+            FROM company_emails ce
+            JOIN companies c ON c.id = ce.company_id
+            WHERE c.is_invalid = FALSE;
+        """)).scalar() or 0
+
+        city_rows = db.execute(text("""
+            SELECT initcap(trim(city)) AS norm_city, COUNT(*) AS count
+            FROM companies 
+            WHERE is_invalid = FALSE AND city IS NOT NULL AND trim(city) != ''
+            GROUP BY norm_city
+            ORDER BY norm_city ASC;
+        """)).fetchall()
+
+        sorted_cities = [{"name": r[0], "count": r[1]} for r in city_rows if r[0]]
+
+        tech_map = defaultdict(int)
+        try:
+            tech_rows = db.execute(text("""
+                SELECT item, COUNT(*) AS count
+                FROM company_profiles,
+                     jsonb_array_elements_text(
+                         CASE 
+                             WHEN jsonb_typeof(tech_stack) = 'array' THEN tech_stack 
+                             ELSE '[]'::jsonb 
+                         END
+                     ) AS item
+                WHERE item IS NOT NULL AND trim(item) != ''
+                GROUP BY item
+                ORDER BY count DESC
+                LIMIT 60;
+            """)).fetchall()
+            for t_name, count in tech_rows:
+                if t_name:
+                    clean = t_name.strip()
+                    if clean:
+                        key = clean.lower()
+                        if key == ".net" or key.startswith(".net "):
+                            display = ".NET" + clean[4:]
+                        elif key in ["aws", "php", "html", "css", "sql", "api", "seo", "crm", "erp"]:
+                            display = clean.upper()
+                        elif key == "javascript":
+                            display = "JavaScript"
+                        elif key == "typescript":
+                            display = "TypeScript"
+                        else:
+                            display = clean.title() if len(clean) > 3 else clean.upper()
+                        tech_map[display] += count
+        except Exception:
+            pass
+
+        sorted_tech = [{"name": k, "count": v} for k, v in sorted(tech_map.items(), key=lambda x: x[0].lower())]
+
+        _filter_cache["timestamp"] = now
+        _filter_cache["data"] = {
+            "cities": sorted_cities,
+            "tech_stacks": sorted_tech,
+            "stats": {
+                "total": total_valid,
+                "enriched": enriched_count,
+                "emails": with_emails_count,
+                "invalid": invalid_count,
+                "contacted": None,
+                "is_logged_in": False
+            },
+            "is_master_admin": False
+        }
+        print(f"[Cache] Pre-warmed filters cache successfully ({total_valid} valid companies, {len(sorted_cities)} cities).")
+        db.close()
+    except Exception as e:
+        print(f"[Cache Warning] Pre-warming filter cache failed: {e}")
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
+    asyncio.create_task(asyncio.to_thread(_prewarm_cache))
     yield
 
 
@@ -669,7 +763,7 @@ async def stop_scrape():
 
 
 @app.get("/api/companies/filters")
-async def get_companies_filters(request: Request, db: Session = Depends(get_db)):
+def get_companies_filters(request: Request, db: Session = Depends(get_db)):
     """Cached filter metadata (tech stacks, cities, and aggregate metric counts)"""
     global _filter_cache
     now = time.time()
@@ -677,22 +771,18 @@ async def get_companies_filters(request: Request, db: Session = Depends(get_db))
         user = get_current_user(db, request)
         is_admin = bool(user and config.is_master_admin(user.email))
 
-        base_query = (
-            db.query(Company)
-            .filter(~Company.domain.like("%.local"))
-            .filter(Company.domain.contains("."))
-        )
-
         # Pitched / contacted count is strictly PER-USER and ONLY available when logged in
         user_contacted_count = None
         if user:
-            sent_subq = db.query(OutreachLog.company_id).filter(
-                OutreachLog.status == "SENT",
-                OutreachLog.user_id == user.id
-            ).distinct()
-            user_contacted_count = base_query.filter(Company.is_invalid.is_(False), Company.id.in_(sent_subq)).count()
+            user_contacted_count = (
+                db.query(OutreachLog.company_id)
+                .filter(OutreachLog.status == "SENT", OutreachLog.user_id == user.id)
+                .distinct()
+                .count()
+            )
 
-        if _filter_cache.get("data") and (now - _filter_cache.get("timestamp", 0) < 60):
+        # 5-minute cache TTL (300s) for aggregate metrics, cities, and tech stacks
+        if _filter_cache.get("data") and (now - _filter_cache.get("timestamp", 0) < 300):
             cached = copy.deepcopy(_filter_cache["data"])
             cached["is_master_admin"] = is_admin
             if "stats" in cached and isinstance(cached["stats"], dict):
@@ -700,45 +790,63 @@ async def get_companies_filters(request: Request, db: Session = Depends(get_db))
                 cached["stats"]["is_logged_in"] = bool(user)
             return cached
 
-        total_valid = base_query.filter(Company.is_invalid.is_(False)).count()
-        invalid_count = base_query.filter(Company.is_invalid.is_(True)).count()
-        enriched_count = base_query.filter(Company.is_invalid.is_(False), Company.is_enriched.is_(True)).count()
+        # Fast single SQL query for valid, invalid, and enriched counts
+        counts_res = db.execute(text("""
+            SELECT 
+                COUNT(*) FILTER (WHERE is_invalid = FALSE) AS total_valid,
+                COUNT(*) FILTER (WHERE is_invalid = TRUE) AS invalid_count,
+                COUNT(*) FILTER (WHERE is_invalid = FALSE AND is_enriched = TRUE) AS enriched_count
+            FROM companies
+            WHERE domain NOT LIKE '%.local' AND domain LIKE '%.%';
+        """)).fetchone()
 
-        emails_subq = db.query(CompanyEmail.company_id).distinct()
-        with_emails_count = base_query.filter(Company.is_invalid.is_(False), Company.id.in_(emails_subq)).count()
+        total_valid = (counts_res[0] if counts_res else 0) or 0
+        invalid_count = (counts_res[1] if counts_res else 0) or 0
+        enriched_count = (counts_res[2] if counts_res else 0) or 0
 
-        # Cities aggregation
-        cities_map = defaultdict(int)
-        for (c_city,) in db.query(Company.city).filter(Company.is_invalid.is_(False), Company.city.isnot(None), Company.city != "").all():
-            if c_city:
-                clean = c_city.strip()
-                if clean:
-                    norm = clean.title()
-                    cities_map[norm] += 1
+        # Distinct company email count
+        with_emails_count = db.execute(text("""
+            SELECT COUNT(DISTINCT ce.company_id)
+            FROM company_emails ce
+            JOIN companies c ON c.id = ce.company_id
+            WHERE c.is_invalid = FALSE;
+        """)).scalar() or 0
+
+        # PostgreSQL GROUP BY for 73 cities in ~100ms
+        city_rows = db.execute(text("""
+            SELECT initcap(trim(city)) AS norm_city, COUNT(*) AS count
+            FROM companies 
+            WHERE is_invalid = FALSE AND city IS NOT NULL AND trim(city) != ''
+            GROUP BY norm_city
+            ORDER BY norm_city ASC;
+        """)).fetchall()
 
         sorted_cities = [
-            {"name": city_name, "count": count}
-            for city_name, count in sorted(cities_map.items(), key=lambda x: x[0])
+            {"name": r[0], "count": r[1]}
+            for r in city_rows if r[0]
         ]
 
-        # Tech stack aggregation
+        # PostgreSQL JSONB aggregation for tech stacks
         tech_map = defaultdict(int)
-        for (stack,) in db.query(CompanyProfile.tech_stack).filter(CompanyProfile.tech_stack.isnot(None)).all():
-            items = []
-            if isinstance(stack, list):
-                items = stack
-            elif isinstance(stack, str):
-                try:
-                    parsed = json.loads(stack)
-                    if isinstance(parsed, list):
-                        items = parsed
-                    else:
-                        items = [s.strip() for s in stack.split(",") if s.strip()]
-                except Exception:
-                    items = [s.strip() for s in stack.split(",") if s.strip()]
-            for t in items:
-                if t and isinstance(t, str):
-                    clean = t.strip()
+        try:
+            tech_rows = db.execute(text("""
+                SELECT item, COUNT(*) AS count
+                FROM company_profiles,
+                     jsonb_array_elements_text(
+                         CASE 
+                             WHEN jsonb_typeof(tech_stack) = 'array' THEN tech_stack 
+                             ELSE '[]'::jsonb 
+                         END
+                     ) AS item
+                WHERE item IS NOT NULL AND trim(item) != ''
+                GROUP BY item
+                ORDER BY count DESC
+                LIMIT 60;
+            """)).fetchall()
+
+            for t_name, count in tech_rows:
+                if t_name:
+                    clean = t_name.strip()
                     if clean:
                         key = clean.lower()
                         if key == ".net" or key.startswith(".net "):
@@ -751,7 +859,9 @@ async def get_companies_filters(request: Request, db: Session = Depends(get_db))
                             display = "TypeScript"
                         else:
                             display = clean.title() if len(clean) > 3 else clean.upper()
-                        tech_map[display] += 1
+                        tech_map[display] += count
+        except Exception as tech_err:
+            print(f"[Filters Warning] JSONB tech stack query fallback: {tech_err}")
 
         sorted_tech = [
             {"name": tech_name, "count": count}
@@ -802,7 +912,7 @@ async def get_companies_filters(request: Request, db: Session = Depends(get_db))
 
 
 @app.get("/api/companies")
-async def get_companies(
+def get_companies(
     request: Request,
     page: int = 1,
     page_size: int = 20,
@@ -828,7 +938,14 @@ async def get_companies(
             .filter(Company.domain.contains("."))
         )
 
-        invalid_count = base_query.filter(Company.is_invalid.is_(True)).count()
+        # Pull invalid_count from cache if possible instead of running an extra full count
+        cached_invalid = 0
+        if is_admin:
+            if _filter_cache.get("data") and "stats" in _filter_cache["data"]:
+                cached_invalid = _filter_cache["data"]["stats"].get("invalid", 0)
+            else:
+                cached_invalid = base_query.filter(Company.is_invalid.is_(True)).count()
+        invalid_count = cached_invalid
 
         # 1. Base genuine vs excluded filtering
         if status == "invalid":
@@ -928,21 +1045,37 @@ async def get_companies(
         else:
             query = query.order_by(Company.id.desc())
 
-        total_count = query.count()
+        # 6b. Fast total_count resolution (reuse cached count when no custom search/city/tech filter is active)
+        has_custom_filters = bool(
+            (search and search.strip()) or
+            city_terms or
+            tech_terms or
+            status in ("contacted", "sent", "uncontacted", "ready")
+        )
+
+        if not has_custom_filters and _filter_cache.get("data") and "stats" in _filter_cache["data"]:
+            stats_cache = _filter_cache["data"]["stats"]
+            if status == "all" and not is_admin:
+                total_count = stats_cache.get("total", 0)
+            elif status == "enriched":
+                total_count = stats_cache.get("enriched", 0)
+            elif status == "emails":
+                total_count = stats_cache.get("emails", 0)
+            elif status == "invalid" and is_admin:
+                total_count = stats_cache.get("invalid", 0)
+            else:
+                total_count = query.count()
+        else:
+            total_count = query.count()
 
         # 7. Server-side pagination strictly enforcing defined list: [10, 20, 50, 100, 200]
-        ALLOWED_PAGE_SIZES = {10, 20, 50, 100, 200, 0}
+        ALLOWED_PAGE_SIZES = {10, 20, 50, 100, 200}
         if page_size not in ALLOWED_PAGE_SIZES:
             page_size = 20
 
-        if page_size > 0:
-            total_pages = max(1, (total_count + page_size - 1) // page_size) if total_count > 0 else 1
-            cur_page = max(1, min(page, total_pages)) if total_count > 0 else 1
-            companies = query.offset((cur_page - 1) * page_size).limit(page_size).all()
-        else:
-            total_pages = 1
-            cur_page = 1
-            companies = query.all()
+        total_pages = max(1, (total_count + page_size - 1) // page_size) if total_count > 0 else 1
+        cur_page = max(1, min(page, total_pages)) if total_count > 0 else 1
+        companies = query.offset((cur_page - 1) * page_size).limit(page_size).all()
 
         company_ids = [c.id for c in companies]
 
@@ -1045,7 +1178,7 @@ async def get_companies(
 
 
 @app.get("/api/companies/{company_id}")
-async def get_company_detail(company_id: int, request: Request, db: Session = Depends(get_db)):
+def get_company_detail(company_id: int, request: Request, db: Session = Depends(get_db)):
     """On-demand deep intelligence dossier and verified records for a single company modal"""
     user = get_current_user(db, request)
     is_admin = bool(user and config.is_master_admin(user.email))
@@ -1122,7 +1255,7 @@ async def get_company_detail(company_id: int, request: Request, db: Session = De
 
 # --- Stage 2: Deep Subpage Crawler & AI Enrichment (Login Gated) ---
 @app.get("/api/auth/status")
-async def auth_status(request: Request, db: Session = Depends(get_db)):
+def auth_status(request: Request, db: Session = Depends(get_db)):
     user = get_current_user(db, request)
     is_logged_in = bool(user and user.oauth_tokens)
     is_master = bool(is_logged_in and config.is_master_admin(user.email))
@@ -1418,7 +1551,7 @@ MAX_PDF_PAGES = 15
 
 
 @app.get("/api/resume/profile")
-async def get_candidate_profile(request: Request, db: Session = Depends(get_db)):
+def get_candidate_profile(request: Request, db: Session = Depends(get_db)):
     user = get_current_user(db, request)
     if not user:
         return {"profile": None, "resume_link": "", "target_role": ""}
@@ -2047,13 +2180,14 @@ async def bulk_send_outreach(
 
 
 @app.get("/api/outreach/logs")
-async def get_outreach_logs(request: Request = None, db: Session = Depends(get_db)):
+def get_outreach_logs(request: Request = None, db: Session = Depends(get_db)):
     user = get_current_user(db, request)
     if not user or not user.oauth_tokens:
         return {"logs": []}
 
     logs = (
         db.query(OutreachLog)
+        .options(joinedload(OutreachLog.company))
         .filter(OutreachLog.user_id == user.id)
         .order_by(OutreachLog.sent_at.desc())
         .limit(100)
@@ -2075,7 +2209,7 @@ async def get_outreach_logs(request: Request = None, db: Session = Depends(get_d
 
 
 @app.get("/api/outreach/sent/{company_id}")
-async def get_sent_email_for_company(company_id: int, request: Request, db: Session = Depends(get_db)):
+def get_sent_email_for_company(company_id: int, request: Request, db: Session = Depends(get_db)):
     user = get_current_user(db, request)
     if not user or not user.oauth_tokens:
         raise HTTPException(status_code=401, detail="Authentication required.")

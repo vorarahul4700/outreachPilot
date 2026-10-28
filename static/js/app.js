@@ -256,6 +256,8 @@ document.addEventListener("DOMContentLoaded", () => {
         renderPitchesList();
       }
       fetchAuditLogs();
+    } else if (tabId === "resume") {
+      loadCandidateProfile();
     }
     activeTab = tabId;
     refreshIcons();
@@ -1836,41 +1838,59 @@ document.addEventListener("DOMContentLoaded", () => {
   let totalServerPages = 1;
 
   let filterOptionsLoaded = false;
+  let filterFetchPromise = null;
 
   // Fetch cached filter options (Tech Stacks & Cities with counts) from backend
   async function fetchCompaniesFilters() {
-    try {
-      const res = await fetch("/api/companies/filters");
-      if (!res.ok) return;
-      const data = await res.json();
-      filterOptionsLoaded = true;
+    if (filterOptionsLoaded && filterFetchPromise === null) return;
+    if (filterFetchPromise) return filterFetchPromise;
 
-      // Build tech options
-      const techOpts = [{ value: "", label: "Tech Stack (All)", count: null }];
-      (data.tech_stacks || []).forEach(t => {
-        techOpts.push({ value: t.name.toLowerCase(), label: t.name, count: t.count });
-      });
-      if (ddFilterTech) ddFilterTech.setOptions(techOpts);
-      if (ddOutreachTech) ddOutreachTech.setOptions(techOpts);
+    filterFetchPromise = (async () => {
+      try {
+        const res = await fetch("/api/companies/filters");
+        if (!res.ok) return;
+        const data = await res.json();
+        filterOptionsLoaded = true;
 
-      // Build city options
-      const cityOpts = [{ value: "", label: "All Cities", count: null }];
-      (data.cities || []).forEach(c => {
-        cityOpts.push({ value: c.name.toLowerCase(), label: c.name, count: c.count });
-      });
-      if (ddFilterCity) ddFilterCity.setOptions(cityOpts);
-      if (ddOutreachCity) ddOutreachCity.setOptions(cityOpts);
+        // Build tech options
+        const techOpts = [{ value: "", label: "Tech Stack (All)", count: null }];
+        (data.tech_stacks || []).forEach(t => {
+          techOpts.push({ value: t.name.toLowerCase(), label: t.name, count: t.count });
+        });
+        if (ddFilterTech) ddFilterTech.setOptions(techOpts);
+        if (ddOutreachTech) ddOutreachTech.setOptions(techOpts);
 
-      if (data.stats) {
-        updateCompanyMetrics(data.stats);
+        // Build city options
+        const cityOpts = [{ value: "", label: "All Cities", count: null }];
+        (data.cities || []).forEach(c => {
+          cityOpts.push({ value: c.name.toLowerCase(), label: c.name, count: c.count });
+        });
+        if (ddFilterCity) ddFilterCity.setOptions(cityOpts);
+        if (ddOutreachCity) ddOutreachCity.setOptions(cityOpts);
+
+        if (data.stats) {
+          updateCompanyMetrics(data.stats);
+        }
+      } catch (e) {
+        console.warn("Failed to fetch company filters:", e);
+      } finally {
+        filterFetchPromise = null;
       }
-    } catch (e) {
-      console.warn("Failed to fetch company filters:", e);
-    }
+    })();
+
+    return filterFetchPromise;
   }
+
+  let companiesAbortController = null;
 
   async function fetchCompanies(preservePage = true) {
     try {
+      if (companiesAbortController) {
+        try { companiesAbortController.abort(); } catch (_) {}
+      }
+      companiesAbortController = new AbortController();
+      const signal = companiesAbortController.signal;
+
       if (!companies || companies.length === 0) {
         renderSkeletonCompanies(6);
       }
@@ -1896,10 +1916,9 @@ document.addEventListener("DOMContentLoaded", () => {
         sort: selectedSort
       });
 
-      const res = await fetch(`/api/companies?${params.toString()}`);
+      const res = await fetch(`/api/companies?${params.toString()}`, { signal });
       if (!res.ok) {
-        console.warn(`[Directory] API responded with HTTP ${res.status}. Retrying in 1.5s...`);
-        setTimeout(() => fetchCompanies(preservePage), 1500);
+        console.warn(`[Directory] API responded with HTTP ${res.status}.`);
         return;
       }
       const data = await res.json();
@@ -1930,6 +1949,7 @@ document.addEventListener("DOMContentLoaded", () => {
       renderCompanies(companies);
       updateScoutViewFromInputs();
     } catch (err) {
+      if (err.name === "AbortError") return;
       console.error("Failed to load companies:", err);
     }
   }
@@ -3094,7 +3114,6 @@ document.addEventListener("DOMContentLoaded", () => {
         statCardInvalid?.classList.add("hidden");
       }
       refreshIcons();
-      fetchCompaniesFilters();
     } catch (err) {
       console.warn("Auth status fetch error:", err);
     }
@@ -4175,7 +4194,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (isOutreachLoading) return;
     isOutreachLoading = true;
     try {
-      const res = await fetch("/api/companies?page_size=0&status=all");
+      const res = await fetch("/api/companies?page_size=50&status=all");
       if (res.ok) {
         const data = await res.json();
         allOutreachCompanies = data.companies || [];
@@ -4900,8 +4919,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // Initial Data Load & Render Lucide Icons
   refreshIcons();
   checkAuthStatus();
-  loadCandidateProfile();
   fetchCompanies();
-  fetchAuditLogs();
 });
 
