@@ -2069,12 +2069,8 @@ document.addEventListener("DOMContentLoaded", () => {
             statusBadge = `<span class="px-2.5 py-0.5 rounded text-caption font-mono bg-surface-container text-on-surface-variant border border-outline-variant/60 shrink-0">Uncontacted</span>`;
           }
 
-          // Description (2-line clamp with JSON cleanup)
-          const rawKeyword = c.normalized_keyword || c.search_keyword || '';
-          const cleanKeyword = rawKeyword.replace(/\s+(companies|firms|agencies)$/i, '').trim();
-          let rawDesc = (c.profile && c.profile.summary)
-            ? c.profile.summary
-            : (c.description || (cleanKeyword ? `${cleanKeyword} engineering and enterprise solutions.` : 'Technology solutions and services provider.'));
+          // Description: Only use actual scraped description or AI summary. Never manufacture fake text.
+          let rawDesc = (c.profile && c.profile.summary) ? c.profile.summary : (c.description || '');
           if (typeof rawDesc === 'string') {
             const trimmed = rawDesc.trim();
             if (trimmed.startsWith('{') || trimmed.includes('"summary"')) {
@@ -2086,7 +2082,7 @@ document.addEventListener("DOMContentLoaded", () => {
               }
             }
           }
-          const descText = rawDesc;
+          const descText = typeof rawDesc === 'string' ? rawDesc.trim() : '';
 
           // Contact & Location (Strict: Never guess contact@ or domain fallbacks)
           const hasEmail = Boolean(c.emails && c.emails.length > 0);
@@ -2142,10 +2138,14 @@ document.addEventListener("DOMContentLoaded", () => {
                 </div>
               </div>
 
-              <!-- Part 2: Description (2 lines clamp, breathable) -->
-              <p class="text-body-sm font-body-sm text-on-surface-variant mb-3.5 line-clamp-2 leading-relaxed">
-                ${escapeHTML(descText)}
-              </p>
+              <!-- Part 2: Description (Rendered only if actual description or AI summary exists) -->
+              ${descText ? `
+                <p class="text-body-sm font-body-sm text-on-surface-variant mb-3.5 line-clamp-2 leading-relaxed">
+                  ${escapeHTML(descText)}
+                </p>
+              ` : `
+                <div class="mb-3.5"></div>
+              `}
 
               <!-- Part 3: Contact, Location & Tech (Clean vertical flow without cage border-y) -->
               <div class="flex flex-col gap-2.5 mb-4">

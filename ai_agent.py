@@ -120,16 +120,26 @@ def analyze_company(company_name: str, domain: str, scraped_text: str) -> dict[s
     """
     if not client:
         return {
-            "summary": f"{company_name} is a technology company operating on {domain}.",
-            "detailed_analysis": f"### 1. Company Overview & Identity\n- **Name:** {company_name}\n- **Domain:** {domain}\n- **Core Focus:** Digital technology and software development solutions.\n\n### 2. Services & Expertise\n- Web & Mobile Application Development\n- Custom Enterprise Solutions\n\n### 3. Technology Stack & Languages\n- **Languages & Frameworks:** Modern web and mobile engineering technologies.\n\n### 4. Industries & Client Portfolio\n- Cross-industry software consulting.\n\n### 5. Development Process & Engagement Model\n- Agile discovery, iterative development, and ongoing support.\n\n### 6. Additional Insights\n- Client-first engineering and continuous maintenance.",
-            "industry": "Software & Services",
+            "summary": "",
+            "detailed_analysis": "",
+            "industry": "",
             "tech_stack": [],
             "services": [],
-            "hiring_signals": "General engineering expansion",
-            "tone": "Professional"
+            "hiring_signals": "",
+            "tone": ""
         }
 
-    clean_sample = scraped_text[:12000]
+    clean_sample = (scraped_text or "").strip()[:12000]
+    if len(clean_sample) < 60:
+        return {
+            "summary": "",
+            "detailed_analysis": f"### No Readable Website Content Detected\nUnable to extract technical intelligence for **{company_name}** (`{domain}`) because the website returned no readable text (the domain may be parked, inactive, or restricted by client-side protection).",
+            "industry": "",
+            "tech_stack": [],
+            "services": [],
+            "hiring_signals": "",
+            "tone": ""
+        }
 
     prompt = f"""Act as a senior business research analyst. You are compiling a comprehensive, fact-grounded company profile for "{company_name}" ({domain}) based on their website content (including Home, About Us, Services, Portfolio, and Contact pages).
 
@@ -200,13 +210,13 @@ Your response MUST be a valid JSON object matching this schema:
     except Exception as e:
         print(f"[AI Agent Error] analyze_company failed: {e}")
         return {
-            "summary": f"{company_name} is an active technology provider on {domain}.",
-            "detailed_analysis": f"### 1. Company Overview & Identity\n- **Official Name:** {company_name}\n- **Domain:** {domain}\n\n### 2. Services & Expertise\n- Software Engineering & Digital Services\n\n### 3. Technology Stack & Languages\n- Web & Cloud Technologies\n\n### 4. Industries & Client Portfolio\n- Commercial & Enterprise Clients\n\n### 5. Development Process & Engagement Model\n- Consultative Agile Delivery\n\n### 6. Additional Insights\n- Client-oriented technology partner.",
-            "industry": "Information Technology",
+            "summary": "",
+            "detailed_analysis": "",
+            "industry": "",
             "tech_stack": [],
             "services": [],
-            "hiring_signals": "Open to talented engineers",
-            "tone": "Professional"
+            "hiring_signals": "",
+            "tone": ""
         }
 
 
@@ -327,27 +337,27 @@ def generate_personalized_pitch(
     candidate_name = (candidate_profile.get("full_name") or "Candidate").strip()
     target_role = (candidate_profile.get("target_role") or "Software Engineer").strip()
     archetype = (candidate_profile.get("archetype") or "").strip()
-    skills = ", ".join(candidate_profile.get("top_skills", [])[:5] or ["Python", "FastAPI", "PostgreSQL", "REST APIs"])
+    skills = ", ".join(candidate_profile.get("top_skills", [])[:5])
 
     raw_strong = candidate_profile.get("strong_points") or candidate_profile.get("key_achievements") or []
     if raw_strong:
         strong_points_str = "\n".join([f"- {sp}" for sp in raw_strong[:3]])
     else:
-        strong_points_str = "- Architected scalable backend services and high-throughput database systems."
+        strong_points_str = ""
 
     best_fit = ", ".join(candidate_profile.get("best_fit_roles", [])[:3]) or target_role
     resume_link = (candidate_profile.get("resume_link") or "").strip()
 
     company_summary = (company_profile.get("summary") or "")[:350]
-    company_tech = ", ".join(company_profile.get("tech_stack", [])[:6]) or "Modern Web & Cloud Architecture"
-    company_services = ", ".join(company_profile.get("services", [])[:4]) or "Custom Software Engineering & Technology Services"
-    company_industry = company_profile.get("industry") or "Technology"
-    culture_signals = company_profile.get("culture_signals") or company_profile.get("tone") or "Engineering-driven, quality-focused"
+    company_tech = ", ".join(company_profile.get("tech_stack", [])[:6])
+    company_services = ", ".join(company_profile.get("services", [])[:4])
+    company_industry = company_profile.get("industry") or ""
+    culture_signals = company_profile.get("culture_signals") or company_profile.get("tone") or ""
     likely_pain_points = company_profile.get("likely_pain_points") or []
     if isinstance(likely_pain_points, list) and likely_pain_points:
         pain_points_str = "; ".join(likely_pain_points[:2])
     else:
-        pain_points_str = f"Scaling backend throughput, database indexing bottlenecks, or modernizing {company_tech.split(',')[0] if company_tech else 'web'} architecture."
+        pain_points_str = ""
 
     greeting = f"Hi {contact_name}," if contact_name and contact_name.strip() else f"Hi {company_name} team,"
     resume_instruction = f"Naturally mention candidate portfolio/resume link ({resume_link}) in closing CTA." if resume_link else ""

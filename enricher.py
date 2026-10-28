@@ -279,8 +279,10 @@ async def deep_enrich_company(
     db.add(c_profile)
 
     has_intel = bool(
-        (ai_profile_data.get("detailed_analysis") and len(str(ai_profile_data["detailed_analysis"]).strip()) > 50) or
-        (ai_profile_data.get("summary") and len(str(ai_profile_data["summary"]).strip()) > 30)
+        len(combined_text.strip()) >= 60 and (
+            (ai_profile_data.get("detailed_analysis") and len(str(ai_profile_data["detailed_analysis"]).strip()) > 50 and "No Readable Website Content Detected" not in str(ai_profile_data["detailed_analysis"])) or
+            (ai_profile_data.get("summary") and len(str(ai_profile_data["summary"]).strip()) > 30)
+        )
     )
 
     company.is_enriched = has_intel
