@@ -360,93 +360,130 @@ def generate_personalized_pitch(
         pain_points_str = ""
 
     greeting = f"Hi {contact_name}," if contact_name and contact_name.strip() else f"Hi {company_name} team,"
-    resume_instruction = f"Naturally mention candidate portfolio/resume link ({resume_link}) in closing CTA." if resume_link else ""
+    resume_instruction = f"Explicitly mention that the candidate's resume/portfolio is available at ({resume_link}) or attached." if resume_link else "Mention that the candidate's resume is attached for review."
 
-    prompt = f"""Act as a senior career coach and outbound sales copywriter. I will give you two inputs:
+    prompt = f"""Act as a senior technical talent advisor and candidate career strategist. You are writing a high-signal, direct COLD JOB APPLICATION / INQUIRY email on behalf of a technical candidate reaching out to engineering leadership, founders, or the hiring team at {company_name}.
 
-(A) Structured Resume Analysis:
-- Candidate Name: {candidate_name}
-- Target Role: {target_role}
-- Archetype: {archetype}
-- Core Skills: {skills}
-- Key Differentiators / Proof Points:
+CONTEXT:
+This is a JOB SEEKER reaching out for open or upcoming {target_role} employment opportunities.
+This is NOT a B2B sales pitch, NOT an agency offering services, and NOT product marketing.
+
+(A) Structured Resume Analysis of Candidate:
+- Candidate Full Name: {candidate_name}
+- Target Job Role: {target_role}
+- Professional Archetype: {archetype}
+- Core Verified Skills: {skills}
+- Evidence-Backed Achievements from Resume:
 {strong_points_str}
 - Best-Fit Roles: {best_fit}
-{resume_instruction}
+- Resume Reference: {resume_instruction}
 
-(B) Structured Company Profile:
+(B) Company Intelligence:
 - Company Name: {company_name}
 - Industry: {company_industry}
-- What The Company Does: {company_summary}
+- What They Build / Do: {company_summary}
 - Core Services: {company_services}
 - Tech Stack: {company_tech}
-- Culture Signals: {culture_signals}
-- Likely Pain Points: {pain_points_str}
+- Culture / Engineering Signals: {culture_signals}
 
-Your job: write a personalized cold email plus two variants that connect the candidate's strongest, most relevant proof points to the company's actual needs. The goal is a reply or a 15-minute call — not a generic application.
+YOUR OBJECTIVE:
+Write a concise, professional cold job outreach email that connects the candidate's verified technical skills and measurable resume achievements to the company's tech stack and engineering work, inquiring about open or upcoming {target_role} positions.
 
-Rules:
-1. Open with a specific, researched hook about the company (reference a product, service, tech stack, or recent work — never "I came across your website" or generic praise).
-2. In 1–2 sentences, state the candidate's single most relevant proof point with a concrete number or outcome.
-3. Connect that proof to a likely need at the company, inferred from their services/stack.
-4. Include one line of credible technical or domain specificity (name the stack, tool, or metric).
-5. End with a low-friction CTA (e.g., "Worth a 15-min chat?" or "Open to a quick call this week?").
-6. Keep the primary email under 120 words. No fluff, no "I hope this email finds you well," no attachments on first contact.
-7. Tone: confident, concise, peer-to-peer — not desperate or overly formal.
-8. NEVER use bracket placeholders like [Name], [Company], or [Hiring Manager]. Greet with "{greeting}".
+CRITICAL RULES:
+1. PURPOSE IS JOB OPPORTUNITY: Clearly state the candidate is reaching out regarding open or upcoming {target_role} roles / engineering opportunities at {company_name}.
+2. ZERO SALES/AGENCY CLICHÉS:
+   - NEVER ask "Worth a 15-min chat this week?" or "jump on a quick call".
+   - NEVER say "support your upcoming roadmap" or "scale your business".
+   - NEVER pitch consulting, contract services, or vendor solutions.
+3. GROUNDED IN RESUME: Feature 1 concrete, verified achievement or project directly from the candidate's resume. Cite actual technologies ({skills}). Never invent numbers or fake metrics.
+4. COMPANY RELEVANCE: In 1 sentence, show genuine alignment between the candidate's technical experience and what {company_name} works with ({company_tech or company_services}).
+5. CALL TO ACTION (JOB INQUIRY):
+   - Mention the attached resume (or portfolio link {resume_link if resume_link else ''}).
+   - Ask a professional, low-pressure hiring question: e.g., "Are you currently hiring for {target_role} roles, or open to considering my profile for upcoming engineering needs?"
+6. GREETING & SIGN-OFF:
+   - Greet strictly with "{greeting}" (never use placeholders like [Hiring Manager]).
+   - Sign off cleanly with:
+     Best regards,
+     {candidate_name}
+7. LENGTH: Under 110 words. Clear, respectful, peer-to-peer engineering tone. No fluff ("I hope this finds you well").
 
 Deliverables (must return valid JSON matching this schema):
 {{
   "subject_lines": {{
-    "curiosity": "Short curiosity-driven subject line (4-7 words)",
-    "specificity": "Specific, stack/metric-driven subject line (4-7 words)",
-    "benefit_led": "Outcome/benefit-led subject line (4-7 words)"
+    "specificity": "Application: {target_role} - {candidate_name} ({skills.split(',')[0] if skills else target_role})",
+    "curiosity": "Inquiring about {target_role} opportunities at {company_name} - {candidate_name}",
+    "benefit_led": "{target_role} candidate experienced in {skills.split(',')[0] if skills else target_role} - {candidate_name}"
   }},
   "subject_line": "The best recommended subject line out of the 3 above",
-  "primary_email": "Primary cold email under 120 words",
+  "primary_email": "Primary cold job outreach email under 110 words",
   "email_body": "Same content as primary_email",
-  "variant_a_linkedin": "Shorter, punchier message under 80 words for LinkedIn DM",
-  "variant_b_referral": "Slightly warmer, referral-style email under 140 words",
-  "cover_letter": "Concise tailored note for company application",
+  "variant_a_linkedin": "Short LinkedIn message under 75 words to an engineering manager or founder regarding open roles",
+  "variant_b_referral": "Warmer referral/networking note under 125 words expressing admiration for their tech stack and asking about team growth",
+  "cover_letter": "Concise tailored candidate cover letter paragraph for application portals",
   "personalization_notes": [
-    "Specific company fact 1 researched and used",
-    "Specific company fact 2 researched and used"
+    "Specific company tech or service aligned with candidate experience",
+    "Candidate resume achievement highlighted for this role"
   ],
   "what_to_change_if": {{
-    "if_not_hiring": "How to adjust if company is not currently hiring (e.g. pitch ad-hoc contract / knowledge exchange)",
-    "if_recruiter": "How to adjust if contacting a recruiter vs engineering manager"
+    "if_not_hiring": "How candidate should respond if no immediate openings (e.g., ask to stay connected and keep resume on file for future expansion)",
+    "if_recruiter": "How to tailor if speaking directly to an internal recruiter vs CTO/Tech Lead"
   }},
   "matched_skills": ["Skill1", "Skill2", "Skill3"]
 }}"""
 
     def make_pitch_fallback():
-        proof = (candidate_profile.get("key_achievements") or candidate_profile.get("strong_points") or [f"delivering production applications with {skills}"])[0]
-        resume_mention = f" You can view my portfolio and projects here: {resume_link}." if resume_link else ""
-        primary = f"{greeting}\n\nI noticed {company_name}’s work in {company_services.split(',')[0] if company_services else 'software delivery'} and your focus on {company_tech.split(',')[0] if company_tech else 'scalable systems'}.\n\nAs a {target_role} specializing in {skills}, I recently {proof}.\n\nGiven your engineering focus, I’d love to share how my experience could support {company_name}’s upcoming roadmap.{resume_mention}\n\nWorth a 15-min chat this week?\n\nBest regards,\n{candidate_name}"
-        
-        linkedin = f"Hi {company_name} team, noticed your stack leans on {company_tech.split(',')[0] if company_tech else 'modern web services'}. As a {target_role} specializing in {skills}, I recently {proof}. Would love to connect and see how I could add value to your team. Open to a quick call?{resume_mention}"
-        
-        referral = f"{greeting}\n\nI’ve been following {company_name}’s growth in {company_industry} and really admire your engineering focus on {company_services.split(',')[0] if company_services else 'robust systems'}.\n\nIn my recent work as a {target_role}, I specialized in {skills}, where I {proof}.\n\nI’d welcome the chance to connect with your team to see if my background might be a strong fit for your current or upcoming projects.{resume_mention}\n\nWould you be open to a brief 15-minute chat?\n\nWarm regards,\n{candidate_name}"
+        raw_proofs = candidate_profile.get("key_achievements") or candidate_profile.get("strong_points") or []
+        proof = raw_proofs[0] if raw_proofs else f"building production applications using {skills}"
+        resume_ref = f" (Portfolio / Resume: {resume_link})" if resume_link else " (Resume attached)"
+        comp_tech_focus = company_tech.split(',')[0].strip() if company_tech else (company_services.split(',')[0].strip() if company_services else "modern software engineering")
+
+        primary = (
+            f"{greeting}\n\n"
+            f"I am writing to inquire about open or upcoming {target_role} opportunities at {company_name}.\n\n"
+            f"As a {target_role} specializing in {skills}, my recent work includes {proof}. "
+            f"Given {company_name}'s focus on {comp_tech_focus}, I would love to contribute my experience to your engineering team.\n\n"
+            f"I have shared my resume for your consideration{resume_ref}. Are you currently hiring for {target_role} roles, or open to a brief conversation if there might be a potential fit?\n\n"
+            f"Best regards,\n"
+            f"{candidate_name}"
+        )
+
+        linkedin = (
+            f"Hi {contact_name or company_name + ' team'},\n\n"
+            f"I’m reaching out to explore potential {target_role} opportunities at {company_name}. "
+            f"I specialize in {skills} and recently {proof}. Given your work with {comp_tech_focus}, "
+            f"I'd love to connect and share my resume{resume_ref} if you have any open engineering roles.\n\n"
+            f"Best regards,\n{candidate_name}"
+        )
+
+        referral = (
+            f"{greeting}\n\n"
+            f"I have been following {company_name}'s work in {company_industry or 'technology'} and wanted to reach out regarding potential {target_role} openings.\n\n"
+            f"In my background as a {target_role}, I focus on {skills}, where I {proof}. "
+            f"I really admire the work your team is doing around {comp_tech_focus} and would welcome the chance to explore how my skills could add value to your projects.\n\n"
+            f"I have attached my resume for your review{resume_ref}. Would you be open to considering my profile if an engineering opportunity arises?\n\n"
+            f"Warm regards,\n"
+            f"{candidate_name}"
+        )
 
         return {
             "subject_lines": {
-                "curiosity": f"{target_role} inquiry for {company_name}",
-                "specificity": f"{skills.split(',')[0] if skills else target_role} - {candidate_name}",
-                "benefit_led": f"{target_role} candidate for {company_name}"
+                "specificity": f"Application: {target_role} - {candidate_name}",
+                "curiosity": f"{target_role} inquiry for {company_name} - {candidate_name}",
+                "benefit_led": f"{target_role} ({skills.split(',')[0] if skills else target_role}) - {candidate_name}"
             },
-            "subject_line": f"{target_role} inquiry - {candidate_name}",
+            "subject_line": f"{target_role} Inquiry - {candidate_name}",
             "primary_email": primary,
             "email_body": primary,
             "variant_a_linkedin": linkedin,
             "variant_b_referral": referral,
             "cover_letter": referral,
             "personalization_notes": [
-                f"Referenced {company_name}'s focus on {company_industry}",
-                f"Connected candidate's verified proof point to company engineering needs"
+                f"Referenced {company_name}'s engineering focus on {comp_tech_focus}",
+                f"Highlighted candidate's verified resume achievement for {target_role} role"
             ],
             "what_to_change_if": {
-                "if_not_hiring": "Frame outreach as proactive connection or offer consulting assistance.",
-                "if_recruiter": "State immediate availability, target role, and location preference directly."
+                "if_not_hiring": "Ask if you can stay in touch on LinkedIn or if they can keep your resume on file for future openings.",
+                "if_recruiter": "Mention your immediate availability, work authorization, and preferred start date."
             },
             "matched_skills": candidate_profile.get("top_skills", [])[:3] or [target_role]
         }
@@ -457,7 +494,7 @@ Deliverables (must return valid JSON matching this schema):
     try:
         response = call_groq_with_fallback(
             messages=[
-                {"role": "system", "content": "You are a senior career coach and outbound sales copywriter. Never use bracket placeholders. Connect candidate proof points to company needs with precision. Return pure JSON."},
+                {"role": "system", "content": "You are a senior technical talent advisor and candidate career strategist. You write direct, respectful cold job application outreach from technical candidates to engineering teams. Never use bracket placeholders. Never pitch products or sales services. Connect candidate proof points to company engineering needs with precision. Return pure JSON."},
                 {"role": "user", "content": prompt}
             ],
             temperature=0.3,

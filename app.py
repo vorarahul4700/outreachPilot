@@ -1738,10 +1738,19 @@ async def generate_single_pitch(
     c_name = cand_profile.get("full_name") or (user.name if user and user.name else "Candidate")
     t_role = cand_profile.get("target_role") or (user.target_role if user and user.target_role else "Professional")
     if not subj:
-        subj = f"{t_role} inquiry - {c_name}"
+        subj = f"Application: {t_role} - {c_name}"
     if not body:
-        skills_str = ", ".join(cand_profile.get("top_skills", [])[:4]) or "PHP, Python, SQL, REST APIs"
-        body = f"Hi {company.name} team,\n\nI’ve been following {company.name} and wanted to reach out directly. As a {t_role} specializing in {skills_str}, I build scalable backend architectures, high-throughput APIs, and optimized databases.\n\nI'm exploring new {t_role} roles and would love to know if {company.name} has open or upcoming engineering positions. Would you be open to a brief chat regarding how my experience could help your product roadmap?\n\nBest regards,\n{c_name}"
+        skills_str = ", ".join(cand_profile.get("top_skills", [])[:4]) or "Python, SQL, REST APIs"
+        resume_ref = f" (Portfolio / Resume: {cand_profile.get('resume_link')})" if cand_profile.get('resume_link') else " (Resume attached)"
+        body = (
+            f"Hi {company.name} team,\n\n"
+            f"I am writing to inquire about open or upcoming {t_role} opportunities at {company.name}.\n\n"
+            f"As a {t_role} specializing in {skills_str}, I build scalable backend architectures, high-throughput APIs, and clean software solutions. "
+            f"I have been following {company.name}'s engineering work and would love to contribute to your team.\n\n"
+            f"I have shared my resume for your consideration{resume_ref}. Are you currently hiring for {t_role} roles, or open to considering my profile for upcoming needs?\n\n"
+            f"Best regards,\n"
+            f"{c_name}"
+        )
 
     existing_pitch = db.query(ColdPitch).filter(
         ColdPitch.company_id == company.id,
@@ -1796,10 +1805,19 @@ async def generate_single_pitch(
     c_name = cand_profile.get("full_name") or (user.name if user and user.name else "Candidate")
     t_role = cand_profile.get("target_role") or (user.target_role if user and user.target_role else "Professional")
     if not subj:
-        subj = f"{t_role} inquiry - {c_name}"
+        subj = f"Application: {t_role} - {c_name}"
     if not body:
-        skills_str = ", ".join(cand_profile.get("top_skills", [])[:4]) or "PHP, Python, SQL, REST APIs"
-        body = f"Hi {company.name} team,\n\nI’ve been following {company.name} and wanted to reach out directly. As a {t_role} specializing in {skills_str}, I build scalable backend architectures, high-throughput APIs, and optimized databases.\n\nI'm exploring new {t_role} roles and would love to know if {company.name} has open or upcoming engineering positions. Would you be open to a brief chat regarding how my experience could help your product roadmap?\n\nBest regards,\n{c_name}"
+        skills_str = ", ".join(cand_profile.get("top_skills", [])[:4]) or "Python, SQL, REST APIs"
+        resume_ref = f" (Portfolio / Resume: {cand_profile.get('resume_link')})" if cand_profile.get('resume_link') else " (Resume attached)"
+        body = (
+            f"Hi {company.name} team,\n\n"
+            f"I am writing to inquire about open or upcoming {t_role} opportunities at {company.name}.\n\n"
+            f"As a {t_role} specializing in {skills_str}, I build scalable backend architectures, high-throughput APIs, and clean software solutions. "
+            f"I have been following {company.name}'s engineering work and would love to contribute to your team.\n\n"
+            f"I have shared my resume for your consideration{resume_ref}. Are you currently hiring for {t_role} roles, or open to considering my profile for upcoming needs?\n\n"
+            f"Best regards,\n"
+            f"{c_name}"
+        )
 
     matched_meta = {
         "skills": pitch_data.get("matched_skills", []),
@@ -1953,10 +1971,19 @@ async def generate_bulk_pitches(
         c_name = cand_profile.get("full_name") or (user.name if user and user.name else "Candidate")
         t_role = cand_profile.get("target_role") or (user.target_role if user and user.target_role else "Professional")
         if not subj:
-            subj = f"{t_role} inquiry - {c_name}"
+            subj = f"Application: {t_role} - {c_name}"
         if not body:
-            skills_str = ", ".join(cand_profile.get("top_skills", [])[:4]) or "PHP, Python, SQL, REST APIs"
-            body = f"Hi {task['company_name']} team,\n\nI’ve been following {task['company_name']} and wanted to reach out directly. As a {t_role} specializing in {skills_str}, I build scalable backend architectures, high-throughput APIs, and optimized databases.\n\nI'm exploring new {t_role} roles and would love to know if {task['company_name']} has open or upcoming engineering positions. Would you be open to a brief chat regarding how my experience could help your product roadmap?\n\nBest regards,\n{c_name}"
+            skills_str = ", ".join(cand_profile.get("top_skills", [])[:4]) or "Python, SQL, REST APIs"
+            resume_ref = f" (Portfolio / Resume: {cand_profile.get('resume_link')})" if cand_profile.get('resume_link') else " (Resume attached)"
+            body = (
+                f"Hi {task['company_name']} team,\n\n"
+                f"I am writing to inquire about open or upcoming {t_role} opportunities at {task['company_name']}.\n\n"
+                f"As a {t_role} specializing in {skills_str}, I build scalable backend architectures, high-throughput APIs, and clean software solutions. "
+                f"I have been following {task['company_name']}'s engineering work and would love to contribute to your team.\n\n"
+                f"I have shared my resume for your consideration{resume_ref}. Are you currently hiring for {t_role} roles, or open to considering my profile for upcoming needs?\n\n"
+                f"Best regards,\n"
+                f"{c_name}"
+            )
 
         matched_meta = {
             "skills": pitch_data.get("matched_skills", []),
