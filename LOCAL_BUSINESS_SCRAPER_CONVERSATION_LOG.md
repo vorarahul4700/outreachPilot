@@ -2,7 +2,7 @@
 
 > **Source Conversation IDs**: `535144eb-8643-4672-97c1-a50d8c6f76d5`, `cbf5f4ce-cc56-42d0-a8e9-2a9c6ab4c5e1`, `a6c98eff-335b-41bd-9128-e88942bef461`  
 > **Project**: OutreachPilot (originally `gScrapper`) -- Autonomous Local Business Scraper & Recruiter Cold Outreach Engine  
-> **Total Development Turns**: 347 turns  
+> **Total Development Turns**: 348 turns  
 > **Generated Date**: 2026-10-26 (Last Updated: 2026-10-29)
 
 ## Table of Contents
@@ -22935,5 +22935,24 @@ can we do this city wise?specific city with 500 companies 100 batch? pleaes make
 
 #### Assistant Implementation & Final Response
 Enabled city-scoped enrichment across the entire cloud worker pipeline, pushed updates to GitHub, and launched 5 parallel runners for 500 Surat companies in batches of 100.
+
+---
+
+### Turn 348: live verification of surat cloud enrichment pipeline
+
+#### User Prompt
+```text
+can we do this city wise?specific city with 500 companies 100 batch? pleaes make this changes and start for city surat
+```
+
+#### Actions & Tools Executed
+- Fixed bash literal double-quote handling in `.github/workflows/cloud_enrich.yml` and added whitespace/quote sanitization in `cloud_enrich.py` (`clean_city = target_city.strip().strip('"').strip("'").lower()`)
+- Pushed fix to `main` (`f7a4e31`)
+- Re-executed `scratch/run_cloud_enrichment.py --city surat --total 500 --batch-size 100` launching 5 runners targeting 500 Surat companies
+- Inspected active GitHub Action runs: `40833277603`, `40833264069`, `40833249404`, `40833238213`, `40833226286`
+- Queried Neon PostgreSQL verifying live lock execution: 463 Surat companies claimed `IN_PROGRESS`, 8 `COMPLETED`, 30 `INCOMPLETE`, pending reduced from 977 to 477
+
+#### Assistant Implementation & Final Response
+Delivered live telemetry confirming all 5 runners actively processing Surat companies in parallel with zero lock contention and verified Gemini Flash throughput.
 
 ---
