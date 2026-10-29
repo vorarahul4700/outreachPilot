@@ -112,3 +112,9 @@ Thumbs.db
 .agents/
 .gemini/
 
+# ------------------------------------------------------------------------------
+# 9. Internal Development & Conversation Logs
+# ------------------------------------------------------------------------------
+LOCAL_BUSINESS_SCRAPER_CONVERSATION_LOG.md
+
+
