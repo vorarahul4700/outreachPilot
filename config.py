@@ -1,4 +1,4 @@
-import base64
+﻿import base64
 import hashlib
 import ipaddress
 import json
@@ -63,6 +63,14 @@ IS_MULTI_GROQ = len(GROQ_API_KEYS) > 1
 # Dynamically scale concurrency: 2 workers per account key (capped at 8)
 GROQ_CONCURRENCY = max(2, min(8, len(GROQ_API_KEYS) * 2)) if GROQ_API_KEYS else 2
 GROQ_MODEL = os.getenv("GROQ_MODEL", "qwen/qwen3.8-27b")
+
+# Unified Google Gemini API Key configuration
+# Automatically detects if GEMINI_API_KEY or GEMINI_API_KEYS contains comma-separated keys
+_raw_gemini_key = os.getenv("GEMINI_API_KEY", "") or os.getenv("GEMINI_API_KEYS", "")
+GEMINI_API_KEYS = [k.strip() for k in _raw_gemini_key.split(",") if k.strip()]
+GEMINI_API_KEY = GEMINI_API_KEYS[0] if GEMINI_API_KEYS else ""
+IS_MULTI_GEMINI = len(GEMINI_API_KEYS) > 1
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
 
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "")

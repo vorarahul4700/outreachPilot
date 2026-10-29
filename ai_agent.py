@@ -1,97 +1,297 @@
-import itertools
+﻿import itertools
 import json
 import re
 import time
 from typing import Any
 
 from groq import Groq
+try:
+    import httpx
+except ImportError:
+    httpx = None
+import requests
 
 import config
 
-_CLIENT_POOL = [
+
+class AIMessage:
+    def __init__(self, content: str):
+        self.content = content
+
+
+class AIChoice:
+    def __init__(self, content: str):
+        self.message = AIMessage(content)
+
+
+class AIResponse:
+    def __init__(self, content: str):
+        self.choices = [AIChoice(content)]
+
+
+# Groq Multi-Account Client Pool
+_GROQ_CLIENT_POOL = [
     Groq(api_key=k) for k in config.GROQ_API_KEYS
 ] if config.GROQ_API_KEYS else ([Groq(api_key=config.GROQ_API_KEY)] if config.GROQ_API_KEY else [])
 
-_client_counter = itertools.count()
-client = _CLIENT_POOL[0] if _CLIENT_POOL else None
+_groq_counter = itertools.count()
+_gemini_counter = itertools.count()
 
-_ROTATING_MODELS = ["qwen/qwen3.8-27b", "openai/gpt-oss-20b"]
-_model_counter = itertools.count()
+# Primary client reference for legacy boolean truthy checks
+client = _GROQ_CLIENT_POOL[0] if _GROQ_CLIENT_POOL else (True if config.GEMINI_API_KEYS else None)
+
+_ROTATING_GROQ_MODELS = ["qwen/qwen3.8-27b", "openai/gpt-oss-20b"]
+_groq_model_counter = itertools.count()
+
+_EXHAUSTED_GROQ_CLIENTS: dict[int, float] = {}
+_EXHAUSTED_GEMINI_KEYS: dict[str, float] = {}
 
 
-_EXHAUSTED_CLIENTS: dict[int, float] = {}
-
-def is_client_cooling_down(client_idx: int) -> bool:
-    exp = _EXHAUSTED_CLIENTS.get(client_idx)
+def is_groq_cooling_down(client_idx: int) -> bool:
+    exp = _EXHAUSTED_GROQ_CLIENTS.get(client_idx)
     if not exp:
         return False
     if time.time() < exp:
         return True
-    _EXHAUSTED_CLIENTS.pop(client_idx, None)
+    _EXHAUSTED_GROQ_CLIENTS.pop(client_idx, None)
     return False
 
-def mark_client_cooldown(client_idx: int, cooldown_seconds: int = 180):
-    _EXHAUSTED_CLIENTS[client_idx] = time.time() + cooldown_seconds
+
+def mark_groq_cooldown(client_idx: int, cooldown_seconds: int = 180):
+    _EXHAUSTED_GROQ_CLIENTS[client_idx] = time.time() + cooldown_seconds
 
 
-def call_groq_with_fallback(messages: list[dict], temperature: float = 0.3, max_tokens: int = 450, response_format: dict = None):
+def is_gemini_cooling_down(key: str) -> bool:
+    exp = _EXHAUSTED_GEMINI_KEYS.get(key)
+    if not exp:
+        return False
+    if time.time() < exp:
+        return True
+    _EXHAUSTED_GEMINI_KEYS.pop(key, None)
+    return False
+
+
+def mark_gemini_cooldown(key: str, cooldown_seconds: int = 120):
+    _EXHAUSTED_GEMINI_KEYS[key] = time.time() + cooldown_seconds
+
+
+def call_gemini_single_key(
+    key: str,
+    messages: list[dict],
+    temperature: float = 0.2,
+    max_tokens: int = 2200,
+    response_format: dict = None,
+    model: str = "gemini-1.5-flash"
+) -> AIResponse:
     """
-    Calls Groq with automatic multi-account round-robin and model fallback cascade:
-    Distributes parallel queries across multiple independent Groq accounts and models
-    to maximize throughput and completely prevent rate-limit throttling.
+    Executes a prompt against Google Gemini using OpenAI-compatible or native REST protocol.
+    Returns standard AIResponse object with .choices[0].message.content for 100% backward compatibility.
     """
-    if not _CLIENT_POOL:
-        raise RuntimeError("No active Groq API keys available.")
+    # 1. Attempt OpenAI-compatible endpoint
+    openai_url = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"
+    headers = {
+        "Authorization": f"Bearer {key}",
+        "Content-Type": "application/json"
+    }
+    payload = {
+        "model": model,
+        "messages": messages,
+        "temperature": temperature,
+    }
+    if max_tokens:
+        payload["max_tokens"] = max_tokens
+    if response_format:
+        payload["response_format"] = response_format
 
-    # Filter out accounts currently cooling down from daily token limits
-    available_indices = [
-        i for i in range(len(_CLIENT_POOL))
-        if not is_client_cooling_down(i)
-    ]
-    if not available_indices:
-        raise RuntimeError("All Groq accounts are temporarily at daily token limit capacity.")
+    try:
+        if httpx:
+            with httpx.Client(timeout=45.0) as h_client:
+                r = h_client.post(openai_url, headers=headers, json=payload)
+                if r.status_code == 200:
+                    data = r.json()
+                    content = data["choices"][0]["message"]["content"]
+                    return AIResponse(content)
+                elif r.status_code == 429:
+                    raise RuntimeError(f"Gemini 429 Rate Limit ({key[:8]}...): {r.text}")
+        else:
+            r = requests.post(openai_url, headers=headers, json=payload, timeout=45.0)
+            if r.status_code == 200:
+                data = r.json()
+                content = data["choices"][0]["message"]["content"]
+                return AIResponse(content)
+            elif r.status_code == 429:
+                raise RuntimeError(f"Gemini 429 Rate Limit ({key[:8]}...): {r.text}")
+    except Exception as e:
+        if "429" in str(e).lower() or "quota" in str(e).lower() or "rate limit" in str(e).lower():
+            raise
 
-    # Pick next starting client in rotation among available clients
-    start_rot = next(_client_counter) % len(available_indices)
-    ordered_indices = available_indices[start_rot:] + available_indices[:start_rot]
+    # 2. Native Google AI Studio generateContent endpoint fallback
+    clean_model = model.replace("models/", "")
+    native_url = f"https://generativelanguage.googleapis.com/v1beta/models/{clean_model}:generateContent?key={key}"
 
-    # Pick next primary model in rotation
-    next_idx = next(_model_counter)
-    primary = _ROTATING_MODELS[next_idx % len(_ROTATING_MODELS)]
-    candidate_models = [primary] + [m for m in _ROTATING_MODELS if m != primary]
+    contents = []
+    system_text = None
+    for m in messages:
+        role = m.get("role", "user")
+        c_text = m.get("content", "")
+        if role == "system":
+            system_text = c_text
+        else:
+            c_role = "user" if role == "user" else "model"
+            contents.append({"role": c_role, "parts": [{"text": c_text}]})
+
+    if not contents and system_text:
+        contents.append({"role": "user", "parts": [{"text": system_text}]})
+        system_text = None
+
+    gen_config = {"temperature": temperature}
+    if max_tokens:
+        gen_config["maxOutputTokens"] = max_tokens
+    if response_format and response_format.get("type") == "json_object":
+        gen_config["responseMimeType"] = "application/json"
+
+    native_payload = {
+        "contents": contents,
+        "generationConfig": gen_config
+    }
+    if system_text:
+        native_payload["systemInstruction"] = {"parts": [{"text": system_text}]}
+
+    if httpx:
+        with httpx.Client(timeout=45.0) as h_client:
+            r = h_client.post(native_url, json=native_payload)
+            if r.status_code == 200:
+                data = r.json()
+                parts = data.get("candidates", [{}])[0].get("content", {}).get("parts", [])
+                text_content = "".join(p.get("text", "") for p in parts)
+                return AIResponse(text_content)
+            elif r.status_code == 429:
+                raise RuntimeError(f"Gemini 429 Rate Limit ({key[:8]}...): {r.text}")
+            else:
+                raise RuntimeError(f"Gemini Native endpoint failed ({r.status_code}): {r.text}")
+    else:
+        r = requests.post(native_url, json=native_payload, timeout=45.0)
+        if r.status_code == 200:
+            data = r.json()
+            parts = data.get("candidates", [{}])[0].get("content", {}).get("parts", [])
+            text_content = "".join(p.get("text", "") for p in parts)
+            return AIResponse(text_content)
+        elif r.status_code == 429:
+            raise RuntimeError(f"Gemini 429 Rate Limit ({key[:8]}...): {r.text}")
+        else:
+            raise RuntimeError(f"Gemini Native endpoint failed ({r.status_code}): {r.text}")
+
+
+def call_ai_with_fallback(
+    messages: list[dict],
+    temperature: float = 0.3,
+    max_tokens: int = 450,
+    response_format: dict = None,
+    prefer_provider: str = "auto"
+):
+    """
+    Unified multi-provider AI engine with automatic multi-account key pooling and failover.
+    Distributes queries across Google Gemini (4 accounts, 1M TPM) and Groq (4 accounts, ultra-fast)
+    to completely prevent rate-limit throttling and token exhaustion.
+    """
+    has_gemini = bool(config.GEMINI_API_KEYS)
+    has_groq = bool(_GROQ_CLIENT_POOL)
+
+    if not has_gemini and not has_groq:
+        raise RuntimeError("No active AI provider API keys available (checked Gemini and Groq).")
+
+    # Routing strategy:
+    # Large context / enrichment tasks (>1000 tokens) -> Gemini primary (1M TPM)
+    # Fast pitch / short tasks -> Groq primary (<500ms response time)
+    if prefer_provider == "gemini":
+        providers = ["gemini", "groq"]
+    elif prefer_provider == "groq":
+        providers = ["groq", "gemini"]
+    else:
+        if max_tokens and max_tokens > 1000:
+            providers = ["gemini", "groq"]
+        else:
+            providers = ["groq", "gemini"]
 
     last_exc = None
-    for c_idx in ordered_indices:
-        active_client = _CLIENT_POOL[c_idx]
-        client_rate_limited = False
-        for model_name in candidate_models:
-            if client_rate_limited:
-                break
-            for rf in [response_format, None]:  # Try with json_object format first, fallback to raw text parsing
+    for prov in providers:
+        if prov == "gemini" and has_gemini:
+            available_keys = [k for k in config.GEMINI_API_KEYS if not is_gemini_cooling_down(k)]
+            if not available_keys:
+                continue
+
+            start_idx = next(_gemini_counter) % len(available_keys)
+            ordered_keys = available_keys[start_idx:] + available_keys[:start_idx]
+
+            for gem_key in ordered_keys:
                 try:
-                    kwargs = {
-                        "model": model_name,
-                        "messages": messages,
-                        "temperature": temperature,
-                    }
-                    if max_tokens:
-                        kwargs["max_tokens"] = max_tokens
-                    if rf:
-                        kwargs["response_format"] = rf
-                    return active_client.chat.completions.create(**kwargs)
+                    return call_gemini_single_key(
+                        key=gem_key,
+                        messages=messages,
+                        temperature=temperature,
+                        max_tokens=max_tokens,
+                        response_format=response_format,
+                        model=config.GEMINI_MODEL
+                    )
                 except Exception as e:
                     last_exc = e
                     err_str = str(e).lower()
-                    if "tpd" in err_str or "tokens per day" in err_str:
-                        # Account-level daily token cap hit: mark account on cooldown
-                        mark_client_cooldown(c_idx, cooldown_seconds=180)
-                        client_rate_limited = True
-                        break
-                    elif "429" in err_str or "rate limit" in err_str:
-                        client_rate_limited = True
-                        break
+                    if "429" in err_str or "rate limit" in err_str or "quota" in err_str:
+                        mark_gemini_cooldown(gem_key, cooldown_seconds=120)
                     continue
-    raise last_exc
+
+        elif prov == "groq" and has_groq:
+            available_indices = [
+                i for i in range(len(_GROQ_CLIENT_POOL))
+                if not is_groq_cooling_down(i)
+            ]
+            if not available_indices:
+                continue
+
+            start_rot = next(_groq_counter) % len(available_indices)
+            ordered_indices = available_indices[start_rot:] + available_indices[:start_rot]
+
+            next_idx = next(_groq_model_counter)
+            primary = _ROTATING_GROQ_MODELS[next_idx % len(_ROTATING_GROQ_MODELS)]
+            candidate_models = [primary] + [m for m in _ROTATING_GROQ_MODELS if m != primary]
+
+            for c_idx in ordered_indices:
+                active_client = _GROQ_CLIENT_POOL[c_idx]
+                client_rate_limited = False
+                for model_name in candidate_models:
+                    if client_rate_limited:
+                        break
+                    for rf in [response_format, None]:
+                        try:
+                            kwargs = {
+                                "model": model_name,
+                                "messages": messages,
+                                "temperature": temperature,
+                            }
+                            if max_tokens:
+                                kwargs["max_tokens"] = max_tokens
+                            if rf:
+                                kwargs["response_format"] = rf
+                            return active_client.chat.completions.create(**kwargs)
+                        except Exception as e:
+                            last_exc = e
+                            err_str = str(e).lower()
+                            if "tpd" in err_str or "tokens per day" in err_str:
+                                mark_groq_cooldown(c_idx, cooldown_seconds=180)
+                                client_rate_limited = True
+                                break
+                            elif "429" in err_str or "rate limit" in err_str:
+                                client_rate_limited = True
+                                break
+                            continue
+
+    if last_exc:
+        raise last_exc
+    raise RuntimeError("All configured AI keys (Gemini & Groq) are currently in cooldown.")
+
+
+# Backward compatibility alias - legacy callers use call_groq_with_fallback seamlessly
+call_groq_with_fallback = call_ai_with_fallback
 
 
 def clean_json_response(raw_text: str) -> dict[str, Any]:
