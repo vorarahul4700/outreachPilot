@@ -52,7 +52,8 @@ def run_enrichment_pipeline(batch_size: int = 60, max_attempts: int = 3, target_
             query = query.filter(Company.domain == target_domain.strip().lower())
         else:
             if target_city:
-                query = query.filter(func.lower(Company.city) == target_city.strip().lower())
+                clean_city = target_city.strip().strip('"').strip("'").lower()
+                query = query.filter(func.lower(Company.city) == clean_city)
             query = query.filter(
                 Company.enrichment_status.in_(["PENDING", "FAILED"]),
                 Company.enrichment_attempts < max_attempts

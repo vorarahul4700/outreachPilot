@@ -48,7 +48,7 @@ jobs:
         run: |
           EXTRA_ARGS=""
           if [ -n "${{ github.event.inputs.city }}" ]; then
-            EXTRA_ARGS="--city \"${{ github.event.inputs.city }}\""
+            EXTRA_ARGS="--city ${{ github.event.inputs.city }}"
           fi
           python cloud_enrich.py \
             --batch-size "${{ github.event.inputs.batch_size || '60' }}" \
