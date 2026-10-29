@@ -2,7 +2,7 @@
 
 > **Source Conversation IDs**: `535144eb-8643-4672-97c1-a50d8c6f76d5`, `cbf5f4ce-cc56-42d0-a8e9-2a9c6ab4c5e1`, `a6c98eff-335b-41bd-9128-e88942bef461`  
 > **Project**: OutreachPilot (originally `gScrapper`) -- Autonomous Local Business Scraper & Recruiter Cold Outreach Engine  
-> **Total Development Turns**: 344 turns  
+> **Total Development Turns**: 347 turns  
 > **Generated Date**: 2026-10-26 (Last Updated: 2026-10-29)
 
 ## Table of Contents
@@ -22885,5 +22885,55 @@ okay go with this for now and once implementation done give me the changes i nee
 
 #### Assistant Implementation & Final Response
 Completed end-to-end integration of the 4 Gemini and 4 Groq accounts, committed and pushed changes to main, and delivered exact step-by-step instructions for adding the secrets in Render and GitHub.
+
+---
+### Turn 345: github and render keys done
+
+#### User Prompt
+```text
+github and render keys done
+```
+
+#### Actions & Tools Executed
+- Confirmed full deployment and synchronization of `GEMINI_API_KEYS` and `GROQ_API_KEY` across GitHub Actions and Render hosting environments
+- Verified unified multi-provider rotation ready for production and background cloud enrichment runs
+
+#### Assistant Implementation & Final Response
+Acknowledged confirmation, verified readiness of both platforms, and offered to trigger cloud enrichment test runs or batch runners.
+
+---
+### Turn 346: start run_cloud_enrichment.py for 500 companies
+
+#### User Prompt
+```text
+start @[c:\Users\vorar\OneDrive\Desktop\outreachPilot\scratch\run_cloud_enrichment.py] for 500 companies
+```
+
+#### Actions & Tools Executed
+- Executed `scratch/run_cloud_enrichment.py --total 500` querying Neon PostgreSQL database state
+- Verified 33,603 total valid companies with 32,822 pending enrichment
+- Dispatched 5 concurrent GitHub Actions cloud enrichment runners (`cloud_enrich.yml`), each targeting a batch of 100 companies
+- Inspected GitHub Actions API verifying all 5 runs actively executing in parallel (Run IDs: `40827723066`, `40827706471`, `40827698447`, `40827688778`, `40827679940`) powered by the new 4-key Gemini Flash + 4-key Groq unified rotation pool
+
+#### Assistant Implementation & Final Response
+Delivered dispatch confirmation with active GitHub Actions run IDs, tracking links, and initial database metrics.
+
+---
+### Turn 347: can we do this city wise? specific city with 500 companies 100 batch? pleaes make this changes and start for city surat
+
+#### User Prompt
+```text
+can we do this city wise?specific city with 500 companies 100 batch? pleaes make this changes and start for city surat
+```
+
+#### Actions & Tools Executed
+- Updated `cloud_enrich.py` to accept `--city` parameter and filter candidate companies by `func.lower(Company.city) == target_city.lower()` with `SKIP LOCKED`
+- Updated `.github/workflows/cloud_enrich.yml` workflow dispatch to support `city` input and pass `--city` flag to the runner command
+- Updated `scratch/run_cloud_enrichment.py` to support `--city` in CLI, database metrics reporting, and GitHub Actions dispatch payload
+- Committed and pushed changes to `main` branch (`f990a42`)
+- Executed `scratch/run_cloud_enrichment.py --city surat --total 500 --batch-size 100` querying Neon PostgreSQL (977 pending Surat companies) and dispatched 5 concurrent runners
+
+#### Assistant Implementation & Final Response
+Enabled city-scoped enrichment across the entire cloud worker pipeline, pushed updates to GitHub, and launched 5 parallel runners for 500 Surat companies in batches of 100.
 
 ---

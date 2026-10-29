@@ -1,4 +1,4 @@
-"""
+﻿"""
 OutreachPilot - Cloud AI Enrichment & Auto-Healing Worker
 File: cloud_enrich.py
 
@@ -22,6 +22,7 @@ if hasattr(sys.stdout, "reconfigure"):
         pass
 
 import config
+from sqlalchemy import func
 from db import Company, SessionLocal, init_db
 from enricher import deep_enrich_company
 
@@ -37,7 +38,7 @@ def log(msg: str):
             pass
 
 
-def run_enrichment_pipeline(batch_size: int = 60, max_attempts: int = 3, target_domain: str = None):
+def run_enrichment_pipeline(batch_size: int = 60, max_attempts: int = 3, target_domain: str = None, target_city: str = None):
     """Claims pending/failed companies and enriches them in parallel using multi-account pool."""
     init_db()
     db = SessionLocal()
@@ -50,6 +51,8 @@ def run_enrichment_pipeline(batch_size: int = 60, max_attempts: int = 3, target_
         if target_domain:
             query = query.filter(Company.domain == target_domain.strip().lower())
         else:
+            if target_city:
+                query = query.filter(func.lower(Company.city) == target_city.strip().lower())
             query = query.filter(
                 Company.enrichment_status.in_(["PENDING", "FAILED"]),
                 Company.enrichment_attempts < max_attempts
@@ -62,7 +65,8 @@ def run_enrichment_pipeline(batch_size: int = 60, max_attempts: int = 3, target_
             log("No pending or failed companies found in database. All records are up to date!")
             return
 
-        log(f"Found {total_items} companies requiring AI enrichment (Batch Size: {batch_size}, Max Attempts: {max_attempts}).")
+        city_tag = f" in {target_city.title()}" if target_city else ""
+        log(f"Found {total_items} companies requiring AI enrichment{city_tag} (Batch Size: {batch_size}, Max Attempts: {max_attempts}).")
 
         # Mark claimed batch as IN_PROGRESS and bump attempts count
         company_targets = []
@@ -188,10 +192,12 @@ if __name__ == "__main__":
     parser.add_argument("--batch-size", type=int, default=60, help="Max companies to claim per run")
     parser.add_argument("--max-attempts", type=int, default=3, help="Max attempts before marking INCOMPLETE")
     parser.add_argument("--domain", type=str, default=None, help="Target specific domain")
+    parser.add_argument("--city", type=str, default=None, help="Target specific city (e.g. Surat, Bangalore)")
     args = parser.parse_args()
 
     run_enrichment_pipeline(
         batch_size=args.batch_size,
         max_attempts=args.max_attempts,
-        target_domain=args.domain
+        target_domain=args.domain,
+        target_city=args.city
     )

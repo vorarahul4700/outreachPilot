@@ -11,6 +11,10 @@ on:
         description: "Max attempts before marking INCOMPLETE"
         required: false
         default: "3"
+      city:
+        description: "Target specific city (optional, e.g. Surat)"
+        required: false
+        default: ""
 
 jobs:
   enrich_job:
@@ -42,6 +46,11 @@ jobs:
           GEMINI_MODEL: ${{ secrets.GEMINI_MODEL || 'gemini-1.5-flash' }}
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
         run: |
+          EXTRA_ARGS=""
+          if [ -n "${{ github.event.inputs.city }}" ]; then
+            EXTRA_ARGS="--city \"${{ github.event.inputs.city }}\""
+          fi
           python cloud_enrich.py \
             --batch-size "${{ github.event.inputs.batch_size || '60' }}" \
-            --max-attempts "${{ github.event.inputs.max_attempts || '3' }}"
+            --max-attempts "${{ github.event.inputs.max_attempts || '3' }}" \
+            $EXTRA_ARGS
