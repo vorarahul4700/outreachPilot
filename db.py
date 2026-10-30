@@ -177,9 +177,9 @@ elif clean_db_url.startswith("postgresql://") and not clean_db_url.startswith("p
 connect_args = {
     "connect_timeout": 10,
     "keepalives": 1,
-    "keepalives_idle": 30,
-    "keepalives_interval": 10,
-    "keepalives_count": 5
+    "keepalives_idle": 15,
+    "keepalives_interval": 5,
+    "keepalives_count": 3
 }
 if "postgresql" in clean_db_url:
     try:
@@ -201,10 +201,10 @@ try:
     engine = create_engine(
         clean_db_url,
         pool_pre_ping=True,
-        pool_recycle=300,
-        pool_size=15,
-        max_overflow=25,
-        pool_timeout=20,
+        pool_recycle=60,
+        pool_size=20,
+        max_overflow=30,
+        pool_timeout=25,
         connect_args=connect_args
     )
     print(f"[DB] Initialized database engine: {engine.name} ({engine.url.render_as_string(hide_password=True)})")

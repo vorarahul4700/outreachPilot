@@ -174,6 +174,11 @@ async def deep_enrich_company(
     if not company:
         return {"error": "Company not found", "success": False}
 
+    company_id_val = company.id
+    company_name_val = company.name
+    company_domain_val = company.domain
+    company_website_url_val = company.website_url
+
     # 1. Check if already enriched in DB (Smart Caching)
     if company.is_enriched and not force_refresh:
         existing_profile = db.query(CompanyProfile).filter(CompanyProfile.company_id == company.id).first()
@@ -195,9 +200,19 @@ async def deep_enrich_company(
             } if existing_profile else {}
         }
 
+    # CRITICAL FOR NEON CLOUD POOLER:
+    # Release the connection back to the pool before starting long-running network I/O
+    # (website crawling + AI analysis takes 15-45 seconds).
+    # Holding a transaction open causes Neon's PgBouncer pooler to terminate the idle connection
+    # with "SSL connection has been closed unexpectedly".
+    try:
+        db.rollback()
+    except Exception:
+        pass
+
     # 2. Parallel Crawl Company Website (Homepage + Subpages simultaneously)
-    base_clean = f"https://{company.domain}" if company.domain else (company.website_url.split("?")[0].rstrip("/") if company.website_url else "")
-    target_url = base_clean or company.website_url
+    base_clean = f"https://{company_domain_val}" if company_domain_val else (company_website_url_val.split("?")[0].rstrip("/") if company_website_url_val else "")
+    target_url = base_clean or company_website_url_val
 
     all_emails: set[str] = set()
     aggregated_text: list[str] = []
@@ -249,22 +264,11 @@ async def deep_enrich_company(
         scraped_text=combined_text
     )
 
-    # 4. Save to PostgreSQL Database
-    if force_refresh:
-        db.query(CompanyEmail).filter(CompanyEmail.company_id == company.id).delete()
-        db.query(CompanyProfile).filter(CompanyProfile.company_id == company.id).delete()
+    # 4. Save to PostgreSQL Database with reconnect resilience
+    from db import SessionLocal
 
     ranked_emails = filter_and_prioritize_emails(all_emails)
-    email_records = []
-    for em, etype, is_prim in ranked_emails:
-        c_email = CompanyEmail(
-            company_id=company.id,
-            email_address=em,
-            email_type=etype,
-            is_primary=is_prim
-        )
-        db.add(c_email)
-        email_records.append({"email": em, "type": etype, "is_primary": is_prim})
+    email_records = [{"email": em, "type": etype, "is_primary": is_prim} for em, etype, is_prim in ranked_emails]
 
     has_intel = bool(
         len(combined_text.strip()) >= 60 and (
@@ -273,30 +277,66 @@ async def deep_enrich_company(
         )
     )
 
-    if has_intel and (ai_profile_data.get("summary") or ai_profile_data.get("detailed_analysis")):
-        c_profile = CompanyProfile(
-            company_id=company.id,
-            summary_short=ai_profile_data.get("summary", ""),
-            detailed_analysis=ai_profile_data.get("detailed_analysis", ""),
-            industry=ai_profile_data.get("industry", ""),
-            tech_stack=ai_profile_data.get("tech_stack", []),
-            services=ai_profile_data.get("services", []),
-            hiring_signals=ai_profile_data.get("hiring_signals", ""),
-            tone=ai_profile_data.get("tone", "Professional")
-        )
-        db.add(c_profile)
+    save_db = db
+    for attempt in range(1, 4):
+        try:
+            target_company = save_db.query(Company).filter(Company.id == company_id_val).first()
+            if not target_company:
+                return {"error": "Company not found", "success": False}
 
-    company.is_enriched = has_intel
-    company.enrichment_status = "COMPLETED" if has_intel else "INCOMPLETE"
-    company.last_enriched_at = datetime.utcnow()
-    db.commit()
+            if force_refresh:
+                save_db.query(CompanyEmail).filter(CompanyEmail.company_id == company_id_val).delete()
+                save_db.query(CompanyProfile).filter(CompanyProfile.company_id == company_id_val).delete()
+
+            for em, etype, is_prim in ranked_emails:
+                c_email = CompanyEmail(
+                    company_id=company_id_val,
+                    email_address=em,
+                    email_type=etype,
+                    is_primary=is_prim
+                )
+                save_db.add(c_email)
+
+            if has_intel and (ai_profile_data.get("summary") or ai_profile_data.get("detailed_analysis")):
+                c_profile = CompanyProfile(
+                    company_id=company_id_val,
+                    summary_short=ai_profile_data.get("summary", ""),
+                    detailed_analysis=ai_profile_data.get("detailed_analysis", ""),
+                    industry=ai_profile_data.get("industry", ""),
+                    tech_stack=ai_profile_data.get("tech_stack", []),
+                    services=ai_profile_data.get("services", []),
+                    hiring_signals=ai_profile_data.get("hiring_signals", ""),
+                    tone=ai_profile_data.get("tone", "Professional")
+                )
+                save_db.add(c_profile)
+
+            target_company.is_enriched = has_intel
+            target_company.enrichment_status = "COMPLETED" if has_intel else "INCOMPLETE"
+            target_company.last_enriched_at = datetime.utcnow()
+            save_db.commit()
+            break
+        except Exception as save_err:
+            try:
+                save_db.rollback()
+            except Exception:
+                pass
+            if attempt == 3:
+                raise save_err
+            # If SSL connection was severed by Neon while idle during web crawling,
+            # discard the severed session and get a fresh connection from the pool:
+            try:
+                save_db.close()
+            except Exception:
+                pass
+            save_db = SessionLocal()
+            await asyncio.sleep(0.5)
 
     return {
         "success": True,
         "cached": False,
-        "company_id": company.id,
-        "company_name": company.name,
-        "domain": company.domain,
+        "company_id": company_id_val,
+        "company_name": company_name_val,
+        "domain": company_domain_val,
         "emails": email_records,
         "profile": ai_profile_data
     }

@@ -113,7 +113,7 @@ def run_enrichment_pipeline(batch_size: int = 60, max_attempts: int = 3, target_
                     prof = res.get("profile", {}) if isinstance(res, dict) else {}
                     detailed = str(prof.get("detailed_analysis", "") or "")
                     summary = str(prof.get("summary", "") or "")
-                    
+
                     # Strictly verify actual technical intelligence exists
                     has_intel = bool(
                         isinstance(res, dict) and prof and (
@@ -121,12 +121,6 @@ def run_enrichment_pipeline(batch_size: int = 60, max_attempts: int = 3, target_
                             len(summary.strip()) > 30
                         )
                     )
-                    c_obj = worker_db.query(Company).filter(Company.id == c_id).first()
-                    if c_obj:
-                        c_obj.is_enriched = has_intel
-                        c_obj.enrichment_status = "COMPLETED" if has_intel else "INCOMPLETE"
-                        c_obj.last_enriched_at = datetime.utcnow()
-                        worker_db.commit()
 
                     async with lock:
                         if has_intel:
@@ -140,8 +134,13 @@ def run_enrichment_pipeline(batch_size: int = 60, max_attempts: int = 3, target_
                     err_msg = str(err)
                     log(f"[{idx}/{total_items}] [FAIL] Failed {c_domain}: {err}")
                     try:
-                        worker_db.rollback()
-                        c_obj = worker_db.query(Company).filter(Company.id == c_id).first()
+                        worker_db.close()
+                    except Exception:
+                        pass
+
+                    recovery_db = SessionLocal()
+                    try:
+                        c_obj = recovery_db.query(Company).filter(Company.id == c_id).first()
                         if c_obj:
                             c_obj.is_enriched = False
                             # If failure is rate-limit/token exhaustion, keep as PENDING for future retry
@@ -157,9 +156,14 @@ def run_enrichment_pipeline(batch_size: int = 60, max_attempts: int = 3, target_
                                 c_obj.enrichment_status = "FAILED"
                                 async with lock:
                                     failed_count += 1
-                            worker_db.commit()
+                            recovery_db.commit()
                     except Exception as db_err:
                         log(f"[DB Error] Could not update failure status for {c_domain}: {db_err}")
+                    finally:
+                        try:
+                            recovery_db.close()
+                        except Exception:
+                            pass
                     return False
                 finally:
                     try:
