@@ -266,24 +266,25 @@ async def deep_enrich_company(
         db.add(c_email)
         email_records.append({"email": em, "type": etype, "is_primary": is_prim})
 
-    c_profile = CompanyProfile(
-        company_id=company.id,
-        summary_short=ai_profile_data.get("summary", ""),
-        detailed_analysis=ai_profile_data.get("detailed_analysis", ""),
-        industry=ai_profile_data.get("industry", ""),
-        tech_stack=ai_profile_data.get("tech_stack", []),
-        services=ai_profile_data.get("services", []),
-        hiring_signals=ai_profile_data.get("hiring_signals", ""),
-        tone=ai_profile_data.get("tone", "Professional")
-    )
-    db.add(c_profile)
-
     has_intel = bool(
         len(combined_text.strip()) >= 60 and (
             (ai_profile_data.get("detailed_analysis") and len(str(ai_profile_data["detailed_analysis"]).strip()) > 50 and "No Readable Website Content Detected" not in str(ai_profile_data["detailed_analysis"])) or
             (ai_profile_data.get("summary") and len(str(ai_profile_data["summary"]).strip()) > 30)
         )
     )
+
+    if has_intel and (ai_profile_data.get("summary") or ai_profile_data.get("detailed_analysis")):
+        c_profile = CompanyProfile(
+            company_id=company.id,
+            summary_short=ai_profile_data.get("summary", ""),
+            detailed_analysis=ai_profile_data.get("detailed_analysis", ""),
+            industry=ai_profile_data.get("industry", ""),
+            tech_stack=ai_profile_data.get("tech_stack", []),
+            services=ai_profile_data.get("services", []),
+            hiring_signals=ai_profile_data.get("hiring_signals", ""),
+            tone=ai_profile_data.get("tone", "Professional")
+        )
+        db.add(c_profile)
 
     company.is_enriched = has_intel
     company.enrichment_status = "COMPLETED" if has_intel else "INCOMPLETE"
