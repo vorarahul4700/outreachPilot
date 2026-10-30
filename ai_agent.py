@@ -81,53 +81,17 @@ def call_gemini_single_key(
     temperature: float = 0.2,
     max_tokens: int = 2200,
     response_format: dict = None,
-    model: str = "gemini-1.5-flash"
+    model: str = "gemini-3.5-flash"
 ) -> AIResponse:
     """
-    Executes a prompt against Google Gemini using OpenAI-compatible or native REST protocol.
-    Returns standard AIResponse object with .choices[0].message.content for 100% backward compatibility.
+    Executes a prompt against Google Gemini using the direct Google AI Studio REST protocol.
+    Supports official AQ. authentication keys, JSON output enforcement, and fallback model cascade.
     """
-    # 1. Attempt OpenAI-compatible endpoint
-    openai_url = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions"
-    headers = {
-        "Authorization": f"Bearer {key}",
-        "Content-Type": "application/json"
-    }
-    payload = {
-        "model": model,
-        "messages": messages,
-        "temperature": temperature,
-    }
-    if max_tokens:
-        payload["max_tokens"] = max_tokens
-    if response_format:
-        payload["response_format"] = response_format
-
-    try:
-        if httpx:
-            with httpx.Client(timeout=45.0) as h_client:
-                r = h_client.post(openai_url, headers=headers, json=payload)
-                if r.status_code == 200:
-                    data = r.json()
-                    content = data["choices"][0]["message"]["content"]
-                    return AIResponse(content)
-                elif r.status_code == 429:
-                    raise RuntimeError(f"Gemini 429 Rate Limit ({key[:8]}...): {r.text}")
-        else:
-            r = requests.post(openai_url, headers=headers, json=payload, timeout=45.0)
-            if r.status_code == 200:
-                data = r.json()
-                content = data["choices"][0]["message"]["content"]
-                return AIResponse(content)
-            elif r.status_code == 429:
-                raise RuntimeError(f"Gemini 429 Rate Limit ({key[:8]}...): {r.text}")
-    except Exception as e:
-        if "429" in str(e).lower() or "quota" in str(e).lower() or "rate limit" in str(e).lower():
-            raise
-
-    # 2. Native Google AI Studio generateContent endpoint fallback
     clean_model = model.replace("models/", "")
-    native_url = f"https://generativelanguage.googleapis.com/v1beta/models/{clean_model}:generateContent?key={key}"
+    models_to_try = [clean_model]
+    for alt in ["gemini-3.5-flash", "gemini-3.5-flash-lite", "gemini-3.8-flash"]:
+        if alt not in models_to_try:
+            models_to_try.append(alt)
 
     contents = []
     system_text = None
@@ -157,9 +121,16 @@ def call_gemini_single_key(
     if system_text:
         native_payload["systemInstruction"] = {"parts": [{"text": system_text}]}
 
-    if httpx:
-        with httpx.Client(timeout=45.0) as h_client:
-            r = h_client.post(native_url, json=native_payload)
+    last_gem_err = None
+    for target_m in models_to_try:
+        native_url = f"https://generativelanguage.googleapis.com/v1beta/models/{target_m}:generateContent?key={key}"
+        try:
+            if httpx:
+                with httpx.Client(timeout=25.0) as h_client:
+                    r = h_client.post(native_url, json=native_payload)
+            else:
+                r = requests.post(native_url, json=native_payload, timeout=25.0)
+
             if r.status_code == 200:
                 data = r.json()
                 parts = data.get("candidates", [{}])[0].get("content", {}).get("parts", [])
@@ -167,19 +138,18 @@ def call_gemini_single_key(
                 return AIResponse(text_content)
             elif r.status_code == 429:
                 raise RuntimeError(f"Gemini 429 Rate Limit ({key[:8]}...): {r.text}")
+            elif r.status_code in (404, 503):
+                last_gem_err = f"Gemini model {target_m} returned {r.status_code}: {r.text[:100]}"
+                continue
             else:
-                raise RuntimeError(f"Gemini Native endpoint failed ({r.status_code}): {r.text}")
-    else:
-        r = requests.post(native_url, json=native_payload, timeout=45.0)
-        if r.status_code == 200:
-            data = r.json()
-            parts = data.get("candidates", [{}])[0].get("content", {}).get("parts", [])
-            text_content = "".join(p.get("text", "") for p in parts)
-            return AIResponse(text_content)
-        elif r.status_code == 429:
-            raise RuntimeError(f"Gemini 429 Rate Limit ({key[:8]}...): {r.text}")
-        else:
-            raise RuntimeError(f"Gemini Native endpoint failed ({r.status_code}): {r.text}")
+                last_gem_err = f"Gemini error {r.status_code}: {r.text[:150]}"
+        except Exception as e:
+            if "429" in str(e).lower() or "quota" in str(e).lower() or "rate limit" in str(e).lower():
+                raise
+            last_gem_err = str(e)
+            continue
+
+    raise RuntimeError(f"All Gemini models failed on key {key[:8]}... Last error: {last_gem_err}")
 
 
 def call_ai_with_fallback(
@@ -269,7 +239,8 @@ def call_ai_with_fallback(
                                 "temperature": temperature,
                             }
                             if max_tokens:
-                                kwargs["max_tokens"] = max_tokens
+                                # Groq qwen/qwen3.8-27b has an Output Tokens Per Minute (OTPM) limit of 1000
+                                kwargs["max_tokens"] = min(max_tokens, 950)
                             if rf:
                                 kwargs["response_format"] = rf
                             return active_client.chat.completions.create(**kwargs)

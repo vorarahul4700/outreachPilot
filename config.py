@@ -70,7 +70,7 @@ _raw_gemini_key = os.getenv("GEMINI_API_KEY", "") or os.getenv("GEMINI_API_KEYS"
 GEMINI_API_KEYS = [k.strip() for k in _raw_gemini_key.split(",") if k.strip()]
 GEMINI_API_KEY = GEMINI_API_KEYS[0] if GEMINI_API_KEYS else ""
 IS_MULTI_GEMINI = len(GEMINI_API_KEYS) > 1
-GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-1.5-flash")
+GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-3.5-flash")
 
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
 GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET", "")
