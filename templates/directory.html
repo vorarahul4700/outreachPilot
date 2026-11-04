@@ -197,17 +197,32 @@
 
       <!-- SECTION: BROWSE BY SPECIALIZATION & CATEGORY -->
       <section id="tech-section" class="space-y-4">
-        <div class="flex items-center justify-between border-b border-outline pb-3">
-          <div>
-            <h2 class="text-xl font-display font-bold text-primary">Browse by Industry &amp; Specialization</h2>
-            <p class="text-xs text-on-surface-variant">Verified companies categorized by their core specializations, engineering stacks, and professional services.</p>
+        <div class="space-y-3 border-b border-outline pb-3">
+          <div class="flex items-center justify-between">
+            <div>
+              <h2 class="text-xl font-display font-bold text-primary">Browse by Industry &amp; Specialization</h2>
+              <p class="text-xs text-on-surface-variant">Verified companies categorized by their core specializations across IT, Sales, Marketing, Pharma, Healthcare, Finance, and Manufacturing.</p>
+            </div>
+            <span class="text-xs font-mono text-secondary px-2 py-0.5 rounded bg-secondary/10 border border-secondary/25">{{ technologies|length }} Categories</span>
           </div>
-          <span class="text-xs font-mono text-secondary px-2 py-0.5 rounded bg-secondary/10 border border-secondary/25">{{ technologies|length }} Categories</span>
+
+          <!-- Multi-Industry Domain Filter Pills -->
+          <div class="flex flex-wrap items-center gap-1.5 pt-1" id="domain-filter-pills">
+            <button type="button" class="domain-pill active px-3 py-1 rounded-full text-xs font-mono border border-secondary bg-secondary/15 text-primary" data-domain="all">All Domains</button>
+            <button type="button" class="domain-pill px-3 py-1 rounded-full text-xs font-mono border border-outline bg-surface-container text-on-surface-variant hover:text-primary hover:border-secondary/40 transition" data-domain="it">IT &amp; Software</button>
+            <button type="button" class="domain-pill px-3 py-1 rounded-full text-xs font-mono border border-outline bg-surface-container text-on-surface-variant hover:text-primary hover:border-secondary/40 transition" data-domain="sales">Sales &amp; BPO</button>
+            <button type="button" class="domain-pill px-3 py-1 rounded-full text-xs font-mono border border-outline bg-surface-container text-on-surface-variant hover:text-primary hover:border-secondary/40 transition" data-domain="marketing">Marketing &amp; PR</button>
+            <button type="button" class="domain-pill px-3 py-1 rounded-full text-xs font-mono border border-outline bg-surface-container text-on-surface-variant hover:text-primary hover:border-secondary/40 transition" data-domain="pharma">Pharma &amp; Healthcare</button>
+            <button type="button" class="domain-pill px-3 py-1 rounded-full text-xs font-mono border border-outline bg-surface-container text-on-surface-variant hover:text-primary hover:border-secondary/40 transition" data-domain="finance">Finance &amp; Legal</button>
+            <button type="button" class="domain-pill px-3 py-1 rounded-full text-xs font-mono border border-outline bg-surface-container text-on-surface-variant hover:text-primary hover:border-secondary/40 transition" data-domain="manufacturing">Manufacturing</button>
+            <button type="button" class="domain-pill px-3 py-1 rounded-full text-xs font-mono border border-outline bg-surface-container text-on-surface-variant hover:text-primary hover:border-secondary/40 transition" data-domain="realestate">Real Estate</button>
+            <button type="button" class="domain-pill px-3 py-1 rounded-full text-xs font-mono border border-outline bg-surface-container text-on-surface-variant hover:text-primary hover:border-secondary/40 transition" data-domain="hr">HR &amp; Staffing</button>
+          </div>
         </div>
 
         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2.5" id="tech-grid">
           {% for t in technologies %}
-          <a href="/directory/tech/{{ t.slug }}" class="tech-card bento-cell p-3 flex flex-col justify-between hover:border-secondary group" data-name="{{ t.name|lower }}">
+          <a href="/directory/tech/{{ t.slug }}" class="tech-card bento-cell p-3 flex flex-col justify-between hover:border-secondary group" data-name="{{ t.name|lower }}" data-domain="{{ t.domain_code or 'it' }}">
             <div class="flex items-center justify-between">
               <span class="font-display font-semibold text-sm text-primary group-hover:text-secondary transition-colors">{{ t.name }}</span>
               <span class="material-symbols-outlined text-[14px] text-on-surface-variant group-hover:text-secondary group-hover:translate-x-0.5 transition-all">arrow_forward</span>
@@ -225,8 +240,8 @@
       <section id="city-section" class="space-y-4">
         <div class="flex items-center justify-between border-b border-outline pb-3">
           <div>
-            <h2 class="text-xl font-display font-bold text-primary">Browse by Indian Technology Hub</h2>
-            <p class="text-xs text-on-surface-variant">Verified IT development clusters across Tier 1, 2, and 3 engineering cities.</p>
+            <h2 class="text-xl font-display font-bold text-primary">Browse by Indian Commercial &amp; Business Hub</h2>
+            <p class="text-xs text-on-surface-variant">Verified business clusters and commercial districts across Tier 1, 2, and 3 metropolitan cities.</p>
           </div>
           <span class="text-xs font-mono text-secondary px-2 py-0.5 rounded bg-secondary/10 border border-secondary/25">{{ cities|length }} Cities</span>
         </div>
@@ -320,19 +335,40 @@
     const initialIcon = document.getElementById("theme-toggle-icon");
     if (initialIcon) initialIcon.textContent = initialTheme === "light" ? "dark_mode" : "light_mode";
 
-    // Instant Client-Side Filter
+    // Instant Client-Side Filter & Domain Pill Filtering
+    let activeDomain = "all";
+    const domainPills = document.querySelectorAll(".domain-pill");
+
+    domainPills.forEach(pill => {
+      pill.addEventListener("click", () => {
+        domainPills.forEach(p => {
+          p.classList.remove("active", "border-secondary", "bg-secondary/15", "text-primary");
+          p.classList.add("border-outline", "bg-surface-container", "text-on-surface-variant");
+        });
+        pill.classList.add("active", "border-secondary", "bg-secondary/15", "text-primary");
+        pill.classList.remove("border-outline", "bg-surface-container", "text-on-surface-variant");
+        activeDomain = pill.getAttribute("data-domain") || "all";
+        applyFilters();
+      });
+    });
+
     const searchInput = document.getElementById("dir-filter-input");
-    searchInput?.addEventListener("input", (e) => {
-      const q = e.target.value.trim().toLowerCase();
+    searchInput?.addEventListener("input", applyFilters);
+
+    function applyFilters() {
+      const q = (searchInput?.value || "").trim().toLowerCase();
       document.querySelectorAll(".city-card").forEach(el => {
         const name = el.getAttribute("data-name") || "";
         el.style.display = name.includes(q) ? "" : "none";
       });
       document.querySelectorAll(".tech-card").forEach(el => {
         const name = el.getAttribute("data-name") || "";
-        el.style.display = name.includes(q) ? "" : "none";
+        const domain = el.getAttribute("data-domain") || "all";
+        const matchesQuery = name.includes(q);
+        const matchesDomain = activeDomain === "all" || domain === activeDomain;
+        el.style.display = (matchesQuery && matchesDomain) ? "" : "none";
       });
-    });
+    }
   </script>
 </body>
 </html>

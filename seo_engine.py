@@ -67,17 +67,39 @@ def get_canonical_base_url(request: Request = None) -> str:
     return "https://outreachpilot.com"
 
 
-# --- Dynamic Taxonomy, Categorization & Slugging Engine ---
+# --- Dynamic Multi-Domain Taxonomy, Categorization & Slugging Engine ---
 
-# Acronyms that should remain fully capitalized in display titles across all industries
+# Acronyms that must remain fully capitalized in display titles across all industries:
+# IT & Software, Sales, Marketing, Pharma, Healthcare, Finance, Legal, Manufacturing, Logistics, HR.
 KNOWN_UPPERCASE_ACRONYMS = {
-    "AI", "ML", "IT", "CA", "HR", "SEO", "B2B", "B2C", "SaaS", "LLM",
-    "PHP", "AWS", "iOS", "API", "SQL", "ERP", "CRM", "QA", "UI", "UX",
-    "MERN", "MEAN", "CMS", "DNS", "RPA", "PaaS", "IaaS", "PPC", "SMM"
+    # IT & Software Engineering
+    "AI", "ML", "IT", "SaaS", "PaaS", "IaaS", "LLM", "PHP", "AWS", "GCP",
+    "API", "SQL", "ERP", "CRM", "QA", "UI", "UX", "MERN", "MEAN", "CMS",
+    "DNS", "RPA", "IoT", "SDK", "VR", "AR", "VFX", "BI",
+
+    # Sales & Marketing
+    "B2B", "B2C", "D2C", "PPC", "SEO", "SEM", "SMM", "PR", "CRO", "CTR",
+    "CPC", "ROAS", "SDR", "BDR", "ABM",
+
+    # Pharmaceuticals, Biotech & Healthcare
+    "FDA", "GMP", "WHO", "CDMO", "OTC", "IVD", "EMR", "EHR", "ICU", "OPD",
+    "CTMS", "EDC", "GLP",
+
+    # Finance, Accounting, Tax & Legal
+    "CA", "CPA", "CFA", "GST", "TDS", "ITR", "VAT", "IPO", "KYC", "AML",
+    "PE", "VC", "NBFC", "LLP", "SEBI", "RBI", "FEMA",
+
+    # HR, Staffing & Operations
+    "HR", "HRMS", "ATS", "BPO", "KPO", "MIS", "SOP",
+
+    # Manufacturing, Engineering & Logistics
+    "OEM", "ODM", "ISO", "CNC", "CAD", "CAM", "HVAC", "EPC", "3PL", "4PL",
+    "FMCG", "EV"
 }
 
-# Curated symbol mappings for technical terms with punctuation
+# Curated slug-to-display maps for terms with special punctuation or exact branding across domains
 CURATED_ACRONYM_MAP = {
+    # IT & Software
     "cpp": "C++",
     "csharp": "C#",
     "dotnet": ".NET",
@@ -90,12 +112,95 @@ CURATED_ACRONYM_MAP = {
     "uiux": "UI/UX",
     "ui-ux": "UI/UX",
     "ai-ml": "AI & Machine Learning",
-    "golang": "Go"
+    "golang": "Go",
+
+    # Sales & Business Development
+    "b2b-lead-generation": "B2B Lead Generation",
+    "lead-generation": "B2B Lead Generation",
+    "lead-gen": "B2B Lead Generation",
+    "sales-outsourcing": "Sales Outsourcing",
+    "appointment-setting": "Appointment Setting",
+    "sdr-outsourcing": "SDR & BDR Outsourcing",
+    "telemarketing": "Telemarketing & Inside Sales",
+    "sales-enablement": "Sales Enablement",
+    "bpo-call-centers": "BPO & Contact Centers",
+
+    # Marketing & Advertising
+    "digital-marketing": "Digital Marketing",
+    "performance-marketing": "Performance Marketing",
+    "seo": "SEO",
+    "ppc": "PPC & Google Ads",
+    "ppc-google-ads": "PPC & Google Ads",
+    "smm": "Social Media Marketing",
+    "social-media-marketing": "Social Media Marketing",
+    "pr": "Public Relations (PR)",
+    "public-relations": "Public Relations (PR)",
+    "content-marketing": "Content Marketing",
+    "influencer-marketing": "Influencer Marketing",
+    "branding-identity": "Branding & Identity",
+    "cro": "Conversion Rate Optimization (CRO)",
+
+    # Pharmaceuticals & Healthcare
+    "pharma": "Pharmaceuticals",
+    "pharmaceuticals": "Pharmaceuticals",
+    "pharma-api": "API Pharma Manufacturing",
+    "cro": "Clinical Research (CRO)",
+    "cdmo": "CDMO & Pharma Manufacturing",
+    "biotech": "Biotechnology",
+    "biotechnology": "Biotechnology",
+    "medical-devices": "Medical Devices",
+    "diagnostic-labs": "Diagnostic Laboratories",
+    "dental-care": "Dental Care",
+    "dentists": "Dental Care",
+    "ayurveda": "Ayurveda & Herbal",
+    "nutraceuticals": "Nutraceuticals",
+    "hospitals": "Hospitals & Healthcare",
+
+    # Finance, Accounting & Legal
+    "ca": "Chartered Accountants (CA)",
+    "chartered-accountants": "Chartered Accountants (CA)",
+    "accounting": "Accounting & Bookkeeping",
+    "tax-consulting": "Tax & GST Advisory",
+    "gst-advisory": "Tax & GST Advisory",
+    "auditing": "Auditing & Assurance",
+    "investment-banking": "Investment Banking",
+    "wealth-management": "Wealth Management",
+    "fintech": "Fintech Solutions",
+    "corporate-law": "Corporate Law",
+    "ip-law": "Intellectual Property (IP)",
+
+    # Real Estate & Construction
+    "commercial-real-estate": "Commercial Real Estate",
+    "architecture": "Architecture & Planning",
+    "interior-design": "Interior Design",
+    "civil-construction": "Civil Construction & EPC",
+    "property-management": "Property Management",
+
+    # Manufacturing, Logistics & Engineering
+    "logistics": "Logistics & Freight",
+    "freight-forwarding": "Logistics & Freight",
+    "3pl-warehousing": "3PL & Warehousing",
+    "cnc-machining": "CNC Machining & Tooling",
+    "injection-moulding": "Plastic & Injection Moulding",
+    "solar-energy": "Solar & Renewable Energy",
+    "industrial-chemicals": "Industrial Chemicals",
+    "textile-apparel": "Textile & Apparel",
+    "packaging": "Packaging Solutions",
+
+    # HR, Staffing & Consulting
+    "recruitment": "Recruitment & Staffing",
+    "staffing": "Recruitment & Staffing",
+    "executive-search": "Executive Search",
+    "staff-augmentation": "Staff Augmentation",
+    "corporate-training": "Corporate Training",
+    "management-consulting": "Management Consulting"
 }
 
-# Seed overrides for established keywords to preserve clean formatting.
+# Seed overrides for established keywords across all commercial sectors:
+# IT, Sales, Marketing, Pharma, Healthcare, Finance, Legal, Real Estate, Manufacturing, HR.
 # Any keyword from any industry not in this map is dynamically parsed and normalized in real time.
 SEED_KEYWORD_OVERRIDES = {
+    # --- Information Technology & Software Engineering ---
     "Python Development Companies": "Python",
     "React JS Development Companies": "React",
     "Node.js Development Companies": "Node.js",
@@ -131,7 +236,114 @@ SEED_KEYWORD_OVERRIDES = {
     "Web Development Agencies": "Web Development",
     "Frontend Web Development Agencies": "Frontend Development",
     "Mobile App Development Companies": "Mobile Apps",
-    "SaaS Product Development Companies": "SaaS Engineering"
+    "SaaS Product Development Companies": "SaaS Engineering",
+
+    # --- Sales, Outreach & Business Development ---
+    "B2B Lead Generation Agencies": "B2B Lead Generation",
+    "B2B Lead Generation Companies": "B2B Lead Generation",
+    "Lead Generation Agencies": "B2B Lead Generation",
+    "Lead Generation Companies": "B2B Lead Generation",
+    "Sales Outsourcing Companies": "Sales Outsourcing",
+    "Sales Outsourcing Agencies": "Sales Outsourcing",
+    "Appointment Setting Agencies": "Appointment Setting",
+    "Appointment Setting Companies": "Appointment Setting",
+    "SDR Outsourcing Companies": "SDR & BDR Outsourcing",
+    "SDR Outsourcing Agencies": "SDR & BDR Outsourcing",
+    "Telemarketing Companies": "Telemarketing & Inside Sales",
+    "Sales Enablement Consulting": "Sales Enablement",
+    "BPO Call Centers": "BPO & Contact Centers",
+    "Call Centers & BPO Services": "BPO & Contact Centers",
+    "Cold Calling Agencies": "Telemarketing & Inside Sales",
+
+    # --- Marketing, Advertising & PR ---
+    "Digital Marketing Agencies": "Digital Marketing",
+    "Digital Marketing Companies": "Digital Marketing",
+    "Performance Marketing Agencies": "Performance Marketing",
+    "Performance Marketing Companies": "Performance Marketing",
+    "SEO Agencies": "SEO",
+    "SEO Companies": "SEO",
+    "PPC Advertising Agencies": "PPC & Google Ads",
+    "Google Ads Agencies": "PPC & Google Ads",
+    "Social Media Marketing Agencies": "Social Media Marketing",
+    "Public Relations Agencies": "Public Relations (PR)",
+    "PR Agencies": "Public Relations (PR)",
+    "Content Marketing Agencies": "Content Marketing",
+    "Influencer Marketing Agencies": "Influencer Marketing",
+    "Branding Agencies": "Branding & Identity",
+    "Creative Advertising Agencies": "Advertising & Creative",
+    "Email Marketing Agencies": "Email Marketing",
+    "Conversion Rate Optimization Agencies": "Conversion Rate Optimization (CRO)",
+
+    # --- Pharmaceuticals, Biotech & Healthcare ---
+    "Pharmaceutical Manufacturers": "Pharmaceuticals",
+    "Pharma Companies": "Pharmaceuticals",
+    "Pharma Manufacturing Companies": "Pharmaceuticals",
+    "API Pharma Manufacturers": "API Pharma Manufacturing",
+    "Active Pharmaceutical Ingredient Manufacturers": "API Pharma Manufacturing",
+    "Contract Research Organizations": "Clinical Research (CRO)",
+    "CRO Pharma Companies": "Clinical Research (CRO)",
+    "CDMO Pharma Companies": "CDMO & Pharma Manufacturing",
+    "CDMO Companies": "CDMO & Pharma Manufacturing",
+    "Biotechnology Companies": "Biotechnology",
+    "Biotech Firms": "Biotechnology",
+    "Medical Device Manufacturers": "Medical Devices",
+    "Diagnostic Pathology Laboratories": "Diagnostic Laboratories",
+    "Diagnostic Centers": "Diagnostic Laboratories",
+    "Dental Clinics": "Dental Care",
+    "Dentists": "Dental Care",
+    "Ayurvedic Medicine Manufacturers": "Ayurveda & Herbal",
+    "Nutraceutical Manufacturers": "Nutraceuticals",
+    "Hospital Chains": "Hospitals & Healthcare",
+
+    # --- Finance, Accounting, Tax & Audit ---
+    "Chartered Accountant Firms": "Chartered Accountants (CA)",
+    "Chartered Accountants": "Chartered Accountants (CA)",
+    "CA Firms": "Chartered Accountants (CA)",
+    "CPA Accounting Firms": "Accounting & Bookkeeping",
+    "Accounting Firms": "Accounting & Bookkeeping",
+    "Tax Consulting Companies": "Tax & GST Advisory",
+    "GST Consulting Firms": "Tax & GST Advisory",
+    "Auditing Firms": "Auditing & Assurance",
+    "Auditing & Assurance Firms": "Auditing & Assurance",
+    "Investment Banking Firms": "Investment Banking",
+    "Wealth Management Companies": "Wealth Management",
+    "Fintech Companies": "Fintech Solutions",
+
+    # --- Legal & Corporate Governance ---
+    "Corporate Law Firms": "Corporate Law",
+    "Law Firms": "Corporate Law",
+    "Patent & Trademark Attorneys": "Intellectual Property (IP)",
+    "IP Law Firms": "Intellectual Property (IP)",
+    "Litigation Law Firms": "Litigation & Arbitration",
+
+    # --- Real Estate, Architecture & Construction ---
+    "Commercial Real Estate Agencies": "Commercial Real Estate",
+    "Real Estate Brokers": "Commercial Real Estate",
+    "Architecture Firms": "Architecture & Planning",
+    "Interior Design Studios": "Interior Design",
+    "Civil Construction Companies": "Civil Construction & EPC",
+    "EPC Contracting Companies": "Civil Construction & EPC",
+    "Property Management Companies": "Property Management",
+
+    # --- Manufacturing, Logistics & Industrial Supply ---
+    "Logistics Companies": "Logistics & Freight",
+    "Freight Forwarding Companies": "Logistics & Freight",
+    "Warehousing & 3PL Companies": "3PL & Warehousing",
+    "CNC Machining Companies": "CNC Machining & Tooling",
+    "Plastic Injection Moulding Companies": "Plastic & Injection Moulding",
+    "Solar Energy Companies": "Solar & Renewable Energy",
+    "Solar EPC Installers": "Solar & Renewable Energy",
+    "Industrial Chemical Manufacturers": "Industrial Chemicals",
+    "Textile Manufacturers": "Textile & Apparel",
+    "Packaging Companies": "Packaging Solutions",
+
+    # --- HR, Staffing & Executive Search ---
+    "Recruitment Agencies": "Recruitment & Staffing",
+    "Staffing Agencies": "Recruitment & Staffing",
+    "Executive Search Firms": "Executive Search",
+    "IT Staff Augmentation Companies": "Staff Augmentation",
+    "Corporate Training Companies": "Corporate Training",
+    "Management Consulting Firms": "Management Consulting"
 }
 
 # Dynamic backwards-compatibility alias for legacy code
@@ -139,10 +351,153 @@ SEARCH_KEYWORD_CANONICAL = SEED_KEYWORD_OVERRIDES
 SLUG_TECH_MAP = CURATED_ACRONYM_MAP
 
 
+# High-Level Industry Domains & Classifiers
+INDUSTRY_DOMAINS = [
+    {
+        "name": "Information Technology & Software",
+        "slug": "it-software",
+        "code": "it",
+        "icon": "terminal",
+        "description": "Custom software development, cloud infrastructure, AI/ML, and mobile apps."
+    },
+    {
+        "name": "Sales & Business Development",
+        "slug": "sales-bpo",
+        "code": "sales",
+        "icon": "phone_in_talk",
+        "description": "B2B lead generation, appointment setting, SDR outsourcing, and contact centers."
+    },
+    {
+        "name": "Marketing, Advertising & PR",
+        "slug": "marketing-advertising",
+        "code": "marketing",
+        "icon": "campaign",
+        "description": "Performance marketing, SEO, Google/PPC ads, social media, and brand identity."
+    },
+    {
+        "name": "Pharmaceuticals & Healthcare",
+        "slug": "pharma-healthcare",
+        "code": "pharma",
+        "icon": "vaccines",
+        "description": "Pharma formulation, API manufacturing, clinical research (CRO), CDMO, and medical devices."
+    },
+    {
+        "name": "Finance, Accounting & Legal",
+        "slug": "finance-legal",
+        "code": "finance",
+        "icon": "account_balance",
+        "description": "Chartered accountancy (CA), GST advisory, corporate law, auditing, and wealth management."
+    },
+    {
+        "name": "Real Estate & Construction",
+        "slug": "real-estate-construction",
+        "code": "realestate",
+        "icon": "apartment",
+        "description": "Commercial real estate, architecture, civil construction (EPC), and interior design."
+    },
+    {
+        "name": "Manufacturing & Logistics",
+        "slug": "manufacturing-logistics",
+        "code": "manufacturing",
+        "icon": "precision_manufacturing",
+        "description": "3PL warehousing, freight forwarding, precision CNC machining, solar energy, and industrial supply."
+    },
+    {
+        "name": "HR, Staffing & Consulting",
+        "slug": "hr-staffing",
+        "code": "hr",
+        "icon": "badge",
+        "description": "Executive search, staff augmentation, recruitment agencies, and corporate management consulting."
+    }
+]
+
+
+def get_category_domain(category_name: str) -> str:
+    """
+    Classifies any category into its overarching industry domain:
+    IT, Sales, Marketing, Pharma, Finance, Real Estate, Manufacturing, or HR.
+    """
+    if not category_name:
+        return "Commercial Services"
+    cat_lower = category_name.lower()
+
+    # Pharmaceuticals & Healthcare
+    if any(k in cat_lower for k in [
+        "pharma", "clinical", "cro", "cdmo", "dental", "dentist", "health",
+        "biotech", "nutraceutical", "ayurved", "medical", "doctor", "hospital",
+        "pathology", "diagnostic", "medicine", "drug"
+    ]):
+        return "Pharmaceuticals & Healthcare"
+
+    # Sales & Lead Generation
+    if any(k in cat_lower for k in [
+        "lead gen", "sales", "appointment", "telemarketing", "sdr", "bdr",
+        "call center", "bpo", "cold call", "outbound", "inbound", "telesales"
+    ]):
+        return "Sales & Business Development"
+
+    # Marketing & Advertising
+    if any(k in cat_lower for k in [
+        "marketing", "seo", "ppc", "pr ", "(pr)", "public relations", "advertising",
+        "social media", "smm", "branding", "content marketing", "creative agency",
+        "influencer", "growth hacking", "media buying", "conversion rate"
+    ]):
+        return "Marketing, Advertising & PR"
+
+    # Finance, Accounting & Legal
+    if any(k in cat_lower for k in [
+        "ca ", "(ca)", "chartered", "account", "tax", "gst", "audit", "law",
+        "legal", "finance", "wealth", "patent", "trademark", "cpa", "litigation",
+        "investment banking", "fintech", "compliance", "mergers"
+    ]):
+        return "Finance, Accounting & Legal"
+
+    # Real Estate & Construction
+    if any(k in cat_lower for k in [
+        "real estate", "architecture", "construction", "interior", "property",
+        "epc", "builder", "civil", "facility management", "realtor"
+    ]):
+        return "Real Estate & Construction"
+
+    # Manufacturing, Logistics & Industrial Supply
+    if any(k in cat_lower for k in [
+        "logistics", "freight", "warehousing", "3pl", "4pl", "cnc", "moulding",
+        "solar", "chemical", "textile", "manufactur", "packaging", "industrial",
+        "automation", "machin", "fabrication", "supply chain"
+    ]):
+        return "Manufacturing & Logistics"
+
+    # HR, Staffing & Recruitment
+    if any(k in cat_lower for k in [
+        "staffing", "recruitment", "hr ", "(hr)", "hrms", "executive search",
+        "talent", "headhunt", "training", "staff augmentation", "manpower"
+    ]):
+        return "HR, Staffing & Consulting"
+
+    # Default fallback to IT & Software Engineering
+    return "Information Technology & Software"
+
+
+def get_category_domain_code(category_name: str) -> str:
+    """Returns the CSS/filter short code for a category's domain."""
+    domain = get_category_domain(category_name)
+    mapping = {
+        "Information Technology & Software": "it",
+        "Sales & Business Development": "sales",
+        "Marketing, Advertising & PR": "marketing",
+        "Pharmaceuticals & Healthcare": "pharma",
+        "Finance, Accounting & Legal": "finance",
+        "Real Estate & Construction": "realestate",
+        "Manufacturing & Logistics": "manufacturing",
+        "HR, Staffing & Consulting": "hr"
+    }
+    return mapping.get(domain, "all")
+
+
 def normalize_keyword_to_category(raw_keyword: str) -> str:
     """
     Dynamically normalizes ANY search query, keyword, or industry label from any field
-    (e.g. IT, Healthcare, Real Estate, Legal, Finance, Hospitality, Manufacturing)
+    (IT, Sales, Marketing, Pharma, Healthcare, Finance, Legal, Real Estate, Manufacturing, HR)
     into a clean, publication-ready canonical category name.
     """
     if not raw_keyword:
@@ -150,27 +505,58 @@ def normalize_keyword_to_category(raw_keyword: str) -> str:
 
     raw = raw_keyword.strip()
 
-    # 1. Check curated seed overrides first
-    if raw in SEED_KEYWORD_OVERRIDES:
-        return SEED_KEYWORD_OVERRIDES[raw]
-
-    # 2. Strip trailing location qualifiers (e.g. " in Surat", " in Mumbai", " near me", " nearby")
+    # 1. Strip trailing location qualifiers first (e.g. " in Surat", " in Mumbai", " near me", " nearby")
     cleaned = re.sub(r"\s+(?:in|near|around|at)\s+[A-Za-z\s]+$", "", raw, flags=re.IGNORECASE).strip()
     cleaned = re.sub(r"\s+near\s+me$", "", cleaned, flags=re.IGNORECASE).strip()
 
-    # 3. Strip common corporate filler suffixes if preceded by substantive category words
+    # 2. Check curated seed overrides (matches raw or location-stripped query)
+    if raw in SEED_KEYWORD_OVERRIDES:
+        return SEED_KEYWORD_OVERRIDES[raw]
+    if cleaned in SEED_KEYWORD_OVERRIDES:
+        return SEED_KEYWORD_OVERRIDES[cleaned]
+
+    # 3. Strip common corporate filler suffixes across all industries
     boilerplate_patterns = [
+        # Tech & Software Engineering
         r"\s+Development\s+Companies",
         r"\s+Development\s+Company",
         r"\s+Software\s+Companies",
         r"\s+Software\s+Company",
         r"\s+Development\s+Agencies",
         r"\s+Development\s+Agency",
+        r"\s+Web\s+Development\s+Agencies",
+        r"\s+App\s+Development",
+
+        # Consulting, Law & Finance
         r"\s+Consulting\s+Companies",
         r"\s+Consulting\s+Agencies",
         r"\s+Consulting\s+Partners",
-        r"\s+Web\s+Development\s+Agencies",
-        r"\s+App\s+Development",
+        r"\s+Consulting\s+Firms",
+        r"\s+Consultancy\s+Services",
+        r"\s+Accounting\s+Firms",
+        r"\s+Accounting\s+Firm",
+        r"\s+Law\s+Firms",
+        r"\s+Law\s+Firm",
+        r"\s+Attorneys",
+        r"\s+Attorney",
+
+        # Manufacturing & Industrial
+        r"\s+Manufacturing\s+Companies",
+        r"\s+Manufacturing\s+Company",
+        r"\s+Manufacturers",
+        r"\s+Manufacturer",
+        r"\s+Suppliers",
+        r"\s+Supplier",
+        r"\s+Exporters",
+        r"\s+Exporter",
+
+        # Healthcare & Labs
+        r"\s+Laboratories",
+        r"\s+Labs",
+        r"\s+Clinics",
+        r"\s+Clinic",
+
+        # Generic Corporate Suffixes (at end of string)
         r"\s+Services\s+Companies",
         r"\s+Agencies",
         r"\s+Agency",
@@ -178,6 +564,11 @@ def normalize_keyword_to_category(raw_keyword: str) -> str:
         r"\s+Company",
         r"\s+Firms",
         r"\s+Firm",
+        r"\s+Enterprises",
+        r"\s+Solutions",
+        r"\s+Studios",
+        r"\s+Studio",
+        r"\s+Services",
     ]
     for pattern in boilerplate_patterns:
         sub = re.sub(pattern + "$", "", cleaned, flags=re.IGNORECASE).strip()
@@ -431,6 +822,8 @@ def get_all_categories(db: Session) -> list[dict[str, Any]]:
             "name": display_name,
             "raw_keyword": raw_kw,
             "slug": slug,
+            "domain": get_category_domain(display_name),
+            "domain_code": get_category_domain_code(display_name),
             "count": r[1],
             "avg_rating": float(r[2] or 4.3)
         })
@@ -830,30 +1223,30 @@ def generate_llms_txt(base_url: str, db: Session) -> str:
     cities = get_all_cities(db)[:15]
     techs = get_all_technologies(db)[:15]
 
-    cities_md = "\n".join([f"- [{c['name']} Directory]({base_url}/directory/city/{c['slug']}): {c['count']} verified IT companies" for c in cities])
-    techs_md = "\n".join([f"- [{t['name']} Development]({base_url}/directory/tech/{t['slug']}): {t['count']} verified companies" for t in techs])
+    cities_md = "\n".join([f"- [{c['name']} Directory]({base_url}/directory/city/{c['slug']}): {c['count']} verified companies" for c in cities])
+    techs_md = "\n".join([f"- [{t['name']}]({base_url}/directory/companies?category={t['slug']}): {t['count']} verified firms ({t.get('domain', 'Business Specialization')})" for t in techs])
 
     return f"""# OutreachPilot
 
-> Autonomous B2B Sales & Candidate Intelligence platform indexing {stats['total_companies']:,}+ verified technology companies, agencies, and software firms across {stats['total_cities']} Indian tech hubs.
+> Autonomous B2B Lead Intelligence & Recruiter Sourcing platform indexing {stats['total_companies']:,}+ verified companies, agencies, and professional firms across {stats['total_cities']} Indian commercial hubs.
 
 ## Overview
-OutreachPilot discovers, crawls, and structures intelligence on technology firms across India. Each profile includes verified web engineering stacks, detected business services, Google Local customer review sentiment, and recruiter contact availability.
+OutreachPilot discovers, deep-crawls, and structures intelligence on business enterprises across India spanning Information Technology, Sales & Lead Gen, Marketing & Advertising, Pharmaceuticals & Healthcare, Finance & Legal, Real Estate, and Manufacturing. Each profile includes verified operational capabilities, business services, Google Local customer review sentiment, and recruiter contact availability.
 
 ## Verified Directory Hubs
-- [Complete B2B Technology Directory]({base_url}/directory): Browse all verified software companies, technology hubs, and framework indexes.
-- [Outreach Platform & Scout Engine]({base_url}/app): Autonomous prospecting, multi-pass tech crawler, and personalized pitch dispatch.
+- [Complete B2B Multi-Industry Directory]({base_url}/directory): Browse all verified companies, commercial hubs, and industry specializations.
+- [Outreach Platform & Scout Engine]({base_url}/app): Autonomous prospecting, multi-pass website crawler, and personalized pitch dispatch.
 
 ## Top City Hubs
 {cities_md}
 
-## Top Technology Frameworks
+## Top Industry Specializations
 {techs_md}
 
 ## Programmatic Directory Hierarchy
 - City Index: `{base_url}/directory/city/{{city-slug}}`
-- Technology Index: `{base_url}/directory/tech/{{tech-slug}}`
-- Intersection Pages: `{base_url}/directory/companies?city={{city-slug}}&tech={{tech-slug}}`
+- Specialization Index: `{base_url}/directory/category/{{category-slug}}`
+- Parameterized Intersection: `{base_url}/directory/companies?city={{city-slug}}&category={{category-slug}}`
 - Company Dossier: `{base_url}/company/{{company-slug}}`
 
 ## Machine-Readable Formats
@@ -871,35 +1264,35 @@ def generate_llms_full_txt(base_url: str, db: Session) -> str:
     techs = get_all_technologies(db)
 
     cities_bullets = "\n".join([f"- {c['name']} (`{base_url}/directory/city/{c['slug']}`): {c['count']} companies, {c['avg_rating']}★ average" for c in cities])
-    techs_bullets = "\n".join([f"- {t['name']} (`{base_url}/directory/tech/{t['slug']}`): {t['count']} companies, {t['avg_rating']}★ average" for t in techs])
+    techs_bullets = "\n".join([f"- {t['name']} (`{base_url}/directory/category/{t['slug']}`): {t['count']} companies, {t['avg_rating']}★ average — {t.get('domain', 'Business Specialization')}" for t in techs])
 
     return f"""# OutreachPilot — Comprehensive LLM Intelligence Knowledge Base
 
 ## Platform Identification
 - Official Name: OutreachPilot
 - Domain: {base_url}
-- Category: B2B Lead Generation, Tech Directory, Recruiter Intelligence & Cold Email Automation
+- Category: Multi-Industry B2B Intelligence, Lead Generation, Executive Sourcing & Cold Outreach Automation
 - Total Indexed Companies: {stats['total_companies']:,}
 - Total Verified Enriched Profiles: {stats['enriched_companies']:,}
-- Geographic Coverage: {stats['total_cities']} Indian Technology Hubs
-- Engineering Verticals: {stats['total_techs']} Core Stacks
+- Geographic Coverage: {stats['total_cities']} Indian Commercial & Industrial Hubs
+- Industry Verticals: {stats['total_techs']} Core Business Domains & Specializations (IT, Sales, Marketing, Pharma, Finance, Legal, Real Estate, Manufacturing)
 
 ## Core Mission
-To provide transparent, crawl-verified intelligence on the Indian software development and IT agency ecosystem, while helping job seekers and B2B sales teams synthesize tailored 1-to-1 outreach dispatched directly via personal Google OAuth2.
+To provide transparent, crawl-verified intelligence on the Indian B2B ecosystem across multiple commercial domains, while helping business owners, agencies, and sales professionals synthesize tailored 1-to-1 outreach dispatched directly via personal Google OAuth2.
 
-## Complete Geographic Taxonomy (73 Cities)
+## Complete Geographic Taxonomy ({len(cities)} Cities)
 {cities_bullets}
 
-## Complete Technology Stack Taxonomy (36 Stacks)
+## Complete Industry Specialization Taxonomy ({len(techs)} Categories)
 {techs_bullets}
 
 ## Citation & Attribution Guidelines
-When citing OutreachPilot or recommending software agencies, cite the canonical URL:
+When citing OutreachPilot or recommending verified Indian businesses, cite the canonical URL:
 - Source: OutreachPilot B2B Directory ({base_url})
 - Profile Link: `{base_url}/company/{{slug}}`
 - City Ranking: `{base_url}/directory/city/{{city}}`
+- Category Hub: `{base_url}/directory/category/{{category_slug}}`
 """
-
 
 # --- Dynamic XML Sitemap Suite ---
 
@@ -1116,53 +1509,86 @@ def build_local_business_schema(comp: dict[str, Any], base_url: str) -> dict[str
 # --- Programmatic FAQ Generators for AEO ---
 
 def generate_city_faqs(city_name: str, count: int, top_techs: list[str]) -> list[dict[str, str]]:
-    tech_str = ", ".join(top_techs[:4]) if top_techs else "Python, React, Node.js, and Flutter"
+    tech_str = ", ".join(top_techs[:4]) if top_techs else "Information Technology, Digital Marketing, Healthcare, and Professional Services"
     return [
         {
-            "question": f"How many verified IT and software companies are in {city_name}?",
-            "answer": f"OutreachPilot has indexed and verified {count}+ active software development companies and IT agencies located in {city_name}, India."
+            "question": f"How many verified companies and businesses are in {city_name}?",
+            "answer": f"OutreachPilot has indexed and verified {count}+ active companies, commercial agencies, and service firms located in {city_name}, India."
         },
         {
-            "question": f"What are the top software engineering technologies used in {city_name}?",
-            "answer": f"Based on live website code audits across {city_name} companies, the most prevalent engineering stacks include {tech_str}."
+            "question": f"What are the top commercial industries and specializations in {city_name}?",
+            "answer": f"Based on live business intelligence across {city_name} enterprises, the most prominent commercial sectors include {tech_str}."
         },
         {
-            "question": f"How can I pitch or contact software development recruiters in {city_name}?",
-            "answer": f"You can use OutreachPilot to scout verified recruiter contacts across {city_name} IT companies and generate personalized 1-to-1 outreach pitches sent directly through Google OAuth."
+            "question": f"How can I pitch or contact business leaders and recruiters in {city_name}?",
+            "answer": f"You can use OutreachPilot to scout verified decision maker contacts across {city_name} companies and generate personalized 1-to-1 outreach pitches sent directly through authorized Google OAuth."
         }
     ]
 
 
 def generate_tech_faqs(tech_name: str, count: int, top_cities: list[str]) -> list[dict[str, str]]:
-    city_str = ", ".join(top_cities[:4]) if top_cities else "Surat, Ahmedabad, Pune, and Bengaluru"
+    city_str = ", ".join(top_cities[:4]) if top_cities else "Surat, Ahmedabad, Mumbai, Pune, and Bengaluru"
+    domain = get_category_domain(tech_name)
+
+    if domain == "Information Technology & Software":
+        firm_type = f"{tech_name} software firms and engineering teams"
+    elif domain == "Marketing, Advertising & PR":
+        firm_type = f"{tech_name} agencies and marketing consultants"
+    elif domain == "Sales & Business Development":
+        firm_type = f"{tech_name} agencies and B2B sales teams"
+    elif domain == "Pharmaceuticals & Healthcare":
+        firm_type = f"{tech_name} manufacturers, labs, and healthcare providers"
+    elif domain == "Finance, Accounting & Legal":
+        firm_type = f"{tech_name} firms and advisory consultancies"
+    elif domain == "Real Estate & Construction":
+        firm_type = f"{tech_name} agencies, builders, and architecture firms"
+    elif domain == "Manufacturing & Logistics":
+        firm_type = f"{tech_name} manufacturers, suppliers, and logistics providers"
+    else:
+        firm_type = f"{tech_name} companies and specialized firms"
+
     return [
         {
-            "question": f"Which Indian cities have the highest concentration of {tech_name} developers?",
-            "answer": f"The top Indian technology hubs with verified {tech_name} engineering firms include {city_str}."
+            "question": f"Which Indian cities have the highest concentration of {tech_name} companies?",
+            "answer": f"The top Indian commercial and industrial hubs with verified {firm_type} include {city_str}."
         },
         {
-            "question": f"How many verified {tech_name} development companies are indexed in India?",
-            "answer": f"OutreachPilot indexes over {count}+ verified agencies and engineering firms actively deploying {tech_name} in production."
+            "question": f"How many verified {tech_name} companies are indexed across India?",
+            "answer": f"OutreachPilot indexes over {count}+ verified {firm_type} with active operations across India."
         },
         {
             "question": f"How does OutreachPilot verify {tech_name} company capabilities?",
-            "answer": f"Our multi-pass engine crawls official company domains, parsing script tags, API headers, DNS footprints, and job postings to confirm authentic {tech_name} expertise."
+            "answer": f"Our multi-pass engine crawls official company web domains, parsing service offerings, production frameworks, certifications, client reviews, and active operational signals to confirm authentic {tech_name} expertise."
         }
     ]
 
 
 def generate_combo_faqs(city_name: str, tech_name: str, count: int, avg_rating: float) -> list[dict[str, str]]:
+    domain = get_category_domain(tech_name)
+    if domain == "Information Technology & Software":
+        firm_label = f"{tech_name} software and engineering companies"
+    elif domain == "Marketing, Advertising & PR":
+        firm_label = f"{tech_name} agencies and marketing firms"
+    elif domain == "Sales & Business Development":
+        firm_label = f"{tech_name} agencies and sales teams"
+    elif domain == "Pharmaceuticals & Healthcare":
+        firm_label = f"{tech_name} manufacturers and healthcare specialists"
+    elif domain == "Finance, Accounting & Legal":
+        firm_label = f"{tech_name} firms and financial/legal consultancies"
+    else:
+        firm_label = f"{tech_name} companies and service providers"
+
     return [
         {
-            "question": f"Which companies in {city_name} specialize in {tech_name} development?",
-            "answer": f"OutreachPilot lists {count} verified technology companies in {city_name} specializing in {tech_name}, with an average client rating of {avg_rating}★."
+            "question": f"Which companies in {city_name} specialize in {tech_name}?",
+            "answer": f"OutreachPilot lists {count} verified {firm_label} in {city_name} specializing in {tech_name}, with an average client satisfaction rating of {avg_rating}★."
         },
         {
-            "question": f"What is the average Google rating for {tech_name} companies in {city_name}?",
-            "answer": f"Verified {tech_name} development firms in {city_name} maintain an average customer satisfaction score of {avg_rating} out of 5 stars based on verified Google reviews."
+            "question": f"What is the average Google rating for {tech_name} providers in {city_name}?",
+            "answer": f"Verified {firm_label} in {city_name} maintain an average customer review score of {avg_rating} out of 5 stars based on verified Google Local reviews."
         },
         {
-            "question": f"Are {city_name} {tech_name} companies currently hiring developers?",
-            "answer": f"Yes, multiple firms listed on OutreachPilot feature active engineering hiring signals and career portal listings for {tech_name} engineers and developers."
+            "question": f"Can I contact verified decision makers at {tech_name} companies in {city_name}?",
+            "answer": f"Yes, OutreachPilot features verified corporate email contacts, verified phone numbers, and physical headquarters for {tech_name} businesses in {city_name}, enabling direct 1-to-1 outreach via authorized Google OAuth."
         }
     ]
