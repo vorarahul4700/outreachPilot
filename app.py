@@ -23,7 +23,7 @@ from fastapi import (
     UploadFile,
     status,
 )
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from google_auth_oauthlib.flow import Flow
@@ -46,6 +46,7 @@ def invalidate_filter_cache():
 
 
 import config
+import seo_engine
 from ai_agent import (
     generate_personalized_pitch,
     normalize_single_keyword,
@@ -204,10 +205,15 @@ templates = Jinja2Templates(directory="templates")
 async def maintenance_mode_middleware(request: Request, call_next):
     if config.is_maintenance_mode():
         path = request.url.path
-        # Allowed routes: only landing page, maintenance page, static assets, and favicon
+        # Allowed routes: landing page, directory, SEO, GEO, sitemaps, maintenance page, static assets, and favicon
         is_allowed = (
-            path in ("/", "/home", "/landing", "/maintenance", "/privacy", "/terms", "/favicon.ico")
+            path in ("/", "/home", "/landing", "/maintenance", "/privacy", "/terms", "/favicon.ico",
+                     "/robots.txt", "/llms.txt", "/llms-full.txt", "/sitemap.xml",
+                     "/sitemap-core.xml", "/sitemap-cities.xml", "/sitemap-tech.xml", "/sitemap-directory.xml")
             or path.startswith("/static/")
+            or path.startswith("/directory")
+            or path.startswith("/company/")
+            or path.startswith("/sitemap-companies-")
         )
         if not is_allowed:
             # Handle API endpoints and JSON requests
@@ -525,6 +531,395 @@ async def terms_page(request: Request):
         name="terms.html",
         context={"project_name": config.PROJECT_NAME}
     )
+
+
+# ==============================================================================
+# PROGRAMMATIC SEO, AEO & GEO SUITE (GEO / Sitemaps / Directories / Companies)
+# ==============================================================================
+
+@app.get("/robots.txt", include_in_schema=False)
+async def robots_txt(request: Request):
+    """AI-friendly, crawler-optimized robots.txt explicitly unblocking GPTBot, ClaudeBot, etc."""
+    base_url = seo_engine.get_canonical_base_url(request)
+    content = seo_engine.generate_robots_txt(base_url)
+    return Response(
+        content=content,
+        media_type="text/plain; charset=utf-8",
+        headers={"Cache-Control": "public, max-age=86400, s-maxage=86400"}
+    )
+
+
+@app.get("/llms.txt", include_in_schema=False)
+async def llms_txt(request: Request, db: Session = Depends(get_db)):
+    """Standardized LLM Context File per llmstxt.org specification"""
+    base_url = seo_engine.get_canonical_base_url(request)
+    content = seo_engine.generate_llms_txt(base_url, db)
+    return Response(
+        content=content,
+        media_type="text/plain; charset=utf-8",
+        headers={"Cache-Control": "public, max-age=86400, s-maxage=86400"}
+    )
+
+
+@app.get("/llms-full.txt", include_in_schema=False)
+async def llms_full_txt(request: Request, db: Session = Depends(get_db)):
+    """Comprehensive Machine-Readable LLM Knowledge Base for Agentic Crawlers"""
+    base_url = seo_engine.get_canonical_base_url(request)
+    content = seo_engine.generate_llms_full_txt(base_url, db)
+    return Response(
+        content=content,
+        media_type="text/plain; charset=utf-8",
+        headers={"Cache-Control": "public, max-age=86400, s-maxage=86400"}
+    )
+
+
+@app.get("/sitemap.xml", include_in_schema=False)
+async def sitemap_index_endpoint(request: Request, db: Session = Depends(get_db)):
+    """Master XML Sitemap Index referencing all sub-sitemaps"""
+    base_url = seo_engine.get_canonical_base_url(request)
+    content = seo_engine.generate_sitemap_index(base_url, db)
+    return Response(
+        content=content,
+        media_type="application/xml; charset=utf-8",
+        headers={"Cache-Control": "public, max-age=86400, s-maxage=86400"}
+    )
+
+
+@app.get("/sitemap-core.xml", include_in_schema=False)
+async def sitemap_core_endpoint(request: Request):
+    """Core Pages XML Sitemap"""
+    base_url = seo_engine.get_canonical_base_url(request)
+    content = seo_engine.generate_sitemap_core(base_url)
+    return Response(
+        content=content,
+        media_type="application/xml; charset=utf-8",
+        headers={"Cache-Control": "public, max-age=86400, s-maxage=86400"}
+    )
+
+
+@app.get("/sitemap-cities.xml", include_in_schema=False)
+async def sitemap_cities_endpoint(request: Request, db: Session = Depends(get_db)):
+    """All 73 Indian City Hubs XML Sitemap"""
+    base_url = seo_engine.get_canonical_base_url(request)
+    content = seo_engine.generate_sitemap_cities(base_url, db)
+    return Response(
+        content=content,
+        media_type="application/xml; charset=utf-8",
+        headers={"Cache-Control": "public, max-age=86400, s-maxage=86400"}
+    )
+
+
+@app.get("/sitemap-tech.xml", include_in_schema=False)
+async def sitemap_tech_endpoint(request: Request, db: Session = Depends(get_db)):
+    """All 36 Engineering Stacks XML Sitemap"""
+    base_url = seo_engine.get_canonical_base_url(request)
+    content = seo_engine.generate_sitemap_tech(base_url, db)
+    return Response(
+        content=content,
+        media_type="application/xml; charset=utf-8",
+        headers={"Cache-Control": "public, max-age=86400, s-maxage=86400"}
+    )
+
+
+@app.get("/sitemap-directory.xml", include_in_schema=False)
+async def sitemap_directory_endpoint(request: Request, db: Session = Depends(get_db)):
+    """Programmatic City + Technology Combinations XML Sitemap"""
+    base_url = seo_engine.get_canonical_base_url(request)
+    content = seo_engine.generate_sitemap_directory(base_url, db)
+    return Response(
+        content=content,
+        media_type="application/xml; charset=utf-8",
+        headers={"Cache-Control": "public, max-age=86400, s-maxage=86400"}
+    )
+
+
+@app.get("/sitemap-companies-{page}.xml", include_in_schema=False)
+async def sitemap_companies_endpoint(page: int, request: Request, db: Session = Depends(get_db)):
+    """Paginated Company Profiles XML Sitemap (5,000 URLs per file)"""
+    if page < 1:
+        raise HTTPException(status_code=404, detail="Sitemap page not found")
+    base_url = seo_engine.get_canonical_base_url(request)
+    content = seo_engine.generate_sitemap_companies(base_url, page, db)
+    return Response(
+        content=content,
+        media_type="application/xml; charset=utf-8",
+        headers={"Cache-Control": "public, max-age=86400, s-maxage=86400"}
+    )
+
+
+# --- Programmatic Directory Routes (pSEO & AEO) ---
+
+@app.get("/directory", response_class=HTMLResponse)
+async def directory_index_page(request: Request, db: Session = Depends(get_db)):
+    """Master B2B Technology & Agency Directory Homepage"""
+    base_url = seo_engine.get_canonical_base_url(request)
+    canonical_url = f"{base_url}/directory"
+    stats = seo_engine.get_directory_stats(db)
+    cities = seo_engine.get_all_cities(db)
+    technologies = seo_engine.get_all_technologies(db)
+
+    breadcrumbs = [("Home", f"{base_url}/"), ("Directory", canonical_url)]
+    bc_schema = seo_engine.build_breadcrumb_schema(breadcrumbs)
+    faq_schema = seo_engine.build_faq_schema([
+        {
+            "question": "How does OutreachPilot verify technology stacks and company data?",
+            "answer": "OutreachPilot utilizes an autonomous multi-pass crawler that directly analyzes live company website source code to detect actual production frameworks."
+        },
+        {
+            "question": "Can I contact the recruiters and engineering leads of these companies?",
+            "answer": "Yes. OutreachPilot extracts verified contact emails and enables users to draft hyper-personalized opportunity pitches sent directly through your authorized personal Gmail via OAuth 2.0."
+        },
+        {
+            "question": "How often is the directory intelligence updated?",
+            "answer": "Company profiles are re-crawled continuously to detect technology stack changes, new job openings, domain health, and Google review updates."
+        }
+    ])
+    combined_schema = json.dumps([bc_schema, faq_schema], ensure_ascii=False)
+
+    response = templates.TemplateResponse(
+        request=request,
+        name="directory.html",
+        context={
+            "project_name": config.PROJECT_NAME,
+            "canonical_url": canonical_url,
+            "stats": stats,
+            "cities": cities,
+            "technologies": technologies,
+            "json_ld_schema": combined_schema
+        }
+    )
+    response.headers["Cache-Control"] = "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800"
+    return response
+
+
+@app.get("/directory/city/{city_slug}", response_class=HTMLResponse)
+async def directory_city_hub(city_slug: str, request: Request, db: Session = Depends(get_db)):
+    """City-Level Technology Directory Hub (73 Indian Cities)"""
+    city_name = seo_engine.slug_to_city_name(city_slug)
+    companies, total_count = seo_engine.get_companies_list(db, city=city_name, limit=30)
+    if total_count == 0:
+        raise HTTPException(status_code=404, detail=f"No verified companies found for city: {city_name}")
+
+    base_url = seo_engine.get_canonical_base_url(request)
+    canonical_url = f"{base_url}/directory/city/{city_slug}"
+
+    all_combos = seo_engine.get_all_combinations(db)
+    city_combos = [c for c in all_combos if c["city_slug"] == city_slug]
+    related_items = [
+        {"name": c["tech_name"], "url": f"{base_url}/directory/companies/{city_slug}/{c['tech_slug']}", "count": c["count"]}
+        for c in city_combos[:16]
+    ]
+    top_tech_names = [c["tech_name"] for c in city_combos[:5]]
+    avg_rating = round(sum(c["rating"] for c in companies) / max(1, len(companies)), 1) if companies else 4.2
+
+    faqs = seo_engine.generate_city_faqs(city_name, total_count, top_tech_names)
+
+    breadcrumbs = [
+        ("Home", f"{base_url}/"),
+        ("Directory", f"{base_url}/directory"),
+        (city_name, canonical_url)
+    ]
+    bc_schema = seo_engine.build_breadcrumb_schema(breadcrumbs)
+    itemlist_schema = seo_engine.build_itemlist_schema(companies, base_url, f"Top Software Companies in {city_name}")
+    faq_schema = seo_engine.build_faq_schema(faqs)
+    combined_schema = json.dumps([bc_schema, itemlist_schema, faq_schema], ensure_ascii=False)
+
+    page_title = f"Top Software & IT Companies in {city_name} (2026 Directory)"
+    page_subtitle = f"Verified tech stacks, client ratings, and direct recruiter contact intelligence across {total_count}+ active software agencies in {city_name}, India."
+    meta_description = f"Browse {total_count}+ verified software agencies and IT firms in {city_name}, India. Crawled engineering stacks, Google ratings, client reviews, and verified contacts."
+
+    response = templates.TemplateResponse(
+        request=request,
+        name="directory_hub.html",
+        context={
+            "project_name": config.PROJECT_NAME,
+            "canonical_url": canonical_url,
+            "page_title": page_title,
+            "page_heading": f"Top Software & IT Companies in {city_name}",
+            "page_subtitle": page_subtitle,
+            "meta_description": meta_description,
+            "hub_name": city_name,
+            "hub_badge": f"Verified Indian Tech Hub &bull; {city_name}",
+            "total_companies": total_count,
+            "avg_rating": avg_rating,
+            "related_title": f"Top Technology Stacks in {city_name}",
+            "related_items": related_items,
+            "companies": companies,
+            "faqs": faqs,
+            "json_ld_schema": combined_schema
+        }
+    )
+    response.headers["Cache-Control"] = "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800"
+    return response
+
+
+@app.get("/directory/tech/{tech_slug}", response_class=HTMLResponse)
+async def directory_tech_hub(tech_slug: str, request: Request, db: Session = Depends(get_db)):
+    """Technology Stack Hub (36 Engineering Categories)"""
+    tech_name = seo_engine.slug_to_tech_name(tech_slug)
+    companies, total_count = seo_engine.get_companies_list(db, tech=tech_name, limit=30)
+    if total_count == 0:
+        raise HTTPException(status_code=404, detail=f"No verified companies found for tech stack: {tech_name}")
+
+    base_url = seo_engine.get_canonical_base_url(request)
+    canonical_url = f"{base_url}/directory/tech/{tech_slug}"
+
+    all_combos = seo_engine.get_all_combinations(db)
+    tech_combos = [c for c in all_combos if c["tech_slug"] == tech_slug]
+    related_items = [
+        {"name": c["city_name"], "url": f"{base_url}/directory/companies/{c['city_slug']}/{tech_slug}", "count": c["count"]}
+        for c in tech_combos[:16]
+    ]
+    top_city_names = [c["city_name"] for c in tech_combos[:5]]
+    avg_rating = round(sum(c["rating"] for c in companies) / max(1, len(companies)), 1) if companies else 4.3
+
+    faqs = seo_engine.generate_tech_faqs(tech_name, total_count, top_city_names)
+
+    breadcrumbs = [
+        ("Home", f"{base_url}/"),
+        ("Directory", f"{base_url}/directory"),
+        (tech_name, canonical_url)
+    ]
+    bc_schema = seo_engine.build_breadcrumb_schema(breadcrumbs)
+    itemlist_schema = seo_engine.build_itemlist_schema(companies, base_url, f"Top {tech_name} Development Companies in India")
+    faq_schema = seo_engine.build_faq_schema(faqs)
+    combined_schema = json.dumps([bc_schema, itemlist_schema, faq_schema], ensure_ascii=False)
+
+    page_title = f"Top {tech_name} Development Companies in India (2026 Rankings)"
+    page_subtitle = f"Directory of {total_count}+ verified software engineering firms deploying {tech_name} in production across India's top technology hubs."
+    meta_description = f"Explore {total_count}+ verified {tech_name} development companies and software agencies across India. Crawled tech stacks, client reviews, and verified contacts."
+
+    response = templates.TemplateResponse(
+        request=request,
+        name="directory_hub.html",
+        context={
+            "project_name": config.PROJECT_NAME,
+            "canonical_url": canonical_url,
+            "page_title": page_title,
+            "page_heading": f"Top {tech_name} Development Companies in India",
+            "page_subtitle": page_subtitle,
+            "meta_description": meta_description,
+            "hub_name": tech_name,
+            "hub_badge": f"Verified Engineering Stack &bull; {tech_name}",
+            "total_companies": total_count,
+            "avg_rating": avg_rating,
+            "related_title": f"Top Indian Cities for {tech_name}",
+            "related_items": related_items,
+            "companies": companies,
+            "faqs": faqs,
+            "json_ld_schema": combined_schema
+        }
+    )
+    response.headers["Cache-Control"] = "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800"
+    return response
+
+
+@app.get("/directory/companies/{city_slug}/{tech_slug}", response_class=HTMLResponse)
+async def directory_combo_page(city_slug: str, tech_slug: str, request: Request, db: Session = Depends(get_db)):
+    """High-Intent Programmatic Intersection Page (City + Technology Stack)"""
+    city_name = seo_engine.slug_to_city_name(city_slug)
+    tech_name = seo_engine.slug_to_tech_name(tech_slug)
+
+    companies, total_count = seo_engine.get_companies_list(db, city=city_name, tech=tech_name, limit=30)
+    if total_count == 0:
+        raise HTTPException(status_code=404, detail=f"No verified {tech_name} companies found in {city_name}")
+
+    base_url = seo_engine.get_canonical_base_url(request)
+    canonical_url = f"{base_url}/directory/companies/{city_slug}/{tech_slug}"
+
+    all_combos = seo_engine.get_all_combinations(db)
+    related_techs = [
+        {"name": c["tech_name"], "slug": c["tech_slug"], "count": c["count"]}
+        for c in all_combos if c["city_slug"] == city_slug and c["tech_slug"] != tech_slug
+    ][:12]
+    related_cities = [
+        {"name": c["city_name"], "slug": c["city_slug"], "count": c["count"]}
+        for c in all_combos if c["tech_slug"] == tech_slug and c["city_slug"] != city_slug
+    ][:12]
+
+    avg_rating = round(sum(c["rating"] for c in companies) / max(1, len(companies)), 1) if companies else 4.2
+    faqs = seo_engine.generate_combo_faqs(city_name, tech_name, total_count, avg_rating)
+
+    breadcrumbs = [
+        ("Home", f"{base_url}/"),
+        ("Directory", f"{base_url}/directory"),
+        (city_name, f"{base_url}/directory/city/{city_slug}"),
+        (tech_name, canonical_url)
+    ]
+    bc_schema = seo_engine.build_breadcrumb_schema(breadcrumbs)
+    itemlist_schema = seo_engine.build_itemlist_schema(companies, base_url, f"Top {tech_name} Companies in {city_name}")
+    faq_schema = seo_engine.build_faq_schema(faqs)
+    combined_schema = json.dumps([bc_schema, itemlist_schema, faq_schema], ensure_ascii=False)
+
+    response = templates.TemplateResponse(
+        request=request,
+        name="directory_combo.html",
+        context={
+            "project_name": config.PROJECT_NAME,
+            "canonical_url": canonical_url,
+            "city_name": city_name,
+            "city_slug": city_slug,
+            "tech_name": tech_name,
+            "tech_slug": tech_slug,
+            "total_companies": total_count,
+            "avg_rating": avg_rating,
+            "companies": companies,
+            "related_techs": related_techs,
+            "related_cities": related_cities,
+            "faqs": faqs,
+            "json_ld_schema": combined_schema
+        }
+    )
+    response.headers["Cache-Control"] = "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800"
+    return response
+
+
+@app.get("/company/{slug}", response_class=HTMLResponse)
+async def company_showcase_profile(slug: str, request: Request, db: Session = Depends(get_db)):
+    """Verified Individual Company Intelligence Profile Dossier"""
+    company_id = seo_engine.parse_company_slug(slug)
+    if not company_id:
+        raise HTTPException(status_code=404, detail="Company profile not found")
+
+    company = seo_engine.get_company_details(db, company_id)
+    if not company:
+        raise HTTPException(status_code=404, detail="Company profile not found")
+
+    base_url = seo_engine.get_canonical_base_url(request)
+    canonical_url = f"{base_url}/company/{company['slug']}"
+    city_slug = seo_engine.city_to_slug(company["city"])
+
+    # Related companies in same city
+    nearby_companies, _ = seo_engine.get_companies_list(db, city=company["city"], limit=4)
+    nearby_filtered = [c for c in nearby_companies if c["id"] != company["id"]][:3]
+
+    breadcrumbs = [
+        ("Home", f"{base_url}/"),
+        ("Directory", f"{base_url}/directory"),
+        (company["city"], f"{base_url}/directory/city/{city_slug}"),
+        (company["name"], canonical_url)
+    ]
+    bc_schema = seo_engine.build_breadcrumb_schema(breadcrumbs)
+    org_schema = seo_engine.build_local_business_schema(company, base_url)
+    combined_schema = json.dumps([bc_schema, org_schema], ensure_ascii=False)
+
+    meta_description = f"{company['name']} in {company['city']}, India. Verified technology stack: {', '.join(company['profile'].get('tech_stack', [])[:4])}. Client rating: {company['rating']}★. View full B2B intelligence dossier."
+
+    response = templates.TemplateResponse(
+        request=request,
+        name="company_profile.html",
+        context={
+            "project_name": config.PROJECT_NAME,
+            "canonical_url": canonical_url,
+            "company": company,
+            "city_slug": city_slug,
+            "nearby_companies": nearby_filtered,
+            "meta_description": meta_description,
+            "json_ld_schema": combined_schema
+        }
+    )
+    response.headers["Cache-Control"] = "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800"
+    return response
 
 
 # --- Stage 1: Google Local Lead Scout Endpoints ---

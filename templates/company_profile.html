@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg">
+  <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+  <title>{{ company.name }} - Tech Stack, Services &amp; Company Intelligence | OutreachPilot</title>
+  <meta name="description" content="{{ meta_description }}"/>
+  <link rel="canonical" href="{{ canonical_url }}"/>
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="business.business"/>
+  <meta property="og:url" content="{{ canonical_url }}"/>
+  <meta property="og:title" content="{{ company.name }} - Tech Stack &amp; Verified B2B Profile"/>
+  <meta property="og:description" content="{{ meta_description }}"/>
+  <meta property="og:site_name" content="OutreachPilot"/>
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image"/>
+  <meta name="twitter:title" content="{{ company.name }} - Verified Company Dossier"/>
+  <meta name="twitter:description" content="{{ meta_description }}"/>
+
+  <!-- Typography -->
+  <link rel="preload" href="/static/fonts/spacegrotesk-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/static/fonts/dmsans-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/static/css/fonts.css">
+  <link rel="stylesheet" href="/static/css/style.css?v=8.1">
+  <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+
+  <script>
+    (function() {
+      try {
+        const saved = localStorage.getItem('pilot_theme');
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const theme = saved ? saved : (prefersDark ? 'dark' : 'light');
+        if (theme === 'light') {
+          document.documentElement.classList.remove('dark');
+          document.documentElement.classList.add('light');
+        } else {
+          document.documentElement.classList.add('dark');
+          document.documentElement.classList.remove('light');
+        }
+      } catch (e) {}
+    })();
+  </script>
+
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "background": "rgb(var(--color-background) / <alpha-value>)",
+            "on-background": "rgb(var(--color-on-background) / <alpha-value>)",
+            "surface": "rgb(var(--color-surface) / <alpha-value>)",
+            "surface-container-lowest": "rgb(var(--color-surface-container-lowest) / <alpha-value>)",
+            "surface-container-low": "rgb(var(--color-surface-container-low) / <alpha-value>)",
+            "surface-container": "rgb(var(--color-surface-container) / <alpha-value>)",
+            "surface-container-high": "rgb(var(--color-surface-container-high) / <alpha-value>)",
+            "outline": "rgb(var(--color-outline) / <alpha-value>)",
+            "outline-variant": "rgb(var(--color-outline-variant) / <alpha-value>)",
+            "primary": "rgb(var(--color-primary) / <alpha-value>)",
+            "secondary": "rgb(var(--color-secondary) / <alpha-value>)",
+            "tertiary": "rgb(var(--color-tertiary) / <alpha-value>)",
+            "on-surface": "rgb(var(--color-on-surface) / <alpha-value>)",
+            "on-surface-variant": "rgb(var(--color-on-surface-variant) / <alpha-value>)"
+          },
+          fontFamily: {
+            display: ["Space Grotesk", "-apple-system", "sans-serif"],
+            sans: ["DM Sans", "-apple-system", "sans-serif"],
+            mono: ["JetBrains Mono", "monospace"]
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    .tnum { font-variant-numeric: tabular-nums; }
+    .bento-cell {
+      background-color: rgb(var(--color-surface-container-low));
+      border: 1px solid rgb(var(--color-outline));
+      border-radius: 0.75rem;
+      transition: all 0.2s ease;
+    }
+    .bento-cell:hover {
+      border-color: rgb(var(--color-outline-variant));
+    }
+    .btn-tactile-ecru {
+      background-color: #EFECE6;
+      color: #111317;
+      border: 1px solid #EFECE6;
+      font-weight: 600;
+      transition: all 0.15s ease;
+    }
+    .btn-tactile-ecru:hover {
+      background-color: #DFDCD5;
+      transform: translateY(-1px);
+    }
+  </style>
+
+  <!-- Schema.org JSON-LD Structured Data (Organization / LocalBusiness) -->
+  <script type="application/ld+json">
+  {{ json_ld_schema | safe }}
+  </script>
+</head>
+<body class="bg-background text-on-background min-h-screen flex flex-col font-sans antialiased selection:bg-secondary/20 selection:text-secondary">
+
+  <!-- NAVBAR -->
+  <header class="w-full border-b border-outline bg-background/90 backdrop-blur sticky top-0 z-40">
+    <div class="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
+      <div class="flex items-center gap-6">
+        <a href="/" class="flex items-center gap-2 group">
+          <div class="w-7 h-7 rounded-lg bg-surface-container-high border border-outline-variant flex items-center justify-center text-primary">
+            <span class="material-symbols-outlined text-[17px]">rocket_launch</span>
+          </div>
+          <span class="font-display font-bold text-base tracking-tight text-primary">Outreach<span class="text-secondary">Pilot</span></span>
+        </a>
+        <nav class="hidden md:flex items-center gap-4 text-xs font-mono text-on-surface-variant">
+          <a href="/directory" class="text-primary font-semibold border-b-2 border-secondary pb-0.5">Directory</a>
+          <a href="/#workflow" class="hover:text-primary transition-colors">Protocol</a>
+          <a href="/#features" class="hover:text-primary transition-colors">Engine</a>
+        </nav>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <button id="btn-theme-toggle" type="button" aria-label="Toggle Theme" class="w-8 h-8 rounded-lg flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container border border-outline-variant/40 transition cursor-pointer">
+          <span id="theme-toggle-icon" class="material-symbols-outlined text-[18px]">light_mode</span>
+        </button>
+        <a href="/app" class="btn-tactile-ecru flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-bold">
+          <span>Pitch This Company</span>
+          <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- BREADCRUMBS -->
+  <nav class="w-full border-b border-outline/60 bg-surface-container-lowest/40" aria-label="Breadcrumb">
+    <div class="max-w-6xl mx-auto px-6 py-2.5 text-xs font-mono text-on-surface-variant flex items-center gap-2">
+      <a href="/" class="hover:text-primary transition-colors">Home</a>
+      <span class="text-outline-variant">/</span>
+      <a href="/directory" class="hover:text-primary transition-colors">Directory</a>
+      <span class="text-outline-variant">/</span>
+      <a href="/directory/city/{{ city_slug }}" class="hover:text-primary transition-colors">{{ company.city }}</a>
+      <span class="text-outline-variant">/</span>
+      <span class="text-primary font-medium truncate max-w-[200px] sm:max-w-none">{{ company.name }}</span>
+    </div>
+  </nav>
+
+  <main class="flex-grow flex flex-col items-center w-full px-6 py-10">
+    <div class="w-full max-w-4xl space-y-8">
+
+      <!-- COMPANY HEADER HERO -->
+      <section class="bento-cell p-6 space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-outline pb-4">
+          <div>
+            <div class="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-secondary/10 border border-secondary/25 text-[11px] font-mono text-secondary mb-2">
+              <span class="material-symbols-outlined text-[13px]">verified</span>
+              <span>Verified B2B Lead Dossier</span>
+            </div>
+            <h1 class="text-2xl sm:text-3xl font-display font-bold text-primary tracking-tight">
+              {{ company.name }}
+            </h1>
+            <div class="flex flex-wrap items-center gap-2 text-xs font-mono text-on-surface-variant mt-1.5">
+              <span class="flex items-center gap-1 text-primary">
+                <span class="material-symbols-outlined text-[14px]">location_on</span>
+                <span>{{ company.city }}, India</span>
+              </span>
+              <span class="text-outline-variant">&bull;</span>
+              <a href="{{ company.website_url }}" target="_blank" rel="nofollow noopener noreferrer" class="hover:text-secondary underline flex items-center gap-0.5">
+                <span>{{ company.domain }}</span>
+                <span class="material-symbols-outlined text-[11px]">open_in_new</span>
+              </a>
+            </div>
+          </div>
+
+          <!-- Rating & Contact Badge -->
+          <div class="flex sm:flex-col items-center sm:items-end justify-between gap-2 shrink-0">
+            <div class="flex items-center gap-1 text-secondary font-mono font-bold text-sm bg-surface-container px-2.5 py-1 rounded border border-outline">
+              <span class="material-symbols-outlined text-[15px] fill-current">star</span>
+              <span class="tnum">{{ company.rating }}</span>
+              <span class="text-on-surface-variant text-xs font-normal tnum">({{ company.reviews_count }} reviews)</span>
+            </div>
+            <span class="text-[11px] font-mono {% if company.has_emails %}text-secondary{% else %}text-on-surface-variant{% endif %} flex items-center gap-1">
+              <span class="material-symbols-outlined text-[13px]">{% if company.has_emails %}mark_email_read{% else %}mail{% endif %}</span>
+              <span>{% if company.has_emails %}Verified Contacts Ready{% else %}Public Lead{% endif %}</span>
+            </span>
+          </div>
+        </div>
+
+        <!-- AI EXECUTIVE SUMMARY -->
+        <div class="space-y-2">
+          <h2 class="text-xs font-mono uppercase tracking-wider text-on-surface-variant font-semibold flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-[15px] text-secondary">psychology</span>
+            <span>AI Executive Overview</span>
+          </h2>
+          <p class="text-sm text-on-surface leading-relaxed font-sans">
+            {{ company.profile.summary }}
+          </p>
+        </div>
+
+        <!-- ACTION ROW -->
+        <div class="pt-2 flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
+          <div class="flex items-center gap-2">
+            <span class="text-on-surface-variant">Industry:</span>
+            <span class="text-primary font-medium">{{ company.profile.industry }}</span>
+          </div>
+          <a href="/app" class="btn-tactile-ecru flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold">
+            <span class="material-symbols-outlined text-[14px]">send</span>
+            <span>Draft AI Pitch via Gmail</span>
+          </a>
+        </div>
+      </section>
+
+      <!-- VERIFIED ENGINEERING TECH STACK -->
+      <section class="bento-cell p-6 space-y-4">
+        <div class="flex items-center justify-between border-b border-outline pb-2">
+          <h2 class="text-base font-display font-bold text-primary flex items-center gap-2">
+            <span class="material-symbols-outlined text-[18px] text-secondary">memory</span>
+            <span>Verified Technology Stack &amp; Frameworks</span>
+          </h2>
+          <span class="text-[11px] font-mono text-tertiary px-2 py-0.5 rounded bg-tertiary/10 border border-tertiary/25">Crawl-Verified</span>
+        </div>
+        <p class="text-xs text-on-surface-variant leading-relaxed">
+          The following technologies and frameworks were identified during automated multi-pass crawler inspection of {{ company.domain }}'s production scripts, server headers, and web architecture.
+        </p>
+
+        {% if company.profile.tech_stack and company.profile.tech_stack|length > 0 %}
+        <div class="flex flex-wrap gap-2 pt-1">
+          {% for tech in company.profile.tech_stack %}
+          <span class="px-3 py-1.5 rounded-lg text-xs font-mono font-medium bg-surface-container-high text-primary border border-outline hover:border-secondary transition-colors">
+            {{ tech }}
+          </span>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="p-3 rounded bg-surface-container text-xs font-mono text-on-surface-variant">
+          Standard web technology stack detected.
+        </div>
+        {% endif %}
+      </section>
+
+      <!-- CORE SERVICES & CAPABILITIES -->
+      <section class="bento-cell p-6 space-y-4">
+        <div class="flex items-center justify-between border-b border-outline pb-2">
+          <h2 class="text-base font-display font-bold text-primary flex items-center gap-2">
+            <span class="material-symbols-outlined text-[18px] text-secondary">design_services</span>
+            <span>Services &amp; Development Offerings</span>
+          </h2>
+          <span class="text-[11px] font-mono text-on-surface-variant">Crawl Data</span>
+        </div>
+
+        {% if company.profile.services and company.profile.services|length > 0 %}
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+          {% for serv in company.profile.services %}
+          <div class="p-3 rounded-lg bg-surface-container-high/40 border border-outline text-xs font-mono text-primary flex items-center gap-2">
+            <span class="material-symbols-outlined text-sm text-secondary">check_circle</span>
+            <span>{{ serv }}</span>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-xs text-on-surface-variant">Custom Software and Technology Solutions.</p>
+        {% endif %}
+      </section>
+
+      <!-- HIRING & GROWTH SIGNALS -->
+      {% if company.profile.hiring_signals %}
+      <section class="bento-cell p-6 space-y-3">
+        <h2 class="text-base font-display font-bold text-primary flex items-center gap-2">
+          <span class="material-symbols-outlined text-[18px] text-secondary">trending_up</span>
+          <span>Hiring &amp; Team Signals</span>
+        </h2>
+        <div class="p-3.5 rounded-lg bg-surface-container border border-outline font-mono text-xs text-on-surface flex items-start gap-2.5">
+          <span class="material-symbols-outlined text-sm text-secondary mt-0.5">radar</span>
+          <span>{{ company.profile.hiring_signals }}</span>
+        </div>
+      </section>
+      {% endif %}
+
+      <!-- DEEP TECHNICAL ANALYSIS (IF ENRICHED) -->
+      {% if company.profile.detailed_analysis %}
+      <section class="bento-cell p-6 space-y-3">
+        <h2 class="text-base font-display font-bold text-primary flex items-center gap-2">
+          <span class="material-symbols-outlined text-[18px] text-secondary">analytics</span>
+          <span>Detailed Technical Dossier</span>
+        </h2>
+        <div class="text-xs font-sans text-on-surface-variant leading-relaxed whitespace-pre-line p-4 rounded-lg bg-surface-container-high/30 border border-outline">
+          {{ company.profile.detailed_analysis }}
+        </div>
+      </section>
+      {% endif %}
+
+      <!-- RELATED COMPANIES IN THIS CITY -->
+      {% if nearby_companies and nearby_companies|length > 0 %}
+      <section class="space-y-3">
+        <h2 class="text-xs font-mono uppercase tracking-wider text-on-surface-variant font-semibold">
+          Other Verified Tech Companies in {{ company.city }}
+        </h2>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+          {% for n in nearby_companies %}
+          <a href="/company/{{ n.slug }}" class="bento-cell p-3 flex flex-col justify-between hover:border-secondary transition-colors group">
+            <span class="font-display font-bold text-xs text-primary group-hover:text-secondary line-clamp-1">{{ n.name }}</span>
+            <div class="flex items-center justify-between text-[11px] font-mono text-on-surface-variant mt-2 pt-1.5 border-t border-outline/50">
+              <span class="truncate">{{ n.domain }}</span>
+              <span class="text-secondary tnum">{{ n.rating }}★</span>
+            </div>
+          </a>
+          {% endfor %}
+        </div>
+      </section>
+      {% endif %}
+
+    </div>
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="w-full border-t border-outline bg-background py-8 text-xs font-mono text-on-surface-variant">
+    <div class="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div>&copy; 2026 OutreachPilot. Autonomous B2B Intelligence. All rights reserved.</div>
+      <div class="flex items-center gap-4">
+        <a href="/directory" class="hover:text-primary transition-colors">Directory</a>
+        <a href="/directory/city/{{ city_slug }}" class="hover:text-primary transition-colors">{{ company.city }} Hub</a>
+        <a href="/llms.txt" class="hover:text-primary transition-colors">llms.txt</a>
+        <a href="/sitemap.xml" class="hover:text-primary transition-colors">sitemap.xml</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    function toggleTheme() {
+      const isLight = document.documentElement.classList.contains("light");
+      const next = isLight ? "dark" : "light";
+      document.documentElement.classList.toggle("dark", next === "dark");
+      document.documentElement.classList.toggle("light", next === "light");
+      try { localStorage.setItem("pilot_theme", next); } catch (_) {}
+      const icon = document.getElementById("theme-toggle-icon");
+      if (icon) icon.textContent = next === "light" ? "dark_mode" : "light_mode";
+    }
+    document.getElementById("btn-theme-toggle")?.addEventListener("click", toggleTheme);
+  </script>
+</body>
+</html>
+

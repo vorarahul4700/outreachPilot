@@ -77,8 +77,10 @@ test-results/
 playwright-report/
 blob-report/
 playwright/.cache/
+var/
 downloaded_files/
 scratch/
+local_staging/
 temp/
 tmp/
 cookies.txt

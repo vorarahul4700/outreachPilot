@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+  <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg">
+  <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+  <title>B2B Technology &amp; Software Company Directory (India) | OutreachPilot</title>
+  <meta name="description" content="Explore verified software agencies, web development companies, and tech firms across 73 Indian cities and 36 technology stacks. Verified ratings, tech stacks, and recruiter contacts."/>
+  <link rel="canonical" href="{{ canonical_url }}"/>
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website"/>
+  <meta property="og:url" content="{{ canonical_url }}"/>
+  <meta property="og:title" content="B2B Technology &amp; Software Company Directory (India) | OutreachPilot"/>
+  <meta property="og:description" content="Explore verified software agencies across 73 Indian cities and 36 technology stacks."/>
+  <meta property="og:site_name" content="OutreachPilot"/>
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image"/>
+  <meta name="twitter:title" content="B2B Technology &amp; Software Company Directory (India)"/>
+  <meta name="twitter:description" content="Explore verified software agencies across 73 Indian cities and 36 tech stacks."/>
+
+  <!-- High-Performance Typography -->
+  <link rel="preload" href="/static/fonts/spacegrotesk-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/static/fonts/dmsans-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/static/css/fonts.css">
+  <link rel="stylesheet" href="/static/css/style.css?v=8.1">
+  <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+
+  <!-- Theme Script -->
+  <script>
+    (function() {
+      try {
+        const saved = localStorage.getItem('pilot_theme');
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const theme = saved ? saved : (prefersDark ? 'dark' : 'light');
+        if (theme === 'light') {
+          document.documentElement.classList.remove('dark');
+          document.documentElement.classList.add('light');
+        } else {
+          document.documentElement.classList.add('dark');
+          document.documentElement.classList.remove('light');
+        }
+      } catch (e) {}
+    })();
+  </script>
+
+  <script>
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "background": "rgb(var(--color-background) / <alpha-value>)",
+            "on-background": "rgb(var(--color-on-background) / <alpha-value>)",
+            "surface": "rgb(var(--color-surface) / <alpha-value>)",
+            "surface-container-lowest": "rgb(var(--color-surface-container-lowest) / <alpha-value>)",
+            "surface-container-low": "rgb(var(--color-surface-container-low) / <alpha-value>)",
+            "surface-container": "rgb(var(--color-surface-container) / <alpha-value>)",
+            "surface-container-high": "rgb(var(--color-surface-container-high) / <alpha-value>)",
+            "outline": "rgb(var(--color-outline) / <alpha-value>)",
+            "outline-variant": "rgb(var(--color-outline-variant) / <alpha-value>)",
+            "primary": "rgb(var(--color-primary) / <alpha-value>)",
+            "primary-muted": "rgb(var(--color-primary) / 0.8)",
+            "secondary": "rgb(var(--color-secondary) / <alpha-value>)",
+            "tertiary": "rgb(var(--color-tertiary) / <alpha-value>)",
+            "on-surface": "rgb(var(--color-on-surface) / <alpha-value>)",
+            "on-surface-variant": "rgb(var(--color-on-surface-variant) / <alpha-value>)"
+          },
+          fontFamily: {
+            display: ["Space Grotesk", "-apple-system", "sans-serif"],
+            sans: ["DM Sans", "-apple-system", "sans-serif"],
+            mono: ["JetBrains Mono", "monospace"]
+          }
+        }
+      }
+    };
+  </script>
+
+  <style>
+    .tnum { font-variant-numeric: tabular-nums; }
+    .bento-cell {
+      background-color: rgb(var(--color-surface-container-low));
+      border: 1px solid rgb(var(--color-outline));
+      border-radius: 0.75rem;
+      transition: all 0.2s ease;
+    }
+    .bento-cell:hover {
+      border-color: rgb(var(--color-outline-variant));
+      transform: translateY(-2px);
+    }
+    .btn-tactile-ecru {
+      background-color: #EFECE6;
+      color: #111317;
+      border: 1px solid #EFECE6;
+      font-weight: 600;
+      transition: all 0.15s ease;
+    }
+    .btn-tactile-ecru:hover {
+      background-color: #DFDCD5;
+      transform: translateY(-1px);
+    }
+  </style>
+
+  <!-- AEO Schema.org JSON-LD Structured Data -->
+  <script type="application/ld+json">
+  {{ json_ld_schema | safe }}
+  </script>
+</head>
+<body class="bg-background text-on-background min-h-screen flex flex-col font-sans antialiased selection:bg-secondary/20 selection:text-secondary">
+
+  <!-- NAVBAR -->
+  <header class="w-full border-b border-outline bg-background/90 backdrop-blur sticky top-0 z-40">
+    <div class="max-w-6xl mx-auto px-6 h-14 flex items-center justify-between">
+      <div class="flex items-center gap-6">
+        <a href="/" class="flex items-center gap-2 group">
+          <div class="w-7 h-7 rounded-lg bg-surface-container-high border border-outline-variant flex items-center justify-center text-primary">
+            <span class="material-symbols-outlined text-[17px]">rocket_launch</span>
+          </div>
+          <span class="font-display font-bold text-base tracking-tight text-primary">Outreach<span class="text-secondary">Pilot</span></span>
+        </a>
+        <nav class="hidden md:flex items-center gap-4 text-xs font-mono text-on-surface-variant">
+          <a href="/directory" class="text-primary font-semibold border-b-2 border-secondary pb-0.5">Directory</a>
+          <a href="/#workflow" class="hover:text-primary transition-colors">Protocol</a>
+          <a href="/#features" class="hover:text-primary transition-colors">Engine</a>
+        </nav>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <button id="btn-theme-toggle" type="button" aria-label="Toggle Theme" class="w-8 h-8 rounded-lg flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container border border-outline-variant/40 transition cursor-pointer">
+          <span id="theme-toggle-icon" class="material-symbols-outlined text-[18px]">light_mode</span>
+        </button>
+        <a href="/app" class="btn-tactile-ecru flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-bold">
+          <span>Open Workspace</span>
+          <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- BREADCRUMBS -->
+  <div class="w-full border-b border-outline/60 bg-surface-container-lowest/40">
+    <div class="max-w-6xl mx-auto px-6 py-2.5 text-xs font-mono text-on-surface-variant flex items-center gap-2">
+      <a href="/" class="hover:text-primary transition-colors">Home</a>
+      <span class="text-outline-variant">/</span>
+      <span class="text-primary font-medium">B2B Tech Directory</span>
+    </div>
+  </div>
+
+  <main class="flex-grow flex flex-col items-center w-full px-6 py-10">
+    <div class="w-full max-w-6xl space-y-12">
+
+      <!-- HERO & SEARCH -->
+      <section class="text-center space-y-4 pt-4">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container-high border border-outline-variant text-xs font-mono text-secondary">
+          <span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
+          <span>Verified Indian Software &amp; IT Ecosystem</span>
+        </div>
+        <h1 class="text-3xl sm:text-4xl md:text-5xl font-display font-bold text-primary max-w-3xl mx-auto tracking-tight leading-tight">
+          Browse {{ stats.total_companies|default(33600) }} Verified Technology Companies Across India
+        </h1>
+        <p class="text-sm sm:text-base text-on-surface-variant max-w-2xl mx-auto leading-relaxed">
+          Deep-crawled engineering stacks, verified recruiter contacts, services breakdown, and authentic Google review sentiments across 73 cities and 36 technology verticals.
+        </p>
+
+        <!-- LIVE METRICS BAR (AEO Optimized) -->
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-3xl mx-auto pt-4">
+          <div class="bento-cell p-3.5 text-center">
+            <div class="text-xl sm:text-2xl font-mono font-bold text-primary tnum">{{ stats.total_companies }}</div>
+            <div class="text-[11px] font-mono text-on-surface-variant uppercase tracking-wider mt-0.5">Indexed Companies</div>
+          </div>
+          <div class="bento-cell p-3.5 text-center">
+            <div class="text-xl sm:text-2xl font-mono font-bold text-secondary tnum">{{ stats.total_cities }}</div>
+            <div class="text-[11px] font-mono text-on-surface-variant uppercase tracking-wider mt-0.5">Tech Hubs</div>
+          </div>
+          <div class="bento-cell p-3.5 text-center">
+            <div class="text-xl sm:text-2xl font-mono font-bold text-tertiary tnum">{{ stats.total_techs }}</div>
+            <div class="text-[11px] font-mono text-on-surface-variant uppercase tracking-wider mt-0.5">Frameworks</div>
+          </div>
+          <div class="bento-cell p-3.5 text-center">
+            <div class="text-xl sm:text-2xl font-mono font-bold text-primary tnum">{{ stats.avg_rating }}★</div>
+            <div class="text-[11px] font-mono text-on-surface-variant uppercase tracking-wider mt-0.5">Avg Google Rating</div>
+          </div>
+        </div>
+
+        <!-- QUICK FILTER SEARCH -->
+        <div class="max-w-xl mx-auto pt-2">
+          <div class="relative">
+            <span class="absolute inset-y-0 left-3 flex items-center text-on-surface-variant">
+              <span class="material-symbols-outlined text-[18px]">search</span>
+            </span>
+            <input type="text" id="dir-filter-input" placeholder="Filter by city name or tech stack (e.g. Surat, React, Python)..." class="w-full pl-10 pr-4 py-2.5 rounded-lg bg-surface-container-high border border-outline text-xs font-mono text-primary placeholder:text-on-surface-variant/70 focus:outline-none focus:border-secondary transition">
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION: BROWSE BY TECHNOLOGY STACK -->
+      <section id="tech-section" class="space-y-4">
+        <div class="flex items-center justify-between border-b border-outline pb-3">
+          <div>
+            <h2 class="text-xl font-display font-bold text-primary">Browse by Technology &amp; Engineering Stack</h2>
+            <p class="text-xs text-on-surface-variant">Software firms categorized by their core development frameworks and languages.</p>
+          </div>
+          <span class="text-xs font-mono text-secondary px-2 py-0.5 rounded bg-secondary/10 border border-secondary/25">{{ technologies|length }} Stacks</span>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2.5" id="tech-grid">
+          {% for t in technologies %}
+          <a href="/directory/tech/{{ t.slug }}" class="tech-card bento-cell p-3 flex flex-col justify-between hover:border-secondary group" data-name="{{ t.name|lower }}">
+            <div class="flex items-center justify-between">
+              <span class="font-display font-semibold text-sm text-primary group-hover:text-secondary transition-colors">{{ t.name }}</span>
+              <span class="material-symbols-outlined text-[14px] text-on-surface-variant group-hover:text-secondary group-hover:translate-x-0.5 transition-all">arrow_forward</span>
+            </div>
+            <div class="flex items-center justify-between text-[11px] font-mono text-on-surface-variant mt-2 pt-2 border-t border-outline/50">
+              <span class="tnum">{{ t.count }} firms</span>
+              <span class="text-secondary">{{ t.avg_rating }}★</span>
+            </div>
+          </a>
+          {% endfor %}
+        </div>
+      </section>
+
+      <!-- SECTION: BROWSE BY CITY -->
+      <section id="city-section" class="space-y-4">
+        <div class="flex items-center justify-between border-b border-outline pb-3">
+          <div>
+            <h2 class="text-xl font-display font-bold text-primary">Browse by Indian Technology Hub</h2>
+            <p class="text-xs text-on-surface-variant">Verified IT development clusters across Tier 1, 2, and 3 engineering cities.</p>
+          </div>
+          <span class="text-xs font-mono text-secondary px-2 py-0.5 rounded bg-secondary/10 border border-secondary/25">{{ cities|length }} Cities</span>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2.5" id="city-grid">
+          {% for c in cities %}
+          <a href="/directory/city/{{ c.slug }}" class="city-card bento-cell p-3 flex flex-col justify-between hover:border-secondary group" data-name="{{ c.name|lower }}">
+            <div class="flex items-center justify-between">
+              <span class="font-display font-semibold text-sm text-primary group-hover:text-secondary transition-colors">{{ c.name }}</span>
+              <span class="material-symbols-outlined text-[14px] text-on-surface-variant group-hover:text-secondary group-hover:translate-x-0.5 transition-all">arrow_forward</span>
+            </div>
+            <div class="flex items-center justify-between text-[11px] font-mono text-on-surface-variant mt-2 pt-2 border-t border-outline/50">
+              <span class="tnum">{{ c.count }} firms</span>
+              <span class="text-secondary">{{ c.avg_rating }}★</span>
+            </div>
+          </a>
+          {% endfor %}
+        </div>
+      </section>
+
+      <!-- AEO FAQ SECTION (Direct Answer Optimized) -->
+      <section class="bento-cell p-6 space-y-4">
+        <div class="flex items-center gap-2 text-xs font-mono text-secondary">
+          <span class="material-symbols-outlined text-sm">help_outline</span>
+          <span>FREQUENTLY ASKED QUESTIONS</span>
+        </div>
+        <h2 class="text-xl font-display font-bold text-primary">About the OutreachPilot B2B Directory</h2>
+
+        <div class="space-y-3 pt-2">
+          <details class="group border border-outline rounded-lg p-3.5 bg-surface-container-high/40" open>
+            <summary class="font-display font-semibold text-sm text-primary cursor-pointer flex items-center justify-between">
+              <span>How does OutreachPilot verify technology stacks and company data?</span>
+              <span class="material-symbols-outlined text-sm group-open:rotate-180 transition-transform">expand_more</span>
+            </summary>
+            <p class="text-xs text-on-surface-variant leading-relaxed mt-2.5 pt-2 border-t border-outline/50">
+              OutreachPilot utilizes an autonomous multi-pass crawler that directly analyzes live company website source code, inspecting meta tags, API endpoints, script bundles, and DNS records to detect actual production frameworks (such as Python, React, Flutter, and Django) rather than relying on self-reported claims.
+            </p>
+          </details>
+
+          <details class="group border border-outline rounded-lg p-3.5 bg-surface-container-high/40">
+            <summary class="font-display font-semibold text-sm text-primary cursor-pointer flex items-center justify-between">
+              <span>Can I contact the recruiters and engineering leads of these companies?</span>
+              <span class="material-symbols-outlined text-sm group-open:rotate-180 transition-transform">expand_more</span>
+            </summary>
+            <p class="text-xs text-on-surface-variant leading-relaxed mt-2.5 pt-2 border-t border-outline/50">
+              Yes. OutreachPilot extracts verified contact emails from career portals, header links, and domain DNS records, and enables users to draft hyper-personalized opportunity pitches sent directly through your authorized personal Gmail via OAuth 2.0.
+            </p>
+          </details>
+
+          <details class="group border border-outline rounded-lg p-3.5 bg-surface-container-high/40">
+            <summary class="font-display font-semibold text-sm text-primary cursor-pointer flex items-center justify-between">
+              <span>How often is the directory intelligence updated?</span>
+              <span class="material-symbols-outlined text-sm group-open:rotate-180 transition-transform">expand_more</span>
+            </summary>
+            <p class="text-xs text-on-surface-variant leading-relaxed mt-2.5 pt-2 border-t border-outline/50">
+              Company profiles are re-crawled continuously to detect technology stack changes, new job openings, domain health, and Google review updates.
+            </p>
+          </details>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="w-full border-t border-outline bg-background py-8 text-xs font-mono text-on-surface-variant">
+    <div class="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div>&copy; 2026 OutreachPilot. Autonomous B2B Intelligence. All rights reserved.</div>
+      <div class="flex items-center gap-4">
+        <a href="/llms.txt" class="hover:text-primary transition-colors">llms.txt</a>
+        <a href="/sitemap.xml" class="hover:text-primary transition-colors">sitemap.xml</a>
+        <a href="/privacy" class="hover:text-primary transition-colors">Privacy</a>
+        <a href="/terms" class="hover:text-primary transition-colors">Terms</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Pure Theme Toggle
+    function toggleTheme() {
+      const isLight = document.documentElement.classList.contains("light");
+      const next = isLight ? "dark" : "light";
+      document.documentElement.classList.toggle("dark", next === "dark");
+      document.documentElement.classList.toggle("light", next === "light");
+      try { localStorage.setItem("pilot_theme", next); } catch (_) {}
+      const icon = document.getElementById("theme-toggle-icon");
+      if (icon) icon.textContent = next === "light" ? "dark_mode" : "light_mode";
+    }
+    document.getElementById("btn-theme-toggle")?.addEventListener("click", toggleTheme);
+    const initialTheme = document.documentElement.classList.contains("light") ? "light" : "dark";
+    const initialIcon = document.getElementById("theme-toggle-icon");
+    if (initialIcon) initialIcon.textContent = initialTheme === "light" ? "dark_mode" : "light_mode";
+
+    // Instant Client-Side Filter
+    const searchInput = document.getElementById("dir-filter-input");
+    searchInput?.addEventListener("input", (e) => {
+      const q = e.target.value.trim().toLowerCase();
+      document.querySelectorAll(".city-card").forEach(el => {
+        const name = el.getAttribute("data-name") || "";
+        el.style.display = name.includes(q) ? "" : "none";
+      });
+      document.querySelectorAll(".tech-card").forEach(el => {
+        const name = el.getAttribute("data-name") || "";
+        el.style.display = name.includes(q) ? "" : "none";
+      });
+    });
+  </script>
+</body>
+</html>
+
