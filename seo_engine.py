@@ -16,7 +16,8 @@ import math
 import os
 import re
 import time
-from typing import Any
+from collections import defaultdict
+from typing import Any, Optional
 from urllib.parse import quote, urlparse
 from fastapi import Request
 from sqlalchemy import func, or_, text
@@ -66,94 +67,35 @@ def get_canonical_base_url(request: Request = None) -> str:
     return "https://outreachpilot.com"
 
 
-# --- Bidirectional Slug & Normalization Dictionaries ---
+# --- Dynamic Taxonomy, Categorization & Slugging Engine ---
 
-SLUG_TECH_MAP = {
-    "python": "Python",
-    "react": "React",
-    "reactjs": "React",
-    "react-js": "React",
-    "nodejs": "Node.js",
-    "node-js": "Node.js",
-    "node": "Node.js",
-    "dotnet": ".NET",
-    "dot-net": ".NET",
-    "flutter": "Flutter",
-    "java": "Java",
-    "django": "Django",
-    "fastapi": "FastAPI",
-    "laravel": "Laravel",
-    "php": "PHP",
-    "angular": "Angular",
-    "vue": "Vue.js",
-    "vuejs": "Vue.js",
-    "nextjs": "Next.js",
-    "next-js": "Next.js",
-    "ios": "iOS",
-    "android": "Android",
-    "aws": "AWS",
-    "devops": "DevOps",
-    "wordpress": "WordPress",
-    "shopify": "Shopify",
-    "golang": "Go",
-    "go": "Go",
-    "ruby": "Ruby on Rails",
-    "rails": "Ruby on Rails",
-    "uiux": "UI/UX",
-    "ui-ux": "UI/UX",
-    "ai-ml": "AI / Machine Learning",
-    "ai": "AI / Machine Learning",
-    "machine-learning": "AI / Machine Learning",
-    "salesforce": "Salesforce",
-    "qa-testing": "QA & Software Testing",
-    "qa": "QA & Software Testing",
+# Acronyms that should remain fully capitalized in display titles across all industries
+KNOWN_UPPERCASE_ACRONYMS = {
+    "AI", "ML", "IT", "CA", "HR", "SEO", "B2B", "B2C", "SaaS", "LLM",
+    "PHP", "AWS", "iOS", "API", "SQL", "ERP", "CRM", "QA", "UI", "UX",
+    "MERN", "MEAN", "CMS", "DNS", "RPA", "PaaS", "IaaS", "PPC", "SMM"
+}
+
+# Curated symbol mappings for technical terms with punctuation
+CURATED_ACRONYM_MAP = {
     "cpp": "C++",
     "csharp": "C#",
-    "sql": "SQL / Databases",
-    "mern": "MERN Stack",
-    "mean": "MEAN Stack"
+    "dotnet": ".NET",
+    "nodejs": "Node.js",
+    "node-js": "Node.js",
+    "nextjs": "Next.js",
+    "next-js": "Next.js",
+    "vuejs": "Vue.js",
+    "vue-js": "Vue.js",
+    "uiux": "UI/UX",
+    "ui-ux": "UI/UX",
+    "ai-ml": "AI & Machine Learning",
+    "golang": "Go"
 }
 
-TECH_TO_SLUG_MAP = {
-    "python": "python",
-    "react": "react",
-    "node.js": "nodejs",
-    "nodejs": "nodejs",
-    ".net": "dotnet",
-    "flutter": "flutter",
-    "java": "java",
-    "django": "django",
-    "fastapi": "fastapi",
-    "laravel": "laravel",
-    "php": "php",
-    "angular": "angular",
-    "vue.js": "vue",
-    "vue": "vue",
-    "next.js": "nextjs",
-    "nextjs": "nextjs",
-    "ios": "ios",
-    "android": "android",
-    "aws": "aws",
-    "devops": "devops",
-    "wordpress": "wordpress",
-    "shopify": "shopify",
-    "go": "golang",
-    "golang": "golang",
-    "ruby on rails": "ruby",
-    "ruby": "ruby",
-    "ui/ux": "uiux",
-    "ai / machine learning": "ai-ml",
-    "salesforce": "salesforce",
-    "qa & software testing": "qa-testing",
-    "c++": "cpp",
-    "c#": "csharp",
-    "sql / databases": "sql",
-    "mern stack": "mern",
-    "mean stack": "mean"
-}
-
-
-SEARCH_KEYWORD_CANONICAL = {
+# Seed overrides for established keywords to preserve clean formatting.
+# Any keyword from any industry not in this map is dynamically parsed and normalized in real time.
+SEED_KEYWORD_OVERRIDES = {
     "Python Development Companies": "Python",
     "React JS Development Companies": "React",
     "Node.js Development Companies": "Node.js",
@@ -192,13 +134,84 @@ SEARCH_KEYWORD_CANONICAL = {
     "SaaS Product Development Companies": "SaaS Engineering"
 }
 
+# Dynamic backwards-compatibility alias for legacy code
+SEARCH_KEYWORD_CANONICAL = SEED_KEYWORD_OVERRIDES
+SLUG_TECH_MAP = CURATED_ACRONYM_MAP
+
+
+def normalize_keyword_to_category(raw_keyword: str) -> str:
+    """
+    Dynamically normalizes ANY search query, keyword, or industry label from any field
+    (e.g. IT, Healthcare, Real Estate, Legal, Finance, Hospitality, Manufacturing)
+    into a clean, publication-ready canonical category name.
+    """
+    if not raw_keyword:
+        return "General Business"
+
+    raw = raw_keyword.strip()
+
+    # 1. Check curated seed overrides first
+    if raw in SEED_KEYWORD_OVERRIDES:
+        return SEED_KEYWORD_OVERRIDES[raw]
+
+    # 2. Strip trailing location qualifiers (e.g. " in Surat", " in Mumbai", " near me", " nearby")
+    cleaned = re.sub(r"\s+(?:in|near|around|at)\s+[A-Za-z\s]+$", "", raw, flags=re.IGNORECASE).strip()
+    cleaned = re.sub(r"\s+near\s+me$", "", cleaned, flags=re.IGNORECASE).strip()
+
+    # 3. Strip common corporate filler suffixes if preceded by substantive category words
+    boilerplate_patterns = [
+        r"\s+Development\s+Companies",
+        r"\s+Development\s+Company",
+        r"\s+Software\s+Companies",
+        r"\s+Software\s+Company",
+        r"\s+Development\s+Agencies",
+        r"\s+Development\s+Agency",
+        r"\s+Consulting\s+Companies",
+        r"\s+Consulting\s+Agencies",
+        r"\s+Consulting\s+Partners",
+        r"\s+Web\s+Development\s+Agencies",
+        r"\s+App\s+Development",
+        r"\s+Services\s+Companies",
+        r"\s+Agencies",
+        r"\s+Agency",
+        r"\s+Companies",
+        r"\s+Company",
+        r"\s+Firms",
+        r"\s+Firm",
+    ]
+    for pattern in boilerplate_patterns:
+        sub = re.sub(pattern + "$", "", cleaned, flags=re.IGNORECASE).strip()
+        if sub != cleaned and len(sub) >= 2:
+            cleaned = sub
+            break
+
+    # 4. Acronym-aware title casing
+    words = cleaned.split()
+    formatted_words = []
+    for w in words:
+        clean_w = re.sub(r"[^\w]", "", w).upper()
+        if clean_w in KNOWN_UPPERCASE_ACRONYMS:
+            if clean_w == "IOS":
+                formatted_words.append("iOS")
+            else:
+                formatted_words.append(clean_w)
+        else:
+            formatted_words.append(w.capitalize())
+
+    return " ".join(formatted_words) or raw.title()
+
 
 def slugify(text_val: str) -> str:
     """Converts raw text into an SEO-friendly URL slug."""
     if not text_val:
         return ""
     s = text_val.strip().lower()
-    s = s.replace(".net", "dotnet").replace("c++", "cpp").replace("c#", "csharp")
+    s = (
+        s.replace(".net", "dotnet")
+        .replace("c++", "cpp")
+        .replace("c#", "csharp")
+        .replace("&", "and")
+    )
     s = re.sub(r"[^\w\s-]", "", s)
     s = re.sub(r"[\s_]+", "-", s)
     return s.strip("-")
@@ -217,26 +230,68 @@ def slug_to_city_name(slug: str) -> str:
     return raw.title()
 
 
-def tech_to_slug(tech: str) -> str:
-    if not tech:
+def tech_to_slug(tech_or_category: str) -> str:
+    """
+    Dynamically converts any category, technology, or industry name into an SEO-friendly slug.
+    Works universally across IT, Healthcare, Real Estate, Finance, Legal, etc.
+    """
+    if not tech_or_category:
         return ""
-    clean = tech.strip().lower()
-    if clean in TECH_TO_SLUG_MAP:
-        return TECH_TO_SLUG_MAP[clean]
+    clean = tech_or_category.strip().lower()
+
+    # Symbol-sensitive conversions
+    clean = (
+        clean.replace(".net", "dotnet")
+        .replace("c++", "cpp")
+        .replace("c#", "csharp")
+        .replace("ui/ux", "uiux")
+        .replace("ui-ux", "uiux")
+        .replace("ai / machine learning", "ai-ml")
+        .replace("ai & machine learning", "ai-ml")
+        .replace("node.js", "nodejs")
+        .replace("next.js", "nextjs")
+        .replace("vue.js", "vuejs")
+    )
     return slugify(clean)
+
+category_to_slug = tech_to_slug
 
 
 def slug_to_tech_name(slug: str) -> str:
+    """
+    Dynamically resolves a URL slug to its canonical category/tech display name.
+    1. Checks dynamic database taxonomy cache.
+    2. Checks known curated acronyms and symbols (.NET, C++, C#, Node.js, Next.js, UI/UX, AI/ML).
+    3. Dynamically formats slug into clean Title Case with uppercase acronym handling.
+    """
     if not slug:
         return ""
-    clean = slug.strip().lower()
-    if clean in SLUG_TECH_MAP:
-        return SLUG_TECH_MAP[clean]
-    # Check canonical dictionary
-    for raw, canonical in SEARCH_KEYWORD_CANONICAL.items():
-        if slugify(canonical) == clean:
-            return canonical
-    return slug.replace("-", " ").title()
+    clean_slug = slug.strip().lower()
+
+    # 1. Check in-memory cached dynamic taxonomy
+    slug_map = get_cached("slug_category_map")
+    if slug_map and clean_slug in slug_map:
+        return slug_map[clean_slug]
+
+    # 2. Curated Acronym & Tech Overrides
+    if clean_slug in CURATED_ACRONYM_MAP:
+        return CURATED_ACRONYM_MAP[clean_slug]
+
+    # 3. Dynamic Title Case with Acronym Preserving
+    words = clean_slug.replace("-", " ").replace("_", " ").split()
+    capitalized_words = []
+    for w in words:
+        upper_w = w.upper()
+        if upper_w in KNOWN_UPPERCASE_ACRONYMS:
+            if upper_w == "IOS":
+                capitalized_words.append("iOS")
+            else:
+                capitalized_words.append(upper_w)
+        else:
+            capitalized_words.append(w.capitalize())
+    return " ".join(capitalized_words)
+
+slug_to_category_name = slug_to_tech_name
 
 
 def company_to_slug(company_name: str, domain: str, company_id: int) -> str:
@@ -324,47 +379,79 @@ def get_all_cities(db: Session) -> list[dict[str, Any]]:
     return results
 
 
-def get_all_technologies(db: Session) -> list[dict[str, Any]]:
+def get_all_categories(db: Session) -> list[dict[str, Any]]:
+    """
+    Dynamically retrieves and aggregates ALL industry categories, tech stacks, and services
+    present across the entire company database.
+    Works for ANY industry (IT, Healthcare, Real Estate, Finance, Manufacturing, etc.).
+    """
     cached = get_cached("all_techs")
     if cached:
         return cached
 
     rows = db.execute(text("""
         SELECT 
-            search_keyword AS raw_tech,
+            COALESCE(NULLIF(trim(normalized_keyword), ''), trim(search_keyword)) AS raw_kw,
             COUNT(*) AS count,
-            ROUND(AVG(rating)::numeric, 1) AS avg_rating
+            ROUND((AVG(rating) FILTER (WHERE is_invalid = FALSE AND rating > 0))::numeric, 1) AS avg_rating
         FROM companies
         WHERE is_invalid = FALSE 
-          AND search_keyword IS NOT NULL 
-          AND trim(search_keyword) != ''
-        GROUP BY search_keyword
-        HAVING COUNT(*) >= 5
+          AND (
+              (search_keyword IS NOT NULL AND trim(search_keyword) != '')
+              OR (normalized_keyword IS NOT NULL AND trim(normalized_keyword) != '')
+          )
+        GROUP BY COALESCE(NULLIF(trim(normalized_keyword), ''), trim(search_keyword))
+        HAVING COUNT(*) >= 1
         ORDER BY count DESC;
     """)).fetchall()
 
     results = []
     seen_slugs = set()
+    slug_category_map = {}
+    category_slug_map = {}
+    category_raw_keywords_map = defaultdict(set)
+
     for r in rows:
-        raw_tech = r[0].strip()
-        display_name = SEARCH_KEYWORD_CANONICAL.get(raw_tech, raw_tech)
-        slug = tech_to_slug(display_name)
-        if slug in seen_slugs:
+        raw_kw = (r[0] or "").strip()
+        if not raw_kw:
             continue
+        display_name = normalize_keyword_to_category(raw_kw)
+        slug = tech_to_slug(display_name)
+        category_raw_keywords_map[slug].add(raw_kw)
+
+        if slug in seen_slugs:
+            for existing in results:
+                if existing["slug"] == slug:
+                    existing["count"] += r[1]
+                    break
+            continue
+
         seen_slugs.add(slug)
         results.append({
             "name": display_name,
-            "raw_keyword": raw_tech,
+            "raw_keyword": raw_kw,
             "slug": slug,
             "count": r[1],
             "avg_rating": float(r[2] or 4.3)
         })
+        slug_category_map[slug] = display_name
+        category_slug_map[display_name.lower()] = slug
+
+    results.sort(key=lambda x: x["count"], reverse=True)
 
     set_cached("all_techs", results)
+    set_cached("slug_category_map", slug_category_map)
+    set_cached("category_slug_map", category_slug_map)
+    set_cached("category_raw_keywords_map", {k: list(v) for k, v in category_raw_keywords_map.items()})
     return results
+
+get_all_technologies = get_all_categories
 
 
 def get_all_combinations(db: Session) -> list[dict[str, Any]]:
+    """
+    Dynamically aggregates all city + category/technology combinations across the entire database.
+    """
     cached = get_cached("all_combinations")
     if cached:
         return cached
@@ -372,38 +459,43 @@ def get_all_combinations(db: Session) -> list[dict[str, Any]]:
     rows = db.execute(text("""
         SELECT 
             initcap(trim(city)) AS city_name,
-            search_keyword,
+            COALESCE(NULLIF(trim(normalized_keyword), ''), trim(search_keyword)) AS raw_kw,
             COUNT(*) AS count,
-            ROUND(AVG(rating)::numeric, 1) AS avg_rating
+            ROUND((AVG(rating) FILTER (WHERE is_invalid = FALSE AND rating > 0))::numeric, 1) AS avg_rating
         FROM companies
         WHERE is_invalid = FALSE 
           AND city IS NOT NULL AND trim(city) != ''
-          AND search_keyword IS NOT NULL AND trim(search_keyword) != ''
-        GROUP BY initcap(trim(city)), search_keyword
+          AND (
+              (search_keyword IS NOT NULL AND trim(search_keyword) != '')
+              OR (normalized_keyword IS NOT NULL AND trim(normalized_keyword) != '')
+          )
+        GROUP BY initcap(trim(city)), COALESCE(NULLIF(trim(normalized_keyword), ''), trim(search_keyword))
         HAVING COUNT(*) >= 1
         ORDER BY count DESC;
     """)).fetchall()
 
     combos = []
-    seen = set()
+    seen = {}
     for r in rows:
         c_name = r[0]
-        raw_tech = r[1].strip()
-        disp_tech = SEARCH_KEYWORD_CANONICAL.get(raw_tech, raw_tech)
+        raw_kw = (r[1] or "").strip()
+        disp_cat = normalize_keyword_to_category(raw_kw)
         c_slug = city_to_slug(c_name)
-        t_slug = tech_to_slug(disp_tech)
+        t_slug = tech_to_slug(disp_cat)
         combo_key = f"{c_slug}:{t_slug}"
         if combo_key in seen:
+            seen[combo_key]["count"] += r[2]
             continue
-        seen.add(combo_key)
-        combos.append({
+        entry = {
             "city_name": c_name,
             "city_slug": c_slug,
-            "tech_name": disp_tech,
+            "tech_name": disp_cat,
             "tech_slug": t_slug,
             "count": r[2],
             "avg_rating": float(r[3] or 4.2)
-        })
+        }
+        seen[combo_key] = entry
+        combos.append(entry)
 
     set_cached("all_combinations", combos)
     return combos
@@ -431,20 +523,23 @@ def get_companies_list(
         query = query.filter(func.lower(Company.city) == city.strip().lower())
 
     if tech:
-        tech_slug = tech_to_slug(tech)
-        # Find all raw search keywords mapped to this tech
-        matching_keywords = [
-            raw for raw, canonical in SEARCH_KEYWORD_CANONICAL.items()
-            if slugify(canonical) == tech_slug or tech_slug in slugify(canonical)
-        ]
+        clean_tech = tech.strip()
+        tech_slug = tech_to_slug(clean_tech)
+        canonical_name = slug_to_tech_name(tech_slug)
+
+        # Dynamic keyword matching: retrieve dynamic raw keywords mapped to this category
+        raw_kw_map = get_cached("category_raw_keywords_map") or {}
+        matching_keywords = list(raw_kw_map.get(tech_slug, []))
         if not matching_keywords:
-            matching_keywords = [tech]
+            matching_keywords = [clean_tech, canonical_name]
 
         query = query.filter(
             or_(
                 Company.search_keyword.in_(matching_keywords),
-                func.lower(Company.search_keyword).ilike(f"%{tech.strip().lower()}%"),
-                func.lower(Company.normalized_keyword) == tech.strip().lower()
+                func.lower(Company.search_keyword).ilike(f"%{clean_tech.lower()}%"),
+                func.lower(Company.normalized_keyword).ilike(f"%{clean_tech.lower()}%"),
+                func.lower(Company.search_keyword).ilike(f"%{canonical_name.lower()}%"),
+                func.lower(Company.normalized_keyword) == tech_slug
             )
         )
 
@@ -482,7 +577,7 @@ def get_companies_list(
 
         stack_badges = profile_data.get("tech_stack", [])
         if not stack_badges and c.search_keyword:
-            canon_name = SEARCH_KEYWORD_CANONICAL.get(c.search_keyword, c.search_keyword.replace(" Development Companies", ""))
+            canon_name = normalize_keyword_to_category(c.search_keyword)
             stack_badges = [canon_name]
 
         serialized.append({

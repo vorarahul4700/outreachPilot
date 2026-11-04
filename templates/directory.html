@@ -190,19 +190,19 @@
             <span class="absolute inset-y-0 left-3 flex items-center text-on-surface-variant">
               <span class="material-symbols-outlined text-[18px]">search</span>
             </span>
-            <input type="text" id="dir-filter-input" placeholder="Filter by city name or tech stack (e.g. Surat, React, Python)..." class="w-full pl-10 pr-4 py-2.5 rounded-lg bg-surface-container-high border border-outline text-xs font-mono text-primary placeholder:text-on-surface-variant/70 focus:outline-none focus:border-secondary transition">
+            <input type="text" id="dir-filter-input" placeholder="Filter by city name or specialization (e.g. Surat, React, Python)..." class="w-full pl-10 pr-4 py-2.5 rounded-lg bg-surface-container-high border border-outline text-xs font-mono text-primary placeholder:text-on-surface-variant/70 focus:outline-none focus:border-secondary transition">
           </div>
         </div>
       </section>
 
-      <!-- SECTION: BROWSE BY TECHNOLOGY STACK -->
+      <!-- SECTION: BROWSE BY SPECIALIZATION & CATEGORY -->
       <section id="tech-section" class="space-y-4">
         <div class="flex items-center justify-between border-b border-outline pb-3">
           <div>
-            <h2 class="text-xl font-display font-bold text-primary">Browse by Technology &amp; Engineering Stack</h2>
-            <p class="text-xs text-on-surface-variant">Software firms categorized by their core development frameworks and languages.</p>
+            <h2 class="text-xl font-display font-bold text-primary">Browse by Industry &amp; Specialization</h2>
+            <p class="text-xs text-on-surface-variant">Verified companies categorized by their core specializations, engineering stacks, and professional services.</p>
           </div>
-          <span class="text-xs font-mono text-secondary px-2 py-0.5 rounded bg-secondary/10 border border-secondary/25">{{ technologies|length }} Stacks</span>
+          <span class="text-xs font-mono text-secondary px-2 py-0.5 rounded bg-secondary/10 border border-secondary/25">{{ technologies|length }} Categories</span>
         </div>
 
         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2.5" id="tech-grid">

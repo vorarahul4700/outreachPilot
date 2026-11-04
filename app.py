@@ -755,12 +755,13 @@ async def directory_city_hub(city_slug: str, request: Request, db: Session = Dep
 
 
 @app.get("/directory/tech/{tech_slug}", response_class=HTMLResponse)
+@app.get("/directory/category/{tech_slug}", response_class=HTMLResponse)
 async def directory_tech_hub(tech_slug: str, request: Request, db: Session = Depends(get_db)):
-    """Technology Stack Hub (36 Engineering Categories)"""
+    """Category & Technology Specialization Hub (Dynamic Across All Industries)"""
     tech_name = seo_engine.slug_to_tech_name(tech_slug)
     companies, total_count = seo_engine.get_companies_list(db, tech=tech_name, limit=30)
     if total_count == 0:
-        raise HTTPException(status_code=404, detail=f"No verified companies found for tech stack: {tech_name}")
+        raise HTTPException(status_code=404, detail=f"No verified companies found for category/tech: {tech_name}")
 
     base_url = seo_engine.get_canonical_base_url(request)
     canonical_url = f"{base_url}/directory/tech/{tech_slug}"
@@ -782,13 +783,13 @@ async def directory_tech_hub(tech_slug: str, request: Request, db: Session = Dep
         (tech_name, canonical_url)
     ]
     bc_schema = seo_engine.build_breadcrumb_schema(breadcrumbs)
-    itemlist_schema = seo_engine.build_itemlist_schema(companies, base_url, f"Top {tech_name} Development Companies in India")
+    itemlist_schema = seo_engine.build_itemlist_schema(companies, base_url, f"Top {tech_name} Companies in India")
     faq_schema = seo_engine.build_faq_schema(faqs)
     combined_schema = json.dumps([bc_schema, itemlist_schema, faq_schema], ensure_ascii=False)
 
-    page_title = f"Top {tech_name} Development Companies in India (2026 Rankings)"
-    page_subtitle = f"Directory of {total_count}+ verified software engineering firms deploying {tech_name} in production across India's top technology hubs."
-    meta_description = f"Explore {total_count}+ verified {tech_name} development companies and software agencies across India. Crawled tech stacks, client reviews, and verified contacts."
+    page_title = f"Top {tech_name} Companies & Agencies in India (2026 Rankings)"
+    page_subtitle = f"Directory of {total_count}+ verified {tech_name} firms and specialists across India's top commercial and technology hubs."
+    meta_description = f"Explore {total_count}+ verified {tech_name} companies, agencies, and firms across India. Crawled capabilities, Google ratings, client reviews, and verified contacts."
 
     response = templates.TemplateResponse(
         request=request,
@@ -797,11 +798,11 @@ async def directory_tech_hub(tech_slug: str, request: Request, db: Session = Dep
             "project_name": config.PROJECT_NAME,
             "canonical_url": canonical_url,
             "page_title": page_title,
-            "page_heading": f"Top {tech_name} Development Companies in India",
+            "page_heading": f"Top {tech_name} Companies in India",
             "page_subtitle": page_subtitle,
             "meta_description": meta_description,
             "hub_name": tech_name,
-            "hub_badge": f"Verified Engineering Stack • {tech_name}",
+            "hub_badge": f"Verified Specialization • {tech_name}",
             "total_companies": total_count,
             "avg_rating": avg_rating,
             "related_title": f"Top Indian Cities for {tech_name}",
@@ -818,21 +819,24 @@ async def directory_tech_hub(tech_slug: str, request: Request, db: Session = Dep
 @app.get("/directory/companies", response_class=HTMLResponse)
 async def directory_companies(
     request: Request,
-    city: Optional[str] = Query(None, description="City slug or name, e.g. noida"),
-    tech: Optional[str] = Query(None, description="Tech stack slug or name, e.g. nextjs, laravel"),
+    city: Optional[str] = Query(None, description="City slug or name, e.g. noida, mumbai"),
+    tech: Optional[str] = Query(None, description="Category or tech stack slug/name, e.g. nextjs, dentists"),
+    category: Optional[str] = Query(None, description="Industry/category alias for tech parameter"),
     q: Optional[str] = Query(None, description="General search term"),
     db: Session = Depends(get_db)
 ):
     """
     Scalable Parameterized B2B Directory Landing & Search Engine.
-    Supports query parameters: ?city=noida&tech=nextjs for future-proof dimension expansion.
+    Supports query parameters: ?city=noida&tech=nextjs and ?city=mumbai&category=dentists
+    for future-proof multidimensional expansion across all business domains.
     """
     base_url = seo_engine.get_canonical_base_url(request)
+    selected_category = (category or tech or "").strip()
 
-    # Case 1: Both city and tech provided -> Render Programmatic Intersection Page
-    if city and tech:
+    # Case 1: Both city and category/tech provided -> Render Programmatic Intersection Page
+    if city and selected_category:
         city_slug = seo_engine.city_to_slug(city)
-        tech_slug = seo_engine.tech_to_slug(tech)
+        tech_slug = seo_engine.tech_to_slug(selected_category)
         city_name = seo_engine.slug_to_city_name(city_slug)
         tech_name = seo_engine.slug_to_tech_name(tech_slug)
 
@@ -889,13 +893,13 @@ async def directory_companies(
         return response
 
     # Case 2: Only city provided -> Render City Hub
-    if city and not tech:
+    if city and not selected_category:
         city_slug = seo_engine.city_to_slug(city)
         return await directory_city_hub(city_slug, request, db)
 
-    # Case 3: Only tech provided -> Render Tech Hub
-    if tech and not city:
-        tech_slug = seo_engine.tech_to_slug(tech)
+    # Case 3: Only category/tech provided -> Render Category Hub
+    if selected_category and not city:
+        tech_slug = seo_engine.tech_to_slug(selected_category)
         return await directory_tech_hub(tech_slug, request, db)
 
     # Case 4: General query or empty params -> Redirect to /directory
