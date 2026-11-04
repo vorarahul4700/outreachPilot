@@ -5084,9 +5084,93 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  // Handle Deep-Linked Actions from Public Directory & Company Profiles
+  async function handleDeepLinkedActions() {
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const action = urlParams.get("action");
+      const companyId = urlParams.get("company_id") || urlParams.get("id");
+      const companyName = urlParams.get("company_name") || "";
+      const city = urlParams.get("city");
+      const tech = urlParams.get("tech");
+      const q = urlParams.get("q") || urlParams.get("search");
+
+      if (!action && !companyId && !city && !tech && !q) return;
+
+      // 1. Direct Pitch Trigger (?action=pitch&company_id=123)
+      if (action === "pitch" && companyId) {
+        switchTab("companies");
+        const cId = parseInt(companyId, 10);
+        if (!isNaN(cId)) {
+          showToast(`Opening AI pitch generator for ${companyName || 'company'}...`, "info");
+          // Allow auth check and table initialization to finish
+          setTimeout(() => {
+            requireLogin(() => {
+              handleGeneratePitch(cId);
+            }, "generate an AI pitch for this company");
+          }, 400);
+        }
+        return;
+      }
+
+      // 2. Direct Company Dossier Modal (?action=view&company_id=123)
+      if (action === "view" && companyId) {
+        const cId = parseInt(companyId, 10);
+        if (!isNaN(cId)) {
+          try {
+            const res = await fetch(`/api/companies/${cId}`);
+            if (res.ok) {
+              const companyData = await res.json();
+              switchTab("companies");
+              openCompanyDetailsModal(companyData);
+            }
+          } catch (e) {
+            console.warn("[DeepLink] Failed to load company details:", e);
+          }
+        }
+        return;
+      }
+
+      // 3. Filter Directory by City and/or Tech and/or Search Query
+      if (city || tech || q) {
+        switchTab("companies");
+        const filterTerms = [];
+        if (city) filterTerms.push(city);
+        if (tech) filterTerms.push(tech);
+        if (q && !filterTerms.includes(q)) filterTerms.push(q);
+
+        if (filterInput && filterTerms.length > 0) {
+          filterInput.value = filterTerms.join(" ");
+        }
+
+        if (city && filterCitySelect) {
+          filterCitySelect.value = city.toLowerCase();
+          if (typeof ddFilterCity !== "undefined" && ddFilterCity) {
+            ddFilterCity.setValue(city.toLowerCase());
+          }
+        }
+
+        if (tech && filterTechSelect) {
+          filterTechSelect.value = tech.toLowerCase();
+          if (typeof ddFilterTech !== "undefined" && ddFilterTech) {
+            ddFilterTech.setValue(tech.toLowerCase());
+          }
+        }
+
+        companiesCurrentPage = 1;
+        fetchCompanies(false);
+        showToast(`Filtered directory for ${filterTerms.join(" • ")}`, "info");
+      }
+    } catch (err) {
+      console.warn("[DeepLink] Error executing deep-linked action:", err);
+    }
+  }
+
   // Initial Data Load & Render Lucide Icons
   refreshIcons();
   checkAuthStatus();
-  fetchCompanies();
+  fetchCompanies().finally(() => {
+    handleDeepLinkedActions();
+  });
 });
 

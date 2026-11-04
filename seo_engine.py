@@ -11,6 +11,7 @@ Provides:
 5. Fast in-memory TTL caching for instant (<5ms) subpage response times.
 """
 
+import html
 import math
 import os
 import re
@@ -504,6 +505,107 @@ def get_companies_list(
     return serialized, total_count
 
 
+def render_dossier_markdown(md_text: str) -> str:
+    """
+    Renders structured technical dossier markdown into semantic, high-contrast HTML.
+    Converts ### headings, **bold** labels, bullet lists, and key-value pairs into
+    tactile bento cards.
+    """
+    if not md_text or not md_text.strip():
+        return ""
+
+    lines = md_text.strip().splitlines()
+    html_parts = []
+    in_section = False
+    in_tag_cloud = False
+
+    for raw_line in lines:
+        line = raw_line.strip()
+        if not line:
+            continue
+
+        # Section Headings (e.g. ### 1. Company Overview & Identity)
+        if line.startswith("###"):
+            if in_tag_cloud:
+                html_parts.append('</div>')
+                in_tag_cloud = False
+            if in_section:
+                html_parts.append('</div></div>')
+            heading_text = html.escape(line.lstrip("#").strip())
+            html_parts.append(
+                f'<div class="dossier-card bg-surface-container-low border border-outline rounded-xl p-4 sm:p-5 mb-4 shadow-sm">'
+                f'<div class="flex items-center gap-2 mb-3 pb-2 border-b border-outline/50">'
+                f'<span class="w-2 h-2 rounded-full bg-secondary shrink-0"></span>'
+                f'<h3 class="text-xs sm:text-sm font-display font-bold text-primary">{heading_text}</h3>'
+                f'</div>'
+                f'<div class="space-y-2 text-xs font-sans leading-relaxed">'
+            )
+            in_section = True
+            continue
+
+        # Key-Value lines (e.g. - **Official Name:** Perfomance Marketing or - **Website:** ...)
+        if line.startswith("-") and "**" in line:
+            content = line.lstrip("-").strip()
+            # Match - **Key:** Value
+            match = re.match(r'^\*\*([^*]+)\*\*:?\s*(.*)$', content)
+            if match:
+                key, val = match.group(1).rstrip(":"), match.group(2)
+                esc_key = html.escape(key)
+                if not val:
+                    # Tag badge without value (e.g. - **Mobile App Development**)
+                    if not in_tag_cloud:
+                        html_parts.append('<div class="flex flex-wrap gap-2 pt-1 pb-1">')
+                        in_tag_cloud = True
+                    html_parts.append(
+                        f'<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-mono font-medium bg-surface-container-high text-primary border border-outline">'
+                        f'<span class="material-symbols-outlined text-[13px] text-secondary">check_circle</span>'
+                        f'{esc_key}'
+                        f'</span>'
+                    )
+                else:
+                    if in_tag_cloud:
+                        html_parts.append('</div>')
+                        in_tag_cloud = False
+                    esc_val = re.sub(r'\*\*([^*]+)\*\*', r'<strong class="text-primary font-semibold">\1</strong>', html.escape(val))
+                    html_parts.append(
+                        f'<div class="flex flex-col sm:flex-row sm:items-baseline gap-1 sm:gap-2 py-1.5 border-b border-outline/25 last:border-0">'
+                        f'<span class="font-mono text-[11px] uppercase tracking-wider text-secondary font-semibold shrink-0 min-w-[140px]">{esc_key}:</span>'
+                        f'<span class="text-on-surface-variant font-sans text-xs">{esc_val}</span>'
+                        f'</div>'
+                    )
+                continue
+
+        # Standard bullet items (- Enterprise Software, FinTech...)
+        if line.startswith("-"):
+            if in_tag_cloud:
+                html_parts.append('</div>')
+                in_tag_cloud = False
+            item_text = html.escape(line.lstrip("-").strip())
+            item_text = re.sub(r'\*\*([^*]+)\*\*', r'<strong class="text-primary font-semibold">\1</strong>', item_text)
+            html_parts.append(
+                f'<div class="flex items-start gap-2 py-1 text-on-surface-variant">'
+                f'<span class="text-secondary font-mono mt-0.5">•</span>'
+                f'<span>{item_text}</span>'
+                f'</div>'
+            )
+            continue
+
+        # Fallback paragraph
+        if in_tag_cloud:
+            html_parts.append('</div>')
+            in_tag_cloud = False
+        para_text = html.escape(line)
+        para_text = re.sub(r'\*\*([^*]+)\*\*', r'<strong class="text-primary font-semibold">\1</strong>', para_text)
+        html_parts.append(f'<p class="text-on-surface-variant leading-relaxed py-1">{para_text}</p>')
+
+    if in_tag_cloud:
+        html_parts.append('</div>')
+    if in_section:
+        html_parts.append('</div></div>')
+
+    return "\n".join(html_parts)
+
+
 def get_company_details(db: Session, company_id: int) -> dict[str, Any] | None:
     """Retrieves full company dossier for the public profile page."""
     c = (
@@ -515,9 +617,13 @@ def get_company_details(db: Session, company_id: int) -> dict[str, Any] | None:
     if not c:
         return None
 
+    detailed_raw = c.profile.detailed_analysis if (c.profile and c.profile.detailed_analysis) else None
+    detailed_html = render_dossier_markdown(detailed_raw) if detailed_raw else None
+
     profile_data = {
         "summary": "Verified technology company providing custom software, web application development, and engineering consulting services.",
-        "detailed_analysis": None,
+        "detailed_analysis": detailed_raw,
+        "detailed_analysis_html": detailed_html,
         "industry": "Custom Software & Information Technology",
         "tech_stack": [],
         "services": ["Web Application Development", "Custom Software Engineering"],
@@ -528,7 +634,8 @@ def get_company_details(db: Session, company_id: int) -> dict[str, Any] | None:
     if c.profile:
         profile_data = {
             "summary": c.profile.summary_short or profile_data["summary"],
-            "detailed_analysis": c.profile.detailed_analysis or None,
+            "detailed_analysis": detailed_raw,
+            "detailed_analysis_html": detailed_html,
             "industry": c.profile.industry or profile_data["industry"],
             "tech_stack": c.profile.tech_stack or [],
             "services": c.profile.services or profile_data["services"],
@@ -651,7 +758,7 @@ OutreachPilot discovers, crawls, and structures intelligence on technology firms
 ## Programmatic Directory Hierarchy
 - City Index: `{base_url}/directory/city/{{city-slug}}`
 - Technology Index: `{base_url}/directory/tech/{{tech-slug}}`
-- Intersection Pages: `{base_url}/directory/companies/{{city-slug}}/{{tech-slug}}`
+- Intersection Pages: `{base_url}/directory/companies?city={{city-slug}}&tech={{tech-slug}}`
 - Company Dossier: `{base_url}/company/{{company-slug}}`
 
 ## Machine-Readable Formats
@@ -790,7 +897,7 @@ def generate_sitemap_directory(base_url: str, db: Session) -> str:
     combos = get_all_combinations(db)
     urls_xml = "\n".join([
         f"""  <url>
-    <loc>{base_url}/directory/companies/{c['city_slug']}/{c['tech_slug']}</loc>
+    <loc>{base_url}/directory/companies?city={c['city_slug']}&amp;tech={c['tech_slug']}</loc>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>""" for c in combos

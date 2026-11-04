@@ -9,7 +9,7 @@ import urllib.parse
 from collections import defaultdict
 from contextlib import asynccontextmanager
 from datetime import datetime
-from typing import Any
+from typing import Any, Optional
 
 import requests
 import uvicorn
@@ -19,6 +19,7 @@ from fastapi import (
     File,
     Form,
     HTTPException,
+    Query,
     Request,
     UploadFile,
     status,
@@ -706,7 +707,7 @@ async def directory_city_hub(city_slug: str, request: Request, db: Session = Dep
     all_combos = seo_engine.get_all_combinations(db)
     city_combos = [c for c in all_combos if c["city_slug"] == city_slug]
     related_items = [
-        {"name": c["tech_name"], "url": f"{base_url}/directory/companies/{city_slug}/{c['tech_slug']}", "count": c["count"]}
+        {"name": c["tech_name"], "url": f"{base_url}/directory/companies?city={city_slug}&tech={c['tech_slug']}", "count": c["count"]}
         for c in city_combos[:16]
     ]
     top_tech_names = [c["tech_name"] for c in city_combos[:5]]
@@ -739,7 +740,7 @@ async def directory_city_hub(city_slug: str, request: Request, db: Session = Dep
             "page_subtitle": page_subtitle,
             "meta_description": meta_description,
             "hub_name": city_name,
-            "hub_badge": f"Verified Indian Tech Hub &bull; {city_name}",
+            "hub_badge": f"Verified Indian Tech Hub • {city_name}",
             "total_companies": total_count,
             "avg_rating": avg_rating,
             "related_title": f"Top Technology Stacks in {city_name}",
@@ -767,7 +768,7 @@ async def directory_tech_hub(tech_slug: str, request: Request, db: Session = Dep
     all_combos = seo_engine.get_all_combinations(db)
     tech_combos = [c for c in all_combos if c["tech_slug"] == tech_slug]
     related_items = [
-        {"name": c["city_name"], "url": f"{base_url}/directory/companies/{c['city_slug']}/{tech_slug}", "count": c["count"]}
+        {"name": c["city_name"], "url": f"{base_url}/directory/companies?city={c['city_slug']}&tech={tech_slug}", "count": c["count"]}
         for c in tech_combos[:16]
     ]
     top_city_names = [c["city_name"] for c in tech_combos[:5]]
@@ -800,7 +801,7 @@ async def directory_tech_hub(tech_slug: str, request: Request, db: Session = Dep
             "page_subtitle": page_subtitle,
             "meta_description": meta_description,
             "hub_name": tech_name,
-            "hub_badge": f"Verified Engineering Stack &bull; {tech_name}",
+            "hub_badge": f"Verified Engineering Stack • {tech_name}",
             "total_companies": total_count,
             "avg_rating": avg_rating,
             "related_title": f"Top Indian Cities for {tech_name}",
@@ -814,64 +815,100 @@ async def directory_tech_hub(tech_slug: str, request: Request, db: Session = Dep
     return response
 
 
-@app.get("/directory/companies/{city_slug}/{tech_slug}", response_class=HTMLResponse)
-async def directory_combo_page(city_slug: str, tech_slug: str, request: Request, db: Session = Depends(get_db)):
-    """High-Intent Programmatic Intersection Page (City + Technology Stack)"""
-    city_name = seo_engine.slug_to_city_name(city_slug)
-    tech_name = seo_engine.slug_to_tech_name(tech_slug)
-
-    companies, total_count = seo_engine.get_companies_list(db, city=city_name, tech=tech_name, limit=30)
-    if total_count == 0:
-        raise HTTPException(status_code=404, detail=f"No verified {tech_name} companies found in {city_name}")
-
+@app.get("/directory/companies", response_class=HTMLResponse)
+async def directory_companies(
+    request: Request,
+    city: Optional[str] = Query(None, description="City slug or name, e.g. noida"),
+    tech: Optional[str] = Query(None, description="Tech stack slug or name, e.g. nextjs, laravel"),
+    q: Optional[str] = Query(None, description="General search term"),
+    db: Session = Depends(get_db)
+):
+    """
+    Scalable Parameterized B2B Directory Landing & Search Engine.
+    Supports query parameters: ?city=noida&tech=nextjs for future-proof dimension expansion.
+    """
     base_url = seo_engine.get_canonical_base_url(request)
-    canonical_url = f"{base_url}/directory/companies/{city_slug}/{tech_slug}"
 
-    all_combos = seo_engine.get_all_combinations(db)
-    related_techs = [
-        {"name": c["tech_name"], "slug": c["tech_slug"], "count": c["count"]}
-        for c in all_combos if c["city_slug"] == city_slug and c["tech_slug"] != tech_slug
-    ][:12]
-    related_cities = [
-        {"name": c["city_name"], "slug": c["city_slug"], "count": c["count"]}
-        for c in all_combos if c["tech_slug"] == tech_slug and c["city_slug"] != city_slug
-    ][:12]
+    # Case 1: Both city and tech provided -> Render Programmatic Intersection Page
+    if city and tech:
+        city_slug = seo_engine.city_to_slug(city)
+        tech_slug = seo_engine.tech_to_slug(tech)
+        city_name = seo_engine.slug_to_city_name(city_slug)
+        tech_name = seo_engine.slug_to_tech_name(tech_slug)
 
-    avg_rating = round(sum(c["rating"] for c in companies) / max(1, len(companies)), 1) if companies else 4.2
-    faqs = seo_engine.generate_combo_faqs(city_name, tech_name, total_count, avg_rating)
+        companies, total_count = seo_engine.get_companies_list(db, city=city_name, tech=tech_name, limit=30)
+        if total_count == 0:
+            raise HTTPException(status_code=404, detail=f"No verified {tech_name} companies found in {city_name}")
 
-    breadcrumbs = [
-        ("Home", f"{base_url}/"),
-        ("Directory", f"{base_url}/directory"),
-        (city_name, f"{base_url}/directory/city/{city_slug}"),
-        (tech_name, canonical_url)
-    ]
-    bc_schema = seo_engine.build_breadcrumb_schema(breadcrumbs)
-    itemlist_schema = seo_engine.build_itemlist_schema(companies, base_url, f"Top {tech_name} Companies in {city_name}")
-    faq_schema = seo_engine.build_faq_schema(faqs)
-    combined_schema = json.dumps([bc_schema, itemlist_schema, faq_schema], ensure_ascii=False)
+        canonical_url = f"{base_url}/directory/companies?city={city_slug}&tech={tech_slug}"
 
-    response = templates.TemplateResponse(
-        request=request,
-        name="directory_combo.html",
-        context={
-            "project_name": config.PROJECT_NAME,
-            "canonical_url": canonical_url,
-            "city_name": city_name,
-            "city_slug": city_slug,
-            "tech_name": tech_name,
-            "tech_slug": tech_slug,
-            "total_companies": total_count,
-            "avg_rating": avg_rating,
-            "companies": companies,
-            "related_techs": related_techs,
-            "related_cities": related_cities,
-            "faqs": faqs,
-            "json_ld_schema": combined_schema
-        }
+        all_combos = seo_engine.get_all_combinations(db)
+        related_techs = [
+            {"name": c["tech_name"], "slug": c["tech_slug"], "count": c["count"]}
+            for c in all_combos if c["city_slug"] == city_slug and c["tech_slug"] != tech_slug
+        ][:12]
+        related_cities = [
+            {"name": c["city_name"], "slug": c["city_slug"], "count": c["count"]}
+            for c in all_combos if c["tech_slug"] == tech_slug and c["city_slug"] != city_slug
+        ][:12]
+
+        avg_rating = round(sum(c["rating"] for c in companies) / max(1, len(companies)), 1) if companies else 4.2
+        faqs = seo_engine.generate_combo_faqs(city_name, tech_name, total_count, avg_rating)
+
+        breadcrumbs = [
+            ("Home", f"{base_url}/"),
+            ("Directory", f"{base_url}/directory"),
+            (city_name, f"{base_url}/directory/city/{city_slug}"),
+            (tech_name, canonical_url)
+        ]
+        bc_schema = seo_engine.build_breadcrumb_schema(breadcrumbs)
+        itemlist_schema = seo_engine.build_itemlist_schema(companies, base_url, f"Top {tech_name} Companies in {city_name}")
+        faq_schema = seo_engine.build_faq_schema(faqs)
+        combined_schema = json.dumps([bc_schema, itemlist_schema, faq_schema], ensure_ascii=False)
+
+        response = templates.TemplateResponse(
+            request=request,
+            name="directory_combo.html",
+            context={
+                "project_name": config.PROJECT_NAME,
+                "canonical_url": canonical_url,
+                "city_name": city_name,
+                "city_slug": city_slug,
+                "tech_name": tech_name,
+                "tech_slug": tech_slug,
+                "total_companies": total_count,
+                "avg_rating": avg_rating,
+                "companies": companies,
+                "related_techs": related_techs,
+                "related_cities": related_cities,
+                "faqs": faqs,
+                "json_ld_schema": combined_schema
+            }
+        )
+        response.headers["Cache-Control"] = "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800"
+        return response
+
+    # Case 2: Only city provided -> Render City Hub
+    if city and not tech:
+        city_slug = seo_engine.city_to_slug(city)
+        return await directory_city_hub(city_slug, request, db)
+
+    # Case 3: Only tech provided -> Render Tech Hub
+    if tech and not city:
+        tech_slug = seo_engine.tech_to_slug(tech)
+        return await directory_tech_hub(tech_slug, request, db)
+
+    # Case 4: General query or empty params -> Redirect to /directory
+    return RedirectResponse(url="/directory", status_code=301)
+
+
+@app.get("/directory/companies/{city_slug}/{tech_slug}", response_class=HTMLResponse)
+async def directory_combo_legacy_redirect(city_slug: str, tech_slug: str):
+    """301 Redirect legacy path format to scalable parameterized format"""
+    return RedirectResponse(
+        url=f"/directory/companies?city={city_slug}&tech={tech_slug}",
+        status_code=301
     )
-    response.headers["Cache-Control"] = "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800"
-    return response
 
 
 @app.get("/company/{slug}", response_class=HTMLResponse)

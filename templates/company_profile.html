@@ -128,7 +128,7 @@
         <button id="btn-theme-toggle" type="button" aria-label="Toggle Theme" class="w-8 h-8 rounded-lg flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container border border-outline-variant/40 transition cursor-pointer shrink-0">
           <span id="theme-toggle-icon" class="material-symbols-outlined text-[18px]">light_mode</span>
         </button>
-        <a href="/app" class="btn-tactile-ecru flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-bold whitespace-nowrap shrink-0">
+        <a href="/app?action=pitch&company_id={{ company.id }}&company_name={{ company.name | urlencode }}" class="btn-tactile-ecru flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-bold whitespace-nowrap shrink-0">
           <span>Pitch This Company</span>
           <span class="material-symbols-outlined text-[14px] shrink-0">arrow_forward</span>
         </a>
@@ -168,7 +168,7 @@
                 <span class="material-symbols-outlined text-[14px]">location_on</span>
                 <span>{{ company.city }}, India</span>
               </span>
-              <span class="text-outline-variant">&bull;</span>
+              <span class="text-outline-variant">•</span>
               <a href="{{ company.website_url }}" target="_blank" rel="nofollow noopener noreferrer" class="hover:text-secondary underline flex items-center gap-0.5">
                 <span>{{ company.domain }}</span>
                 <span class="material-symbols-outlined text-[11px]">open_in_new</span>
@@ -207,7 +207,7 @@
             <span class="text-on-surface-variant">Industry:</span>
             <span class="text-primary font-medium">{{ company.profile.industry }}</span>
           </div>
-          <a href="/app" class="btn-tactile-ecru flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold">
+          <a href="/app?action=pitch&company_id={{ company.id }}&company_name={{ company.name | urlencode }}" class="btn-tactile-ecru flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold">
             <span class="material-symbols-outlined text-[14px]">send</span>
             <span>Draft AI Pitch via Gmail</span>
           </a>
@@ -282,14 +282,23 @@
 
       <!-- DEEP TECHNICAL ANALYSIS (IF ENRICHED) -->
       {% if company.profile.detailed_analysis %}
-      <section class="bento-cell p-6 space-y-3">
-        <h2 class="text-base font-display font-bold text-primary flex items-center gap-2">
-          <span class="material-symbols-outlined text-[18px] text-secondary">analytics</span>
-          <span>Detailed Technical Dossier</span>
-        </h2>
+      <section class="bento-cell p-6 space-y-4">
+        <div class="flex items-center justify-between border-b border-outline pb-2">
+          <h2 class="text-base font-display font-bold text-primary flex items-center gap-2">
+            <span class="material-symbols-outlined text-[18px] text-secondary">analytics</span>
+            <span>Detailed Technical Dossier</span>
+          </h2>
+          <span class="text-[11px] font-mono text-secondary px-2 py-0.5 rounded bg-secondary/10 border border-secondary/25">Multi-Pass Intelligence</span>
+        </div>
+        {% if company.profile.detailed_analysis_html %}
+        <div class="dossier-rendered space-y-4 pt-1">
+          {{ company.profile.detailed_analysis_html | safe }}
+        </div>
+        {% else %}
         <div class="text-xs font-sans text-on-surface-variant leading-relaxed whitespace-pre-line p-4 rounded-lg bg-surface-container-high/30 border border-outline">
           {{ company.profile.detailed_analysis }}
         </div>
+        {% endif %}
       </section>
       {% endif %}
 
