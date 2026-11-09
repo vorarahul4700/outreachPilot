@@ -155,31 +155,31 @@
       <section class="text-center space-y-4 pt-4">
         <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container-high border border-outline-variant text-xs font-mono text-secondary">
           <span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
-          <span>Verified Indian Software &amp; IT Ecosystem</span>
+          <span id="dir-badge-text">Verified Indian Software &amp; IT Ecosystem</span>
         </div>
         <h1 class="text-3xl sm:text-4xl md:text-5xl font-display font-bold text-primary max-w-3xl mx-auto tracking-tight leading-tight">
-          Browse {{ stats.total_companies|default(33600) }} Verified Technology Companies Across India
+          Browse <span id="dir-hero-count">{{ stats.total_companies|default(33600) }}</span> Verified <span id="dir-hero-domain">Technology</span> Companies Across India
         </h1>
-        <p class="text-sm sm:text-base text-on-surface-variant max-w-2xl mx-auto leading-relaxed">
-          Deep-crawled engineering stacks, verified recruiter contacts, services breakdown, and authentic Google review sentiments across 73 cities and 36 technology verticals.
+        <p id="dir-hero-subtitle" class="text-sm sm:text-base text-on-surface-variant max-w-2xl mx-auto leading-relaxed">
+          Deep-crawled engineering stacks, verified recruiter contacts, services breakdown, and authentic Google review sentiments across {{ stats.total_cities }} cities and {{ stats.total_techs }} technology verticals.
         </p>
 
         <!-- LIVE METRICS BAR (AEO Optimized) -->
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-3xl mx-auto pt-4">
           <div class="bento-cell p-3.5 text-center">
-            <div class="text-xl sm:text-2xl font-mono font-bold text-primary tnum">{{ stats.total_companies }}</div>
+            <div id="dir-stat-total" class="text-xl sm:text-2xl font-mono font-bold text-primary tnum">{{ stats.total_companies }}</div>
             <div class="text-[11px] font-mono text-on-surface-variant uppercase tracking-wider mt-0.5">Indexed Companies</div>
           </div>
           <div class="bento-cell p-3.5 text-center">
-            <div class="text-xl sm:text-2xl font-mono font-bold text-secondary tnum">{{ stats.total_cities }}</div>
-            <div class="text-[11px] font-mono text-on-surface-variant uppercase tracking-wider mt-0.5">Tech Hubs</div>
+            <div id="dir-stat-cities" class="text-xl sm:text-2xl font-mono font-bold text-secondary tnum">{{ stats.total_cities }}</div>
+            <div class="text-[11px] font-mono text-on-surface-variant uppercase tracking-wider mt-0.5">Commercial Hubs</div>
           </div>
           <div class="bento-cell p-3.5 text-center">
-            <div class="text-xl sm:text-2xl font-mono font-bold text-tertiary tnum">{{ stats.total_techs }}</div>
-            <div class="text-[11px] font-mono text-on-surface-variant uppercase tracking-wider mt-0.5">Frameworks</div>
+            <div id="dir-stat-techs" class="text-xl sm:text-2xl font-mono font-bold text-tertiary tnum">{{ stats.total_techs }}</div>
+            <div class="text-[11px] font-mono text-on-surface-variant uppercase tracking-wider mt-0.5">Specializations</div>
           </div>
           <div class="bento-cell p-3.5 text-center">
-            <div class="text-xl sm:text-2xl font-mono font-bold text-primary tnum">{{ stats.avg_rating }}★</div>
+            <div id="dir-stat-rating" class="text-xl sm:text-2xl font-mono font-bold text-primary tnum">{{ stats.avg_rating }}★</div>
             <div class="text-[11px] font-mono text-on-surface-variant uppercase tracking-wider mt-0.5">Avg Google Rating</div>
           </div>
         </div>
@@ -203,20 +203,56 @@
               <h2 class="text-xl font-display font-bold text-primary">Browse by Industry &amp; Specialization</h2>
               <p class="text-xs text-on-surface-variant">Verified companies categorized by their core specializations across IT, Sales, Marketing, Pharma, Healthcare, Finance, and Manufacturing.</p>
             </div>
-            <span class="text-xs font-mono text-secondary px-2 py-0.5 rounded bg-secondary/10 border border-secondary/25">{{ technologies|length }} Categories</span>
+            <span id="dir-categories-badge" class="text-xs font-mono text-secondary px-2 py-0.5 rounded bg-secondary/10 border border-secondary/25">{{ technologies|length }} Categories</span>
           </div>
 
           <!-- Multi-Industry Domain Filter Pills -->
-          <div class="flex flex-wrap items-center gap-1.5 pt-1" id="domain-filter-pills">
-            <button type="button" class="domain-pill active px-3 py-1 rounded-full text-xs font-mono border border-secondary bg-secondary/15 text-primary" data-domain="all">All Domains</button>
-            <button type="button" class="domain-pill px-3 py-1 rounded-full text-xs font-mono border border-outline bg-surface-container text-on-surface-variant hover:text-primary hover:border-secondary/40 transition" data-domain="it">IT &amp; Software</button>
-            <button type="button" class="domain-pill px-3 py-1 rounded-full text-xs font-mono border border-outline bg-surface-container text-on-surface-variant hover:text-primary hover:border-secondary/40 transition" data-domain="sales">Sales &amp; BPO</button>
-            <button type="button" class="domain-pill px-3 py-1 rounded-full text-xs font-mono border border-outline bg-surface-container text-on-surface-variant hover:text-primary hover:border-secondary/40 transition" data-domain="marketing">Marketing &amp; PR</button>
-            <button type="button" class="domain-pill px-3 py-1 rounded-full text-xs font-mono border border-outline bg-surface-container text-on-surface-variant hover:text-primary hover:border-secondary/40 transition" data-domain="pharma">Pharma &amp; Healthcare</button>
-            <button type="button" class="domain-pill px-3 py-1 rounded-full text-xs font-mono border border-outline bg-surface-container text-on-surface-variant hover:text-primary hover:border-secondary/40 transition" data-domain="finance">Finance &amp; Legal</button>
-            <button type="button" class="domain-pill px-3 py-1 rounded-full text-xs font-mono border border-outline bg-surface-container text-on-surface-variant hover:text-primary hover:border-secondary/40 transition" data-domain="manufacturing">Manufacturing</button>
-            <button type="button" class="domain-pill px-3 py-1 rounded-full text-xs font-mono border border-outline bg-surface-container text-on-surface-variant hover:text-primary hover:border-secondary/40 transition" data-domain="realestate">Real Estate</button>
-            <button type="button" class="domain-pill px-3 py-1 rounded-full text-xs font-mono border border-outline bg-surface-container text-on-surface-variant hover:text-primary hover:border-secondary/40 transition" data-domain="hr">HR &amp; Staffing</button>
+          <div class="flex flex-wrap items-center gap-1.5 pt-1" id="domain-filter-pills" role="tablist" aria-label="Filter directory by industry domain">
+            <button type="button" class="domain-pill active px-3 py-1.5 rounded-lg border border-secondary bg-secondary/15 text-primary text-xs font-mono font-semibold flex items-center gap-1.5 cursor-pointer transition" data-domain="all">
+              <span class="material-symbols-outlined text-[14px] text-secondary">apps</span>
+              <span>All Domains</span>
+              <span class="text-[10px] text-on-surface-variant font-normal tnum" id="dir-domain-count-all">({% if domains %}{{ domains|sum(attribute='count') }}{% else %}{{ stats.total_companies }}{% endif %})</span>
+            </button>
+            <button type="button" class="domain-pill px-3 py-1.5 rounded-lg border border-outline bg-surface-container text-on-surface-variant hover:text-primary hover:border-secondary/50 text-xs font-mono flex items-center gap-1.5 cursor-pointer transition" data-domain="it">
+              <span class="inline-block w-2 h-2 rounded-full bg-blue-400"></span>
+              <span>IT &amp; Software</span>
+              <span class="text-[10px] text-on-surface-variant font-normal tnum" id="dir-domain-count-it">({% for d in domains if d.code == 'it' %}{{ d.count }}{% else %}{{ stats.total_companies }}{% endfor %})</span>
+            </button>
+            <button type="button" class="domain-pill px-3 py-1.5 rounded-lg border border-outline bg-surface-container text-on-surface-variant hover:text-primary hover:border-secondary/50 text-xs font-mono flex items-center gap-1.5 cursor-pointer transition" data-domain="sales">
+              <span class="inline-block w-2 h-2 rounded-full bg-amber-400"></span>
+              <span>Sales &amp; BPO</span>
+              <span class="text-[10px] text-on-surface-variant font-normal tnum" id="dir-domain-count-sales">({% for d in domains if d.code == 'sales' %}{{ d.count }}{% else %}0{% endfor %})</span>
+            </button>
+            <button type="button" class="domain-pill px-3 py-1.5 rounded-lg border border-outline bg-surface-container text-on-surface-variant hover:text-primary hover:border-secondary/50 text-xs font-mono flex items-center gap-1.5 cursor-pointer transition" data-domain="marketing">
+              <span class="inline-block w-2 h-2 rounded-full bg-purple-400"></span>
+              <span>Marketing &amp; PR</span>
+              <span class="text-[10px] text-on-surface-variant font-normal tnum" id="dir-domain-count-marketing">({% for d in domains if d.code == 'marketing' %}{{ d.count }}{% else %}0{% endfor %})</span>
+            </button>
+            <button type="button" class="domain-pill px-3 py-1.5 rounded-lg border border-outline bg-surface-container text-on-surface-variant hover:text-primary hover:border-secondary/50 text-xs font-mono flex items-center gap-1.5 cursor-pointer transition" data-domain="pharma">
+              <span class="inline-block w-2 h-2 rounded-full bg-emerald-400"></span>
+              <span>Pharma &amp; Healthcare</span>
+              <span class="text-[10px] text-on-surface-variant font-normal tnum" id="dir-domain-count-pharma">({% for d in domains if d.code == 'pharma' %}{{ d.count }}{% else %}0{% endfor %})</span>
+            </button>
+            <button type="button" class="domain-pill px-3 py-1.5 rounded-lg border border-outline bg-surface-container text-on-surface-variant hover:text-primary hover:border-secondary/50 text-xs font-mono flex items-center gap-1.5 cursor-pointer transition" data-domain="finance">
+              <span class="inline-block w-2 h-2 rounded-full bg-emerald-600"></span>
+              <span>Finance &amp; Legal</span>
+              <span class="text-[10px] text-on-surface-variant font-normal tnum" id="dir-domain-count-finance">({% for d in domains if d.code == 'finance' %}{{ d.count }}{% else %}0{% endfor %})</span>
+            </button>
+            <button type="button" class="domain-pill px-3 py-1.5 rounded-lg border border-outline bg-surface-container text-on-surface-variant hover:text-primary hover:border-secondary/50 text-xs font-mono flex items-center gap-1.5 cursor-pointer transition" data-domain="manufacturing">
+              <span class="inline-block w-2 h-2 rounded-full bg-orange-400"></span>
+              <span>Manufacturing</span>
+              <span class="text-[10px] text-on-surface-variant font-normal tnum" id="dir-domain-count-manufacturing">({% for d in domains if d.code == 'manufacturing' %}{{ d.count }}{% else %}0{% endfor %})</span>
+            </button>
+            <button type="button" class="domain-pill px-3 py-1.5 rounded-lg border border-outline bg-surface-container text-on-surface-variant hover:text-primary hover:border-secondary/50 text-xs font-mono flex items-center gap-1.5 cursor-pointer transition" data-domain="realestate">
+              <span class="inline-block w-2 h-2 rounded-full bg-teal-400"></span>
+              <span>Real Estate</span>
+              <span class="text-[10px] text-on-surface-variant font-normal tnum" id="dir-domain-count-realestate">({% for d in domains if d.code == 'realestate' %}{{ d.count }}{% else %}0{% endfor %})</span>
+            </button>
+            <button type="button" class="domain-pill px-3 py-1.5 rounded-lg border border-outline bg-surface-container text-on-surface-variant hover:text-primary hover:border-secondary/50 text-xs font-mono flex items-center gap-1.5 cursor-pointer transition" data-domain="hr">
+              <span class="inline-block w-2 h-2 rounded-full bg-pink-400"></span>
+              <span>HR &amp; Staffing</span>
+              <span class="text-[10px] text-on-surface-variant font-normal tnum" id="dir-domain-count-hr">({% for d in domains if d.code == 'hr' %}{{ d.count }}{% else %}0{% endfor %})</span>
+            </button>
           </div>
         </div>
 
@@ -233,6 +269,23 @@
             </div>
           </a>
           {% endfor %}
+
+          <!-- High-Tactile Empty State for Domains without active specializations yet -->
+          <div id="tech-empty-state" class="col-span-full bento-cell p-8 text-center space-y-3 hidden">
+            <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-surface-container-high border border-outline text-secondary mb-1">
+              <span class="material-symbols-outlined text-2xl">radar</span>
+            </div>
+            <h3 class="font-display font-bold text-base text-primary" id="empty-state-title">Onboarding Companies in <span id="empty-state-domain-name">Sales &amp; BPO</span></h3>
+            <p id="empty-state-domain-desc" class="text-xs text-on-surface-variant max-w-md mx-auto leading-relaxed">
+              Our autonomous crawlers are currently indexing and verifying companies in this industry domain. Switch back to <strong>All Domains</strong> or <strong>IT &amp; Software</strong> to explore 33,603+ active profiles.
+            </p>
+            <div class="pt-2">
+              <button type="button" id="btn-empty-state-reset" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-secondary bg-secondary/15 text-primary text-xs font-mono hover:bg-secondary/25 transition cursor-pointer">
+                <span class="material-symbols-outlined text-[15px]">arrow_back</span>
+                <span>View All Domains ({% if domains %}{{ domains|sum(attribute='count') }}{% else %}{{ stats.total_companies }}{% endif %})</span>
+              </button>
+            </div>
+          </div>
         </div>
       </section>
 
@@ -259,6 +312,9 @@
             </div>
           </a>
           {% endfor %}
+          <div id="city-empty-state" class="col-span-full bento-cell p-6 text-center text-xs font-mono text-on-surface-variant hidden">
+            No commercial hubs match your search term.
+          </div>
         </div>
       </section>
 
@@ -335,40 +391,173 @@
     const initialIcon = document.getElementById("theme-toggle-icon");
     if (initialIcon) initialIcon.textContent = initialTheme === "light" ? "dark_mode" : "light_mode";
 
-    // Instant Client-Side Filter & Domain Pill Filtering
+    // Dynamic Multi-Domain Directory Metadata & Synchronized Filtering
+    const DOMAIN_METRICS = {
+      all: {
+        name: "All Domains",
+        titleDomain: "Multi-Industry",
+        badge: "Verified Indian Multi-Industry Ecosystem",
+        total: {{ stats.total_companies|default(33603) }},
+        cities: {{ stats.total_cities|default(73) }},
+        specializations: {{ stats.total_techs|default(36) }},
+        rating: "{{ stats.avg_rating|default(4.3) }}★",
+        subtitle: "Deep-crawled engineering stacks, verified recruiter contacts, services breakdown, and authentic Google review sentiments across {{ stats.total_cities }} cities and {{ stats.total_techs }} specializations."
+      },
+      it: {
+        name: "IT & Software",
+        titleDomain: "Technology",
+        badge: "Verified Indian Software & IT Ecosystem",
+        total: {{ stats.total_companies|default(33603) }},
+        cities: {{ stats.total_cities|default(73) }},
+        specializations: {{ stats.total_techs|default(36) }},
+        rating: "{{ stats.avg_rating|default(4.3) }}★",
+        subtitle: "Deep-crawled engineering stacks, verified developer & recruiter contacts, services breakdown, and authentic Google review sentiments across {{ stats.total_cities }} tech hubs."
+      },
+      {% for d in domains if d.code != 'it' %}
+      "{{ d.code }}": {
+        name: "{{ d.name }}",
+        titleDomain: "{{ d.name }}",
+        badge: "Verified Indian {{ d.name }} Ecosystem",
+        total: {{ d.count }},
+        cities: {% if d.count > 0 %}{{ stats.total_cities }}{% else %}0{% endif %},
+        specializations: 0,
+        rating: {% if d.count > 0 %}"{{ stats.avg_rating }}★"{% else %}"N/A"{% endif %},
+        subtitle: "{{ d.description }}"
+      },
+      {% endfor %}
+    };
+
     let activeDomain = "all";
-    const domainPills = document.querySelectorAll(".domain-pill");
-
-    domainPills.forEach(pill => {
-      pill.addEventListener("click", () => {
-        domainPills.forEach(p => {
-          p.classList.remove("active", "border-secondary", "bg-secondary/15", "text-primary");
-          p.classList.add("border-outline", "bg-surface-container", "text-on-surface-variant");
-        });
-        pill.classList.add("active", "border-secondary", "bg-secondary/15", "text-primary");
-        pill.classList.remove("border-outline", "bg-surface-container", "text-on-surface-variant");
-        activeDomain = pill.getAttribute("data-domain") || "all";
-        applyFilters();
-      });
-    });
-
+    const pillContainer = document.getElementById("domain-filter-pills");
     const searchInput = document.getElementById("dir-filter-input");
+    const techCards = document.querySelectorAll(".tech-card");
+    const cityCards = document.querySelectorAll(".city-card");
+    const techEmptyState = document.getElementById("tech-empty-state");
+    const cityEmptyState = document.getElementById("city-empty-state");
+    const emptyStateTitle = document.getElementById("empty-state-title");
+    const emptyStateDesc = document.getElementById("empty-state-domain-desc");
+    const btnEmptyStateReset = document.getElementById("btn-empty-state-reset");
+
+    // Live Metrics Bar Elements
+    const elDirStatTotal = document.getElementById("dir-stat-total");
+    const elDirStatCities = document.getElementById("dir-stat-cities");
+    const elDirStatTechs = document.getElementById("dir-stat-techs");
+    const elDirStatRating = document.getElementById("dir-stat-rating");
+
+    // Hero Elements
+    const elDirHeroCount = document.getElementById("dir-hero-count");
+    const elDirHeroDomain = document.getElementById("dir-hero-domain");
+    const elDirHeroSubtitle = document.getElementById("dir-hero-subtitle");
+    const elDirBadgeText = document.getElementById("dir-badge-text");
+    const elDirCategoriesBadge = document.getElementById("dir-categories-badge");
+
+    function setDirectoryDomain(targetDomain) {
+      activeDomain = (targetDomain || "all").toLowerCase().trim();
+
+      // Update pill active classes
+      if (pillContainer) {
+        pillContainer.querySelectorAll(".domain-pill").forEach(p => {
+          const pDom = (p.getAttribute("data-domain") || "all").toLowerCase().trim();
+          if (pDom === activeDomain) {
+            p.classList.remove("border-outline", "bg-surface-container", "text-on-surface-variant");
+            p.classList.add("active", "border-secondary", "bg-secondary/15", "text-primary", "font-semibold");
+          } else {
+            p.classList.remove("active", "border-secondary", "bg-secondary/15", "text-primary", "font-semibold");
+            p.classList.add("border-outline", "bg-surface-container", "text-on-surface-variant");
+          }
+        });
+      }
+
+      applyFilters();
+    }
+
+    if (pillContainer) {
+      pillContainer.addEventListener("click", (e) => {
+        const pill = e.target.closest(".domain-pill");
+        if (!pill) return;
+        const dom = pill.getAttribute("data-domain") || "all";
+        setDirectoryDomain(dom);
+      });
+    }
+
     searchInput?.addEventListener("input", applyFilters);
+
+    btnEmptyStateReset?.addEventListener("click", () => {
+      if (searchInput) searchInput.value = "";
+      setDirectoryDomain("all");
+    });
 
     function applyFilters() {
       const q = (searchInput?.value || "").trim().toLowerCase();
-      document.querySelectorAll(".city-card").forEach(el => {
-        const name = el.getAttribute("data-name") || "";
-        el.style.display = name.includes(q) ? "" : "none";
-      });
-      document.querySelectorAll(".tech-card").forEach(el => {
-        const name = el.getAttribute("data-name") || "";
-        const domain = el.getAttribute("data-domain") || "all";
-        const matchesQuery = name.includes(q);
+      const meta = DOMAIN_METRICS[activeDomain] || DOMAIN_METRICS["all"];
+
+      // 1. Filter Specialization Tech Cards
+      let visibleTechCards = 0;
+      techCards.forEach(el => {
+        const name = (el.getAttribute("data-name") || "").toLowerCase();
+        const domain = (el.getAttribute("data-domain") || "it").toLowerCase();
+        const matchesQuery = !q || name.includes(q);
         const matchesDomain = activeDomain === "all" || domain === activeDomain;
-        el.style.display = (matchesQuery && matchesDomain) ? "" : "none";
+        const visible = matchesQuery && matchesDomain;
+        el.style.display = visible ? "" : "none";
+        if (visible) visibleTechCards++;
       });
+
+      // 2. Filter Cities
+      let visibleCityCards = 0;
+      cityCards.forEach(el => {
+        const name = (el.getAttribute("data-name") || "").toLowerCase();
+        const matchesQuery = !q || name.includes(q);
+        el.style.display = matchesQuery ? "" : "none";
+        if (matchesQuery) visibleCityCards++;
+      });
+
+      // 3. Toggle Empty States
+      if (techEmptyState) {
+        if (visibleTechCards === 0) {
+          techEmptyState.classList.remove("hidden");
+          if (q) {
+            if (emptyStateTitle) emptyStateTitle.innerHTML = `No Specializations Found for "${q}"`;
+            if (emptyStateDesc) emptyStateDesc.innerHTML = `No categories match your search term in <strong>${meta.name}</strong>. Try clearing your search query or switching to All Domains.`;
+          } else {
+            if (emptyStateTitle) emptyStateTitle.innerHTML = `Onboarding Companies in <span id="empty-state-domain-name">${meta.name}</span>`;
+            if (emptyStateDesc) emptyStateDesc.innerHTML = `Our autonomous crawlers are currently indexing and verifying companies in this industry domain. Switch back to <strong>All Domains</strong> or <strong>IT & Software</strong> to explore 33,603+ active profiles.`;
+          }
+        } else {
+          techEmptyState.classList.add("hidden");
+        }
+      }
+
+      if (cityEmptyState) {
+        cityEmptyState.classList.toggle("hidden", visibleCityCards > 0);
+      }
+
+      // 4. Dynamically Update Category Count Badge
+      if (elDirCategoriesBadge) {
+        elDirCategoriesBadge.textContent = `${visibleTechCards} ${visibleTechCards === 1 ? 'Category' : 'Categories'}`;
+      }
+
+      // 5. Dynamically Synchronize Live Metrics Bar
+      if (elDirStatTotal) elDirStatTotal.textContent = Number(meta.total || 0).toLocaleString();
+      if (elDirStatCities) elDirStatCities.textContent = meta.cities;
+      if (elDirStatTechs) elDirStatTechs.textContent = visibleTechCards;
+      if (elDirStatRating) elDirStatRating.textContent = meta.rating;
+
+      // 6. Dynamically Synchronize Hero Headlines
+      if (elDirHeroCount) elDirHeroCount.textContent = Number(meta.total || 0).toLocaleString();
+      if (elDirHeroDomain) elDirHeroDomain.textContent = meta.titleDomain || meta.name;
+      if (elDirHeroSubtitle) elDirHeroSubtitle.textContent = meta.subtitle;
+      if (elDirBadgeText) elDirBadgeText.textContent = meta.badge;
     }
+
+    // Handle deep linked ?domain= parameter on page load
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlDomain = urlParams.get("domain");
+      if (urlDomain && DOMAIN_METRICS[urlDomain.toLowerCase()]) {
+        setDirectoryDomain(urlDomain.toLowerCase());
+      }
+    } catch (_) {}
   </script>
 </body>
 </html>

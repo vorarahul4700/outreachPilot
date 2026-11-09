@@ -658,6 +658,7 @@ async def directory_index_page(request: Request, db: Session = Depends(get_db)):
     stats = seo_engine.get_directory_stats(db)
     cities = seo_engine.get_all_cities(db)
     technologies = seo_engine.get_all_technologies(db)
+    domains = seo_engine.get_all_domains(db)
 
     breadcrumbs = [("Home", f"{base_url}/"), ("Directory", canonical_url)]
     bc_schema = seo_engine.build_breadcrumb_schema(breadcrumbs)
@@ -686,6 +687,7 @@ async def directory_index_page(request: Request, db: Session = Depends(get_db)):
             "stats": stats,
             "cities": cities,
             "technologies": technologies,
+            "domains": domains,
             "json_ld_schema": combined_schema
         }
     )

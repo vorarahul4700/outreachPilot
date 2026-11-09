@@ -2012,8 +2012,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (data.stats) {
           globalStats = { ...data.stats };
-          updateCompanyMetrics(data.stats);
-          updateHeaderSubtitle(activeDomainFilter, data.stats.total);
+          if (!activeDomainFilter || activeDomainFilter === "all") {
+            updateCompanyMetrics(data.stats);
+            updateHeaderSubtitle("all", data.stats.total);
+          } else {
+            const domItem = domainsData.find(d => d.code === activeDomainFilter);
+            const domCount = domItem ? (domItem.count || 0) : (activeDomainFilter === "it" ? data.stats.total : 0);
+            const domEnriched = domItem ? (domItem.enriched_count || 0) : (activeDomainFilter === "it" ? data.stats.enriched : 0);
+            const domEmails = domItem ? (domItem.emails_count || 0) : (activeDomainFilter === "it" ? data.stats.emails : 0);
+            updateCompanyMetrics({
+              total: domCount,
+              enriched: domEnriched,
+              emails: domEmails,
+              contacted: (activeDomainFilter === "it") ? (data.stats.contacted || 0) : 0,
+              invalid: (activeDomainFilter === "it") ? (data.stats.invalid || 0) : 0,
+              is_logged_in: Boolean(currentUser && currentUser.is_logged_in)
+            });
+            updateHeaderSubtitle(activeDomainFilter, domCount);
+          }
         }
       } catch (e) {
         console.warn("Failed to fetch company filters:", e);
