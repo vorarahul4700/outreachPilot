@@ -482,6 +482,7 @@ async def workspace_page(request: Request, db: Session = Depends(get_db)):
     user = get_current_user(db, request)
     is_logged_in = bool(user and user.oauth_tokens)
     is_master_admin = bool(is_logged_in and config.is_master_admin(user.email))
+    domains = seo_engine.get_all_domains(db)
     return templates.TemplateResponse(
         request=request,
         name="index.html",
@@ -494,6 +495,7 @@ async def workspace_page(request: Request, db: Session = Depends(get_db)):
             "is_master_admin": is_master_admin,
             "google_client_id": config.GOOGLE_CLIENT_ID,
             "dev_mode": config.DEV_MODE,
+            "domains": domains,
         }
     )
 

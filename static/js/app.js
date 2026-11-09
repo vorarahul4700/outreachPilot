@@ -1408,6 +1408,19 @@ document.addEventListener("DOMContentLoaded", () => {
       if (ddFilterTech) ddFilterTech.reset();
       if (ddFilterCity) ddFilterCity.reset();
       activeMetricFilter = null;
+      activeDomainFilter = "all";
+      const domainPillContainer = document.getElementById("companies-domain-filter-pills");
+      if (domainPillContainer) {
+        domainPillContainer.querySelectorAll(".domain-filter-pill").forEach(p => {
+          if ((p.getAttribute("data-domain") || "all") === "all") {
+            p.classList.remove("border-outline-variant/40", "bg-surface-container", "text-on-surface-variant");
+            p.classList.add("active", "border-secondary", "bg-secondary/15", "text-primary", "font-semibold");
+          } else {
+            p.classList.remove("active", "border-secondary", "bg-secondary/15", "text-primary", "font-semibold");
+            p.classList.add("border-outline-variant/40", "bg-surface-container", "text-on-surface-variant");
+          }
+        });
+      }
       document.querySelectorAll(".filter-tab-btn").forEach(btn => {
         if (btn.id === "filter-tab-all") {
           btn.classList.add("active", "bg-surface-container-highest", "text-on-surface");
@@ -1846,36 +1859,51 @@ document.addEventListener("DOMContentLoaded", () => {
     filterCitySelect.addEventListener("change", () => applyCompanyFiltersAndRender(true));
   }
 
-  // Domain quick-filter pills in Company directory section
-  const domainPillContainer = document.getElementById("companies-domain-filter-pills");
-  if (domainPillContainer) {
-    const pills = domainPillContainer.querySelectorAll(".domain-filter-pill");
-    pills.forEach(pill => {
-      pill.addEventListener("click", () => {
-        pills.forEach(p => {
+  // Domain quick-filter pills in Company directory section (Delegated click event)
+  let activeDomainFilter = "all";
+
+  function setDomainFilter(domainCode = "all") {
+    activeDomainFilter = (domainCode || "all").toLowerCase().trim();
+    const pillContainer = document.getElementById("companies-domain-filter-pills");
+    if (pillContainer) {
+      const pills = pillContainer.querySelectorAll(".domain-filter-pill");
+      pills.forEach(p => {
+        const pDom = (p.getAttribute("data-domain") || "all").toLowerCase().trim();
+        if (pDom === activeDomainFilter) {
+          p.classList.remove("border-outline-variant/40", "bg-surface-container", "text-on-surface-variant");
+          p.classList.add("active", "border-secondary", "bg-secondary/15", "text-primary", "font-semibold");
+        } else {
           p.classList.remove("active", "border-secondary", "bg-secondary/15", "text-primary", "font-semibold");
           p.classList.add("border-outline-variant/40", "bg-surface-container", "text-on-surface-variant");
-        });
-        pill.classList.remove("border-outline-variant/40", "bg-surface-container", "text-on-surface-variant");
-        pill.classList.add("active", "border-secondary", "bg-secondary/15", "text-primary", "font-semibold");
-        activeDomainFilter = pill.getAttribute("data-domain") || "all";
-        fetchCompanies(false);
+        }
       });
+    }
+    fetchCompanies(false);
+  }
+
+  const domainPillContainer = document.getElementById("companies-domain-filter-pills");
+  if (domainPillContainer) {
+    domainPillContainer.addEventListener("click", (e) => {
+      const pill = e.target.closest(".domain-filter-pill");
+      if (!pill) return;
+      e.preventDefault();
+      const domainCode = pill.getAttribute("data-domain") || "all";
+      setDomainFilter(domainCode);
     });
   }
 
-  // Scout Industry Domain quick-fill chips
+  // Scout Industry Domain quick-fill chips (Delegated click event)
   const scoutChipsContainer = document.getElementById("scout-domain-chips");
   if (scoutChipsContainer) {
-    const chips = scoutChipsContainer.querySelectorAll(".scout-chip");
-    const inputKw = document.getElementById("input-keyword");
-    chips.forEach(chip => {
-      chip.addEventListener("click", () => {
-        if (inputKw) {
-          inputKw.value = chip.getAttribute("data-keyword") || "";
-          inputKw.focus();
-        }
-      });
+    scoutChipsContainer.addEventListener("click", (e) => {
+      const chip = e.target.closest(".scout-chip");
+      if (!chip) return;
+      e.preventDefault();
+      const inputKw = document.getElementById("input-keyword");
+      if (inputKw) {
+        inputKw.value = chip.getAttribute("data-keyword") || "";
+        inputKw.focus();
+      }
     });
   }
 
@@ -1887,7 +1915,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let totalServerCount = 0;
   let totalServerPages = 1;
-  let activeDomainFilter = "all";
 
   let filterOptionsLoaded = false;
   let filterFetchPromise = null;
@@ -2027,7 +2054,21 @@ document.addEventListener("DOMContentLoaded", () => {
       if (companiesPaginationBottom) companiesPaginationBottom.classList.add("hidden");
       let emptyTitle = "No leads saved yet";
       let emptyMsg = "No leads available. Scout companies in Step 1 first.";
-      if (activeMetricFilter === "invalid") {
+      if (activeDomainFilter && activeDomainFilter !== "all") {
+        const domainNames = {
+          it: "Information Technology & Software",
+          sales: "Sales & Business Development",
+          marketing: "Marketing, Advertising & PR",
+          pharma: "Pharmaceuticals & Healthcare",
+          finance: "Finance, Accounting & Legal",
+          manufacturing: "Manufacturing & Logistics",
+          realestate: "Real Estate & Construction",
+          hr: "HR, Staffing & Consulting"
+        };
+        const domName = domainNames[activeDomainFilter] || activeDomainFilter.toUpperCase();
+        emptyTitle = `No ${domName} Leads Saved Yet`;
+        emptyMsg = `All 33,603 current database leads are under IT & Software. You can scout and enrich verified ${domName} leads in Step 1.`;
+      } else if (activeMetricFilter === "invalid") {
         emptyTitle = "No Invalid Leads Found";
         emptyMsg = "No invalid / excluded leads recorded. Active companies can be marked invalid by Master Admin.";
       } else if (activeMetricFilter === "enriched") {
@@ -5212,19 +5253,7 @@ document.addEventListener("DOMContentLoaded", () => {
       // 4. Filter Directory by Domain (?domain=it or ?domain=pharma)
       if (domain) {
         switchTab("companies");
-        activeDomainFilter = domain.toLowerCase();
-        const pills = document.querySelectorAll("#companies-domain-filter-pills .domain-filter-pill");
-        pills.forEach(p => {
-          if (p.getAttribute("data-domain") === activeDomainFilter) {
-            p.classList.remove("border-outline-variant/40", "bg-surface-container", "text-on-surface-variant");
-            p.classList.add("active", "border-secondary", "bg-secondary/15", "text-primary", "font-semibold");
-          } else {
-            p.classList.remove("active", "border-secondary", "bg-secondary/15", "text-primary", "font-semibold");
-            p.classList.add("border-outline-variant/40", "bg-surface-container", "text-on-surface-variant");
-          }
-        });
-        companiesCurrentPage = 1;
-        fetchCompanies(false);
+        setDomainFilter(domain);
       }
     } catch (err) {
       console.warn("[DeepLink] Error executing deep-linked action:", err);

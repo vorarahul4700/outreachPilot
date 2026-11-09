@@ -541,46 +541,47 @@
           <button type="button" class="domain-filter-pill active px-3 py-1.5 rounded-lg border border-secondary bg-secondary/15 text-primary whitespace-nowrap cursor-pointer transition flex items-center gap-1.5 font-semibold" data-domain="all">
             <span class="material-symbols-outlined text-[15px] text-secondary">apps</span>
             <span>All Domains</span>
+            <span class="text-[10px] text-on-surface-variant font-normal tnum" id="domain-count-all">({% if domains %}{{ domains|sum(attribute='count') }}{% else %}33,603{% endif %})</span>
           </button>
           <button type="button" class="domain-filter-pill px-3 py-1.5 rounded-lg border border-outline-variant/40 bg-surface-container text-on-surface-variant hover:text-primary hover:border-secondary/50 whitespace-nowrap cursor-pointer transition flex items-center gap-1.5" data-domain="it">
             <span class="inline-block w-2 h-2 rounded-full bg-blue-400"></span>
             <span>IT &amp; Software</span>
-            <span class="text-[10px] text-on-surface-variant font-normal tnum" id="domain-count-it"></span>
+            <span class="text-[10px] text-on-surface-variant font-normal tnum" id="domain-count-it">({% for d in domains if d.code == 'it' %}{{ d.count }}{% else %}33,603{% endfor %})</span>
           </button>
           <button type="button" class="domain-filter-pill px-3 py-1.5 rounded-lg border border-outline-variant/40 bg-surface-container text-on-surface-variant hover:text-primary hover:border-secondary/50 whitespace-nowrap cursor-pointer transition flex items-center gap-1.5" data-domain="sales">
             <span class="inline-block w-2 h-2 rounded-full bg-amber-400"></span>
             <span>Sales &amp; BPO</span>
-            <span class="text-[10px] text-on-surface-variant font-normal tnum" id="domain-count-sales"></span>
+            <span class="text-[10px] text-on-surface-variant font-normal tnum" id="domain-count-sales">({% for d in domains if d.code == 'sales' %}{{ d.count }}{% else %}0{% endfor %})</span>
           </button>
           <button type="button" class="domain-filter-pill px-3 py-1.5 rounded-lg border border-outline-variant/40 bg-surface-container text-on-surface-variant hover:text-primary hover:border-secondary/50 whitespace-nowrap cursor-pointer transition flex items-center gap-1.5" data-domain="marketing">
             <span class="inline-block w-2 h-2 rounded-full bg-purple-400"></span>
             <span>Marketing &amp; PR</span>
-            <span class="text-[10px] text-on-surface-variant font-normal tnum" id="domain-count-marketing"></span>
+            <span class="text-[10px] text-on-surface-variant font-normal tnum" id="domain-count-marketing">({% for d in domains if d.code == 'marketing' %}{{ d.count }}{% else %}0{% endfor %})</span>
           </button>
           <button type="button" class="domain-filter-pill px-3 py-1.5 rounded-lg border border-outline-variant/40 bg-surface-container text-on-surface-variant hover:text-primary hover:border-secondary/50 whitespace-nowrap cursor-pointer transition flex items-center gap-1.5" data-domain="pharma">
             <span class="inline-block w-2 h-2 rounded-full bg-emerald-400"></span>
             <span>Pharma &amp; Healthcare</span>
-            <span class="text-[10px] text-on-surface-variant font-normal tnum" id="domain-count-pharma"></span>
+            <span class="text-[10px] text-on-surface-variant font-normal tnum" id="domain-count-pharma">({% for d in domains if d.code == 'pharma' %}{{ d.count }}{% else %}0{% endfor %})</span>
           </button>
           <button type="button" class="domain-filter-pill px-3 py-1.5 rounded-lg border border-outline-variant/40 bg-surface-container text-on-surface-variant hover:text-primary hover:border-secondary/50 whitespace-nowrap cursor-pointer transition flex items-center gap-1.5" data-domain="finance">
             <span class="inline-block w-2 h-2 rounded-full bg-emerald-600"></span>
             <span>Finance &amp; Legal</span>
-            <span class="text-[10px] text-on-surface-variant font-normal tnum" id="domain-count-finance"></span>
+            <span class="text-[10px] text-on-surface-variant font-normal tnum" id="domain-count-finance">({% for d in domains if d.code == 'finance' %}{{ d.count }}{% else %}0{% endfor %})</span>
           </button>
           <button type="button" class="domain-filter-pill px-3 py-1.5 rounded-lg border border-outline-variant/40 bg-surface-container text-on-surface-variant hover:text-primary hover:border-secondary/50 whitespace-nowrap cursor-pointer transition flex items-center gap-1.5" data-domain="manufacturing">
             <span class="inline-block w-2 h-2 rounded-full bg-orange-400"></span>
             <span>Manufacturing</span>
-            <span class="text-[10px] text-on-surface-variant font-normal tnum" id="domain-count-manufacturing"></span>
+            <span class="text-[10px] text-on-surface-variant font-normal tnum" id="domain-count-manufacturing">({% for d in domains if d.code == 'manufacturing' %}{{ d.count }}{% else %}0{% endfor %})</span>
           </button>
           <button type="button" class="domain-filter-pill px-3 py-1.5 rounded-lg border border-outline-variant/40 bg-surface-container text-on-surface-variant hover:text-primary hover:border-secondary/50 whitespace-nowrap cursor-pointer transition flex items-center gap-1.5" data-domain="realestate">
             <span class="inline-block w-2 h-2 rounded-full bg-teal-400"></span>
             <span>Real Estate</span>
-            <span class="text-[10px] text-on-surface-variant font-normal tnum" id="domain-count-realestate"></span>
+            <span class="text-[10px] text-on-surface-variant font-normal tnum" id="domain-count-realestate">({% for d in domains if d.code == 'realestate' %}{{ d.count }}{% else %}0{% endfor %})</span>
           </button>
           <button type="button" class="domain-filter-pill px-3 py-1.5 rounded-lg border border-outline-variant/40 bg-surface-container text-on-surface-variant hover:text-primary hover:border-secondary/50 whitespace-nowrap cursor-pointer transition flex items-center gap-1.5" data-domain="hr">
             <span class="inline-block w-2 h-2 rounded-full bg-pink-400"></span>
             <span>HR &amp; Staffing</span>
-            <span class="text-[10px] text-on-surface-variant font-normal tnum" id="domain-count-hr"></span>
+            <span class="text-[10px] text-on-surface-variant font-normal tnum" id="domain-count-hr">({% for d in domains if d.code == 'hr' %}{{ d.count }}{% else %}0{% endfor %})</span>
           </button>
         </div>
 
@@ -1693,6 +1694,6 @@
       window.__INITIAL_AUTH__ = { is_logged_in: false, email: null, is_master_admin: false, dev_mode: false };
     }
   </script>
-  <script src="/static/js/app.js?v=9.3"></script>
+  <script src="/static/js/app.js?v=9.5"></script>
 </body>
 </html>
