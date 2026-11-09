@@ -255,6 +255,124 @@ def execute_scout_job(job_id: int, auto_enrich: bool = False) -> bool:
             pass
 
 
+def resolve_domain_keywords(domain_input: str) -> list[str]:
+    """
+    Resolves domain codes and aliases (sales, it, marketing, pharma, finance, etc.)
+    into their full list of canonical search keywords.
+    Returns an empty list if domain_input is not a recognized domain code.
+    """
+    if not domain_input:
+        return []
+
+    dom = domain_input.strip().lower()
+    if dom in ("all", "*"):
+        return []
+
+    alias_map = {
+        "it": "it",
+        "tech": "it",
+        "software": "it",
+        "sales": "sales",
+        "bpo": "sales",
+        "outreach": "sales",
+        "marketing": "marketing",
+        "pr": "marketing",
+        "advertising": "marketing",
+        "pharma": "pharma",
+        "healthcare": "pharma",
+        "health": "pharma",
+        "biotech": "pharma",
+        "finance": "finance",
+        "accounting": "finance",
+        "ca": "finance",
+        "legal": "finance",
+        "law": "finance",
+        "realestate": "realestate",
+        "construction": "realestate",
+        "manufacturing": "manufacturing",
+        "logistics": "manufacturing",
+        "hr": "hr",
+        "staffing": "hr",
+    }
+    canonical = alias_map.get(dom)
+    if not canonical:
+        return []
+
+    try:
+        from seo_engine import SEED_KEYWORD_OVERRIDES, get_category_domain_code
+        kws = [
+            raw.strip() for raw, cat in SEED_KEYWORD_OVERRIDES.items()
+            if get_category_domain_code(cat) == canonical
+        ]
+        if kws:
+            return kws
+    except Exception as e:
+        print(f"[Warning] seo_engine lookup failed in resolve_domain_keywords: {e}")
+
+    # Fallback to local taxonomy if seo_engine is not available
+    local_domain_keywords = {
+        "it": [
+            "Python Development Companies", "Django Development Company", "FastAPI Python Developers",
+            "Node.js Development Companies", "NestJS Development Companies", "Golang Software Companies",
+            "PHP Laravel Development Companies", "Ruby on Rails Development Companies", "React JS Development Companies",
+            "Next.js Web Development", "Vue.js Development Companies", "Angular Development Companies",
+            "Frontend Web Development Agencies", "Full Stack Software Companies", "MERN Stack Development Companies",
+            "MEAN Stack Development Companies", "Custom Software Development Companies", "Web Development Agencies",
+            "Mobile App Development Companies", "Flutter App Development Companies", "React Native App Development",
+            "iOS App Development Companies", "Android App Development Companies", "AI Machine Learning Companies",
+            "Generative AI Development Companies", "LLM Development & AI Solutions", "Data Science & Analytics Companies",
+            "Java Software Development Companies", "Spring Boot Development Companies", "DotNet C# Software Companies",
+            "DevOps Cloud Consulting Companies", "AWS Cloud Consulting Partners", "Shopify Development Agencies",
+            "WordPress Development Agencies", "SaaS Product Development Companies", "Blockchain Development Companies"
+        ],
+        "sales": [
+            "B2B Lead Generation Agencies", "B2B Lead Generation Companies", "Sales Outsourcing Companies",
+            "Appointment Setting Agencies", "Appointment Setting Companies", "SDR Outsourcing Companies",
+            "SDR Outsourcing Agencies", "Telemarketing Companies", "Sales Enablement Consulting",
+            "BPO Call Centers", "Call Centers & BPO Services", "Cold Calling Agencies",
+            "Lead Generation Agencies", "Lead Generation Companies"
+        ],
+        "marketing": [
+            "Digital Marketing Agencies", "Digital Marketing Companies", "Performance Marketing Agencies",
+            "Performance Marketing Companies", "SEO Agencies", "SEO Companies", "PPC Advertising Agencies",
+            "Google Ads Agencies", "Social Media Marketing Agencies", "Public Relations Agencies",
+            "PR Agencies", "Content Marketing Agencies", "Influencer Marketing Agencies", "Branding Agencies",
+            "Creative Advertising Agencies", "Email Marketing Agencies", "Conversion Rate Optimization Agencies"
+        ],
+        "pharma": [
+            "Pharmaceutical Manufacturers", "Pharma Companies", "Pharma Manufacturing Companies",
+            "API Pharma Manufacturers", "Active Pharmaceutical Ingredient Manufacturers",
+            "Contract Research Organizations", "CRO Pharma Companies", "CDMO Pharma Companies",
+            "CDMO Companies", "Biotechnology Companies", "Biotech Firms", "Medical Device Manufacturers",
+            "Diagnostic Pathology Laboratories", "Diagnostic Centers", "Dental Clinics", "Dentists",
+            "Ayurvedic Medicine Manufacturers", "Nutraceutical Manufacturers", "Hospital Chains"
+        ],
+        "finance": [
+            "Chartered Accountant Firms", "Chartered Accountants", "CA Firms", "CPA Accounting Firms",
+            "Accounting Firms", "Tax Consulting Companies", "GST Consulting Firms", "Auditing Firms",
+            "Auditing & Assurance Firms", "Investment Banking Firms", "Wealth Management Companies",
+            "Fintech Companies", "Corporate Law Firms", "Law Firms", "Patent & Trademark Attorneys",
+            "IP Law Firms", "Litigation Law Firms"
+        ],
+        "realestate": [
+            "Commercial Real Estate Agencies", "Real Estate Brokers", "Architecture Firms",
+            "Interior Design Studios", "Civil Construction Companies", "EPC Contracting Companies",
+            "Property Management Companies"
+        ],
+        "manufacturing": [
+            "Logistics Companies", "Freight Forwarding Companies", "Warehousing & 3PL Companies",
+            "CNC Machining Companies", "Plastic Injection Moulding Companies", "Solar Energy Companies",
+            "Solar EPC Installers", "Industrial Chemical Manufacturers", "Textile Manufacturers",
+            "Packaging Companies"
+        ],
+        "hr": [
+            "Recruitment Agencies", "Staffing Agencies", "Executive Search Firms",
+            "IT Staff Augmentation Companies", "Corporate Training Companies", "Management Consulting Firms"
+        ]
+    }
+    return local_domain_keywords.get(canonical, [])
+
+
 def claim_next_queued_job(domain_filter: str = None, city_filter: str = None) -> int:
     """
     Atomically claims the next QUEUED ScoutJob from Neon DB using SELECT ... FOR UPDATE SKIP LOCKED.
@@ -263,10 +381,17 @@ def claim_next_queued_job(domain_filter: str = None, city_filter: str = None) ->
     db = SessionLocal()
     try:
         query = db.query(ScoutJob).filter(ScoutJob.status == "QUEUED")
-        if city_filter and city_filter.strip():
+        if city_filter and city_filter.strip().lower() not in ("all", "*", ""):
             query = query.filter(ScoutJob.city.ilike(f"%{city_filter.strip()}%"))
-        if domain_filter and domain_filter.strip():
-            query = query.filter(ScoutJob.keyword.ilike(f"%{domain_filter.strip()}%"))
+
+        if domain_filter and domain_filter.strip().lower() not in ("all", "*", ""):
+            dom_kws = resolve_domain_keywords(domain_filter)
+            if dom_kws:
+                # Target all keywords belonging to this domain (case-insensitive)
+                query = query.filter(func.lower(func.trim(ScoutJob.keyword)).in_([k.lower().strip() for k in dom_kws]))
+            else:
+                # Custom keyword string fallback
+                query = query.filter(ScoutJob.keyword.ilike(f"%{domain_filter.strip()}%"))
 
         job = query.order_by(ScoutJob.id.asc()).with_for_update(skip_locked=True).first()
         if not job:
