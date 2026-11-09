@@ -421,13 +421,13 @@ def get_category_domain(category_name: str) -> str:
         return "Commercial Services"
     cat_lower = category_name.lower()
 
-    # Pharmaceuticals & Healthcare
+    # Marketing & Advertising (Evaluated first to distinguish Conversion Rate CRO from Clinical CRO)
     if any(k in cat_lower for k in [
-        "pharma", "clinical", "cro", "cdmo", "dental", "dentist", "health",
-        "biotech", "nutraceutical", "ayurved", "medical", "doctor", "hospital",
-        "pathology", "diagnostic", "medicine", "drug"
+        "marketing", "seo", "ppc", "pr ", "(pr)", "public relations", "advertising",
+        "social media", "smm", "branding", "content marketing", "creative agency",
+        "influencer", "growth hacking", "media buying", "conversion rate"
     ]):
-        return "Pharmaceuticals & Healthcare"
+        return "Marketing, Advertising & PR"
 
     # Sales & Lead Generation
     if any(k in cat_lower for k in [
@@ -436,13 +436,13 @@ def get_category_domain(category_name: str) -> str:
     ]):
         return "Sales & Business Development"
 
-    # Marketing & Advertising
+    # Pharmaceuticals & Healthcare
     if any(k in cat_lower for k in [
-        "marketing", "seo", "ppc", "pr ", "(pr)", "public relations", "advertising",
-        "social media", "smm", "branding", "content marketing", "creative agency",
-        "influencer", "growth hacking", "media buying", "conversion rate"
-    ]):
-        return "Marketing, Advertising & PR"
+        "pharma", "clinical", "cdmo", "dental", "dentist", "health",
+        "biotech", "nutraceutical", "ayurved", "medical", "doctor", "hospital",
+        "pathology", "diagnostic", "medicine", "drug", "contract research", "cro pharma"
+    ]) or (re.search(r"\bcro\b", cat_lower) and "conversion" not in cat_lower):
+        return "Pharmaceuticals & Healthcare"
 
     # Finance, Accounting & Legal
     if any(k in cat_lower for k in [
