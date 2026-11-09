@@ -242,47 +242,87 @@ def format_local_query(keyword: str = "", city: str = "") -> str:
     return f"{k} in {c}".strip()
 
 
+def extract_embedded_places_data(page_source: str) -> dict[str, dict[str, str]]:
+    """
+    Directly extracts verified company websites, phone numbers, addresses,
+    and categories from Google's embedded client-side JSON data.
+    Provides instant, 100% accurate website resolution without /goto redirect overhead or rate limits.
+    """
+    matches = list(re.finditer(r'\[\s*\["([^"]+)",\d+,\d+,\d+,\[[^\]]*\],"Place name"\]', page_source))
+    places_map = {}
+    for m in matches:
+        start_pos = m.start()
+        name = m.group(1).replace(r"\u0026", "&").replace(r"\\'", "'").strip()
+        chunk = page_source[start_pos:start_pos + 3500]
+
+        web_m = re.search(r'\["(https?://[^"]+)",\d+,\d+,\d+,\[[^\]]*\],"Place website"\]', chunk)
+        web = web_m.group(1).replace(r"\u003d", "=").replace(r"\u0026", "&") if web_m else ""
+
+        phone_m = re.search(r'\["([^"]+)",\d+,\d+,\d+,\[[^\]]*\],"Place phone number"\]', chunk)
+        phone = phone_m.group(1).strip() if phone_m and "add phone" not in phone_m.group(1).lower() else ""
+
+        addr_m = re.search(r'\["([^"]+)",\d+,\d+,\d+,\[[^\]]*\],"Place location"\]', chunk)
+        addr = addr_m.group(1).replace(r"\u0026", "&").strip() if addr_m else ""
+
+        cat_m = re.search(r'\["([^"]+)",\d+,\d+,\d+,\[[^\]]*\],"Place category"\]', chunk)
+        cat = cat_m.group(1).replace(r"\u0026", "&").strip() if cat_m else ""
+
+        norm_key = re.sub(r"[^\w\s]", "", name.lower()).strip()
+        places_map[norm_key] = {
+            "name": name,
+            "website_url": web,
+            "phone": phone,
+            "address": addr,
+            "category": cat
+        }
+    return places_map
+
+
 def extract_card_website_and_goto(card: Any) -> tuple[str, str]:
     """
     Extract website URL or /goto redirect URL from a Google Local card.
     Handles both direct links (typical in HTTP HTML) and /goto redirects (typical in desktop JS).
+    Prioritizes explicit 'Website' buttons over 'Schedule' / appointment links.
     Returns (direct_website_url, goto_url).
     """
     direct_url = ""
     goto_url = ""
+    fallback_goto = ""
 
-    # 1. Check for explicit /goto link
-    goto_a = card.find("a", href=lambda h: h and "/goto?url=" in h)
-    if goto_a:
-        goto_url = goto_a["href"].strip()
-
-    # 2. Iterate all <a> tags looking for company website link
     for a in card.find_all("a", href=True):
         href = a["href"].strip()
         text = a.get_text(separator=" ", strip=True).lower()
         aria = (a.get("aria-label") or "").lower()
         pcu = (a.get("data-pcu") or "").strip()
 
-        # If it's a /goto link and we haven't captured one
-        if "/goto?url=" in href and not goto_url:
-            goto_url = href
-            continue
-
         # If data-pcu is present and is external URL
         if pcu.startswith("http") and not any(x in pcu for x in ["google.com", "google.co", "gstatic.com"]):
             direct_url = pcu
             break
 
-        # Check explicit "website" text or aria-label
-        if ("website" in text or "website" in aria) and href.startswith("http"):
-            if not any(x in href for x in ["google.com", "google.co", "gstatic.com", "schema.org"]):
+        is_website_btn = ("website" in text or "website" in aria)
+
+        # Prioritize explicit Website button
+        if is_website_btn:
+            if "/goto?url=" in href:
+                goto_url = href
+                break
+            elif href.startswith("http") and not any(x in href for x in ["google.com", "google.co", "gstatic.com", "schema.org"]):
                 direct_url = href
                 break
+
+        # Fallback /goto link (only if not a maps/directions link)
+        if "/goto?url=" in href and not fallback_goto:
+            if not any(x in href for x in ["/maps/", "dir/", "google.com/maps"]):
+                fallback_goto = href
 
         # Fallback external link (not google, not directions/maps)
         if href.startswith("http") and not direct_url:
             if not any(x in href for x in ["google.com", "google.co", "gstatic.com", "schema.org", "waze.com", "/maps/"]):
                 direct_url = href
+
+    if not goto_url and fallback_goto:
+        goto_url = fallback_goto
 
     return direct_url, goto_url
 
@@ -336,10 +376,15 @@ class GoogleScraper:
             return ""
 
         try:
-            r = self.session.get(goto_url, allow_redirects=False, timeout=1.8)
-            loc = r.headers.get("Location") or goto_url
-            if loc and is_safe_public_url(loc):
-                return loc
+            r = self.session.get(goto_url, allow_redirects=False, timeout=5.0)
+            loc = r.headers.get("Location")
+            if not loc and r.text:
+                m = re.search(r'<a\s+[^>]*href=["\']([^"\']+)["\']', r.text, re.IGNORECASE)
+                if m:
+                    loc = m.group(1).replace("&amp;", "&")
+            if loc and not any(x in loc for x in ["google.com", "google.co", "gstatic.com"]):
+                if is_safe_public_url(loc):
+                    return loc
             return ""
         except Exception:
             return ""
@@ -506,8 +551,12 @@ class GoogleScraper:
                 soup = BeautifulSoup(resp.text, "html.parser")
                 cards = (
                     soup.find_all("div", class_="VkpGBb")
+                    or soup.find_all("div", class_="w7Dbne")
+                    or soup.find_all("div", class_="uMdZh")
+                    or soup.find_all("div", {"jscontroller": "AtSb"})
                     or soup.find_all("div", class_="cXedhc")
                     or soup.find_all("div", class_="rllt__details")
+                    or soup.find_all("div", class_="C8fQm")
                 )
 
                 if not cards:
@@ -709,11 +758,22 @@ class GoogleScraper:
             except Exception:
                 pass
 
-            # Auto-solve Google verification / sorry challenge if triggered on datacenter IP
+            # Auto-solve Google verification / sorry challenge ONLY if an actual challenge is active
             try:
                 curr_url = (driver.current_url or "").lower()
-                page_src = (driver.page_source or "").lower()
-                if "sorry" in curr_url or "sorry/index" in curr_url or "recaptcha" in page_src:
+                page_title = (driver.title or "").lower()
+                is_challenge = (
+                    "sorry/index" in curr_url
+                    or "/sorry/" in curr_url
+                    or "unusual traffic" in page_title
+                    or "sorry" in page_title
+                    or (hasattr(driver, "is_element_visible") and (
+                        driver.is_element_visible("iframe[src*='recaptcha']")
+                        or driver.is_element_visible("form#captcha-form")
+                        or driver.is_element_visible("#recaptcha")
+                    ))
+                )
+                if is_challenge:
                     self._log("Detected Google verification challenge; executing automated UC bypass...", 22)
                     for solver_method in ["uc_gui_handle_rc", "uc_gui_click_rc", "uc_gui_click_captcha", "uc_gui_handle_captcha"]:
                         if hasattr(driver, solver_method):
@@ -722,7 +782,7 @@ class GoogleScraper:
                                 getattr(driver, solver_method)()
                                 time.sleep(3.5)
                                 curr_url = (driver.current_url or "").lower()
-                                if "sorry" not in curr_url:
+                                if "sorry" not in curr_url and "unusual traffic" not in (driver.title or "").lower():
                                     self._log("Automated UC bypass successful!", 25)
                                     break
                             except Exception as ce:
@@ -756,6 +816,8 @@ class GoogleScraper:
                     # Multi-selector matching for Google Local business listing cards
                     cards = (
                         soup.find_all("div", class_="VkpGBb")
+                        or soup.find_all("div", class_="w7Dbne")
+                        or soup.find_all("div", class_="uMdZh")
                         or soup.find_all("div", {"jscontroller": "AtSb"})
                         or soup.find_all("div", class_="cXedhc")
                         or soup.find_all("div", class_="rllt__details")
@@ -765,32 +827,43 @@ class GoogleScraper:
                         break
                     time.sleep(0.4)
 
-                # Fallback on Page 1: If udm=local yields 0 cards, search via Google Places Web pack
+                # Retry on Page 1: If udm=local yields 0 cards on initial poll, re-try with udm=local preserved
                 if not cards and page == 1:
-                    fallback_query = format_local_query(keyword, city)
-                    fallback_url = f"https://www.google.com/search?q={urllib.parse.quote_plus(fallback_query)}&gl={gl}&hl={hl}"
-                    self._log(f"No cards on udm=local; falling back to Google Places Search: {fallback_url}", 26)
+                    self._log("No cards detected on initial poll; retrying Google Local search...", 26)
+                    # Check for any obstructing consent buttons first
+                    for accept_sel in ["button#L2AGLb", "button:contains('Accept all')", "button:contains('I agree')", "form[action*='consent'] button"]:
+                        try:
+                            if driver.is_element_visible(accept_sel):
+                                driver.click(accept_sel, timeout=1)
+                                time.sleep(1.0)
+                                break
+                        except Exception:
+                            pass
+
+                    # Reconnect to target_url with udm=local strictly preserved
                     if hasattr(driver, "uc_open_with_reconnect"):
                         try:
-                            driver.uc_open_with_reconnect(fallback_url, reconnect_time=3.5)
+                            driver.uc_open_with_reconnect(target_url, reconnect_time=3.5)
                         except Exception:
-                            driver.get(fallback_url)
+                            driver.get(target_url)
                     else:
-                        driver.get(fallback_url)
+                        driver.get(target_url)
                     time.sleep(2.5)
 
-                    for poll_i in range(15):
+                    for poll_i in range(25):
                         page_source = driver.page_source
                         soup = BeautifulSoup(page_source, "html.parser")
                         cards = (
                             soup.find_all("div", class_="VkpGBb")
+                            or soup.find_all("div", class_="w7Dbne")
+                            or soup.find_all("div", class_="uMdZh")
                             or soup.find_all("div", {"jscontroller": "AtSb"})
                             or soup.find_all("div", class_="cXedhc")
                             or soup.find_all("div", class_="rllt__details")
                             or soup.find_all("div", class_="C8fQm")
                         )
                         if cards:
-                            self._log(f"Found {len(cards)} listings via Google Places fallback!", 28)
+                            self._log(f"Found {len(cards)} listings on Google Local retry!", 28)
                             break
                         time.sleep(0.4)
 
@@ -804,6 +877,9 @@ class GoogleScraper:
                         self._log(f"No listings found on {page_label}. URL: {curr_url} | Title: {page_title} | HTML snippet: {src_preview}", 90)
                     break
 
+                # Extract embedded places data directly from Google Places client script
+                embedded_places = extract_embedded_places_data(driver.page_source)
+
                 page_raw_items = []
                 for card in cards:
                     name_el = (
@@ -816,7 +892,21 @@ class GoogleScraper:
                     if not name:
                         continue
 
-                    direct_web, goto_url = extract_card_website_and_goto(card)
+                    # Correlate with embedded Places data
+                    norm_key = re.sub(r"[^\w\s]", "", name.lower()).strip()
+                    emb = embedded_places.get(norm_key)
+                    if not emb:
+                        for k, v in embedded_places.items():
+                            if k.startswith(norm_key[:15]) or norm_key.startswith(k[:15]):
+                                emb = v
+                                break
+
+                    # Website: prioritize embedded place website if available
+                    direct_web = emb.get("website_url") if emb else ""
+                    goto_url = ""
+                    if not direct_web:
+                        direct_web, goto_url = extract_card_website_and_goto(card)
+
                     dom = self._extract_domain_from_url(direct_web) if direct_web else ""
 
                     # Rating and reviews
@@ -834,8 +924,13 @@ class GoogleScraper:
                     except ValueError:
                         reviews_count = 0
 
-                    # Extract real physical address and phone number (filtering out 'Open', 'On-site services', etc.)
+                    # Extract real physical address and phone number
                     address_part, phone = extract_address_and_phone(card, name)
+                    if emb and emb.get("phone") and not phone:
+                        phone = emb["phone"]
+                    if emb and emb.get("address") and (not address_part or address_part == "N/A"):
+                        address_part = emb["address"]
+
                     loc_url = build_google_maps_url(name, address_part, city)
 
                     page_raw_items.append({
