@@ -21,6 +21,7 @@ import os
 import sys
 import time
 from datetime import datetime
+from sqlalchemy import func
 
 # Prevent Windows console UnicodeEncodeError ('charmap' codec) on checkmarks or emojis
 if hasattr(sys.stdout, "reconfigure"):
@@ -339,22 +340,40 @@ def run_single_worker(job_id: int, keyword: str, city: str, auto_enrich: bool = 
     init_db()
     if not job_id or job_id <= 0:
         db = SessionLocal()
-        print(f"[Notice] ScoutJob #{job_id} not provided. Auto-creating ScoutJob in Neon DB...")
-        job = ScoutJob(
-            keyword=keyword,
-            city=city,
-            max_pages=0,
-            status="RUNNING",
-            progress=5,
-            status_message=f"Scouting all pages for '{keyword}' in '{city}'...",
-            logs=[f"[{datetime.utcnow().strftime('%H:%M:%S')}] Single-target worker initiated (All Pages Mode)."],
-            results=[]
+        kw_clean = (keyword or "").strip()
+        ct_clean = (city or "").strip()
+        # Deduplication check: check if an identical job is already queued or running
+        existing = (
+            db.query(ScoutJob)
+            .filter(
+                func.lower(func.trim(ScoutJob.keyword)) == kw_clean.lower(),
+                func.lower(func.trim(ScoutJob.city)) == ct_clean.lower(),
+                ScoutJob.status.in_(["QUEUED", "RUNNING"])
+            )
+            .order_by(ScoutJob.id.desc())
+            .first()
         )
-        db.add(job)
-        db.commit()
-        db.refresh(job)
-        job_id = job.id
-        db.close()
+        if existing:
+            job_id = existing.id
+            print(f"[Notice] Reusing existing active ScoutJob #{job_id} for '{kw_clean}' in '{ct_clean}'.")
+            db.close()
+        else:
+            print(f"[Notice] ScoutJob #{job_id} not provided. Auto-creating ScoutJob in Neon DB...")
+            job = ScoutJob(
+                keyword=kw_clean,
+                city=ct_clean,
+                max_pages=0,
+                status="RUNNING",
+                progress=5,
+                status_message=f"Scouting all pages for '{kw_clean}' in '{ct_clean}'...",
+                logs=[f"[{datetime.utcnow().strftime('%H:%M:%S')}] Single-target worker initiated (All Pages Mode)."],
+                results=[]
+            )
+            db.add(job)
+            db.commit()
+            db.refresh(job)
+            job_id = job.id
+            db.close()
 
     execute_scout_job(job_id=job_id, auto_enrich=auto_enrich)
 

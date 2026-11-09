@@ -1068,6 +1068,25 @@ async def start_scrape(req: ScrapeRequest, db: Session = Depends(get_db)):
     else:
         clean_keyword = clean_keyword or "Direct URL"
 
+    # Deduplication: Re-use active job if an identical keyword + city search is already queued or running
+    existing_active = (
+        db.query(ScoutJob)
+        .filter(
+            func.lower(func.trim(ScoutJob.keyword)) == clean_keyword.lower(),
+            func.lower(func.trim(ScoutJob.city)) == clean_city.lower(),
+            ScoutJob.status.in_(["QUEUED", "RUNNING"])
+        )
+        .order_by(ScoutJob.id.desc())
+        .first()
+    )
+    if existing_active:
+        return {
+            "status": "started",
+            "job_id": existing_active.id,
+            "mode": "existing_active_job",
+            "message": f"Search for '{clean_keyword}' in '{clean_city}' is already in progress (Job #{existing_active.id})."
+        }
+
     # Register ScoutJob in Neon DB
     job = ScoutJob(
         keyword=clean_keyword,
