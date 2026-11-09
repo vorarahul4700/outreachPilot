@@ -161,22 +161,22 @@
           Browse <span id="dir-hero-count">{{ stats.total_companies|default(33600) }}</span> Verified <span id="dir-hero-domain">Technology</span> Companies Across India
         </h1>
         <p id="dir-hero-subtitle" class="text-sm sm:text-base text-on-surface-variant max-w-2xl mx-auto leading-relaxed">
-          Deep-crawled engineering stacks, verified recruiter contacts, services breakdown, and authentic Google review sentiments across {{ stats.total_cities }} cities and {{ stats.total_techs }} technology verticals.
+          Verified company websites, direct contact emails, services offered, and real Google reviews across {{ stats.total_cities }} cities and {{ stats.total_techs }} business categories.
         </p>
 
         <!-- LIVE METRICS BAR (AEO Optimized) -->
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-3xl mx-auto pt-4">
           <div class="bento-cell p-3.5 text-center">
             <div id="dir-stat-total" class="text-xl sm:text-2xl font-mono font-bold text-primary tnum">{{ stats.total_companies }}</div>
-            <div class="text-[11px] font-mono text-on-surface-variant uppercase tracking-wider mt-0.5">Indexed Companies</div>
+            <div class="text-[11px] font-mono text-on-surface-variant uppercase tracking-wider mt-0.5">Verified Companies</div>
           </div>
           <div class="bento-cell p-3.5 text-center">
             <div id="dir-stat-cities" class="text-xl sm:text-2xl font-mono font-bold text-secondary tnum">{{ stats.total_cities }}</div>
-            <div class="text-[11px] font-mono text-on-surface-variant uppercase tracking-wider mt-0.5">Commercial Hubs</div>
+            <div class="text-[11px] font-mono text-on-surface-variant uppercase tracking-wider mt-0.5">Cities Covered</div>
           </div>
           <div class="bento-cell p-3.5 text-center">
             <div id="dir-stat-techs" class="text-xl sm:text-2xl font-mono font-bold text-tertiary tnum">{{ stats.total_techs }}</div>
-            <div class="text-[11px] font-mono text-on-surface-variant uppercase tracking-wider mt-0.5">Specializations</div>
+            <div class="text-[11px] font-mono text-on-surface-variant uppercase tracking-wider mt-0.5">Industries &amp; Tech</div>
           </div>
           <div class="bento-cell p-3.5 text-center">
             <div id="dir-stat-rating" class="text-xl sm:text-2xl font-mono font-bold text-primary tnum">{{ stats.avg_rating }}★</div>
@@ -201,7 +201,7 @@
           <div class="flex items-center justify-between">
             <div>
               <h2 class="text-xl font-display font-bold text-primary">Browse by Industry &amp; Specialization</h2>
-              <p class="text-xs text-on-surface-variant">Verified companies categorized by their core specializations across IT, Sales, Marketing, Pharma, Healthcare, Finance, and Manufacturing.</p>
+              <p class="text-xs text-on-surface-variant">Explore verified companies across IT, Sales, Marketing, Healthcare, Finance, and Manufacturing.</p>
             </div>
             <span id="dir-categories-badge" class="text-xs font-mono text-secondary px-2 py-0.5 rounded bg-secondary/10 border border-secondary/25">{{ technologies|length }} Categories</span>
           </div>
@@ -329,31 +329,31 @@
         <div class="space-y-3 pt-2">
           <details class="group border border-outline rounded-lg p-3.5 bg-surface-container-high/40" open>
             <summary class="font-display font-semibold text-sm text-primary cursor-pointer flex items-center justify-between">
-              <span>How does OutreachPilot verify technology stacks and company data?</span>
+              <span>How does OutreachPilot find and verify company information?</span>
               <span class="material-symbols-outlined text-sm group-open:rotate-180 transition-transform">expand_more</span>
             </summary>
             <p class="text-xs text-on-surface-variant leading-relaxed mt-2.5 pt-2 border-t border-outline/50">
-              OutreachPilot utilizes an autonomous multi-pass crawler that directly analyzes live company website source code, inspecting meta tags, API endpoints, script bundles, and DNS records to detect actual production frameworks (such as Python, React, Flutter, and Django) rather than relying on self-reported claims.
+              We check each company's actual live website. Rather than relying on self-reported claims, our system scans their real website code, tools, and service offerings (such as Python, React, Flutter, or WordPress) so you get accurate, up-to-date information.
             </p>
           </details>
 
           <details class="group border border-outline rounded-lg p-3.5 bg-surface-container-high/40">
             <summary class="font-display font-semibold text-sm text-primary cursor-pointer flex items-center justify-between">
-              <span>Can I contact the recruiters and engineering leads of these companies?</span>
+              <span>Can I email these companies directly?</span>
               <span class="material-symbols-outlined text-sm group-open:rotate-180 transition-transform">expand_more</span>
             </summary>
             <p class="text-xs text-on-surface-variant leading-relaxed mt-2.5 pt-2 border-t border-outline/50">
-              Yes. OutreachPilot extracts verified contact emails from career portals, header links, and domain DNS records, and enables users to draft hyper-personalized opportunity pitches sent directly through your authorized personal Gmail via OAuth 2.0.
+              Yes! OutreachPilot finds verified contact emails from official company websites and career pages. You can draft a customized message and send it directly from your own Gmail account with one click.
             </p>
           </details>
 
           <details class="group border border-outline rounded-lg p-3.5 bg-surface-container-high/40">
             <summary class="font-display font-semibold text-sm text-primary cursor-pointer flex items-center justify-between">
-              <span>How often is the directory intelligence updated?</span>
+              <span>How often is this directory updated?</span>
               <span class="material-symbols-outlined text-sm group-open:rotate-180 transition-transform">expand_more</span>
             </summary>
             <p class="text-xs text-on-surface-variant leading-relaxed mt-2.5 pt-2 border-t border-outline/50">
-              Company profiles are re-crawled continuously to detect technology stack changes, new job openings, domain health, and Google review updates.
+              We regularly check company profiles to ensure contact emails, websites, services, and Google review ratings remain active and accurate.
             </p>
           </details>
         </div>
