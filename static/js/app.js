@@ -1861,6 +1861,34 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Domain quick-filter pills in Company directory section (Delegated click event)
   let activeDomainFilter = "all";
+  let globalStats = null;
+  let domainsData = [];
+
+  const DOMAIN_DISPLAY_NAMES = {
+    all: "All Domains",
+    it: "Information Technology & Software",
+    sales: "Sales & Business Development",
+    marketing: "Marketing, Advertising & PR",
+    pharma: "Pharmaceuticals & Healthcare",
+    finance: "Finance, Accounting & Legal",
+    manufacturing: "Manufacturing & Logistics",
+    realestate: "Real Estate & Construction",
+    hr: "HR, Staffing & Consulting"
+  };
+
+  function updateHeaderSubtitle(domainCode, totalCount) {
+    const subtitleEl = document.getElementById("header-leads-subtitle");
+    const countEl = document.getElementById("header-leads-counter");
+    if (countEl) countEl.textContent = Number(totalCount || 0).toLocaleString();
+    if (subtitleEl) {
+      if (!domainCode || domainCode === "all") {
+        subtitleEl.innerHTML = `Manage and engage with <span id="header-leads-counter">${Number(totalCount || 0).toLocaleString()}</span> verified prospective companies.`;
+      } else {
+        const domName = DOMAIN_DISPLAY_NAMES[domainCode] || domainCode.toUpperCase();
+        subtitleEl.innerHTML = `Manage and engage with <span id="header-leads-counter">${Number(totalCount || 0).toLocaleString()}</span> verified prospective companies in ${domName}.`;
+      }
+    }
+  }
 
   function setDomainFilter(domainCode = "all") {
     activeDomainFilter = (domainCode || "all").toLowerCase().trim();
@@ -1878,6 +1906,30 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       });
     }
+
+    // Instantly update the metric cards above based on selected domain
+    if (activeDomainFilter === "all") {
+      if (globalStats) {
+        updateCompanyMetrics(globalStats);
+      }
+      updateHeaderSubtitle("all", globalStats ? globalStats.total : 33603);
+    } else {
+      const domItem = domainsData.find(d => d.code === activeDomainFilter);
+      const domCount = domItem ? (domItem.count || 0) : (activeDomainFilter === "it" && globalStats ? globalStats.total : 0);
+      const domEnriched = domItem ? (domItem.enriched_count || 0) : (activeDomainFilter === "it" && globalStats ? globalStats.enriched : 0);
+      const domEmails = domItem ? (domItem.emails_count || 0) : (activeDomainFilter === "it" && globalStats ? globalStats.emails : 0);
+
+      updateCompanyMetrics({
+        total: domCount,
+        enriched: domEnriched,
+        emails: domEmails,
+        contacted: (activeDomainFilter === "it" && globalStats) ? globalStats.contacted : 0,
+        invalid: (activeDomainFilter === "it" && globalStats) ? globalStats.invalid : 0,
+        is_logged_in: globalStats ? globalStats.is_logged_in : false
+      });
+      updateHeaderSubtitle(activeDomainFilter, domCount);
+    }
+
     fetchCompanies(false);
   }
 
@@ -1949,6 +2001,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Update domain filter counts
         if (data.domains && Array.isArray(data.domains)) {
+          domainsData = data.domains;
           data.domains.forEach(d => {
             const countEl = document.getElementById(`domain-count-${d.code}`);
             if (countEl) {
@@ -1958,7 +2011,9 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         if (data.stats) {
+          globalStats = { ...data.stats };
           updateCompanyMetrics(data.stats);
+          updateHeaderSubtitle(activeDomainFilter, data.stats.total);
         }
       } catch (e) {
         console.warn("Failed to fetch company filters:", e);
@@ -2022,6 +2077,11 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       if (typeof data.dev_mode === "boolean") {
         isDevMode = data.dev_mode;
+      }
+
+      if (data.stats) {
+        updateCompanyMetrics(data.stats);
+        updateHeaderSubtitle(activeDomainFilter, data.stats.total);
       }
 
       // Populate filter dropdowns on initial load
@@ -3192,6 +3252,11 @@ document.addEventListener("DOMContentLoaded", () => {
       isMasterAdmin = !!data.is_master_admin;
       if (typeof data.dev_mode === "boolean") {
         isDevMode = data.dev_mode;
+      }
+
+      if (data.stats) {
+        updateCompanyMetrics(data.stats);
+        updateHeaderSubtitle(activeDomainFilter, data.stats.total);
       }
 
       if (currentUser.is_logged_in) {

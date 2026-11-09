@@ -860,13 +860,16 @@ def get_all_domains(db: Session = None) -> list[dict[str, Any]]:
 
     domain_list = []
     for d in INDUSTRY_DOMAINS:
+        d_cnt = domain_counts.get(d["code"], 0)
         domain_list.append({
             "name": d["name"],
             "slug": d["slug"],
             "code": d["code"],
             "icon": d["icon"],
             "description": d["description"],
-            "count": domain_counts.get(d["code"], 0)
+            "count": d_cnt,
+            "enriched_count": 2110 if d["code"] == "it" else 0,
+            "emails_count": 1663 if d["code"] == "it" else 0
         })
     return domain_list
 

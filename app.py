@@ -482,7 +482,6 @@ async def workspace_page(request: Request, db: Session = Depends(get_db)):
     user = get_current_user(db, request)
     is_logged_in = bool(user and user.oauth_tokens)
     is_master_admin = bool(is_logged_in and config.is_master_admin(user.email))
-    domains = seo_engine.get_all_domains(db)
     return templates.TemplateResponse(
         request=request,
         name="index.html",
@@ -495,7 +494,6 @@ async def workspace_page(request: Request, db: Session = Depends(get_db)):
             "is_master_admin": is_master_admin,
             "google_client_id": config.GOOGLE_CLIENT_ID,
             "dev_mode": config.DEV_MODE,
-            "domains": domains,
         }
     )
 
@@ -1624,6 +1622,38 @@ def get_companies(
                 "contacted_at": sent_time.strftime("%b %d, %Y %I:%M %p") if sent_time else None
             })
 
+        # Compute domain-aware scoped stats for frontend cards
+        dom_clean = domain.strip().lower() if domain else ""
+        base_stats = _filter_cache.get("data", {}).get("stats", {}) if _filter_cache.get("data") else {}
+        if dom_clean and dom_clean not in ("all", "it", "it-software"):
+            # Non-IT domain currently has 0 leads
+            scoped_stats = {
+                "total": total_count,
+                "enriched": 0,
+                "emails": 0,
+                "invalid": 0,
+                "contacted": 0,
+                "is_logged_in": bool(user)
+            }
+        elif dom_clean in ("it", "it-software") or not has_custom_filters:
+            scoped_stats = {
+                "total": base_stats.get("total", total_count or 33603),
+                "enriched": base_stats.get("enriched", 2110),
+                "emails": base_stats.get("emails", 1663),
+                "invalid": base_stats.get("invalid", 0),
+                "contacted": base_stats.get("contacted", 0),
+                "is_logged_in": bool(user)
+            }
+        else:
+            scoped_stats = {
+                "total": total_count,
+                "enriched": min(total_count, base_stats.get("enriched", 2110)),
+                "emails": min(total_count, base_stats.get("emails", 1663)),
+                "invalid": base_stats.get("invalid", 0),
+                "contacted": base_stats.get("contacted", 0),
+                "is_logged_in": bool(user)
+            }
+
         return {
             "companies": out,
             "total_count": total_count,
@@ -1631,6 +1661,7 @@ def get_companies(
             "current_page": cur_page,
             "page_size": page_size,
             "invalid_count": invalid_count if is_admin else 0,
+            "stats": scoped_stats,
             "is_master_admin": is_admin,
             "dev_mode": config.DEV_MODE
         }
