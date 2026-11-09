@@ -428,7 +428,7 @@ class GoogleScraper:
         keyword: str = "",
         city: str = "",
         direct_url: str = "",
-        max_pages: int = 2,
+        max_pages: int = 0,
         gl: str = "in",
         hl: str = "en",
         cookie: str = ""
@@ -473,13 +473,13 @@ class GoogleScraper:
             "Priority": "u=0, i",
         })
 
-        effective_max = 50 if max_pages <= 0 else max_pages
+        effective_max = 100 if max_pages <= 0 else max_pages
         all_results = []
 
         for page in range(1, effective_max + 1):
             start_offset = (page - 1) * 20
-            page_label = f"Page {page}/{max_pages}" if max_pages > 0 else f"Page {page}"
-            pct = int(20 + ((page - 1) * 70 / effective_max))
+            page_label = f"Page {page} (All Pages Mode)" if max_pages <= 0 else f"Page {page}/{max_pages}"
+            pct = min(90, int(20 + ((page - 1) * 65 / min(effective_max, 25))))
             self._log(f"[Fast-Path HTTP] Fetching listings from {page_label}...", pct)
 
             if direct_url and "google.com/search" in direct_url:
@@ -511,7 +511,7 @@ class GoogleScraper:
                 )
 
                 if not cards:
-                    self._log(f"[Fast-Path HTTP] No more listings on {page_label}.", pct)
+                    self._log(f"[Fast-Path HTTP] Pagination complete: all available listings extracted up to {page_label}.", pct)
                     break
 
                 page_raw = []
@@ -580,7 +580,7 @@ class GoogleScraper:
         keyword: str = "",
         city: str = "",
         direct_url: str = "",
-        max_pages: int = 2,
+        max_pages: int = 0,
         gl: str = "in",
         hl: str = "en"
     ) -> list[dict[str, Any]]:
@@ -627,11 +627,12 @@ class GoogleScraper:
         keyword: str = "",
         city: str = "",
         direct_url: str = "",
-        max_pages: int = 2,
+        max_pages: int = 0,
         gl: str = "in",
         hl: str = "en"
     ) -> list[dict[str, Any]]:
-        self._log(f"Initializing Chromium engine for: {keyword} {city} (Pages: {max_pages}, Region: {gl})...", 10)
+        cov_label = "All Available Pages" if max_pages <= 0 else f"{max_pages} Pages"
+        self._log(f"Initializing Chromium engine for: {keyword} {city} (Coverage: {cov_label}, Region: {gl})...", 10)
 
         target_url = self.build_initial_url(keyword, city, direct_url, gl=gl, hl=hl)
         driver = None
@@ -730,12 +731,12 @@ class GoogleScraper:
                 pass
 
             is_all_pages = (max_pages <= 0)
-            effective_max = 50 if is_all_pages else max_pages
+            effective_max = 100 if is_all_pages else max_pages
             page = 1
 
             while page <= effective_max:
                 page_label = f"Page {page} (All Pages Mode)" if is_all_pages else f"Page {page}/{max_pages}"
-                progress_pct = int(20 + ((page - 1) * 70 / effective_max))
+                progress_pct = min(90, int(20 + ((page - 1) * 65 / min(effective_max, 25))))
                 self._log(f"Parsing results from {page_label}...", progress_pct)
 
                 # Polling for cards (up to 12 seconds with 0.4s interval)
@@ -794,10 +795,13 @@ class GoogleScraper:
                         time.sleep(0.4)
 
                 if not cards:
-                    page_title = driver.title or "No Title"
-                    curr_url = driver.current_url or "No URL"
-                    src_preview = (driver.page_source or "")[:250].replace("\n", " ")
-                    self._log(f"No listings found on {page_label}. URL: {curr_url} | Title: {page_title} | HTML snippet: {src_preview}", 90)
+                    if page > 1:
+                        self._log(f"Pagination complete: all available Google Local listings extracted up to Page {page - 1}.", 95)
+                    else:
+                        page_title = driver.title or "No Title"
+                        curr_url = driver.current_url or "No URL"
+                        src_preview = (driver.page_source or "")[:250].replace("\n", " ")
+                        self._log(f"No listings found on {page_label}. URL: {curr_url} | Title: {page_title} | HTML snippet: {src_preview}", 90)
                     break
 
                 page_raw_items = []
@@ -894,7 +898,10 @@ class GoogleScraper:
                     time.sleep(1.5)
                     page += 1
                 else:
-                    self._log(f"Reached requested limit of {max_pages} pages.", page_progress)
+                    if is_all_pages:
+                        self._log(f"Completed all {page} available pages of Google Local search results.", page_progress)
+                    else:
+                        self._log(f"Reached requested limit of {max_pages} pages.", page_progress)
                     break
 
             self._log(f"Scraping completed! Successfully extracted {len(self.results)} companies.", 100)

@@ -2980,7 +2980,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     scoutCurrentPage = 1;
     liveScrapedResults = [];
-    const max_pages = parseInt(document.getElementById("input-pages")?.value || "2", 10);
+    const max_pages = parseInt(document.getElementById("input-pages")?.value || "0", 10) || 0;
     const gl = document.getElementById("input-gl")?.value || "in";
     const hl = document.getElementById("input-hl")?.value || "en";
 

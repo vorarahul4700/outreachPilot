@@ -1,29 +1,51 @@
-name: Cloud Scout & Automatic AI Enrichment Worker
+name: Cloud Scout & Autonomous Neon DB Queue Worker
 
 on:
   workflow_dispatch:
     inputs:
+      mode:
+        description: "Execution Mode: 'queue' (consumes Neon DB scout_jobs) or 'single' (specific keyword/city)"
+        required: false
+        default: "queue"
+        type: choice
+        options:
+          - queue
+          - single
+      domain:
+        description: "Domain keyword filter for queue (e.g. pharma, it, sales, marketing, or leave blank for any queued)"
+        required: false
+        default: ""
+      city:
+        description: "City filter for queue, or target city for single mode"
+        required: false
+        default: ""
+      batch_size:
+        description: "Max jobs to process per runner in queue mode"
+        required: false
+        default: "30"
+      keyword:
+        description: "Search Keyword (Only for 'single' mode)"
+        required: false
+        default: ""
       job_id:
-        description: "ScoutJob ID from Neon DB (Optional - leave 0 to auto-create)"
+        description: "Specific ScoutJob ID (Only for 'single' mode - leave 0 to auto-create)"
         required: false
         default: "0"
-      keyword:
-        description: "Search Keyword (e.g. IT Companies)"
-        required: true
-        default: "IT Companies"
-      city:
-        description: "City (e.g. Surat)"
-        required: false
-        default: "Surat"
-      max_pages:
-        description: "Max pages to scrape"
-        required: false
-        default: "50"
+
+  schedule:
+    # Run every 6 hours automatically to drain any queued jobs in Neon DB
+    - cron: '0 */6 * * *'
 
 jobs:
   cloud_scout_job:
+    name: Cloud-Runner-${{ matrix.worker_id }}
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 180
+
+    strategy:
+      fail-fast: false
+      matrix:
+        worker_id: [1, 2, 3, 4, 5, 6, 7, 8]
 
     permissions:
       contents: read
@@ -33,13 +55,27 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      - name: Check Single Mode Runner Gate
+        id: runner_gate
+        run: |
+          MODE="${{ github.event.inputs.mode || 'queue' }}"
+          WORKER_ID="${{ matrix.worker_id }}"
+          if [ "$MODE" = "single" ] && [ "$WORKER_ID" != "1" ]; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+            echo "Single-job mode selected: Runner $WORKER_ID skipping to avoid duplicate execution."
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Set up Python 3.11
+        if: steps.runner_gate.outputs.skip != 'true'
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
           cache: "pip"
 
       - name: Install Google Chrome Stable & Xvfb
+        if: steps.runner_gate.outputs.skip != 'true'
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y --no-install-recommends wget curl gnupg xvfb
@@ -50,11 +86,13 @@ jobs:
           google-chrome --version
 
       - name: Install Python Dependencies
+        if: steps.runner_gate.outputs.skip != 'true'
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
       - name: Run Cloud Scout Worker
+        if: steps.runner_gate.outputs.skip != 'true'
         env:
           PYTHONUNBUFFERED: "1"
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
@@ -66,7 +104,10 @@ jobs:
           GITHUB_REPOSITORY: ${{ github.repository }}
         run: |
           xvfb-run -a python cloud_worker.py \
-            --job-id "${{ github.event.inputs.job_id }}" \
-            --keyword "${{ github.event.inputs.keyword }}" \
+            --mode "${{ github.event.inputs.mode || 'queue' }}" \
+            --domain "${{ github.event.inputs.domain }}" \
             --city "${{ github.event.inputs.city }}" \
-            --max-pages "${{ github.event.inputs.max_pages }}"
+            --keyword "${{ github.event.inputs.keyword }}" \
+            --job-id "${{ github.event.inputs.job_id || '0' }}" \
+            --batch-size "${{ github.event.inputs.batch_size || '30' }}" \
+            --runner-id "${{ matrix.worker_id }}"

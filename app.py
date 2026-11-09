@@ -349,7 +349,7 @@ class ScrapeRequest(BaseModel):
     keyword: str | None = ""
     city: str | None = ""
     direct_url: str | None = ""
-    max_pages: int = 2
+    max_pages: int = 0
     gl: str = "in"
     hl: str = "en"
 
@@ -967,7 +967,7 @@ async def company_showcase_profile(slug: str, request: Request, db: Session = De
 
 
 # --- Stage 1: Google Local Lead Scout Endpoints ---
-def run_scraper_sync(keyword: str, city: str, direct_url: str, max_pages: int, gl: str, hl: str):
+def run_scraper_sync(keyword: str, city: str, direct_url: str, max_pages: int = 0, gl: str = "in", hl: str = "en"):
     global current_scraper
     if not current_scraper:
         current_scraper = GoogleScraper(headless=True)
@@ -1100,10 +1100,10 @@ async def start_scrape(req: ScrapeRequest, db: Session = Depends(get_db)):
                 json={
                     "ref": "main",
                     "inputs": {
+                        "mode": "single",
                         "job_id": str(job.id),
                         "keyword": clean_keyword,
-                        "city": clean_city,
-                        "max_pages": str(req.max_pages)
+                        "city": clean_city
                     }
                 },
                 timeout=6.0
