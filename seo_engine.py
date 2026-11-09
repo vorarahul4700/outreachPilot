@@ -463,7 +463,7 @@ def get_category_domain(category_name: str) -> str:
     if any(k in cat_lower for k in [
         "logistics", "freight", "warehousing", "3pl", "4pl", "cnc", "moulding",
         "solar", "chemical", "textile", "manufactur", "packaging", "industrial",
-        "automation", "machin", "fabrication", "supply chain"
+        "factory", "machinery", "machining", "fabrication", "supply chain"
     ]):
         return "Manufacturing & Logistics"
 
@@ -841,6 +841,37 @@ def get_all_categories(db: Session) -> list[dict[str, Any]]:
 get_all_technologies = get_all_categories
 
 
+def get_all_domains(db: Session = None) -> list[dict[str, Any]]:
+    """
+    Returns all 8 industry domains with company counts.
+    Since current DB records are all IT companies, IT reflects the full verified lead count.
+    When non-IT companies are added, each domain dynamically counts matching records.
+    """
+    categories = get_all_categories(db) if db else []
+    domain_counts = defaultdict(int)
+    for cat in categories:
+        d_code = cat.get("domain_code", "it")
+        domain_counts[d_code] += cat.get("count", 0)
+
+    # If IT has zero count from categories, fallback to total companies
+    if "it" not in domain_counts and db:
+        stats = get_directory_stats(db)
+        domain_counts["it"] = stats.get("total_companies", 0)
+
+    domain_list = []
+    for d in INDUSTRY_DOMAINS:
+        domain_list.append({
+            "name": d["name"],
+            "slug": d["slug"],
+            "code": d["code"],
+            "icon": d["icon"],
+            "description": d["description"],
+            "count": domain_counts.get(d["code"], 0)
+        })
+    return domain_list
+
+
+
 def get_all_combinations(db: Session) -> list[dict[str, Any]]:
     """
     Dynamically aggregates all city + category/technology combinations across the entire database.
@@ -900,6 +931,7 @@ def get_companies_list(
     db: Session,
     city: str = None,
     tech: str = None,
+    domain: str = None,
     page: int = 1,
     limit: int = 24
 ) -> tuple[list[dict[str, Any]], int]:
@@ -914,6 +946,25 @@ def get_companies_list(
 
     if city:
         query = query.filter(func.lower(Company.city) == city.strip().lower())
+
+    if domain and domain.strip() and domain.strip().lower() != "all":
+        dom_clean = domain.strip().lower()
+        if dom_clean in ("it", "it-software"):
+            non_it_keywords = [
+                raw for raw, cat in SEED_KEYWORD_OVERRIDES.items()
+                if get_category_domain_code(cat) != "it"
+            ]
+            if non_it_keywords:
+                query = query.filter(~Company.search_keyword.in_(non_it_keywords))
+        else:
+            domain_keywords = [
+                raw for raw, cat in SEED_KEYWORD_OVERRIDES.items()
+                if get_category_domain_code(cat) == dom_clean
+            ]
+            if domain_keywords:
+                query = query.filter(Company.search_keyword.in_(domain_keywords))
+            else:
+                query = query.filter(Company.id == -1)
 
     if tech:
         clean_tech = tech.strip()
@@ -973,10 +1024,17 @@ def get_companies_list(
             canon_name = normalize_keyword_to_category(c.search_keyword)
             stack_badges = [canon_name]
 
+        comp_cat = normalize_keyword_to_category(c.search_keyword or c.normalized_keyword or "")
+        comp_dom = get_category_domain(comp_cat)
+        comp_dom_code = get_category_domain_code(comp_cat)
+
         serialized.append({
             "id": c.id,
             "name": c.name,
             "domain": c.domain,
+            "industry_domain": comp_dom,
+            "domain_code": comp_dom_code,
+            "category": comp_cat,
             "website_url": c.website_url or f"https://{c.domain}",
             "city": c.city or "India",
             "rating": float(c.rating or 4.2),
@@ -1137,10 +1195,17 @@ def get_company_details(db: Session, company_id: int) -> dict[str, Any] | None:
 
     slug = company_to_slug(c.name, c.domain, c.id)
 
+    comp_cat = normalize_keyword_to_category(c.search_keyword or c.normalized_keyword or "")
+    comp_dom = get_category_domain(comp_cat)
+    comp_dom_code = get_category_domain_code(comp_cat)
+
     return {
         "id": c.id,
         "name": c.name,
         "domain": c.domain,
+        "industry_domain": comp_dom,
+        "domain_code": comp_dom_code,
+        "category": comp_cat,
         "website_url": c.website_url or f"https://{c.domain}",
         "phone": c.phone or None,
         "address": c.address or None,

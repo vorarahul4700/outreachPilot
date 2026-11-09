@@ -232,11 +232,15 @@
                 </span>
               </div>
 
-              <div class="text-[11px] font-mono text-on-surface-variant flex items-center gap-1.5 mb-2.5">
+              <div class="text-[11px] font-mono text-on-surface-variant flex items-center gap-1.5 mb-2.5 flex-wrap">
                 <span class="material-symbols-outlined text-[13px]">location_on</span>
                 <span>{{ c.city }}</span>
                 <span class="text-outline-variant">|</span>
                 <span class="text-primary truncate">{{ c.domain }}</span>
+                {% if c.industry_domain %}
+                <span class="text-outline-variant">|</span>
+                <span class="text-[10px] px-1.5 py-0.2 rounded bg-surface-container border border-outline-variant/40 text-on-surface-variant">{{ c.industry_domain }}</span>
+                {% endif %}
               </div>
 
               {% if c.profile.summary %}

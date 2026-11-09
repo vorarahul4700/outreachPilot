@@ -822,6 +822,7 @@ async def directory_companies(
     city: Optional[str] = Query(None, description="City slug or name, e.g. noida, mumbai"),
     tech: Optional[str] = Query(None, description="Category or tech stack slug/name, e.g. nextjs, dentists"),
     category: Optional[str] = Query(None, description="Industry/category alias for tech parameter"),
+    domain: Optional[str] = Query(None, description="High-level industry domain, e.g. it, pharma, sales"),
     q: Optional[str] = Query(None, description="General search term"),
     db: Session = Depends(get_db)
 ):
@@ -1304,9 +1305,13 @@ def get_companies_filters(request: Request, db: Session = Depends(get_db)):
             for tech_name, count in sorted(tech_map.items(), key=lambda x: x[0].lower())
         ]
 
+        # Multi-Domain Hierarchy List with live counts
+        all_domains = seo_engine.get_all_domains(db)
+
         result = {
             "cities": sorted_cities,
             "tech_stacks": sorted_tech,
+            "domains": all_domains,
             "stats": {
                 "total": total_valid,
                 "enriched": enriched_count,
@@ -1355,6 +1360,7 @@ def get_companies(
     search: str = "",
     tech: str = "",
     city: str = "",
+    domain: str = "",
     status: str = "all",
     sort: str = "newest",
     db: Session = Depends(get_db)
@@ -1471,6 +1477,26 @@ def get_companies(
                 or_(*tech_conds)
             ).distinct()
 
+        # 5b. Industry Domain Filter (IT, Sales, Marketing, Pharma, Finance, etc.)
+        if domain and domain.strip() and domain.strip().lower() != "all":
+            dom_clean = domain.strip().lower()
+            if dom_clean in ("it", "it-software"):
+                non_it_keywords = [
+                    raw for raw, cat in seo_engine.SEED_KEYWORD_OVERRIDES.items()
+                    if seo_engine.get_category_domain_code(cat) != "it"
+                ]
+                if non_it_keywords:
+                    query = query.filter(~Company.search_keyword.in_(non_it_keywords))
+            else:
+                domain_keywords = [
+                    raw for raw, cat in seo_engine.SEED_KEYWORD_OVERRIDES.items()
+                    if seo_engine.get_category_domain_code(cat) == dom_clean
+                ]
+                if domain_keywords:
+                    query = query.filter(Company.search_keyword.in_(domain_keywords))
+                else:
+                    query = query.filter(Company.id == -1)
+
         # 6. Sorting
         if sort == "rating_desc":
             query = query.order_by(Company.rating.desc().nullslast(), Company.reviews_count.desc(), Company.id.desc())
@@ -1481,9 +1507,10 @@ def get_companies(
         else:
             query = query.order_by(Company.id.desc())
 
-        # 6b. Fast total_count resolution (reuse cached count when no custom search/city/tech filter is active)
+        # 6b. Fast total_count resolution (reuse cached count when no custom search/city/tech/domain filter is active)
         has_custom_filters = bool(
             (search and search.strip()) or
+            (domain and domain.strip() and domain.strip().lower() != "all") or
             city_terms or
             tech_terms or
             status in ("contacted", "sent", "uncontacted", "ready")
@@ -1580,6 +1607,8 @@ def get_companies(
                 "search_keyword": c.search_keyword or c.source_query or "General Leads",
                 "city": c.city or "",
                 "normalized_keyword": c.normalized_keyword or c.search_keyword or "General Leads",
+                "industry_domain": seo_engine.get_category_domain(seo_engine.normalize_keyword_to_category(c.normalized_keyword or c.search_keyword or "")),
+                "domain_code": seo_engine.get_category_domain_code(seo_engine.normalize_keyword_to_category(c.normalized_keyword or c.search_keyword or "")),
                 "rating": c.rating,
                 "reviews_count": c.reviews_count,
                 "is_enriched": c.is_enriched,

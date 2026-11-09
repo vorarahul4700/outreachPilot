@@ -156,9 +156,17 @@
       <section class="bento-cell p-6 space-y-4">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-outline pb-4">
           <div>
-            <div class="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-secondary/10 border border-secondary/25 text-[11px] font-mono text-secondary mb-2">
-              <span class="material-symbols-outlined text-[13px]">verified</span>
-              <span>Verified B2B Lead Dossier</span>
+            <div class="flex items-center gap-2 mb-2 flex-wrap">
+              <div class="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-secondary/10 border border-secondary/25 text-[11px] font-mono text-secondary">
+                <span class="material-symbols-outlined text-[13px]">verified</span>
+                <span>Verified B2B Lead Dossier</span>
+              </div>
+              {% if company.industry_domain %}
+              <a href="/directory/companies?domain={{ company.domain_code or 'it' }}" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-surface-container border border-outline hover:border-secondary/50 text-[11px] font-mono text-on-surface-variant hover:text-primary transition-colors" title="Browse all {{ company.industry_domain }} companies">
+                <span class="material-symbols-outlined text-[12px] text-secondary">category</span>
+                <span>{{ company.industry_domain }}</span>
+              </a>
+              {% endif %}
             </div>
             <h1 class="text-2xl sm:text-3xl font-display font-bold text-primary tracking-tight">
               {{ company.name }}
@@ -205,7 +213,7 @@
         <div class="pt-2 flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
           <div class="flex items-center gap-2">
             <span class="text-on-surface-variant">Industry:</span>
-            <span class="text-primary font-medium">{{ company.profile.industry }}</span>
+            <span class="text-primary font-medium">{{ company.industry_domain or company.profile.industry }}</span>
           </div>
           <a href="/app?action=pitch&company_id={{ company.id }}&company_name={{ company.name | urlencode }}" class="btn-tactile-ecru flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold">
             <span class="material-symbols-outlined text-[14px]">send</span>

@@ -1846,6 +1846,39 @@ document.addEventListener("DOMContentLoaded", () => {
     filterCitySelect.addEventListener("change", () => applyCompanyFiltersAndRender(true));
   }
 
+  // Domain quick-filter pills in Company directory section
+  const domainPillContainer = document.getElementById("companies-domain-filter-pills");
+  if (domainPillContainer) {
+    const pills = domainPillContainer.querySelectorAll(".domain-filter-pill");
+    pills.forEach(pill => {
+      pill.addEventListener("click", () => {
+        pills.forEach(p => {
+          p.classList.remove("active", "border-secondary", "bg-secondary/15", "text-primary", "font-semibold");
+          p.classList.add("border-outline-variant/40", "bg-surface-container", "text-on-surface-variant");
+        });
+        pill.classList.remove("border-outline-variant/40", "bg-surface-container", "text-on-surface-variant");
+        pill.classList.add("active", "border-secondary", "bg-secondary/15", "text-primary", "font-semibold");
+        activeDomainFilter = pill.getAttribute("data-domain") || "all";
+        fetchCompanies(false);
+      });
+    });
+  }
+
+  // Scout Industry Domain quick-fill chips
+  const scoutChipsContainer = document.getElementById("scout-domain-chips");
+  if (scoutChipsContainer) {
+    const chips = scoutChipsContainer.querySelectorAll(".scout-chip");
+    const inputKw = document.getElementById("input-keyword");
+    chips.forEach(chip => {
+      chip.addEventListener("click", () => {
+        if (inputKw) {
+          inputKw.value = chip.getAttribute("data-keyword") || "";
+          inputKw.focus();
+        }
+      });
+    });
+  }
+
   if (btnFilterEmails) {
     btnFilterEmails.addEventListener("click", () => {
       setActiveMetricFilter("emails");
@@ -1854,6 +1887,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let totalServerCount = 0;
   let totalServerPages = 1;
+  let activeDomainFilter = "all";
 
   let filterOptionsLoaded = false;
   let filterFetchPromise = null;
@@ -1885,6 +1919,16 @@ document.addEventListener("DOMContentLoaded", () => {
         });
         if (ddFilterCity) ddFilterCity.setOptions(cityOpts);
         if (ddOutreachCity) ddOutreachCity.setOptions(cityOpts);
+
+        // Update domain filter counts
+        if (data.domains && Array.isArray(data.domains)) {
+          data.domains.forEach(d => {
+            const countEl = document.getElementById(`domain-count-${d.code}`);
+            if (countEl) {
+              countEl.textContent = d.count ? `(${d.count})` : "(0)";
+            }
+          });
+        }
 
         if (data.stats) {
           updateCompanyMetrics(data.stats);
@@ -1930,6 +1974,7 @@ document.addEventListener("DOMContentLoaded", () => {
         search: q,
         tech: selectedTech,
         city: selectedCity,
+        domain: (activeDomainFilter && activeDomainFilter !== "all") ? activeDomainFilter : "",
         status: statusParam,
         sort: selectedSort
       });
@@ -2164,8 +2209,9 @@ document.addEventListener("DOMContentLoaded", () => {
                         <span class="material-symbols-outlined text-[14px]">open_in_new</span>
                       </a>
                     </div>
-                    <div class="flex items-center gap-2 mt-1">
+                    <div class="flex items-center gap-2 mt-1 flex-wrap">
                       <span class="text-caption font-mono text-on-surface-variant truncate block">${escapeHTML(c.domain || '')}</span>
+                      ${c.industry_domain ? `<span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-surface-container border border-outline-variant/40 text-on-surface-variant shrink-0">${escapeHTML(c.industry_domain)}</span>` : ''}
                       ${ratingDisplay}
                     </div>
                   </div>
@@ -5093,9 +5139,10 @@ document.addEventListener("DOMContentLoaded", () => {
       const companyName = urlParams.get("company_name") || "";
       const city = urlParams.get("city");
       const tech = urlParams.get("tech");
+      const domain = urlParams.get("domain");
       const q = urlParams.get("q") || urlParams.get("search");
 
-      if (!action && !companyId && !city && !tech && !q) return;
+      if (!action && !companyId && !city && !tech && !q && !domain) return;
 
       // 1. Direct Pitch Trigger (?action=pitch&company_id=123)
       if (action === "pitch" && companyId) {
@@ -5160,6 +5207,24 @@ document.addEventListener("DOMContentLoaded", () => {
         companiesCurrentPage = 1;
         fetchCompanies(false);
         showToast(`Filtered directory for ${filterTerms.join(" • ")}`, "info");
+      }
+
+      // 4. Filter Directory by Domain (?domain=it or ?domain=pharma)
+      if (domain) {
+        switchTab("companies");
+        activeDomainFilter = domain.toLowerCase();
+        const pills = document.querySelectorAll("#companies-domain-filter-pills .domain-filter-pill");
+        pills.forEach(p => {
+          if (p.getAttribute("data-domain") === activeDomainFilter) {
+            p.classList.remove("border-outline-variant/40", "bg-surface-container", "text-on-surface-variant");
+            p.classList.add("active", "border-secondary", "bg-secondary/15", "text-primary", "font-semibold");
+          } else {
+            p.classList.remove("active", "border-secondary", "bg-secondary/15", "text-primary", "font-semibold");
+            p.classList.add("border-outline-variant/40", "bg-surface-container", "text-on-surface-variant");
+          }
+        });
+        companiesCurrentPage = 1;
+        fetchCompanies(false);
       }
     } catch (err) {
       console.warn("[DeepLink] Error executing deep-linked action:", err);
