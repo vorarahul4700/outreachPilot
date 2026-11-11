@@ -1093,21 +1093,10 @@ def run_scraper_sync(keyword: str, city: str, direct_url: str, max_pages: int = 
 
 @app.post("/api/scrape")
 async def start_scrape(req: ScrapeRequest, db: Session = Depends(get_db)):
-    global active_task, current_scraper
-
-    clean_keyword = req.keyword.strip() if req.keyword else ""
-    clean_city = req.city.strip() if req.city else ""
-    clean_url = req.direct_url.strip() if req.direct_url else ""
-
-    if not clean_url:
-        if not clean_keyword:
-            return {"status": "error", "message": "Target Keyword / Industry is required."}
-        if not clean_city:
-            return {"status": "error", "message": "City / Location is required."}
-    else:
-        clean_keyword = clean_keyword or "Direct URL"
-
-    # Deduplication: Re-use active job if an identical keyword + city search is already queued or running
+    return {
+        "status": "error",
+        "message": "Public on-demand scraping is disabled. All directory leads are curated and managed autonomously via cloud workflows."
+    }
     existing_active = (
         db.query(ScoutJob)
         .filter(

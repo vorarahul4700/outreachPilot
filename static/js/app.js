@@ -225,7 +225,6 @@ document.addEventListener("DOMContentLoaded", () => {
   function switchTab(tabId) {
     const navItems = [
       { id: "companies", btn: tabCompanies, sec: secCompanies },
-      { id: "scout", btn: tabScout, sec: secScout },
       { id: "outreach", btn: tabOutreach, sec: secOutreach },
       { id: "resume", btn: tabResume, sec: secResume }
     ];
@@ -245,9 +244,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
 
-    if (tabId === "scout") {
-      updateScoutViewFromInputs();
-    } else if (tabId === "companies") {
+    if (tabId === "companies") {
       applyCompanyFiltersAndRender();
     } else if (tabId === "outreach") {
       if (!outreachLoaded || allOutreachCompanies.length === 0) {
@@ -263,21 +260,13 @@ document.addEventListener("DOMContentLoaded", () => {
     refreshIcons();
   }
 
-  if (tabScout) tabScout.addEventListener("click", () => switchTab("scout"));
   if (tabCompanies) tabCompanies.addEventListener("click", () => switchTab("companies"));
   if (tabResume) tabResume.addEventListener("click", () => switchTab("resume"));
   if (tabOutreach) tabOutreach.addEventListener("click", () => switchTab("outreach"));
 
-  // Quick action buttons redirecting to Scout Leads or All Companies
-  const btnGotoScout = document.getElementById("btn-goto-scout");
-  const btnHeaderScout = document.getElementById("btn-header-scout");
-  const btnSwitchToCompanies = document.getElementById("btn-switch-to-companies");
-  const btnJumpCompanies = document.getElementById("btn-jump-companies");
-
-  if (btnGotoScout) btnGotoScout.addEventListener("click", () => switchTab("scout"));
-  if (btnHeaderScout) btnHeaderScout.addEventListener("click", () => switchTab("scout"));
-  if (btnSwitchToCompanies) btnSwitchToCompanies.addEventListener("click", () => switchTab("companies"));
-  if (btnJumpCompanies) btnJumpCompanies.addEventListener("click", () => switchTab("companies"));
+  // Header quick actions
+  const btnHeaderRefresh = document.getElementById("btn-header-refresh");
+  if (btnHeaderRefresh) btnHeaderRefresh.addEventListener("click", () => fetchCompanies());
 
   // Sidebar Expand / Collapse Controller
   const appSidebar = document.getElementById("app-sidebar");
@@ -966,6 +955,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function updateScoutViewFromInputs(resetPage = true) {
+    if (!scoutCardsContainer) return;
     if (resetPage) {
       scoutCurrentPage = 1;
     }

@@ -158,21 +158,14 @@
           <span class="active-dot ml-auto w-1.5 h-1.5 rounded-full bg-primary sidebar-badge"></span>
         </button>
 
-        <!-- Tab 2: Scout Leads (Inactive) -->
-        <button id="tab-scout" class="tab-btn sidebar-nav-item flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all duration-150 ease-in-out cursor-pointer text-left w-full" title="Scout Leads">
-          <span class="material-symbols-outlined text-[18px] shrink-0" data-icon="person_search">person_search</span>
-          <span class="text-label-md font-label-md sidebar-text">Scout Leads</span>
-          <span class="active-dot hidden ml-auto w-1.5 h-1.5 rounded-full bg-primary sidebar-badge"></span>
-        </button>
-
-        <!-- Tab 3: Outreach Hub (Inactive) -->
+        <!-- Tab 2: Outreach Hub (Inactive) -->
         <button id="tab-outreach" class="tab-btn sidebar-nav-item flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all duration-150 ease-in-out cursor-pointer text-left w-full" title="Outreach Hub">
           <span class="material-symbols-outlined text-[18px] shrink-0" data-icon="send">send</span>
           <span class="text-label-md font-label-md sidebar-text">Outreach Hub</span>
           <span class="active-dot hidden ml-auto w-1.5 h-1.5 rounded-full bg-primary sidebar-badge"></span>
         </button>
 
-        <!-- Tab 4: Candidate Profile (Inactive) -->
+        <!-- Tab 3: Candidate Profile (Inactive) -->
         <button id="tab-resume" class="tab-btn sidebar-nav-item flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all duration-150 ease-in-out cursor-pointer text-left w-full" title="Candidate Profile & Resume">
           <span class="material-symbols-outlined text-[18px] shrink-0" data-icon="account_circle">account_circle</span>
           <span class="text-label-md font-label-md sidebar-text">Candidate Profile</span>
@@ -263,207 +256,6 @@
     </div>
 
       <!-- ========================================== -->
-      <!-- TAB: LEAD SCOUT (SEARCH & DISCOVERY)       -->
-      <!-- ========================================== -->
-      <section id="section-scout" class="tab-section hidden space-y-6">
-        
-        <!-- Search Control Card -->
-        <div class="bg-surface-container-low border border-outline-variant/40 rounded-2xl p-5 sm:p-6 shadow-sm space-y-4 relative">
-          <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div>
-              <h2 class="text-headline-sm font-headline-sm text-on-surface font-semibold flex items-center gap-2">
-                <span class="material-symbols-outlined text-[20px] text-primary">radar</span>
-                <span>Find Companies on Google Maps</span>
-                <span class="text-caption font-caption text-secondary bg-secondary/10 px-2.5 py-0.5 rounded border border-secondary/20 flex items-center gap-1 font-mono">
-                  <span class="material-symbols-outlined text-[13px]">verified</span>
-                  <span>Real Websites Only</span>
-                </span>
-              </h2>
-              <p class="text-body-sm font-body-sm text-on-surface-variant mt-1">Find active businesses with real websites and phone numbers. Dead links and spam are automatically removed.</p>
-            </div>
-            
-            <div class="flex items-center gap-2">
-              <button id="btn-switch-to-companies" type="button" class="btn-tactile-slate px-3.5 py-2 text-on-surface rounded text-label-sm font-label-sm transition-colors flex items-center gap-1.5 cursor-pointer">
-                <span class="material-symbols-outlined text-[16px]">arrow_back</span>
-                <span>Back to All Companies (<span class="badge-total-count">0</span>)</span>
-              </button>
-            </div>
-          </div>
-
-          <form id="scout-form" class="space-y-4 pt-1">
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-end">
-              <div class="sm:col-span-2 lg:col-span-3">
-                <label for="input-keyword" class="block text-label-sm font-label-sm text-on-surface-variant mb-1.5 flex items-center justify-between">
-                  <span>Target Keyword / Industry</span>
-                  <span class="text-amber-700 dark:text-amber-400 font-mono text-[10px] tracking-wider uppercase px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-600/30 dark:border-amber-500/25 font-semibold">Required</span>
-                </label>
-                <input type="text" id="input-keyword" required placeholder="e.g. IT Companies, Software Agencies" value="" class="w-full h-10 px-3.5 text-body-sm font-body-sm text-on-surface placeholder:text-outline transition">
-                <div class="flex flex-wrap gap-1 mt-1.5" id="scout-domain-chips">
-                  <button type="button" class="scout-chip px-2 py-0.5 rounded text-[10px] font-mono bg-surface-container border border-outline-variant/40 text-on-surface-variant hover:text-primary hover:border-secondary/50 cursor-pointer" data-keyword="IT Companies, Software Agencies">IT &amp; Tech</button>
-                  <button type="button" class="scout-chip px-2 py-0.5 rounded text-[10px] font-mono bg-surface-container border border-outline-variant/40 text-on-surface-variant hover:text-primary hover:border-secondary/50 cursor-pointer" data-keyword="Pharmaceutical Manufacturers, Clinical Research CRO">Pharma</button>
-                  <button type="button" class="scout-chip px-2 py-0.5 rounded text-[10px] font-mono bg-surface-container border border-outline-variant/40 text-on-surface-variant hover:text-primary hover:border-secondary/50 cursor-pointer" data-keyword="B2B Lead Generation Agencies, Sales Outsourcing">Sales &amp; BPO</button>
-                  <button type="button" class="scout-chip px-2 py-0.5 rounded text-[10px] font-mono bg-surface-container border border-outline-variant/40 text-on-surface-variant hover:text-primary hover:border-secondary/50 cursor-pointer" data-keyword="Digital Marketing Agencies, Performance Marketing">Marketing</button>
-                  <button type="button" class="scout-chip px-2 py-0.5 rounded text-[10px] font-mono bg-surface-container border border-outline-variant/40 text-on-surface-variant hover:text-primary hover:border-secondary/50 cursor-pointer" data-keyword="Chartered Accountant Firms, Tax Consultants">Finance &amp; CA</button>
-                  <button type="button" class="scout-chip px-2 py-0.5 rounded text-[10px] font-mono bg-surface-container border border-outline-variant/40 text-on-surface-variant hover:text-primary hover:border-secondary/50 cursor-pointer" data-keyword="Logistics Companies, Freight Forwarders">Logistics</button>
-                </div>
-              </div>
-              <div class="sm:col-span-1 lg:col-span-3">
-                <label for="input-city" class="block text-label-sm font-label-sm text-on-surface-variant mb-1.5 flex items-center justify-between">
-                  <span>City / Location</span>
-                  <span class="text-amber-700 dark:text-amber-400 font-mono text-[10px] tracking-wider uppercase px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-600/30 dark:border-amber-500/25 font-semibold">Required</span>
-                </label>
-                <input type="text" id="input-city" required placeholder="e.g. Surat, Austin, London" value="" class="w-full h-10 px-3.5 text-body-sm font-body-sm text-on-surface placeholder:text-outline transition">
-              </div>
-              <!-- Custom Tactile Dropdown: Pages to Scrape -->
-              <div class="sm:col-span-1 lg:col-span-2">
-                <label class="block text-label-sm font-label-sm text-on-surface-variant mb-1.5">Pages to Scrape</label>
-                <div class="custom-dropdown relative w-full" id="dropdown-scout-pages">
-                  <input type="hidden" id="input-pages" value="2">
-                  <button type="button" class="custom-dropdown-btn w-full" aria-haspopup="listbox" aria-expanded="false" title="Pages to Scrape">
-                    <span class="custom-dropdown-label truncate">2 Pages (~40 leads)</span>
-                    <span class="material-symbols-outlined text-[16px] text-on-surface-variant dropdown-chevron">expand_more</span>
-                  </button>
-                  <div class="custom-dropdown-menu">
-                    <div class="custom-dropdown-list custom-scrollbar" role="listbox"></div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Custom Tactile Dropdown: Country -->
-              <div class="sm:col-span-1 lg:col-span-2">
-                <label class="block text-label-sm font-label-sm text-on-surface-variant mb-1.5" title="Country code for Google results (gl)">Country</label>
-                <div class="custom-dropdown relative w-full" id="dropdown-scout-gl">
-                  <input type="hidden" id="input-gl" value="in">
-                  <button type="button" class="custom-dropdown-btn w-full" aria-haspopup="listbox" aria-expanded="false" title="Target Country">
-                    <span class="custom-dropdown-label truncate">IN (India)</span>
-                    <span class="material-symbols-outlined text-[16px] text-on-surface-variant dropdown-chevron">expand_more</span>
-                  </button>
-                  <div class="custom-dropdown-menu">
-                    <div class="custom-dropdown-search-wrap">
-                      <span class="material-symbols-outlined text-[15px] text-on-surface-variant absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">search</span>
-                      <input type="text" class="custom-dropdown-search" placeholder="Search country..." autocomplete="off">
-                    </div>
-                    <div class="custom-dropdown-list custom-scrollbar" role="listbox"></div>
-                  </div>
-                </div>
-              </div>
-              <div class="sm:col-span-1 lg:col-span-2 flex flex-col justify-end">
-                <button type="submit" id="btn-start-scout" class="w-full h-10 btn-tactile-ecru font-label-md text-label-md font-semibold px-4 rounded-lg transition-colors flex items-center justify-center gap-1.5 shadow-sm cursor-pointer">
-                  <span class="material-symbols-outlined text-[18px]">search</span>
-                  <span>Find Leads</span>
-                </button>
-              </div>
-            </div>
-
-            <!-- Advanced / Optional Fields Toggle -->
-            <div class="pt-1">
-              <details class="w-full group">
-                <summary class="cursor-pointer text-on-surface-variant hover:text-on-surface transition text-caption font-caption flex items-center gap-1.5">
-                  <span class="material-symbols-outlined text-[16px]">tune</span>
-                  <span>Advanced Options (Direct URL, Language)</span>
-                </summary>
-                <div class="grid grid-cols-1 md:grid-cols-12 gap-3 mt-2 pt-2 border-t border-outline-variant/20">
-                  <div class="md:col-span-9">
-                    <label class="block text-caption font-caption text-on-surface-variant mb-1 font-medium">Direct Google Local Search URL (Overrides Keyword/City)</label>
-                    <input type="text" id="input-url" placeholder="https://www.google.com/search?q=...&udm=local" class="w-full bg-surface-container-lowest border border-outline-variant/30 rounded-lg px-3.5 py-1.5 text-body-sm font-body-sm text-on-surface placeholder:text-on-surface-variant/70 focus:outline-none focus:border-primary-container transition">
-                  </div>
-                  <div class="md:col-span-3">
-                    <label class="block text-caption font-caption text-on-surface-variant mb-1 font-medium">Language Code (hl)</label>
-                    <input type="text" id="input-hl" value="en" placeholder="en" class="w-full bg-surface-container-lowest border border-outline-variant/30 rounded-lg px-3.5 py-1.5 text-body-sm font-body-sm text-on-surface placeholder:text-on-surface-variant/70 focus:outline-none focus:border-primary-container transition">
-                  </div>
-                </div>
-              </details>
-            </div>
-          </form>
-
-          <!-- Live Scraping Monitor (Collapsed by default, expands when active) -->
-          <div id="scout-monitor" class="hidden bg-surface-container-lowest border border-outline-variant/30 rounded-xl p-4 sm:p-5 space-y-3.5 shadow-inner">
-            <div class="flex items-center justify-between text-body-sm">
-              <div class="flex items-center gap-2.5">
-                <span class="inline-block w-2.5 h-2.5 rounded-full bg-secondary animate-pulse"></span>
-                <span id="monitor-status" class="font-medium text-on-surface">Searching Google Maps for businesses...</span>
-              </div>
-              <div class="flex items-center gap-3">
-                <span id="monitor-count" class="font-mono text-primary font-semibold bg-primary/10 px-2.5 py-0.5 rounded-md border border-primary/20 text-caption font-caption">0 Found</span>
-                <button id="btn-toggle-logs" type="button" class="text-caption font-caption text-outline hover:text-on-surface transition underline cursor-pointer">Hide Activity</button>
-              </div>
-            </div>
-            
-            <div class="w-full bg-surface-container rounded-full h-2 overflow-hidden border border-outline-variant/20">
-              <div id="monitor-progress-bar" class="bg-primary-container h-full transition-all duration-300 rounded-full" style="width: 0%"></div>
-            </div>
-
-            <!-- Real-time Terminal Log Console -->
-            <div id="scout-terminal-container" class="space-y-1.5 pt-1">
-              <div class="flex items-center justify-between text-[11px] text-outline font-mono">
-                <span class="flex items-center gap-1.5">
-                  <span class="material-symbols-outlined text-[14px]">terminal</span>
-                  <span>Live Search Activity</span>
-                </span>
-                <span>Automated Search Engine</span>
-              </div>
-              <div id="scout-terminal-logs" class="bg-surface-container-lowest border border-outline-variant/30 rounded-xl p-3 font-mono text-[11px] text-secondary space-y-1 max-h-36 overflow-y-auto leading-relaxed select-text shadow-inner">
-                <div class="text-outline italic">Engine ready. Click 'Find Leads' to see real-time search progress...</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- ========================================== -->
-        <!-- LIVE SCOUTED LEADS (KEYWORD RESULTS)       -->
-        <!-- ========================================== -->
-        <div id="scout-results-section" class="space-y-4">
-          <!-- Section Header Bar -->
-          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-surface-container-low border border-outline-variant/30 rounded-xl px-5 py-4 shadow-sm">
-            <div class="space-y-1">
-              <div class="flex items-center gap-2">
-                <span class="w-2.5 h-2.5 rounded-full bg-secondary animate-pulse"></span>
-                <h3 class="text-headline-sm font-headline-sm text-on-surface font-semibold flex items-center gap-2">
-                  <span>Discovered Leads</span>
-                  <span id="scout-leads-count" class="px-2.5 py-0.5 rounded-full bg-surface-container text-primary border border-outline-variant/30 text-caption font-caption font-mono font-semibold">0 Leads</span>
-                </h3>
-              </div>
-              <p class="text-body-sm font-body-sm text-on-surface-variant">
-                Showing verified businesses matching: <strong id="scout-query-label" class="text-on-surface font-semibold">-</strong>
-              </p>
-            </div>
-          </div>
-
-          <!-- Scout Live Cards Grid (Mobile 1-col, Tablet 2-col, Desktop 3-col - No stretchy cards) -->
-          <div id="scout-cards-container" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
-            <!-- Dynamically populated by app.js -->
-          </div>
-
-          <!-- Scout Live Pagination Controls -->
-          <div id="scout-pagination" class="hidden bg-surface-container-low border border-outline-variant/30 rounded-xl px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-3">
-            <div class="flex items-center space-x-2 text-caption font-caption text-on-surface-variant">
-              <span>Showing <strong id="scout-page-range" class="text-on-surface font-semibold">0-0</strong> of <strong id="scout-page-total" class="text-on-surface font-semibold">0</strong> leads</span>
-            </div>
-
-            <div class="flex items-center space-x-2 sm:space-x-3 flex-wrap justify-center">
-              <div class="flex items-center gap-2 text-caption font-caption text-on-surface-variant">
-                <span class="hidden sm:inline font-mono text-[11px]">Per page:</span>
-                <div class="custom-dropdown dropdown-compact relative" id="dropdown-scout-per-page">
-                  <input type="hidden" id="scout-per-page" value="20">
-                  <button type="button" class="custom-dropdown-btn" aria-haspopup="listbox" aria-expanded="false" title="Leads per page">
-                    <span class="custom-dropdown-label">20</span>
-                    <span class="material-symbols-outlined dropdown-chevron text-[15px]">expand_more</span>
-                  </button>
-                  <div class="custom-dropdown-menu align-right">
-                    <div class="custom-dropdown-list custom-scrollbar" role="listbox"></div>
-                  </div>
-                </div>
-              </div>
-
-              <div id="scout-page-buttons" class="flex items-center space-x-1">
-                <!-- Populated dynamically by app.js -->
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- ========================================== -->
       <!-- TAB 1: ALL COMPANIES DIRECTORY (STITCH UI) -->
       <!-- ========================================== -->
       <section id="section-companies" class="tab-section space-y-6">
@@ -475,9 +267,9 @@
             <p id="header-leads-subtitle" class="text-body-md font-body-md text-on-surface-variant mt-1">Browse, research, and reach out to <span id="header-leads-counter">33603</span> verified businesses.</p>
           </div>
           <div class="flex items-center gap-3">
-            <button id="btn-goto-scout" type="button" class="btn-tactile-ecru flex items-center gap-2 px-4 py-2 rounded font-label-md text-label-md shadow-sm font-semibold cursor-pointer">
-              <span class="material-symbols-outlined text-[18px]">add</span>
-              <span>Find New Companies</span>
+            <button id="btn-header-refresh" type="button" class="btn-tactile-slate flex items-center gap-2 px-3.5 py-2 rounded text-label-md font-label-md font-semibold transition-colors cursor-pointer" title="Refresh Directory">
+              <span class="material-symbols-outlined text-[18px]">refresh</span>
+              <span>Refresh</span>
             </button>
           </div>
         </header>
@@ -1640,6 +1432,6 @@
       window.__INITIAL_AUTH__ = { is_logged_in: false, email: null, is_master_admin: false, dev_mode: false };
     }
   </script>
-  <script src="/static/js/app.js?v=10.1"></script>
+  <script src="/static/js/app.js?v=10.2"></script>
 </body>
 </html>
