@@ -1879,11 +1879,8 @@ document.addEventListener("DOMContentLoaded", () => {
       return { value: (c.name || "").toLowerCase(), label: c.name, count: cnt };
     });
 
-    if (dom !== "all") {
-      mapped.sort((a, b) => (b.count || 0) - (a.count || 0) || a.label.localeCompare(b.label));
-    } else {
-      mapped.sort((a, b) => a.label.localeCompare(b.label));
-    }
+    // ALL cities dropdown will ALWAYS be in alphabetical order (A to Z)
+    mapped.sort((a, b) => (a.label || "").localeCompare(b.label || "", undefined, { sensitivity: "base" }));
 
     mapped.forEach(item => cityOpts.push(item));
 
