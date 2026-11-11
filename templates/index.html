@@ -1448,73 +1448,19 @@
       </div>
 
       <div class="space-y-3">
-        <!-- 3 Subject Lines Angle Selector -->
+        <!-- Subject Line -->
+        <div>
+          <label for="modal-subject" class="block text-label-sm font-label-sm text-on-surface-variant font-medium mb-1.5">Subject Line</label>
+          <input type="text" id="modal-subject" class="w-full recessed-well px-3.5 py-2 text-body-sm text-on-surface focus:outline-none focus:border-primary-container transition" placeholder="Email Subject Line">
+        </div>
+
+        <!-- Email Message Body -->
         <div>
           <div class="flex items-center justify-between mb-1.5">
-            <label class="block text-label-sm font-label-sm text-on-surface-variant font-medium">Subject Line Angle</label>
-            <span class="text-[11px] font-mono text-outline">Click angle to select</span>
-          </div>
-          <div id="pitch-subject-options" class="flex flex-wrap gap-1.5 mb-2">
-            <button type="button" data-angle="specificity" id="btn-subj-specificity" class="pitch-subject-btn active px-2.5 py-1 rounded-lg text-caption font-medium border border-primary/40 bg-primary/10 text-primary transition cursor-pointer flex items-center gap-1">
-              <span>Specificity:</span>
-              <span class="subject-preview font-normal opacity-90 truncate max-w-[170px] inline-block align-bottom">...</span>
-            </button>
-            <button type="button" data-angle="curiosity" id="btn-subj-curiosity" class="pitch-subject-btn px-2.5 py-1 rounded-lg text-caption font-medium border border-outline-variant/40 bg-surface-container text-on-surface-variant hover:text-on-surface transition cursor-pointer flex items-center gap-1">
-              <span>Curiosity:</span>
-              <span class="subject-preview font-normal opacity-90 truncate max-w-[170px] inline-block align-bottom">...</span>
-            </button>
-            <button type="button" data-angle="benefit_led" id="btn-subj-benefit" class="pitch-subject-btn px-2.5 py-1 rounded-lg text-caption font-medium border border-outline-variant/40 bg-surface-container text-on-surface-variant hover:text-on-surface transition cursor-pointer flex items-center gap-1">
-              <span>Benefit-Led:</span>
-              <span class="subject-preview font-normal opacity-90 truncate max-w-[170px] inline-block align-bottom">...</span>
-            </button>
-          </div>
-          <input type="text" id="modal-subject" class="w-full recessed-well px-3.5 py-2 text-body-sm text-on-surface focus:outline-none focus:border-primary-container transition">
-        </div>
-
-        <!-- Variant Switcher Tabs & Word Count -->
-        <div>
-          <div class="flex items-center justify-between mb-1.5 flex-wrap gap-1.5">
-            <div class="flex items-center gap-1 bg-surface-container p-0.5 rounded-lg border border-outline-variant/30" id="pitch-variant-tabs">
-              <button type="button" data-variant="primary" class="pitch-tab-btn active px-2.5 py-1 rounded text-caption font-semibold transition cursor-pointer bg-primary-container text-on-primary shadow-xs">
-                Primary Email (&lt;120w)
-              </button>
-              <button type="button" data-variant="linkedin" class="pitch-tab-btn px-2.5 py-1 rounded text-caption font-medium transition cursor-pointer text-on-surface-variant hover:text-on-surface">
-                LinkedIn DM (&lt;80w)
-              </button>
-              <button type="button" data-variant="referral" class="pitch-tab-btn px-2.5 py-1 rounded text-caption font-medium transition cursor-pointer text-on-surface-variant hover:text-on-surface">
-                Warm Referral (&lt;140w)
-              </button>
-            </div>
+            <label for="modal-body" class="block text-label-sm font-label-sm text-on-surface-variant font-medium">Email Message</label>
             <span id="pitch-word-count" class="text-caption font-mono text-outline">0 words</span>
           </div>
-          <textarea id="modal-body" rows="6" class="w-full recessed-well p-3 text-body-sm text-on-surface font-mono leading-relaxed focus:outline-none focus:border-primary-container transition"></textarea>
-        </div>
-      </div>
-
-      <!-- Personalization Notes & "What to change if..." Accordion -->
-      <div id="pitch-strategy-box" class="bg-surface-container-lowest border border-outline-variant/30 rounded-xl p-3 text-caption font-caption space-y-2">
-        <div class="flex items-center justify-between cursor-pointer select-none" id="pitch-strategy-toggle">
-          <div class="flex items-center gap-1.5 font-semibold text-on-surface">
-            <span class="material-symbols-outlined text-[16px] text-primary">fact_check</span>
-            <span>Personalization Notes & Strategy Insights</span>
-          </div>
-          <span class="material-symbols-outlined text-[16px] text-outline transition-transform" id="pitch-strategy-chevron">expand_more</span>
-        </div>
-        <div id="pitch-strategy-content" class="hidden space-y-2 pt-1 border-t border-outline-variant/20">
-          <div>
-            <span class="font-semibold text-secondary block mb-0.5">Exact Company Facts Researched:</span>
-            <ul id="pitch-personalization-facts" class="list-disc list-inside space-y-0.5 text-on-surface-variant"></ul>
-          </div>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
-            <div class="bg-surface-container/60 p-2 rounded-lg border border-outline-variant/20">
-              <span class="font-semibold text-on-surface block text-[11px] mb-0.5">If Not Hiring:</span>
-              <p id="pitch-strat-not-hiring" class="text-on-surface-variant text-[11px] leading-tight"></p>
-            </div>
-            <div class="bg-surface-container/60 p-2 rounded-lg border border-outline-variant/20">
-              <span class="font-semibold text-on-surface block text-[11px] mb-0.5">If Reaching a Recruiter:</span>
-              <p id="pitch-strat-recruiter" class="text-on-surface-variant text-[11px] leading-tight"></p>
-            </div>
-          </div>
+          <textarea id="modal-body" rows="9" class="w-full recessed-well p-3.5 text-body-sm text-on-surface font-sans leading-relaxed focus:outline-none focus:border-primary-container transition" placeholder="Email pitch message..."></textarea>
         </div>
       </div>
 
@@ -1694,6 +1640,6 @@
       window.__INITIAL_AUTH__ = { is_logged_in: false, email: null, is_master_admin: false, dev_mode: false };
     }
   </script>
-  <script src="/static/js/app.js?v=9.9"></script>
+  <script src="/static/js/app.js?v=10.0"></script>
 </body>
 </html>

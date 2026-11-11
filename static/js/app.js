@@ -4141,26 +4141,9 @@ document.addEventListener("DOMContentLoaded", () => {
   function updatePitchWordCount() {
     if (!modalBody || !pitchWordCount) return;
     const text = (modalBody.value || "").trim();
-    const count = text ? text.split(/\s+/).length : 0;
-    let limitLabel = "(<120w)";
-    let isOver = false;
-
-    if (activeVariant === "linkedin") {
-      limitLabel = "(<80w)";
-      isOver = count > 80;
-    } else if (activeVariant === "referral") {
-      limitLabel = "(<140w)";
-      isOver = count > 140;
-    } else {
-      isOver = count > 120;
-    }
-
-    pitchWordCount.textContent = `${count} words ${limitLabel}`;
-    if (isOver) {
-      pitchWordCount.className = "text-caption font-mono text-amber-500 font-semibold";
-    } else {
-      pitchWordCount.className = "text-caption font-mono text-outline";
-    }
+    const count = text ? text.split(/\s+/).filter(Boolean).length : 0;
+    pitchWordCount.textContent = `${count} words`;
+    pitchWordCount.className = "text-caption font-mono text-outline";
   }
 
   function updateGmailComposeUrls() {
@@ -4183,102 +4166,15 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function setupSubjectAngleButtons(subjs, initialActive = "specificity") {
-    activeSubjectAngle = initialActive;
-    const angleMap = [
-      { id: "btn-subj-specificity", key: "specificity" },
-      { id: "btn-subj-curiosity", key: "curiosity" },
-      { id: "btn-subj-benefit", key: "benefit_led" }
-    ];
-
-    angleMap.forEach(item => {
-      const btn = document.getElementById(item.id);
-      if (!btn) return;
-      const angleVal = (subjs && subjs[item.key]) || "";
-      const previewSpan = btn.querySelector(".subject-preview");
-      if (previewSpan) {
-        previewSpan.textContent = angleVal || "N/A";
-      }
-
-      if (item.key === activeSubjectAngle) {
-        btn.className = "pitch-subject-btn active px-2.5 py-1 rounded-lg text-caption font-medium border border-primary/40 bg-primary/10 text-primary transition cursor-pointer flex items-center gap-1 shadow-xs";
-      } else {
-        btn.className = "pitch-subject-btn px-2.5 py-1 rounded-lg text-caption font-medium border border-outline-variant/40 bg-surface-container text-on-surface-variant hover:text-on-surface transition cursor-pointer flex items-center gap-1";
-      }
-
-      btn.onclick = (e) => {
-        e.preventDefault();
-        activeSubjectAngle = item.key;
-        if (angleVal) {
-          modalSubject.value = angleVal;
-          updateGmailComposeUrls();
-        }
-        setupSubjectAngleButtons(subjs, item.key);
-      };
-    });
+    // Subject line angle options removed per clean direct UI standards
   }
 
   function switchPitchVariant(variantKey) {
-    activeVariant = variantKey;
-    const tabsContainer = document.getElementById("pitch-variant-tabs");
-    if (tabsContainer) {
-      tabsContainer.querySelectorAll(".pitch-tab-btn").forEach(btn => {
-        if (btn.dataset.variant === variantKey) {
-          btn.className = "pitch-tab-btn active px-2.5 py-1 rounded text-caption font-semibold transition cursor-pointer bg-primary-container text-on-primary shadow-xs";
-        } else {
-          btn.className = "pitch-tab-btn px-2.5 py-1 rounded text-caption font-medium transition cursor-pointer text-on-surface-variant hover:text-on-surface";
-        }
-      });
-    }
-
-    if (!currentPitchData) return;
-    if (variantKey === "primary") {
-      modalBody.value = currentPitchData.primary_email || currentPitchData.email_body || "";
-    } else if (variantKey === "linkedin") {
-      modalBody.value = currentPitchData.variant_a_linkedin || "";
-    } else if (variantKey === "referral") {
-      modalBody.value = currentPitchData.variant_b_referral || currentPitchData.cover_letter || "";
-    }
-
-    updatePitchWordCount();
-    updateGmailComposeUrls();
-  }
-
-  const pitchVariantTabs = document.getElementById("pitch-variant-tabs");
-  if (pitchVariantTabs) {
-    pitchVariantTabs.querySelectorAll(".pitch-tab-btn").forEach(btn => {
-      btn.addEventListener("click", () => switchPitchVariant(btn.dataset.variant));
-    });
+    // Variant switcher tabs removed per clean direct UI standards
   }
 
   function populateStrategyNotes(notes, whatToChange) {
-    if (pitchPersonalizationFacts) {
-      if (notes && notes.length > 0) {
-        pitchPersonalizationFacts.innerHTML = notes.map(n => `<li>${escapeHTML(n)}</li>`).join("");
-      } else {
-        pitchPersonalizationFacts.innerHTML = `<li class="italic text-outline">Tailored to company tech stack and industry scope.</li>`;
-      }
-    }
-
-    if (pitchStratNotHiring) {
-      pitchStratNotHiring.textContent = (whatToChange && whatToChange.if_not_hiring) || "Shift focus to peer knowledge sharing or ad-hoc contract engineering.";
-    }
-
-    if (pitchStratRecruiter) {
-      pitchStratRecruiter.textContent = (whatToChange && whatToChange.if_recruiter) || "State target role, immediate availability, and core tech stack match directly.";
-    }
-  }
-
-  if (pitchStrategyToggle && pitchStrategyContent) {
-    pitchStrategyToggle.addEventListener("click", () => {
-      const isHidden = pitchStrategyContent.classList.contains("hidden");
-      if (isHidden) {
-        pitchStrategyContent.classList.remove("hidden");
-        if (pitchStrategyChevron) pitchStrategyChevron.style.transform = "rotate(180deg)";
-      } else {
-        pitchStrategyContent.classList.add("hidden");
-        if (pitchStrategyChevron) pitchStrategyChevron.style.transform = "rotate(0deg)";
-      }
-    });
+    // Strategy notes box removed per clean direct UI standards
   }
 
   if (btnModalRegenerate) {
@@ -4328,24 +4224,9 @@ document.addEventListener("DOMContentLoaded", () => {
           modalTargetEmail.innerHTML = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-mono bg-amber-500/10 text-amber-500 border border-amber-500/20 font-semibold"><span class="material-symbols-outlined text-[13px]">mail_off</span><span>Email not found (Sending disabled)</span></span>`;
         }
 
-        // Setup subject lines and default selection
-        const subjs = data.subject_lines || {
-          specificity: data.subject_line || "Engineering inquiry",
-          curiosity: "Quick question on your tech stack",
-          benefit_led: "Scaling backend pipelines"
-        };
-        modalSubject.value = data.subject_line || subjs.specificity || "";
-        setupSubjectAngleButtons(subjs, "specificity");
-
-        // Set primary email as active variant
-        activeVariant = "primary";
-        modalBody.value = data.primary_email || data.email_body || "";
-        switchPitchVariant("primary");
-
-        // Populate strategy notes
-        populateStrategyNotes(data.personalization_notes, data.what_to_change_if);
-
-        // Update URLs and attachment UI
+        modalSubject.value = data.subject_line || "";
+        modalBody.value = data.email_body || data.primary_email || "";
+        updatePitchWordCount();
         updateGmailComposeUrls();
         updateResumeAttachmentUI();
         modal.classList.remove("hidden");
