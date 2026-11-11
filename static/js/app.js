@@ -1870,13 +1870,23 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!cachedCitiesData || !cachedCitiesData.length) return;
     const dom = (domainCode || "all").toLowerCase().trim();
     const cityOpts = [{ value: "", label: "All Cities", count: null }];
-    cachedCitiesData.forEach(c => {
+
+    const mapped = cachedCitiesData.map(c => {
       let cnt = c.count;
       if (c.domain_counts) {
         cnt = c.domain_counts[dom] !== undefined ? c.domain_counts[dom] : (dom === "all" ? c.count : 0);
       }
-      cityOpts.push({ value: (c.name || "").toLowerCase(), label: c.name, count: cnt });
+      return { value: (c.name || "").toLowerCase(), label: c.name, count: cnt };
     });
+
+    if (dom !== "all") {
+      mapped.sort((a, b) => (b.count || 0) - (a.count || 0) || a.label.localeCompare(b.label));
+    } else {
+      mapped.sort((a, b) => a.label.localeCompare(b.label));
+    }
+
+    mapped.forEach(item => cityOpts.push(item));
+
     if (ddFilterCity) ddFilterCity.setOptions(cityOpts);
     if (ddOutreachCity) ddOutreachCity.setOptions(cityOpts);
   }
