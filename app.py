@@ -697,22 +697,39 @@ async def directory_index_page(request: Request, db: Session = Depends(get_db)):
 
 @app.get("/directory/city/{city_slug}", response_class=HTMLResponse)
 async def directory_city_hub(city_slug: str, request: Request, db: Session = Depends(get_db)):
-    """City-Level Technology Directory Hub (73 Indian Cities)"""
+    """City-Level Technology & Business Directory Hub (73 Indian Cities)"""
     city_name = seo_engine.slug_to_city_name(city_slug)
-    companies, total_count = seo_engine.get_companies_list(db, city=city_name, limit=30)
-    if total_count == 0:
-        raise HTTPException(status_code=404, detail=f"No verified companies found for city: {city_name}")
+    domain_param = request.query_params.get("domain")
+    domain_clean = (domain_param or "").strip().lower()
+    if domain_clean == "all":
+        domain_clean = None
+
+    all_cities = seo_engine.get_all_cities(db)
+    city_match = next((c for c in all_cities if c["slug"] == city_slug), None)
+    if not city_match:
+        raise HTTPException(status_code=404, detail=f"No verified business cluster found for city: {city_name}")
+
+    companies, total_count = seo_engine.get_companies_list(db, city=city_name, domain=domain_clean, limit=30)
 
     base_url = seo_engine.get_canonical_base_url(request)
-    canonical_url = f"{base_url}/directory/city/{city_slug}"
+    canonical_url = f"{base_url}/directory/city/{city_slug}" + (f"?domain={domain_clean}" if domain_clean else "")
+
+    dom_info = next((d for d in seo_engine.INDUSTRY_DOMAINS if d["code"] == domain_clean), None) if domain_clean else None
+    dom_display = dom_info["name"] if dom_info else "Software & IT"
 
     all_combos = seo_engine.get_all_combinations(db)
     city_combos = [c for c in all_combos if c["city_slug"] == city_slug]
+    if domain_clean:
+        filtered_combos = [c for c in city_combos if seo_engine.get_category_domain_code(c["tech_name"]) == domain_clean]
+        active_combos = filtered_combos if filtered_combos else city_combos
+    else:
+        active_combos = city_combos
+
     related_items = [
         {"name": c["tech_name"], "url": f"{base_url}/directory/companies?city={city_slug}&tech={c['tech_slug']}", "count": c["count"]}
-        for c in city_combos[:16]
+        for c in active_combos[:16]
     ]
-    top_tech_names = [c["tech_name"] for c in city_combos[:5]]
+    top_tech_names = [c["tech_name"] for c in active_combos[:5]]
     avg_rating = round(sum(c["rating"] for c in companies) / max(1, len(companies)), 1) if companies else 4.2
 
     faqs = seo_engine.generate_city_faqs(city_name, total_count, top_tech_names)
@@ -723,13 +740,13 @@ async def directory_city_hub(city_slug: str, request: Request, db: Session = Dep
         (city_name, canonical_url)
     ]
     bc_schema = seo_engine.build_breadcrumb_schema(breadcrumbs)
-    itemlist_schema = seo_engine.build_itemlist_schema(companies, base_url, f"Top Software Companies in {city_name}")
+    itemlist_schema = seo_engine.build_itemlist_schema(companies, base_url, f"Top {dom_display} Companies in {city_name}")
     faq_schema = seo_engine.build_faq_schema(faqs)
     combined_schema = json.dumps([bc_schema, itemlist_schema, faq_schema], ensure_ascii=False)
 
-    page_title = f"Top Software & IT Companies in {city_name} (2026 Directory)"
-    page_subtitle = f"Verified tech stacks, client ratings, and direct recruiter contact intelligence across {total_count}+ active software agencies in {city_name}, India."
-    meta_description = f"Browse {total_count}+ verified software agencies and IT firms in {city_name}, India. Crawled engineering stacks, Google ratings, client reviews, and verified contacts."
+    page_title = f"Top {dom_display} Companies in {city_name} (2026 Directory)"
+    page_subtitle = f"Verified service capabilities, client ratings, and direct contact intelligence across {total_count}+ active {dom_display.lower()} agencies in {city_name}, India."
+    meta_description = f"Browse {total_count}+ verified {dom_display.lower()} agencies and firms in {city_name}, India. Crawled websites, Google ratings, client reviews, and verified contacts."
 
     response = templates.TemplateResponse(
         request=request,
@@ -738,14 +755,14 @@ async def directory_city_hub(city_slug: str, request: Request, db: Session = Dep
             "project_name": config.PROJECT_NAME,
             "canonical_url": canonical_url,
             "page_title": page_title,
-            "page_heading": f"Top Software & IT Companies in {city_name}",
+            "page_heading": f"Top {dom_display} Companies in {city_name}",
             "page_subtitle": page_subtitle,
             "meta_description": meta_description,
             "hub_name": city_name,
-            "hub_badge": f"Verified Indian Tech Hub • {city_name}",
+            "hub_badge": f"Verified Indian Hub • {city_name} ({dom_display})",
             "total_companies": total_count,
             "avg_rating": avg_rating,
-            "related_title": f"Top Technology Stacks in {city_name}",
+            "related_title": f"Top Specializations in {city_name}",
             "related_items": related_items,
             "companies": companies,
             "faqs": faqs,
@@ -1270,19 +1287,18 @@ def get_companies_filters(request: Request, db: Session = Depends(get_db)):
             WHERE c.is_invalid = FALSE;
         """)).scalar() or 0
 
-        # PostgreSQL GROUP BY for 73 cities in ~100ms
-        city_rows = db.execute(text("""
-            SELECT initcap(trim(city)) AS norm_city, COUNT(*) AS count
-            FROM companies 
-            WHERE is_invalid = FALSE AND city IS NOT NULL AND trim(city) != ''
-            GROUP BY norm_city
-            ORDER BY norm_city ASC;
-        """)).fetchall()
-
+        # Pre-calculated, domain-aware cached city directory
+        cities_meta = seo_engine.get_all_cities(db)
         sorted_cities = [
-            {"name": r[0], "count": r[1]}
-            for r in city_rows if r[0]
+            {
+                "name": c["name"],
+                "slug": c["slug"],
+                "count": c["count"],
+                "domain_counts": c.get("domain_counts", {})
+            }
+            for c in cities_meta if c.get("name")
         ]
+        sorted_cities.sort(key=lambda x: x["name"].lower())
 
         # PostgreSQL JSONB aggregation for tech stacks
         tech_map = defaultdict(int)

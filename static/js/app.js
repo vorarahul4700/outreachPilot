@@ -1407,6 +1407,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (filterCitySelect) filterCitySelect.value = "";
       if (ddFilterTech) ddFilterTech.reset();
       if (ddFilterCity) ddFilterCity.reset();
+      updateCityDropdownOptions("all");
       activeMetricFilter = null;
       activeDomainFilter = "all";
       const domainPillContainer = document.getElementById("companies-domain-filter-pills");
@@ -1863,6 +1864,22 @@ document.addEventListener("DOMContentLoaded", () => {
   let activeDomainFilter = "all";
   let globalStats = null;
   let domainsData = [];
+  let cachedCitiesData = [];
+
+  function updateCityDropdownOptions(domainCode = "all") {
+    if (!cachedCitiesData || !cachedCitiesData.length) return;
+    const dom = (domainCode || "all").toLowerCase().trim();
+    const cityOpts = [{ value: "", label: "All Cities", count: null }];
+    cachedCitiesData.forEach(c => {
+      let cnt = c.count;
+      if (c.domain_counts) {
+        cnt = c.domain_counts[dom] !== undefined ? c.domain_counts[dom] : (dom === "all" ? c.count : 0);
+      }
+      cityOpts.push({ value: (c.name || "").toLowerCase(), label: c.name, count: cnt });
+    });
+    if (ddFilterCity) ddFilterCity.setOptions(cityOpts);
+    if (ddOutreachCity) ddOutreachCity.setOptions(cityOpts);
+  }
 
   const DOMAIN_DISPLAY_NAMES = {
     all: "All Domains",
@@ -1930,6 +1947,9 @@ document.addEventListener("DOMContentLoaded", () => {
       updateHeaderSubtitle(activeDomainFilter, domCount);
     }
 
+    // Dynamically update city dropdown options and counts for active domain
+    updateCityDropdownOptions(activeDomainFilter);
+
     fetchCompanies(false);
   }
 
@@ -1991,13 +2011,9 @@ document.addEventListener("DOMContentLoaded", () => {
         if (ddFilterTech) ddFilterTech.setOptions(techOpts);
         if (ddOutreachTech) ddOutreachTech.setOptions(techOpts);
 
-        // Build city options
-        const cityOpts = [{ value: "", label: "All Cities", count: null }];
-        (data.cities || []).forEach(c => {
-          cityOpts.push({ value: c.name.toLowerCase(), label: c.name, count: c.count });
-        });
-        if (ddFilterCity) ddFilterCity.setOptions(cityOpts);
-        if (ddOutreachCity) ddOutreachCity.setOptions(cityOpts);
+        // Cache and build domain-aware city options
+        cachedCitiesData = data.cities || [];
+        updateCityDropdownOptions(activeDomainFilter || "all");
 
         // Update domain filter counts
         if (data.domains && Array.isArray(data.domains)) {

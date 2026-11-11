@@ -742,6 +742,7 @@ def get_all_cities(db: Session) -> list[dict[str, Any]]:
     if cached:
         return cached
 
+    # 1. City totals & average ratings
     rows = db.execute(text("""
         SELECT 
             initcap(trim(city)) AS norm_city,
@@ -752,22 +753,67 @@ def get_all_cities(db: Session) -> list[dict[str, Any]]:
           AND city IS NOT NULL 
           AND trim(city) != ''
         GROUP BY initcap(trim(city))
-        HAVING COUNT(*) >= 2
+        HAVING COUNT(*) >= 1
         ORDER BY count DESC, norm_city ASC;
     """)).fetchall()
+
+    # 2. City breakdown by raw keyword / category across industry domains
+    domain_rows = db.execute(text("""
+        SELECT 
+            initcap(trim(city)) AS norm_city,
+            COALESCE(NULLIF(trim(normalized_keyword), ''), trim(search_keyword), '') AS raw_kw,
+            COUNT(*) AS cnt
+        FROM companies
+        WHERE is_invalid = FALSE 
+          AND city IS NOT NULL 
+          AND trim(city) != ''
+        GROUP BY initcap(trim(city)), COALESCE(NULLIF(trim(normalized_keyword), ''), trim(search_keyword), '');
+    """)).fetchall()
+
+    city_domain_counts = defaultdict(lambda: defaultdict(int))
+    for r in domain_rows:
+        c_name = r[0]
+        raw_kw = (r[1] or "").strip()
+        cnt = int(r[2] or 0)
+        if raw_kw:
+            cat = normalize_keyword_to_category(raw_kw)
+            d_code = get_category_domain_code(cat)
+            if d_code != "it" and d_code != "all":
+                city_domain_counts[c_name][d_code] += cnt
 
     results = []
     for r in rows:
         name = r[0]
+        total_cnt = int(r[1] or 0)
+        c_counts = city_domain_counts[name]
+        non_it_total = sum(c_counts.values())
+        it_cnt = max(0, total_cnt - non_it_total)
+
+        domain_dict = {
+            "all": total_cnt,
+            "it": it_cnt,
+        }
+        for d in INDUSTRY_DOMAINS:
+            code = d["code"]
+            if code not in domain_dict:
+                domain_dict[code] = c_counts.get(code, 0)
+
         results.append({
             "name": name,
             "slug": city_to_slug(name),
-            "count": r[1],
-            "avg_rating": float(r[2] or 4.2)
+            "count": total_cnt,
+            "avg_rating": float(r[2] or 4.2),
+            "domain_counts": domain_dict
         })
 
     set_cached("all_cities", results)
     return results
+
+
+def get_city_domain_counts(db: Session) -> dict[str, dict[str, int]]:
+    """Returns mapping of city_slug -> {domain_code: company_count}"""
+    cities = get_all_cities(db)
+    return {c["slug"]: c.get("domain_counts", {}) for c in cities}
 
 
 def get_all_categories(db: Session) -> list[dict[str, Any]]:
@@ -844,19 +890,20 @@ get_all_technologies = get_all_categories
 def get_all_domains(db: Session = None) -> list[dict[str, Any]]:
     """
     Returns all 8 industry domains with company counts.
-    Since current DB records are all IT companies, IT reflects the full verified lead count.
-    When non-IT companies are added, each domain dynamically counts matching records.
+    Accurately sums non-IT companies from dynamic category classification,
+    and sets IT to total_companies minus non_it_total so counts always stay 100% consistent.
     """
     categories = get_all_categories(db) if db else []
     domain_counts = defaultdict(int)
     for cat in categories:
         d_code = cat.get("domain_code", "it")
-        domain_counts[d_code] += cat.get("count", 0)
+        if d_code != "it" and d_code != "all":
+            domain_counts[d_code] += cat.get("count", 0)
 
-    # If IT has zero count from categories, fallback to total companies
-    if "it" not in domain_counts and db:
-        stats = get_directory_stats(db)
-        domain_counts["it"] = stats.get("total_companies", 0)
+    stats = get_directory_stats(db) if db else {}
+    total_companies = stats.get("total_companies", 0) if stats else 0
+    non_it_total = sum(domain_counts.values())
+    domain_counts["it"] = max(0, total_companies - non_it_total) if total_companies > 0 else 0
 
     domain_list = []
     for d in INDUSTRY_DOMAINS:
@@ -958,14 +1005,24 @@ def get_companies_list(
                 if get_category_domain_code(cat) != "it"
             ]
             if non_it_keywords:
-                query = query.filter(~Company.search_keyword.in_(non_it_keywords))
+                query = query.filter(
+                    ~or_(
+                        Company.search_keyword.in_(non_it_keywords),
+                        Company.normalized_keyword.in_(non_it_keywords)
+                    )
+                )
         else:
             domain_keywords = [
                 raw for raw, cat in SEED_KEYWORD_OVERRIDES.items()
                 if get_category_domain_code(cat) == dom_clean
             ]
             if domain_keywords:
-                query = query.filter(Company.search_keyword.in_(domain_keywords))
+                query = query.filter(
+                    or_(
+                        Company.search_keyword.in_(domain_keywords),
+                        Company.normalized_keyword.in_(domain_keywords)
+                    )
+                )
             else:
                 query = query.filter(Company.id == -1)
 

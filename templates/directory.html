@@ -296,18 +296,18 @@
             <h2 class="text-xl font-display font-bold text-primary">Browse by Indian Commercial &amp; Business Hub</h2>
             <p class="text-xs text-on-surface-variant">Verified business clusters and commercial districts across Tier 1, 2, and 3 metropolitan cities.</p>
           </div>
-          <span class="text-xs font-mono text-secondary px-2 py-0.5 rounded bg-secondary/10 border border-secondary/25">{{ cities|length }} Cities</span>
+          <span class="text-xs font-mono text-secondary px-2 py-0.5 rounded bg-secondary/10 border border-secondary/25" id="city-section-badge">{{ cities|length }} Cities</span>
         </div>
 
         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2.5" id="city-grid">
           {% for c in cities %}
-          <a href="/directory/city/{{ c.slug }}" class="city-card bento-cell p-3 flex flex-col justify-between hover:border-secondary group" data-name="{{ c.name|lower }}">
+          <a href="/directory/city/{{ c.slug }}" class="city-card bento-cell p-3 flex flex-col justify-between hover:border-secondary group transition-all" data-name="{{ c.name|lower }}" data-slug="{{ c.slug }}" data-default-order="{{ loop.index }}" data-counts='{{ c.domain_counts|tojson }}'>
             <div class="flex items-center justify-between">
               <span class="font-display font-semibold text-sm text-primary group-hover:text-secondary transition-colors">{{ c.name }}</span>
               <span class="material-symbols-outlined text-[14px] text-on-surface-variant group-hover:text-secondary group-hover:translate-x-0.5 transition-all">arrow_forward</span>
             </div>
             <div class="flex items-center justify-between text-[11px] font-mono text-on-surface-variant mt-2 pt-2 border-t border-outline/50">
-              <span class="tnum">{{ c.count }} firms</span>
+              <span class="tnum city-firm-count">{{ c.count }} firms</span>
               <span class="text-secondary">{{ c.avg_rating }}★</span>
             </div>
           </a>
@@ -503,14 +503,72 @@
         if (visible) visibleTechCards++;
       });
 
-      // 2. Filter Cities
+      // 2. Filter & Dynamically Update Cities
       let visibleCityCards = 0;
+      let activeCitiesInDomain = 0;
+
       cityCards.forEach(el => {
         const name = (el.getAttribute("data-name") || "").toLowerCase();
+        let counts = {};
+        try {
+          counts = JSON.parse(el.getAttribute("data-counts") || "{}");
+        } catch (_) {}
+
+        const domainCount = counts[activeDomain] !== undefined 
+          ? counts[activeDomain] 
+          : (activeDomain === "all" ? (counts.all || 0) : 0);
+
+        if (domainCount > 0) {
+          activeCitiesInDomain++;
+        }
+
+        // Dynamically update the count label to reflect selected domain
+        const countSpan = el.querySelector(".city-firm-count");
+        if (countSpan) {
+          countSpan.textContent = `${Number(domainCount).toLocaleString()} firms`;
+        }
+
+        // Dynamically update link to preserve domain context
+        const baseSlug = el.getAttribute("data-slug");
+        if (baseSlug) {
+          el.href = (activeDomain === "all") 
+            ? `/directory/city/${baseSlug}` 
+            : `/directory/city/${baseSlug}?domain=${activeDomain}`;
+        }
+
+        // Dynamic visual priority & sorting:
+        // In domain mode, push hubs with active leads to the top via CSS order
+        const defaultOrder = parseInt(el.getAttribute("data-default-order") || "100", 10);
+        if (activeDomain === "all") {
+          el.style.order = "";
+          el.classList.remove("opacity-40");
+          el.classList.add("opacity-100");
+        } else {
+          if (domainCount > 0) {
+            el.style.order = -domainCount;
+            el.classList.remove("opacity-40");
+            el.classList.add("opacity-100");
+          } else {
+            el.style.order = 1000 + defaultOrder;
+            el.classList.add("opacity-40");
+            el.classList.remove("opacity-100");
+          }
+        }
+
         const matchesQuery = !q || name.includes(q);
         el.style.display = matchesQuery ? "" : "none";
         if (matchesQuery) visibleCityCards++;
       });
+
+      // Update City Section Badge
+      const elCitySectionBadge = document.getElementById("city-section-badge");
+      if (elCitySectionBadge) {
+        if (activeDomain === "all") {
+          elCitySectionBadge.textContent = `${visibleCityCards} Cities`;
+        } else {
+          elCitySectionBadge.textContent = `${activeCitiesInDomain} Active Hubs (${visibleCityCards} Total)`;
+        }
+      }
 
       // 3. Toggle Empty States
       if (techEmptyState) {
@@ -539,7 +597,7 @@
 
       // 5. Dynamically Synchronize Live Metrics Bar
       if (elDirStatTotal) elDirStatTotal.textContent = Number(meta.total || 0).toLocaleString();
-      if (elDirStatCities) elDirStatCities.textContent = meta.cities;
+      if (elDirStatCities) elDirStatCities.textContent = activeDomain === "all" ? meta.cities : activeCitiesInDomain;
       if (elDirStatTechs) elDirStatTechs.textContent = visibleTechCards;
       if (elDirStatRating) elDirStatRating.textContent = meta.rating;
 
