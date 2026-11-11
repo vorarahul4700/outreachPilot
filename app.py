@@ -1534,15 +1534,32 @@ def get_companies(
                 else:
                     query = query.filter(Company.id == -1)
 
-        # 6. Sorting
+        # 6. Sorting (Always prioritize AI-enriched companies first, then secondary criteria)
         if sort == "rating_desc":
-            query = query.order_by(Company.rating.desc().nullslast(), Company.reviews_count.desc(), Company.id.desc())
+            query = query.order_by(
+                Company.is_enriched.desc(),
+                Company.rating.desc().nullslast(),
+                Company.reviews_count.desc().nullslast(),
+                Company.id.desc()
+            )
         elif sort == "reviews_desc":
-            query = query.order_by(Company.reviews_count.desc(), Company.rating.desc().nullslast(), Company.id.desc())
+            query = query.order_by(
+                Company.is_enriched.desc(),
+                Company.reviews_count.desc().nullslast(),
+                Company.rating.desc().nullslast(),
+                Company.id.desc()
+            )
         elif sort == "name_asc":
-            query = query.order_by(Company.name.asc())
-        else:
-            query = query.order_by(Company.id.desc())
+            query = query.order_by(
+                Company.is_enriched.desc(),
+                Company.name.asc(),
+                Company.id.desc()
+            )
+        else:  # "newest" / default
+            query = query.order_by(
+                Company.is_enriched.desc(),
+                Company.id.desc()
+            )
 
         # 6b. Fast total_count resolution (reuse cached count when no custom search/city/tech/domain filter is active)
         has_custom_filters = bool(
