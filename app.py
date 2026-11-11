@@ -215,6 +215,7 @@ async def maintenance_mode_middleware(request: Request, call_next):
             or path.startswith("/directory")
             or path.startswith("/company/")
             or path.startswith("/sitemap-companies-")
+            or (path.startswith("/google") and path.endswith(".html"))
         )
         if not is_allowed:
             # Handle API endpoints and JSON requests
@@ -537,6 +538,27 @@ async def terms_page(request: Request):
 # ==============================================================================
 # PROGRAMMATIC SEO, AEO & GEO SUITE (GEO / Sitemaps / Directories / Companies)
 # ==============================================================================
+
+@app.get("/google{token}.html", include_in_schema=False)
+async def google_verification_file(token: str):
+    """
+    Auto-verifies Google Search Console site ownership via HTML file upload method.
+    Google requires:
+      - File location: https://outreachpilot.in/google[token].html
+      - Body: google-site-verification: google[token].html
+    Supports either actual file on disk or dynamic string response matching GSC requirements.
+    """
+    clean_token = re.sub(r"[^\w\-]", "", token)
+    filename = f"google{clean_token}.html"
+    file_path = os.path.join(os.path.dirname(__file__), filename)
+    if os.path.exists(file_path):
+        try:
+            with open(file_path, "r", encoding="utf-8") as f:
+                return HTMLResponse(content=f.read().strip(), status_code=200)
+        except Exception:
+            pass
+    return HTMLResponse(content=f"google-site-verification: google{clean_token}.html", status_code=200)
+
 
 @app.get("/robots.txt", include_in_schema=False)
 async def robots_txt(request: Request):
