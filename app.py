@@ -554,14 +554,10 @@ async def google_verification_file(token: str):
         filename = f"google{clean_token}.html"
         file_path = os.path.join(os.path.dirname(__file__), filename)
         if os.path.exists(file_path):
-            try:
-                with open(file_path, "r", encoding="utf-8") as f:
-                    return HTMLResponse(content=f.read().strip(), status_code=200)
-            except Exception:
-                pass
-        return HTMLResponse(content=f"google-site-verification: google{clean_token}.html", status_code=200)
+            return FileResponse(file_path, media_type="text/html")
+        return HTMLResponse(content=f"google-site-verification: google{clean_token}.html\n", media_type="text/html", status_code=200)
     except Exception:
-        return HTMLResponse(content=f"google-site-verification: google{token}.html", status_code=200)
+        return HTMLResponse(content=f"google-site-verification: google{token}.html\n", media_type="text/html", status_code=200)
 
 
 @app.get("/robots.txt", include_in_schema=False)
