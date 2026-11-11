@@ -3,6 +3,7 @@ import copy
 import io
 import json
 import os
+import re
 import secrets
 import time
 import urllib.parse
@@ -548,16 +549,19 @@ async def google_verification_file(token: str):
       - Body: google-site-verification: google[token].html
     Supports either actual file on disk or dynamic string response matching GSC requirements.
     """
-    clean_token = re.sub(r"[^\w\-]", "", token)
-    filename = f"google{clean_token}.html"
-    file_path = os.path.join(os.path.dirname(__file__), filename)
-    if os.path.exists(file_path):
-        try:
-            with open(file_path, "r", encoding="utf-8") as f:
-                return HTMLResponse(content=f.read().strip(), status_code=200)
-        except Exception:
-            pass
-    return HTMLResponse(content=f"google-site-verification: google{clean_token}.html", status_code=200)
+    try:
+        clean_token = "".join(c for c in token if c.isalnum() or c in "-_")
+        filename = f"google{clean_token}.html"
+        file_path = os.path.join(os.path.dirname(__file__), filename)
+        if os.path.exists(file_path):
+            try:
+                with open(file_path, "r", encoding="utf-8") as f:
+                    return HTMLResponse(content=f.read().strip(), status_code=200)
+            except Exception:
+                pass
+        return HTMLResponse(content=f"google-site-verification: google{clean_token}.html", status_code=200)
+    except Exception:
+        return HTMLResponse(content=f"google-site-verification: google{token}.html", status_code=200)
 
 
 @app.get("/robots.txt", include_in_schema=False)
