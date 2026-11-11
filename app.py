@@ -2583,7 +2583,6 @@ async def generate_bulk_pitches(
             "subject_line": subj,
             "email_body": body
         }
-        }
 
         return {
             "company_id": task["company_id"],
