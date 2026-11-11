@@ -1926,12 +1926,12 @@ document.addEventListener("DOMContentLoaded", () => {
       if (globalStats) {
         updateCompanyMetrics(globalStats);
       }
-      updateHeaderSubtitle("all", globalStats ? globalStats.total : 33603);
+      updateHeaderSubtitle("all", globalStats ? globalStats.total : 55119);
     } else {
       const domItem = domainsData.find(d => d.code === activeDomainFilter);
-      const domCount = domItem ? (domItem.count || 0) : (activeDomainFilter === "it" && globalStats ? globalStats.total : 0);
-      const domEnriched = domItem ? (domItem.enriched_count || 0) : (activeDomainFilter === "it" && globalStats ? globalStats.enriched : 0);
-      const domEmails = domItem ? (domItem.emails_count || 0) : (activeDomainFilter === "it" && globalStats ? globalStats.emails : 0);
+      const domCount = domItem ? (domItem.count || 0) : 0;
+      const domEnriched = domItem ? (domItem.enriched_count || 0) : 0;
+      const domEmails = domItem ? (domItem.emails_count || 0) : 0;
 
       updateCompanyMetrics({
         total: domCount,
@@ -2015,12 +2015,19 @@ document.addEventListener("DOMContentLoaded", () => {
         // Update domain filter counts
         if (data.domains && Array.isArray(data.domains)) {
           domainsData = data.domains;
+          let totalAllDomains = 0;
           data.domains.forEach(d => {
+            totalAllDomains += (d.count || 0);
             const countEl = document.getElementById(`domain-count-${d.code}`);
             if (countEl) {
-              countEl.textContent = d.count ? `(${d.count})` : "(0)";
+              countEl.textContent = d.count ? `(${Number(d.count).toLocaleString()})` : "(0)";
             }
           });
+          const countAllEl = document.getElementById("domain-count-all");
+          if (countAllEl) {
+            const allCount = (data.stats && typeof data.stats.total === "number") ? data.stats.total : totalAllDomains;
+            countAllEl.textContent = `(${Number(allCount).toLocaleString()})`;
+          }
         }
 
         if (data.stats) {
@@ -2030,9 +2037,9 @@ document.addEventListener("DOMContentLoaded", () => {
             updateHeaderSubtitle("all", data.stats.total);
           } else {
             const domItem = domainsData.find(d => d.code === activeDomainFilter);
-            const domCount = domItem ? (domItem.count || 0) : (activeDomainFilter === "it" ? data.stats.total : 0);
-            const domEnriched = domItem ? (domItem.enriched_count || 0) : (activeDomainFilter === "it" ? data.stats.enriched : 0);
-            const domEmails = domItem ? (domItem.emails_count || 0) : (activeDomainFilter === "it" ? data.stats.emails : 0);
+            const domCount = domItem ? (domItem.count || 0) : 0;
+            const domEnriched = domItem ? (domItem.enriched_count || 0) : 0;
+            const domEmails = domItem ? (domItem.emails_count || 0) : 0;
             updateCompanyMetrics({
               total: domCount,
               enriched: domEnriched,

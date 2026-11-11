@@ -31,7 +31,7 @@ from fastapi.templating import Jinja2Templates
 from google_auth_oauthlib.flow import Flow
 from pydantic import BaseModel
 from pypdf import PdfReader
-from sqlalchemy import String, func, or_, text
+from sqlalchemy import String, func, literal_column, or_, text
 from sqlalchemy.orm import Session, joinedload
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
@@ -163,11 +163,13 @@ def _prewarm_cache():
             pass
 
         sorted_tech = [{"name": k, "count": v} for k, v in sorted(tech_map.items(), key=lambda x: x[0].lower())]
+        all_domains = seo_engine.get_all_domains(db)
 
         _filter_cache["timestamp"] = now
         _filter_cache["data"] = {
             "cities": sorted_cities,
             "tech_stacks": sorted_tech,
+            "domains": all_domains,
             "stats": {
                 "total": total_valid,
                 "enriched": enriched_count,
@@ -484,6 +486,8 @@ async def workspace_page(request: Request, db: Session = Depends(get_db)):
     user = get_current_user(db, request)
     is_logged_in = bool(user and user.oauth_tokens)
     is_master_admin = bool(is_logged_in and config.is_master_admin(user.email))
+    all_domains = seo_engine.get_all_domains(db)
+    total_valid = sum(d.get("count", 0) for d in all_domains) or 55119
     return templates.TemplateResponse(
         request=request,
         name="index.html",
@@ -496,6 +500,8 @@ async def workspace_page(request: Request, db: Session = Depends(get_db)):
             "is_master_admin": is_master_admin,
             "google_client_id": config.GOOGLE_CLIENT_ID,
             "dev_mode": config.DEV_MODE,
+            "domains": all_domains,
+            "total_companies": total_valid,
         }
     )
 
@@ -1554,30 +1560,37 @@ def get_companies(
                 else:
                     query = query.filter(Company.id == -1)
 
-        # 6. Sorting (Always prioritize AI-enriched companies first, then secondary criteria)
+        # 6. Sorting (Strictly prioritize companies with verified emails and AI enrichment first)
+        email_order = literal_column("has_email").desc()
+        enriched_order = Company.is_enriched.desc()
+
         if sort == "rating_desc":
             query = query.order_by(
-                Company.is_enriched.desc(),
+                email_order,
+                enriched_order,
                 Company.rating.desc().nullslast(),
                 Company.reviews_count.desc().nullslast(),
                 Company.id.desc()
             )
         elif sort == "reviews_desc":
             query = query.order_by(
-                Company.is_enriched.desc(),
+                email_order,
+                enriched_order,
                 Company.reviews_count.desc().nullslast(),
                 Company.rating.desc().nullslast(),
                 Company.id.desc()
             )
         elif sort == "name_asc":
             query = query.order_by(
-                Company.is_enriched.desc(),
+                email_order,
+                enriched_order,
                 Company.name.asc(),
                 Company.id.desc()
             )
         else:  # "newest" / default
             query = query.order_by(
-                Company.is_enriched.desc(),
+                email_order,
+                enriched_order,
                 Company.id.desc()
             )
 
@@ -1708,22 +1721,25 @@ def get_companies(
                 .count()
             )
 
-        if dom_clean and dom_clean not in ("all", "it", "it-software"):
+        if dom_clean and dom_clean not in ("all", ""):
             cached_domains = _filter_cache.get("data", {}).get("domains", []) if _filter_cache.get("data") else []
             d_item = next((d for d in cached_domains if d.get("code") == dom_clean), None)
+            if not d_item:
+                all_doms = seo_engine.get_all_domains(db)
+                d_item = next((d for d in all_doms if d.get("code") == dom_clean), None)
             scoped_stats = {
                 "total": d_item.get("count", 0) if d_item else 0,
                 "enriched": d_item.get("enriched_count", 0) if d_item else 0,
                 "emails": d_item.get("emails_count", 0) if d_item else 0,
                 "invalid": 0,
-                "contacted": 0,
+                "contacted": user_contacted_count if dom_clean == "it" else 0,
                 "is_logged_in": bool(user)
             }
         else:
             scoped_stats = {
-                "total": base_stats.get("total", 33603),
-                "enriched": base_stats.get("enriched", 2110),
-                "emails": base_stats.get("emails", 1663),
+                "total": base_stats.get("total", 55119),
+                "enriched": base_stats.get("enriched", 2114),
+                "emails": base_stats.get("emails", 1667),
                 "invalid": base_stats.get("invalid", 0),
                 "contacted": user_contacted_count,
                 "is_logged_in": bool(user)
