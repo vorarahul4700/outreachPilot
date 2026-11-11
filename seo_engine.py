@@ -1294,6 +1294,8 @@ def generate_robots_txt(base_url: str) -> str:
 
 User-agent: *
 Allow: /
+Allow: /app
+Allow: /workspace
 Allow: /directory
 Allow: /directory/
 Allow: /company/
@@ -1302,9 +1304,6 @@ Allow: /llms-full.txt
 Allow: /sitemap.xml
 Disallow: /api/
 Disallow: /auth/
-Disallow: /app
-Disallow: /workspace
-Disallow: /settings
 
 # Generative AI Answer Engines & Search Bots (Full Indexing Allowed)
 User-agent: GPTBot
