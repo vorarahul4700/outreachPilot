@@ -225,8 +225,8 @@ document.addEventListener("DOMContentLoaded", () => {
   function switchTab(tabId) {
     const navItems = [
       { id: "companies", btn: tabCompanies, sec: secCompanies },
-      { id: "outreach", btn: tabOutreach, sec: secOutreach },
-      { id: "resume", btn: tabResume, sec: secResume }
+      { id: "resume", btn: tabResume, sec: secResume },
+      { id: "outreach", btn: tabOutreach, sec: secOutreach }
     ];
 
     navItems.forEach(({ id, btn, sec }) => {
@@ -1298,14 +1298,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const userContactedCount = (isLoggedIn && contacted !== null) ? contacted : 0;
       const outreachReadyEl = document.getElementById("outreach-count-ready");
-      if (outreachReadyEl) outreachReadyEl.textContent = Math.max(0, total - userContactedCount).toLocaleString();
+      if (outreachReadyEl) outreachReadyEl.textContent = Math.max(0, withEmails - userContactedCount).toLocaleString();
 
       const outreachSentEl = document.getElementById("outreach-count-sent");
       if (outreachSentEl) outreachSentEl.textContent = isLoggedIn ? userContactedCount.toLocaleString() : "0";
 
       document.querySelectorAll(".outreach-badge-all").forEach(el => el.textContent = total);
       document.querySelectorAll(".outreach-badge-emails").forEach(el => el.textContent = withEmails);
-      document.querySelectorAll(".outreach-badge-ready").forEach(el => el.textContent = Math.max(0, total - userContactedCount));
+      document.querySelectorAll(".outreach-badge-ready").forEach(el => el.textContent = Math.max(0, withEmails - userContactedCount));
       document.querySelectorAll(".outreach-badge-sent").forEach(el => {
         el.textContent = isLoggedIn ? userContactedCount : "-";
       });

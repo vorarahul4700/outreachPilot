@@ -1472,7 +1472,16 @@ def get_companies(
                 query = query.filter(Company.id.in_(sent_sub))
             else:
                 query = query.filter(Company.id == -1)
-        elif status in ("uncontacted", "ready"):
+        elif status == "ready":
+            emails_sub = db.query(CompanyEmail.company_id).distinct().subquery()
+            query = query.filter(Company.id.in_(emails_sub))
+            if user:
+                sent_sub = db.query(OutreachLog.company_id).filter(
+                    OutreachLog.status == "SENT",
+                    OutreachLog.user_id == user.id
+                ).distinct().subquery()
+                query = query.filter(~Company.id.in_(sent_sub))
+        elif status == "uncontacted":
             if user:
                 sent_sub = db.query(OutreachLog.company_id).filter(
                     OutreachLog.status == "SENT",
