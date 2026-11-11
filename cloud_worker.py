@@ -121,6 +121,10 @@ def execute_scout_job(job_id: int, auto_enrich: bool = False) -> bool:
             hl="en"
         )
 
+        # Defense-in-depth: if scraper recorded an anti-bot/rate-limit checkpoint or was blocked
+        if getattr(scraper, "is_blocked", False) or (getattr(scraper, "error", None) and any(k in str(scraper.error).lower() for k in ["sorry/index", "anti-bot", "rate-limited", "verification challenge"])):
+            raise GoogleBlockedException(scraper.error or "Google verification challenge (sorry/index) active on runner IP")
+
         total_scraped = len(scraped_raw)
         log_job(db, job_id, f"Google Local search complete across all pages. Located {total_scraped} candidate business locations.", 45)
 

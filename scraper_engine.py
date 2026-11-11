@@ -1067,6 +1067,10 @@ class GoogleScraper:
             self._log(f"Scraping completed! Successfully extracted {len(self.results)} companies.", 100)
             return self.results
 
+        except GoogleBlockedException as gbe:
+            self.error = str(gbe)
+            self._log(f"Rate-limit error during scrape: {gbe!s}", 100)
+            raise
         except Exception as e:
             self.error = str(e)
             self._log(f"Error during scrape: {e!s}", 100)
