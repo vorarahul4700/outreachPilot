@@ -31,8 +31,8 @@ if hasattr(sys.stdout, "reconfigure"):
     except Exception:
         pass
 
-from db import Company, ScoutJob, SessionLocal, init_db
-from scraper_engine import GoogleScraper, is_genuine_company_domain
+from db import Company, ScoutJob, SessionLocal
+from scraper_engine import GoogleBlockedException, GoogleScraper, is_genuine_company_domain
 
 
 def log_job(db, job_id: int, msg: str, progress: int = None, live_card: dict = None):
@@ -87,7 +87,6 @@ def execute_scout_job(job_id: int, auto_enrich: bool = False) -> bool:
     - Updates ScoutJob status to COMPLETED.
     """
     db = SessionLocal()
-    init_db()
 
     job = db.query(ScoutJob).filter(ScoutJob.id == job_id).first()
     if not job:
@@ -228,8 +227,8 @@ def execute_scout_job(job_id: int, auto_enrich: bool = False) -> bool:
                     log_job(db, job_id, f"Note: could not auto-dispatch cloud_enrich ({trig_err}).")
         return True
 
-    except Exception as e:
-        print(f"[Error] Job #{job_id} failed: {e}")
+    except GoogleBlockedException as gbe:
+        print(f"[Warning] Job #{job_id} hit Google verification challenge: {gbe}")
         try:
             db.rollback()
         except Exception:
@@ -239,15 +238,49 @@ def execute_scout_job(job_id: int, auto_enrich: bool = False) -> bool:
             db = SessionLocal()
             job = db.query(ScoutJob).filter(ScoutJob.id == job_id).first()
             if job:
-                job.status = "FAILED"
-                job.error = str(e)
-                job.status_message = f"Failed: {e}"
+                # IMPORTANT: DO NOT mark job as COMPLETED with 0 found!
+                # Re-queue job so it will be retried by another runner / IP
+                job.status = "QUEUED"
+                job.progress = 0
+                job.error = "Google verification checkpoint (sorry/index). Re-queued for retry."
+                job.status_message = "Temporarily paused: Google anti-bot checkpoint (sorry/index) active on runner IP. Preserved in queue for retry."
                 job.updated_at = datetime.utcnow()
                 db.commit()
-            log_job(db, job_id, f"Fatal Error in Cloud Worker: {e}", 100)
+            log_job(db, job_id, f"Paused: Google anti-bot challenge (sorry/index). Preserving job #{job_id} in QUEUED status for retry.", 0)
+        except Exception as q_err:
+            print(f"[Error] Failed to reset job #{job_id} to QUEUED: {q_err}")
+        return "BLOCKED"
+
+    except Exception as e:
+        err_str = str(e)
+        print(f"[Error] Job #{job_id} failed: {err_str}")
+        try:
+            db.rollback()
         except Exception:
             pass
-        return False
+
+        # Check if error is related to Google sorry / captcha block
+        is_sorry_err = any(k in err_str.lower() for k in ["sorry", "captcha", "verification", "unusual traffic"])
+        try:
+            db.close()
+            db = SessionLocal()
+            job = db.query(ScoutJob).filter(ScoutJob.id == job_id).first()
+            if job:
+                if is_sorry_err:
+                    job.status = "QUEUED"
+                    job.progress = 0
+                    job.error = f"Google verification challenge encountered: {err_str}. Re-queued for retry."
+                    job.status_message = "Temporarily paused: Google anti-bot checkpoint active. Preserved in queue for retry."
+                else:
+                    job.status = "FAILED"
+                    job.error = err_str
+                    job.status_message = f"Failed: {err_str}"
+                job.updated_at = datetime.utcnow()
+                db.commit()
+            log_job(db, job_id, f"Error in Cloud Worker: {err_str}", 0 if is_sorry_err else 100)
+        except Exception:
+            pass
+        return "BLOCKED" if is_sorry_err else False
     finally:
         try:
             db.close()
@@ -438,7 +471,6 @@ def run_queue_consumer(
     print(f"  • Pagination   : All Pages Mode (No max page limit)")
     print(f"=======================================================\n")
 
-    init_db()
     processed_count = 0
 
     while processed_count < batch_size:
@@ -448,9 +480,17 @@ def run_queue_consumer(
             break
 
         print(f"\n>>> [Runner-{runner_id}] Processing Job #{job_id} ({processed_count + 1}/{batch_size}) <<<")
-        success = execute_scout_job(job_id=job_id, auto_enrich=auto_enrich)
-        processed_count += 1
-        print(f">>> [Runner-{runner_id}] Finished Job #{job_id} (Status: {'SUCCESS' if success else 'FAILED'}) <<<\n")
+        res = execute_scout_job(job_id=job_id, auto_enrich=auto_enrich)
+        if res == "BLOCKED":
+            print(f">>> [Runner-{runner_id}] Job #{job_id} was challenged by Google (sorry/index). Re-queued safely. <<<")
+            print(f"[Runner-{runner_id}] Halting queue consumer on this runner to avoid hammering rate-limited IP and burning jobs.\n")
+            break
+        elif res:
+            processed_count += 1
+            print(f">>> [Runner-{runner_id}] Finished Job #{job_id} (Status: SUCCESS) <<<\n")
+        else:
+            processed_count += 1
+            print(f">>> [Runner-{runner_id}] Finished Job #{job_id} (Status: FAILED) <<<\n")
 
         # Brief pause between jobs to be gentle on Google and connection pools
         time.sleep(2)
@@ -462,7 +502,6 @@ def run_queue_consumer(
 
 def run_single_worker(job_id: int, keyword: str, city: str, auto_enrich: bool = False):
     """Directly executes a single scout job by ID or keyword/city"""
-    init_db()
     if not job_id or job_id <= 0:
         db = SessionLocal()
         kw_clean = (keyword or "").strip()

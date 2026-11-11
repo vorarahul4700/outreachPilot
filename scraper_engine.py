@@ -18,6 +18,12 @@ from seleniumbase import Driver
 
 from config import is_safe_public_url
 
+
+class GoogleBlockedException(Exception):
+    """Raised when Google anti-bot verification challenge (sorry/index) is active and cannot be bypassed."""
+    pass
+
+
 DISALLOWED_DOMAIN_SUFFIXES = (
     ".local",
     ".localhost",
@@ -866,6 +872,65 @@ class GoogleScraper:
                             self._log(f"Found {len(cards)} listings on Google Local retry!", 28)
                             break
                         time.sleep(0.4)
+
+                # Check if search was challenged or blocked by Google anti-bot verification
+                if not cards and page == 1:
+                    curr_url = (driver.current_url or "").lower()
+                    page_title = (driver.title or "").lower()
+                    is_blocked = (
+                        "sorry/index" in curr_url
+                        or "/sorry/" in curr_url
+                        or "google.com/sorry" in curr_url
+                        or "unusual traffic" in page_title
+                        or "sorry" in page_title
+                    )
+
+                    # Try fallback to standard Google web search if udm=local was challenged
+                    if is_blocked:
+                        self._log("Detected Google verification checkpoint (sorry/index). Attempting fallback to standard web search...", 27)
+                        fallback_url = f"https://www.google.com/search?q={urllib.parse.quote_plus(keyword)}+in+{urllib.parse.quote_plus(city)}&gl={gl}&hl={hl}"
+                        try:
+                            if hasattr(driver, "uc_open_with_reconnect"):
+                                try:
+                                    driver.uc_open_with_reconnect(fallback_url, reconnect_time=3.5)
+                                except Exception:
+                                    driver.get(fallback_url)
+                            else:
+                                driver.get(fallback_url)
+                            time.sleep(3.0)
+                            curr_url = (driver.current_url or "").lower()
+                            page_title = (driver.title or "").lower()
+                            is_blocked = (
+                                "sorry/index" in curr_url
+                                or "/sorry/" in curr_url
+                                or "google.com/sorry" in curr_url
+                                or "unusual traffic" in page_title
+                                or "sorry" in page_title
+                            )
+                            if not is_blocked:
+                                for poll_i in range(25):
+                                    page_source = driver.page_source
+                                    soup = BeautifulSoup(page_source, "html.parser")
+                                    cards = (
+                                        soup.find_all("div", class_="VkpGBb")
+                                        or soup.find_all("div", class_="w7Dbne")
+                                        or soup.find_all("div", class_="uMdZh")
+                                        or soup.find_all("div", {"jscontroller": "AtSb"})
+                                        or soup.find_all("div", class_="cXedhc")
+                                        or soup.find_all("div", class_="rllt__details")
+                                        or soup.find_all("div", class_="C8fQm")
+                                    )
+                                    if cards:
+                                        self._log(f"Fallback search succeeded! Found {len(cards)} listings on standard search.", 28)
+                                        break
+                                    time.sleep(0.4)
+                        except Exception as fe:
+                            self._log(f"Fallback search notice: {fe}", 27)
+
+                    # If still blocked by Google sorry challenge after all bypass attempts, RAISE GoogleBlockedException
+                    if is_blocked:
+                        self._log(f"Google anti-bot verification challenge active ({curr_url}). Runner IP is temporarily rate-limited; halting search to preserve queue.", 85)
+                        raise GoogleBlockedException(f"Google anti-bot verification challenge active ({curr_url}). Runner IP is rate-limited.")
 
                 if not cards:
                     if page > 1:
