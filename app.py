@@ -1701,32 +1701,33 @@ def get_companies(
         # Compute domain-aware scoped stats for frontend cards
         dom_clean = domain.strip().lower() if domain else ""
         base_stats = _filter_cache.get("data", {}).get("stats", {}) if _filter_cache.get("data") else {}
+        user_contacted_count = 0
+        if user:
+            user_contacted_count = (
+                db.query(OutreachLog.company_id)
+                .filter(OutreachLog.status == "SENT", OutreachLog.user_id == user.id)
+                .distinct()
+                .count()
+            )
+
         if dom_clean and dom_clean not in ("all", "it", "it-software"):
-            # Non-IT domain currently has 0 leads
+            cached_domains = _filter_cache.get("data", {}).get("domains", []) if _filter_cache.get("data") else []
+            d_item = next((d for d in cached_domains if d.get("code") == dom_clean), None)
             scoped_stats = {
-                "total": total_count,
-                "enriched": 0,
-                "emails": 0,
+                "total": d_item.get("count", 0) if d_item else 0,
+                "enriched": d_item.get("enriched_count", 0) if d_item else 0,
+                "emails": d_item.get("emails_count", 0) if d_item else 0,
                 "invalid": 0,
                 "contacted": 0,
                 "is_logged_in": bool(user)
             }
-        elif dom_clean in ("it", "it-software") or not has_custom_filters:
+        else:
             scoped_stats = {
-                "total": base_stats.get("total", total_count or 33603),
+                "total": base_stats.get("total", 33603),
                 "enriched": base_stats.get("enriched", 2110),
                 "emails": base_stats.get("emails", 1663),
                 "invalid": base_stats.get("invalid", 0),
-                "contacted": base_stats.get("contacted", 0),
-                "is_logged_in": bool(user)
-            }
-        else:
-            scoped_stats = {
-                "total": total_count,
-                "enriched": min(total_count, base_stats.get("enriched", 2110)),
-                "emails": min(total_count, base_stats.get("emails", 1663)),
-                "invalid": base_stats.get("invalid", 0),
-                "contacted": base_stats.get("contacted", 0),
+                "contacted": user_contacted_count,
                 "is_logged_in": bool(user)
             }
 

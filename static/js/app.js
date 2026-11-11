@@ -4475,6 +4475,9 @@ document.addEventListener("DOMContentLoaded", () => {
         outreachTotalServerPages = data.total_pages || 1;
         outreachCurrentPage = data.current_page || 1;
         outreachLoaded = true;
+        if (data.stats) {
+          updateCompanyMetrics(data.stats);
+        }
       }
     } catch (err) {
       if (err.name === "AbortError") return;
