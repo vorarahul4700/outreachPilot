@@ -2,6 +2,7 @@ import asyncio
 import copy
 import io
 import json
+import mimetypes
 import os
 import re
 import secrets
@@ -199,8 +200,32 @@ app = FastAPI(
     lifespan=lifespan
 )
 
+# Ensure font and vector MIME types are registered consistently across OS images (Render Linux / Windows)
+mimetypes.add_type("font/woff2", ".woff2")
+mimetypes.add_type("font/woff", ".woff")
+mimetypes.add_type("image/svg+xml", ".svg")
+
+
+class CachedStaticFiles(StaticFiles):
+    """StaticFiles subclass adding explicit CORS and CDN/browser Cache-Control headers."""
+
+    async def get_response(self, path: str, scope):
+        response = await super().get_response(path, scope)
+        if response.status_code == 200:
+            lower_path = path.lower()
+            response.headers.setdefault("Access-Control-Allow-Origin", "*")
+            response.headers.setdefault("Timing-Allow-Origin", "*")
+            if lower_path.endswith((".woff2", ".woff", ".ttf", ".otf", ".eot", ".svg", ".png", ".ico", ".webp")):
+                response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+            elif lower_path.endswith((".css", ".js")):
+                response.headers["Cache-Control"] = "public, max-age=86400, s-maxage=604800, stale-while-revalidate=604800"
+            else:
+                response.headers.setdefault("Cache-Control", "public, max-age=3600")
+        return response
+
+
 # Mount static and templates
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/static", CachedStaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
 
@@ -209,9 +234,10 @@ templates = Jinja2Templates(directory="templates")
 async def maintenance_mode_middleware(request: Request, call_next):
     if config.is_maintenance_mode():
         path = request.url.path
-        # Allowed routes: landing page, directory, SEO, GEO, sitemaps, maintenance page, static assets, and favicon
+        # Allowed routes: health checks, landing page, directory, SEO, GEO, sitemaps, maintenance page, static assets, and icons
         is_allowed = (
-            path in ("/", "/home", "/landing", "/maintenance", "/privacy", "/terms", "/favicon.ico",
+            path in ("/health", "/healthz", "/", "/home", "/landing", "/maintenance", "/privacy", "/terms",
+                     "/favicon.ico", "/apple-touch-icon.png", "/apple-touch-icon-precomposed.png",
                      "/robots.txt", "/llms.txt", "/llms-full.txt", "/sitemap.xml",
                      "/sitemap-core.xml", "/sitemap-cities.xml", "/sitemap-tech.xml", "/sitemap-directory.xml")
             or path.startswith("/static/")
@@ -445,15 +471,44 @@ def get_current_user(db: Session, request: Request | None = None) -> User | None
     return user
 
 
-@app.get("/favicon.ico", include_in_schema=False)
-async def favicon():
-    return FileResponse("static/favicon.ico")
+@app.api_route("/healthz", methods=["GET", "HEAD"], include_in_schema=False)
+@app.api_route("/health", methods=["GET", "HEAD"], include_in_schema=False)
+def health_check():
+    """Zero-DB readiness/liveness probe for Render health checks and external keep-alive monitors."""
+    return JSONResponse(
+        content={"status": "ok", "service": config.PROJECT_NAME},
+        headers={"Cache-Control": "no-store"}
+    )
+
+
+@app.api_route("/favicon.ico", methods=["GET", "HEAD"], include_in_schema=False)
+def favicon():
+    return FileResponse(
+        "static/favicon.ico",
+        headers={
+            "Cache-Control": "public, max-age=604800, s-maxage=604800",
+            "Access-Control-Allow-Origin": "*",
+        }
+    )
+
+
+@app.api_route("/apple-touch-icon.png", methods=["GET", "HEAD"], include_in_schema=False)
+@app.api_route("/apple-touch-icon-precomposed.png", methods=["GET", "HEAD"], include_in_schema=False)
+def apple_touch_icon():
+    return FileResponse(
+        "static/img/favicon.png",
+        media_type="image/png",
+        headers={
+            "Cache-Control": "public, max-age=604800, s-maxage=604800",
+            "Access-Control-Allow-Origin": "*",
+        }
+    )
 
 
 # --- UI Routes ---
-@app.get("/", response_class=HTMLResponse)
-@app.get("/home", response_class=HTMLResponse)
-async def landing_page(request: Request, db: Session = Depends(get_db)):
+@app.api_route("/", methods=["GET", "HEAD"], response_class=HTMLResponse)
+@app.api_route("/home", methods=["GET", "HEAD"], response_class=HTMLResponse)
+def landing_page(request: Request, db: Session = Depends(get_db)):
     """Dedicated craft-first Landing Home Page for OutreachPilot"""
     user = get_current_user(db, request)
     is_logged_in = bool(user and user.oauth_tokens)
@@ -477,9 +532,9 @@ async def redirect_landing_to_home():
     return RedirectResponse(url="/", status_code=301)
 
 
-@app.get("/app", response_class=HTMLResponse)
-@app.get("/workspace", response_class=HTMLResponse)
-async def workspace_page(request: Request, db: Session = Depends(get_db)):
+@app.api_route("/app", methods=["GET", "HEAD"], response_class=HTMLResponse)
+@app.api_route("/workspace", methods=["GET", "HEAD"], response_class=HTMLResponse)
+def workspace_page(request: Request, db: Session = Depends(get_db)):
     """Original Scraping Logic & Outreach Workspace Directory"""
     if config.is_maintenance_mode():
         return RedirectResponse(url="/maintenance", status_code=307)
@@ -522,8 +577,8 @@ async def maintenance_page(request: Request):
     )
 
 
-@app.get("/privacy", response_class=HTMLResponse)
-async def privacy_page(request: Request):
+@app.api_route("/privacy", methods=["GET", "HEAD"], response_class=HTMLResponse)
+def privacy_page(request: Request):
     """Public Privacy Policy required by Google OAuth API verification"""
     return templates.TemplateResponse(
         request=request,
@@ -532,8 +587,8 @@ async def privacy_page(request: Request):
     )
 
 
-@app.get("/terms", response_class=HTMLResponse)
-async def terms_page(request: Request):
+@app.api_route("/terms", methods=["GET", "HEAD"], response_class=HTMLResponse)
+def terms_page(request: Request):
     """Public Terms of Service required by Google OAuth API verification"""
     return templates.TemplateResponse(
         request=request,
@@ -566,20 +621,23 @@ async def google_verification_file(token: str):
         return HTMLResponse(content=f"google-site-verification: google{token}.html\n", media_type="text/html", status_code=200)
 
 
-@app.get("/robots.txt", include_in_schema=False)
-async def robots_txt(request: Request):
+@app.api_route("/robots.txt", methods=["GET", "HEAD"], include_in_schema=False)
+def robots_txt(request: Request):
     """AI-friendly, crawler-optimized robots.txt explicitly unblocking GPTBot, ClaudeBot, etc."""
     base_url = seo_engine.get_canonical_base_url(request)
     content = seo_engine.generate_robots_txt(base_url)
     return Response(
         content=content,
         media_type="text/plain; charset=utf-8",
-        headers={"Cache-Control": "public, max-age=86400, s-maxage=86400"}
+        headers={
+            "Cache-Control": "public, max-age=86400, s-maxage=86400, stale-while-revalidate=604800",
+            "X-Robots-Tag": "noindex",
+        }
     )
 
 
-@app.get("/llms.txt", include_in_schema=False)
-async def llms_txt(request: Request, db: Session = Depends(get_db)):
+@app.api_route("/llms.txt", methods=["GET", "HEAD"], include_in_schema=False)
+def llms_txt(request: Request, db: Session = Depends(get_db)):
     """Standardized LLM Context File per llmstxt.org specification"""
     base_url = seo_engine.get_canonical_base_url(request)
     content = seo_engine.generate_llms_txt(base_url, db)
@@ -590,8 +648,8 @@ async def llms_txt(request: Request, db: Session = Depends(get_db)):
     )
 
 
-@app.get("/llms-full.txt", include_in_schema=False)
-async def llms_full_txt(request: Request, db: Session = Depends(get_db)):
+@app.api_route("/llms-full.txt", methods=["GET", "HEAD"], include_in_schema=False)
+def llms_full_txt(request: Request, db: Session = Depends(get_db)):
     """Comprehensive Machine-Readable LLM Knowledge Base for Agentic Crawlers"""
     base_url = seo_engine.get_canonical_base_url(request)
     content = seo_engine.generate_llms_full_txt(base_url, db)
@@ -602,8 +660,8 @@ async def llms_full_txt(request: Request, db: Session = Depends(get_db)):
     )
 
 
-@app.get("/sitemap.xml", include_in_schema=False)
-async def sitemap_index_endpoint(request: Request, db: Session = Depends(get_db)):
+@app.api_route("/sitemap.xml", methods=["GET", "HEAD"], include_in_schema=False)
+def sitemap_index_endpoint(request: Request, db: Session = Depends(get_db)):
     """Master XML Sitemap Index referencing all sub-sitemaps"""
     base_url = seo_engine.get_canonical_base_url(request)
     content = seo_engine.generate_sitemap_index(base_url, db)
@@ -614,8 +672,8 @@ async def sitemap_index_endpoint(request: Request, db: Session = Depends(get_db)
     )
 
 
-@app.get("/sitemap-core.xml", include_in_schema=False)
-async def sitemap_core_endpoint(request: Request):
+@app.api_route("/sitemap-core.xml", methods=["GET", "HEAD"], include_in_schema=False)
+def sitemap_core_endpoint(request: Request):
     """Core Pages XML Sitemap"""
     base_url = seo_engine.get_canonical_base_url(request)
     content = seo_engine.generate_sitemap_core(base_url)
@@ -626,8 +684,8 @@ async def sitemap_core_endpoint(request: Request):
     )
 
 
-@app.get("/sitemap-cities.xml", include_in_schema=False)
-async def sitemap_cities_endpoint(request: Request, db: Session = Depends(get_db)):
+@app.api_route("/sitemap-cities.xml", methods=["GET", "HEAD"], include_in_schema=False)
+def sitemap_cities_endpoint(request: Request, db: Session = Depends(get_db)):
     """All 73 Indian City Hubs XML Sitemap"""
     base_url = seo_engine.get_canonical_base_url(request)
     content = seo_engine.generate_sitemap_cities(base_url, db)
@@ -638,8 +696,8 @@ async def sitemap_cities_endpoint(request: Request, db: Session = Depends(get_db
     )
 
 
-@app.get("/sitemap-tech.xml", include_in_schema=False)
-async def sitemap_tech_endpoint(request: Request, db: Session = Depends(get_db)):
+@app.api_route("/sitemap-tech.xml", methods=["GET", "HEAD"], include_in_schema=False)
+def sitemap_tech_endpoint(request: Request, db: Session = Depends(get_db)):
     """All 36 Engineering Stacks XML Sitemap"""
     base_url = seo_engine.get_canonical_base_url(request)
     content = seo_engine.generate_sitemap_tech(base_url, db)
@@ -650,8 +708,8 @@ async def sitemap_tech_endpoint(request: Request, db: Session = Depends(get_db))
     )
 
 
-@app.get("/sitemap-directory.xml", include_in_schema=False)
-async def sitemap_directory_endpoint(request: Request, db: Session = Depends(get_db)):
+@app.api_route("/sitemap-directory.xml", methods=["GET", "HEAD"], include_in_schema=False)
+def sitemap_directory_endpoint(request: Request, db: Session = Depends(get_db)):
     """Programmatic City + Technology Combinations XML Sitemap"""
     base_url = seo_engine.get_canonical_base_url(request)
     content = seo_engine.generate_sitemap_directory(base_url, db)
@@ -662,8 +720,8 @@ async def sitemap_directory_endpoint(request: Request, db: Session = Depends(get
     )
 
 
-@app.get("/sitemap-companies-{page}.xml", include_in_schema=False)
-async def sitemap_companies_endpoint(page: int, request: Request, db: Session = Depends(get_db)):
+@app.api_route("/sitemap-companies-{page}.xml", methods=["GET", "HEAD"], include_in_schema=False)
+def sitemap_companies_endpoint(page: int, request: Request, db: Session = Depends(get_db)):
     """Paginated Company Profiles XML Sitemap (5,000 URLs per file)"""
     if page < 1:
         raise HTTPException(status_code=404, detail="Sitemap page not found")
@@ -678,8 +736,8 @@ async def sitemap_companies_endpoint(page: int, request: Request, db: Session = 
 
 # --- Programmatic Directory Routes (pSEO & AEO) ---
 
-@app.get("/directory", response_class=HTMLResponse)
-async def directory_index_page(request: Request, db: Session = Depends(get_db)):
+@app.api_route("/directory", methods=["GET", "HEAD"], response_class=HTMLResponse)
+def directory_index_page(request: Request, db: Session = Depends(get_db)):
     """Master B2B Technology & Agency Directory Homepage"""
     base_url = seo_engine.get_canonical_base_url(request)
     canonical_url = f"{base_url}/directory"
@@ -723,8 +781,8 @@ async def directory_index_page(request: Request, db: Session = Depends(get_db)):
     return response
 
 
-@app.get("/directory/city/{city_slug}", response_class=HTMLResponse)
-async def directory_city_hub(city_slug: str, request: Request, db: Session = Depends(get_db)):
+@app.api_route("/directory/city/{city_slug}", methods=["GET", "HEAD"], response_class=HTMLResponse)
+def directory_city_hub(city_slug: str, request: Request, db: Session = Depends(get_db)):
     """City-Level Technology & Business Directory Hub (73 Indian Cities)"""
     city_name = seo_engine.slug_to_city_name(city_slug)
     domain_param = request.query_params.get("domain")
@@ -801,9 +859,9 @@ async def directory_city_hub(city_slug: str, request: Request, db: Session = Dep
     return response
 
 
-@app.get("/directory/tech/{tech_slug}", response_class=HTMLResponse)
-@app.get("/directory/category/{tech_slug}", response_class=HTMLResponse)
-async def directory_tech_hub(tech_slug: str, request: Request, db: Session = Depends(get_db)):
+@app.api_route("/directory/tech/{tech_slug}", methods=["GET", "HEAD"], response_class=HTMLResponse)
+@app.api_route("/directory/category/{tech_slug}", methods=["GET", "HEAD"], response_class=HTMLResponse)
+def directory_tech_hub(tech_slug: str, request: Request, db: Session = Depends(get_db)):
     """Category & Technology Specialization Hub (Dynamic Across All Industries)"""
     tech_name = seo_engine.slug_to_tech_name(tech_slug)
     companies, total_count = seo_engine.get_companies_list(db, tech=tech_name, limit=30)
@@ -863,8 +921,8 @@ async def directory_tech_hub(tech_slug: str, request: Request, db: Session = Dep
     return response
 
 
-@app.get("/directory/companies", response_class=HTMLResponse)
-async def directory_companies(
+@app.api_route("/directory/companies", methods=["GET", "HEAD"], response_class=HTMLResponse)
+def directory_companies(
     request: Request,
     city: Optional[str] = Query(None, description="City slug or name, e.g. noida, mumbai"),
     tech: Optional[str] = Query(None, description="Category or tech stack slug/name, e.g. nextjs, dentists"),
@@ -943,12 +1001,12 @@ async def directory_companies(
     # Case 2: Only city provided -> Render City Hub
     if city and not selected_category:
         city_slug = seo_engine.city_to_slug(city)
-        return await directory_city_hub(city_slug, request, db)
+        return directory_city_hub(city_slug, request, db)
 
     # Case 3: Only category/tech provided -> Render Category Hub
     if selected_category and not city:
         tech_slug = seo_engine.tech_to_slug(selected_category)
-        return await directory_tech_hub(tech_slug, request, db)
+        return directory_tech_hub(tech_slug, request, db)
 
     # Case 4: General query or empty params -> Redirect to /directory
     return RedirectResponse(url="/directory", status_code=301)
@@ -963,8 +1021,8 @@ async def directory_combo_legacy_redirect(city_slug: str, tech_slug: str):
     )
 
 
-@app.get("/company/{slug}", response_class=HTMLResponse)
-async def company_showcase_profile(slug: str, request: Request, db: Session = Depends(get_db)):
+@app.api_route("/company/{slug}", methods=["GET", "HEAD"], response_class=HTMLResponse)
+def company_showcase_profile(slug: str, request: Request, db: Session = Depends(get_db)):
     """Verified Individual Company Intelligence Profile Dossier"""
     company_id = seo_engine.parse_company_slug(slug)
     if not company_id:

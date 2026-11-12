@@ -1,0 +1,22 @@
+name: Render Keep-Alive & Crawl Health Ping
+
+on:
+  schedule:
+    # Off-minute 10-minute cadence to avoid top-of-hour GitHub Actions queue spikes
+    # and keep Render Free instance warm inside its 15-minute idle spin-down window.
+    - cron: '4,14,24,34,44,54 * * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Wake and verify OutreachPilot origin & robots.txt
+        run: |
+          set -euo pipefail
+          curl --retry 2 --retry-delay 5 --max-time 45 -fsSL "https://outreachpilot.in/healthz"
+          ROBOTS_BODY=$(curl --retry 2 --retry-delay 5 --max-time 30 -fsSL "https://outreachpilot.in/robots.txt")
+          echo "$ROBOTS_BODY" | grep -q "Allow: /"
+          echo "Keep-alive OK and robots.txt verified."
+
