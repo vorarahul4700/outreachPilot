@@ -33,14 +33,18 @@ on:
         default: "0"
 
   schedule:
-    # Run every 6 hours automatically to drain any queued jobs in Neon DB
-    - cron: '0 */6 * * *'
+    # Run every 3 hours at :23 past the hour (avoids top-of-the-hour :00 GitHub queue delays/drops)
+    - cron: '23 */3 * * *'
+
+concurrency:
+  group: ${{ github.event_name == 'schedule' && 'cloud-scout-schedule' || github.run_id }}
+  cancel-in-progress: false
 
 jobs:
   cloud_scout_job:
     name: Cloud-Runner-${{ matrix.worker_id }}
     runs-on: ubuntu-latest
-    timeout-minutes: 180
+    timeout-minutes: 150
 
     strategy:
       fail-fast: false
