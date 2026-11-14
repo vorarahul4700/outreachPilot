@@ -1,4 +1,4 @@
-﻿import base64
+import base64
 import hashlib
 import ipaddress
 import json
@@ -19,7 +19,7 @@ PROJECT_NAME = os.getenv("PROJECT_NAME", "OutreachPilot")
 TAGLINE = os.getenv("TAGLINE", "Find Leads. Personalize. Reach Out.")
 APP_DESCRIPTOR = os.getenv("APP_DESCRIPTOR", "AI Outreach Automation")
 
-DEV_MODE = os.getenv("DEV_MODE", "true").lower() in ("true", "1", "yes")
+DEV_MODE = os.getenv("DEV_MODE", "false").lower() in ("true", "1", "yes")
 DEV_OVERRIDE_EMAIL = os.getenv("DEV_OVERRIDE_EMAIL", "")
 
 
@@ -85,11 +85,37 @@ MASTER_ADMIN_EMAILS = [
 ]
 
 # Security Secrets & Cryptography
-SECRET_KEY = os.getenv("SECRET_KEY", "outreachpilot_super_secret_production_key_9837498172")
+# SECRET_KEY must come from the environment. No insecure in-source fallback:
+# the app fails closed on boot if it is missing, so a forgeable default key can
+# never reach production. Generate one with:
+#   python -c "import secrets; print(secrets.token_urlsafe(64))"
+SECRET_KEY = os.getenv("SECRET_KEY", "").strip()
+if not SECRET_KEY:
+    raise RuntimeError(
+        "SECRET_KEY is not set. The application refuses to start without it. "
+        "Generate a strong value with: "
+        "python -c \"import secrets; print(secrets.token_urlsafe(64))\" "
+        "then set SECRET_KEY in your local .env and in the production environment "
+        "(Render > Environment)."
+    )
+
+# The key that was previously hardcoded in source. Kept ONLY to decrypt OAuth
+# tokens that were stored before the key rotation, so existing users are not
+# forced to immediately reconnect Google. It is never used to sign sessions, so
+# it cannot be used to forge a login. New/refreshed tokens are always re-encrypted
+# with the current key.
+_LEGACY_INSECURE_KEY = "outreachpilot_super_secret_production_key_9837498172"
+
+# Optional dedicated key for encrypting stored OAuth tokens. Letting this differ
+# from SECRET_KEY means the session-signing key can be rotated without making
+# stored tokens unreadable. Falls back to SECRET_KEY when unset.
+_TOKEN_ENC_SECRET = os.getenv("TOKEN_ENC_KEY", "").strip() or SECRET_KEY
 
 _signer = URLSafeTimedSerializer(SECRET_KEY, salt="pilot-auth-cookie")
-_fernet_key = base64.urlsafe_b64encode(hashlib.sha256(SECRET_KEY.encode()).digest())
+_fernet_key = base64.urlsafe_b64encode(hashlib.sha256(_TOKEN_ENC_SECRET.encode()).digest())
 _cipher = Fernet(_fernet_key)
+_legacy_fernet_key = base64.urlsafe_b64encode(hashlib.sha256(_LEGACY_INSECURE_KEY.encode()).digest())
+_legacy_cipher = Fernet(_legacy_fernet_key)
 
 
 # Session and Auth Cookie Lifetime (24 Hours = 86,400 seconds)
@@ -125,6 +151,14 @@ def decrypt_tokens(encrypted_str: str) -> dict | None:
         decrypted = _cipher.decrypt(encrypted_str.encode("utf-8"))
         return json.loads(decrypted.decode("utf-8"))
     except Exception:
+        # Migration fallback: tokens encrypted with the old (rotated-out) key.
+        # Decrypt them so the user stays logged in; they get re-encrypted with the
+        # current key on the next refresh/save.
+        try:
+            decrypted = _legacy_cipher.decrypt(encrypted_str.encode("utf-8"))
+            return json.loads(decrypted.decode("utf-8"))
+        except Exception:
+            pass
         # Fallback in case tokens were stored as raw JSON dict earlier
         if isinstance(encrypted_str, dict):
             return encrypted_str
@@ -141,6 +175,9 @@ def is_master_admin(email: str | None) -> bool:
     return clean_email in MASTER_ADMIN_EMAILS
 
 
+_DNS_CACHE: dict[str, list | None] = {}
+
+
 def is_safe_public_url(url: str) -> bool:
     """
     Prevents Server-Side Request Forgery (SSRF) attacks by verifying that a URL:
@@ -148,6 +185,7 @@ def is_safe_public_url(url: str) -> bool:
     2. Has a valid non-empty hostname.
     3. Does not resolve to localhost, loopback (127.0.0.0/8), private subnets,
        link-local addresses (169.254.0.0/16), or cloud metadata services.
+    Uses in-memory DNS caching to eliminate redundant blocking DNS lookups during subpage crawling.
     """
     if not url or not isinstance(url, str):
         return False
@@ -164,17 +202,39 @@ def is_safe_public_url(url: str) -> bool:
         if hostname in ("169.254.169.254", "metadata.google.internal", "instance-data"):
             return False
 
+        def _ip_blocked(ipobj) -> bool:
+            return (
+                ipobj.is_private or ipobj.is_loopback or ipobj.is_link_local
+                or ipobj.is_reserved or ipobj.is_multicast or ipobj.is_unspecified
+            )
+
+        # Literal IP in the hostname.
         try:
-            ip = ipaddress.ip_address(hostname)
-            if ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_reserved or ip.is_multicast:
-                return False
+            return not _ip_blocked(ipaddress.ip_address(hostname))
         except ValueError:
+            pass
+
+        # Resolve ALL A/AAAA records (covers IPv6 and multi-record hosts) and
+        # reject if ANY resolves into a blocked range. Narrows the DNS-rebinding
+        # window by checking every address the name currently maps to.
+        if hostname in _DNS_CACHE:
+            ip_list = _DNS_CACHE[hostname]
+            if not ip_list:
+                return False
+        else:
             try:
-                ip_str = socket.gethostbyname(hostname)
-                ip = ipaddress.ip_address(ip_str)
-                if ip.is_private or ip.is_loopback or ip.is_link_local or ip.is_reserved or ip.is_multicast:
-                    return False
+                infos = socket.getaddrinfo(hostname, None)
+                ip_list = list({info[4][0] for info in infos})
+                _DNS_CACHE[hostname] = ip_list
             except Exception:
+                _DNS_CACHE[hostname] = None
+                return False
+
+        for ip_str in ip_list:
+            try:
+                if _ip_blocked(ipaddress.ip_address(ip_str)):
+                    return False
+            except ValueError:
                 return False
         return True
     except Exception:

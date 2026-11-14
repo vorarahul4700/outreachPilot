@@ -3314,6 +3314,15 @@ document.addEventListener("DOMContentLoaded", () => {
         isDevMode = data.dev_mode;
       }
 
+      const navAdminLink = document.getElementById("nav-admin-link");
+      if (navAdminLink) {
+        if (isMasterAdmin) {
+          navAdminLink.classList.remove("hidden");
+        } else {
+          navAdminLink.classList.add("hidden");
+        }
+      }
+
       if (data.stats) {
         updateCompanyMetrics(data.stats);
         updateHeaderSubtitle(activeDomainFilter, data.stats.total);
@@ -3350,10 +3359,116 @@ document.addEventListener("DOMContentLoaded", () => {
         adminPreviewBanner?.classList.add("hidden");
         statCardInvalid?.classList.add("hidden");
       }
+      updateUserSubscriptionUI(currentUser);
       refreshIcons();
     } catch (err) {
       console.warn("Auth status fetch error:", err);
     }
+  }
+
+  // --- Subscription & Daily Quota Controller ---
+  function updateUserSubscriptionUI(data) {
+    if (!data) return;
+    const isMaster = !!data.is_master_admin;
+    const isKillSwitch = !!data.subscription_kill_switch;
+    const tierCode = isKillSwitch && !isMaster ? "temp_user" : (data.subscription_tier || "free");
+    const tierName = data.subscription_tier_name || (isMaster ? "Master Admin" : (isKillSwitch ? "Temp User (Infinite Pitches)" : (tierCode === "pro" ? "Pro Outreach" : tierCode === "premium_plus" ? "Premium+ Unlimited" : "Free Job Seeker")));
+    const totalLimit = (isMaster || isKillSwitch) ? 999999 : (typeof data.daily_pitch_limit === "number" ? data.daily_pitch_limit : 10);
+    const sentToday = typeof data.pitches_sent_today === "number" ? data.pitches_sent_today : 0;
+    const remaining = (isMaster || isKillSwitch) ? 999999 : (typeof data.pitches_remaining === "number" ? data.pitches_remaining : Math.max(0, totalLimit - sentToday));
+
+    const totalLimitStr = (isMaster || isKillSwitch) ? "∞" : String(totalLimit);
+    const remainingStr = (isMaster || isKillSwitch) ? "∞" : String(remaining);
+    const pct = (isMaster || isKillSwitch) ? 100 : (totalLimit > 0 ? Math.min(100, Math.max(0, Math.round((remaining / totalLimit) * 100))) : 0);
+
+    // If Kill Switch is active, ensure DOM elements are suppressed
+    if (isKillSwitch) {
+      const hw = document.getElementById("header-quota-widget");
+      if (hw) hw.classList.add("hidden");
+      const sc = document.getElementById("sidebar-quota-card");
+      if (sc) sc.classList.add("hidden");
+    }
+
+    // 1. Header Quota Widget
+    const headerTierBadge = document.getElementById("user-header-tier-badge");
+    const headerRemaining = document.getElementById("user-header-quota-remaining");
+    const headerTotal = document.getElementById("user-header-quota-total");
+    const headerBar = document.getElementById("user-header-quota-bar");
+
+    if (headerTierBadge) headerTierBadge.textContent = tierName;
+    if (headerRemaining) headerRemaining.textContent = remainingStr;
+    if (headerTotal) headerTotal.textContent = totalLimitStr;
+    if (headerBar) headerBar.style.width = `${pct}%`;
+
+    // 2. Sidebar Quota Card
+    const sidebarTierBadge = document.getElementById("sidebar-tier-badge");
+    const sidebarRemaining = document.getElementById("sidebar-quota-remaining");
+    const sidebarTotal = document.getElementById("sidebar-quota-total");
+    const sidebarBar = document.getElementById("sidebar-quota-progress");
+
+    if (sidebarTierBadge) sidebarTierBadge.textContent = tierName;
+    if (sidebarRemaining) sidebarRemaining.textContent = remainingStr;
+    if (sidebarTotal) sidebarTotal.textContent = totalLimitStr;
+    if (sidebarBar) sidebarBar.style.width = `${pct}%`;
+
+    // 3. Subscription & Quota Modal
+    const subModalTierBadge = document.getElementById("sub-modal-tier-badge");
+    const subModalTierTitle = document.getElementById("sub-modal-tier-title");
+    const subModalRemaining = document.getElementById("sub-modal-remaining-count");
+    const subModalTotal = document.getElementById("sub-modal-total-limit");
+
+    if (subModalTierBadge) subModalTierBadge.textContent = tierName;
+    if (subModalTierTitle) subModalTierTitle.textContent = tierName;
+    if (subModalRemaining) subModalRemaining.textContent = remainingStr;
+    if (subModalTotal) subModalTotal.textContent = totalLimitStr;
+
+    // Highlight active tier card
+    document.querySelectorAll("[data-tier-card]").forEach(card => {
+      const cardCode = card.getAttribute("data-tier-card");
+      const btn = card.querySelector(".btn-tier-action");
+      if (cardCode === tierCode || (isMaster && cardCode === "premium_plus")) {
+        card.classList.add("ring-2", "ring-primary");
+        if (btn && btn.tagName === "BUTTON") {
+          btn.textContent = "Current Active Plan";
+          btn.disabled = true;
+          btn.classList.add("opacity-60", "cursor-default");
+        }
+      }
+    });
+  }
+
+  // Initial SSR Hydration for Subscription & Daily Quota
+  if (window.__INITIAL_AUTH__) {
+    updateUserSubscriptionUI(window.__INITIAL_AUTH__);
+  }
+
+  const subModal = document.getElementById("modal-user-subscription");
+  const btnCloseSubModal = document.getElementById("btn-close-sub-modal");
+  const headerQuotaWidget = document.getElementById("header-quota-widget");
+  const sidebarQuotaCard = document.getElementById("sidebar-quota-card");
+
+  function openSubscriptionModal() {
+    if (subModal) {
+      subModal.classList.remove("hidden");
+      updateAppModalScrollLock();
+      if (currentUser) updateUserSubscriptionUI(currentUser);
+    }
+  }
+
+  function closeSubscriptionModal() {
+    if (subModal) {
+      subModal.classList.add("hidden");
+      updateAppModalScrollLock();
+    }
+  }
+
+  headerQuotaWidget?.addEventListener("click", openSubscriptionModal);
+  sidebarQuotaCard?.addEventListener("click", openSubscriptionModal);
+  btnCloseSubModal?.addEventListener("click", closeSubscriptionModal);
+  if (subModal) {
+    subModal.addEventListener("click", (e) => {
+      if (e.target === subModal) closeSubscriptionModal();
+    });
   }
 
   if (loginModalClose) {
@@ -3364,6 +3479,26 @@ document.addEventListener("DOMContentLoaded", () => {
       if (e.target === loginModal) loginModal.classList.add("hidden");
     });
   }
+
+  // --- Modal Scroll Lock: Ensure background is never scrollable when any modal is open ---
+  function updateAppModalScrollLock() {
+    const isAnyModalOpen = Boolean(document.querySelector("#modal-user-subscription:not(.hidden), #login-modal:not(.hidden), #resume-confirm-modal:not(.hidden), #sent-email-modal:not(.hidden), #mobile-sidebar-overlay:not(.hidden)"));
+    if (isAnyModalOpen) {
+      document.body.classList.add("overflow-hidden");
+      document.documentElement.classList.add("overflow-hidden");
+    } else {
+      document.body.classList.remove("overflow-hidden");
+      document.documentElement.classList.remove("overflow-hidden");
+    }
+  }
+
+  try {
+    const appModalObserver = new MutationObserver(() => updateAppModalScrollLock());
+    ["modal-user-subscription", "login-modal", "resume-confirm-modal", "sent-email-modal", "mobile-sidebar-overlay"].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) appModalObserver.observe(el, { attributes: true, attributeFilter: ["class"] });
+    });
+  } catch (e) {}
 
   async function performDemoLogin(opts = {}) {
     try {
@@ -3747,6 +3882,7 @@ document.addEventListener("DOMContentLoaded", () => {
               await fetchCompanies();
               fetchAuditLogs();
               renderPitchesList();
+              checkAuthStatus();
             } catch (err) {
               showToast("Batch dispatch error: " + err.message, "error");
             } finally {
@@ -4308,6 +4444,7 @@ document.addEventListener("DOMContentLoaded", () => {
             modal.classList.add("hidden");
             await fetchCompanies();
             fetchAuditLogs();
+            checkAuthStatus();
           } else {
             const errMsg = data.detail || data.error || "Company email not found! Cannot send email.";
             showToast(errMsg, "error");

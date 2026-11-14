@@ -1,5 +1,6 @@
 import asyncio
 import copy
+import csv
 import io
 import json
 import mimetypes
@@ -26,7 +27,7 @@ from fastapi import (
     UploadFile,
     status,
 )
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, RedirectResponse, Response
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, PlainTextResponse, RedirectResponse, Response
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from google_auth_oauthlib.flow import Flow
@@ -42,6 +43,18 @@ _filter_cache = {
     "data": None
 }
 _dynamic_filter_cache = {}
+
+# In-memory cached admin metrics (30s TTL with manual invalidate)
+_admin_metrics_cache = {
+    "timestamp": 0.0,
+    "data": None
+}
+
+def invalidate_admin_metrics_cache():
+    _admin_metrics_cache["timestamp"] = 0.0
+    _admin_metrics_cache["data"] = None
+
+_github_telemetry_cache = {}
 
 def invalidate_filter_cache():
     global _filter_cache, _dynamic_filter_cache
@@ -65,6 +78,8 @@ from db import (
     OutreachLog,
     ScoutJob,
     SessionLocal,
+    SubscriptionTier,
+    SystemSetting,
     User,
     engine,
     get_db,
@@ -77,15 +92,29 @@ from outreach import (
     send_via_google_oauth,
 )
 from scraper_engine import GoogleScraper, is_genuine_company_domain
+from clean_db_company_names import clean_company_name
 
 # In-memory sliding window rate limiter
 _rate_limit_store = defaultdict(list)
 
 
+_rl_call_counter = 0
+
+
 def enforce_rate_limit(key: str, max_calls: int, window_seconds: int = 60):
+    global _rl_call_counter
     now = time.time()
+
+    # Opportunistic eviction so idle keys don't accumulate unbounded in memory.
+    _rl_call_counter += 1
+    if _rl_call_counter % 500 == 0:
+        for k in list(_rate_limit_store.keys()):
+            if not any(now - t < window_seconds for t in _rate_limit_store.get(k, [])):
+                _rate_limit_store.pop(k, None)
+
     recent = [t for t in _rate_limit_store[key] if now - t < window_seconds]
     if len(recent) >= max_calls:
+        _rate_limit_store[key] = recent  # keep the pruned window accurate
         raise HTTPException(
             status_code=429,
             detail=f"Rate limit exceeded. Maximum {max_calls} requests per {window_seconds}s. Please wait a moment."
@@ -430,6 +459,82 @@ class BulkRestoreCompaniesRequest(BaseModel):
     company_ids: list[int]
 
 
+class UpdatePlanRequest(BaseModel):
+    tier: str
+    custom_limit: int | None = None
+
+
+class BanUserRequest(BaseModel):
+    is_banned: bool
+    reason: str | None = None
+
+
+class AddCompanyAdminRequest(BaseModel):
+    name: str
+    domain: str
+    category: str | None = "Information Technology & Software"
+    city: str | None = ""
+    email: str | None = ""
+    phone: str | None = ""
+    tech_stack: str | None = ""
+    summary: str | None = ""
+
+
+class UpdateCompanyAdminRequest(BaseModel):
+    name: str
+    domain: str
+    website_url: str | None = None
+    category: str | None = None
+    city: str | None = None
+    email: str | None = None
+    phone: str | None = None
+    tech_stack: str | None = None
+    summary: str | None = None
+    is_invalid: bool | None = False
+    invalid_reason: str | None = None
+
+
+class QuarantineCompanyRequest(BaseModel):
+    reason: str = "Quarantined by Master Admin"
+
+
+class UpdateTierRequest(BaseModel):
+    name: str
+    subtitle: str | None = None
+    price_inr: int
+    daily_pitch_limit: int
+    features: list[str] | None = None
+    badge: str | None = None
+    is_active: bool = True
+    sync_users: bool = True
+
+
+class CreateTierRequest(BaseModel):
+    code: str
+    name: str
+    subtitle: str | None = None
+    price_inr: int = 0
+    daily_pitch_limit: int = 10
+    features: list[str] | None = None
+    badge: str | None = None
+
+
+class SanitizeNamesRequest(BaseModel):
+    dry_run: bool = False
+    limit: int = 2000
+
+
+class PurgeNonCompaniesRequest(BaseModel):
+    dry_run: bool = False
+    limit: int = 5000
+
+
+class DispatchWorkflowRequest(BaseModel):
+    ref: str = "main"
+    inputs: dict[str, Any] = {}
+    github_token: str | None = None
+
+
 # --- Helper to get or create current user ---
 def get_current_user(db: Session, request: Request | None = None) -> User | None:
     email = None
@@ -461,6 +566,9 @@ def get_current_user(db: Session, request: Request | None = None) -> User | None
                 email=email,
                 name="Master Admin" if is_admin else "Pilot User",
                 target_role="",
+                is_admin=is_admin,
+                daily_pitch_limit=999999 if is_admin else 10,
+                subscription_tier="premium_plus" if is_admin else "free",
                 daily_send_limit=100 if is_admin else 50
             )
             db.add(user)
@@ -469,6 +577,50 @@ def get_current_user(db: Session, request: Request | None = None) -> User | None
         except Exception:
             db.rollback()
             user = db.query(User).filter(User.email == email).first()
+
+    if user:
+        needs_commit = False
+        # Bootstrap check for master admin from config
+        if config.is_master_admin(user.email) and not getattr(user, "is_admin", False):
+            user.is_admin = True
+            user.daily_pitch_limit = 999999
+            user.subscription_tier = "premium_plus"
+            needs_commit = True
+
+        # Midnight reset of daily pitches sent
+        now_utc = datetime.utcnow()
+        if user.last_pitch_reset_date is None or user.last_pitch_reset_date.date() < now_utc.date():
+            user.pitches_sent_today = 0
+            user.last_pitch_reset_date = now_utc
+            needs_commit = True
+
+        if needs_commit:
+            try:
+                db.commit()
+            except Exception:
+                db.rollback()
+
+    return user
+
+
+def require_master_admin(request: Request, db: Session = Depends(get_db)) -> User:
+    """Dependency that ensures the authenticated caller possesses Master Admin privileges."""
+    user = get_current_user(db, request)
+    if not user or not user.oauth_tokens:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication required. Please connect your Google account."
+        )
+    if getattr(user, "is_banned", False):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=f"Account suspended: {user.ban_reason or 'Access denied.'}"
+        )
+    if not (getattr(user, "is_admin", False) or config.is_master_admin(user.email)):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Forbidden: Master Admin privileges required."
+        )
     return user
 
 
@@ -506,6 +658,143 @@ def apple_touch_icon():
     )
 
 
+# --- Master Kill Switch & Subscription Helpers ---
+def is_subscription_kill_switch_active(db: Session = None) -> bool:
+    """
+    Checks if the Master Kill Switch is enabled.
+    When active:
+    - Completely suppresses subscription UI/DOM from landing and app pages.
+    - Designates all users as Temp Users with infinite cold pitch generation and zero quota limits.
+    - Bypasses RBAC subscription paywalls.
+    """
+    # 1. Fast path: check DB if session provided or query DB
+    try:
+        if db:
+            setting = db.query(SystemSetting).filter(SystemSetting.key == "subscription_kill_switch").first()
+            if setting:
+                return setting.value.strip().lower() in ("true", "1", "yes")
+        else:
+            with SessionLocal() as s:
+                setting = s.query(SystemSetting).filter(SystemSetting.key == "subscription_kill_switch").first()
+                if setting:
+                    return setting.value.strip().lower() in ("true", "1", "yes")
+    except Exception:
+        pass
+
+    # 2. Local JSON state file fallback (persists across restarts)
+    try:
+        settings_file = Path(__file__).parent / "var" / "system_settings.json"
+        if settings_file.exists():
+            with open(settings_file, "r", encoding="utf-8") as f:
+                data = json.load(f)
+                val = data.get("subscription_kill_switch")
+                if val is not None:
+                    return bool(val)
+    except Exception:
+        pass
+
+    # 3. Environment variable fallback
+    return os.getenv("SUBSCRIPTION_KILL_SWITCH", "").strip().lower() in ("true", "1", "yes")
+
+
+def set_subscription_kill_switch(active: bool, db: Session = None) -> bool:
+    """Sets the subscription kill switch state across DB, local file, and environment."""
+    val_str = "true" if active else "false"
+    os.environ["SUBSCRIPTION_KILL_SWITCH"] = val_str
+
+    # 1. Update local state file
+    try:
+        var_dir = Path(__file__).parent / "var"
+        var_dir.mkdir(parents=True, exist_ok=True)
+        settings_file = var_dir / "system_settings.json"
+        data = {}
+        if settings_file.exists():
+            try:
+                with open(settings_file, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+            except Exception:
+                data = {}
+        data["subscription_kill_switch"] = active
+        with open(settings_file, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2)
+    except Exception as e:
+        print(f"[Warning] Could not write system_settings.json: {e}")
+
+    # 2. Update DB
+    def _update(s: Session):
+        setting = s.query(SystemSetting).filter(SystemSetting.key == "subscription_kill_switch").first()
+        if not setting:
+            setting = SystemSetting(
+                key="subscription_kill_switch",
+                value=val_str,
+                description="Master Kill Switch: Bypass Subscriptions & RBAC for All Users"
+            )
+            s.add(setting)
+        else:
+            setting.value = val_str
+            setting.updated_at = datetime.utcnow()
+        s.commit()
+
+    try:
+        if db:
+            _update(db)
+        else:
+            with SessionLocal() as s:
+                _update(s)
+    except Exception as ex:
+        print(f"[Warning] Could not save kill switch to DB: {ex}")
+
+    return active
+
+
+# --- Subscription & Quota Resolution Helper ---
+def get_user_subscription_info(user: User | None, db: Session) -> dict:
+    kill_switch_active = is_subscription_kill_switch_active(db)
+    tier_name_map = {
+        "free": "Free Job Seeker",
+        "pro": "Pro Outreach",
+        "premium_plus": "Premium+ Unlimited",
+        "master_admin": "Master Admin Persona"
+    }
+    if not user or not user.oauth_tokens:
+        return {
+            "tier_code": "guest",
+            "tier_name": "Free Job Seeker",
+            "daily_pitch_limit": 0,
+            "pitches_sent_today": 0,
+            "pitches_remaining": 0,
+            "status": "guest",
+            "is_master_admin": False,
+            "kill_switch_active": kill_switch_active
+        }
+
+    is_master = bool(getattr(user, "is_admin", False) or config.is_master_admin(user.email))
+    tier_code = getattr(user, "subscription_tier", "free") or "free"
+
+    tier_obj = db.query(SubscriptionTier).filter(SubscriptionTier.code == tier_code).first()
+    tier_name = tier_obj.name if tier_obj else tier_name_map.get(tier_code, tier_code.title())
+    if is_master:
+        tier_name = "Master Admin"
+    elif kill_switch_active:
+        tier_name = "Temp User (Infinite Pitches)"
+        tier_code = "temp_user"
+
+    daily_limit = 999999 if (is_master or kill_switch_active) else (getattr(user, "daily_pitch_limit", 10) or 10)
+    sent_today = getattr(user, "pitches_sent_today", 0) or 0
+    remaining = 999999 if (is_master or kill_switch_active) else max(0, daily_limit - sent_today)
+
+    return {
+        "tier_code": tier_code,
+        "tier_name": tier_name,
+        "daily_pitch_limit": daily_limit,
+        "pitches_sent_today": sent_today,
+        "pitches_remaining": remaining,
+        "status": getattr(user, "subscription_status", "active") or "active",
+        "is_master_admin": is_master,
+        "kill_switch_active": kill_switch_active
+    }
+
+
 # --- UI Routes ---
 @app.api_route("/", methods=["GET", "HEAD"], response_class=HTMLResponse)
 @app.api_route("/home", methods=["GET", "HEAD"], response_class=HTMLResponse)
@@ -513,6 +802,13 @@ def landing_page(request: Request, db: Session = Depends(get_db)):
     """Dedicated craft-first Landing Home Page for OutreachPilot"""
     user = get_current_user(db, request)
     is_logged_in = bool(user and user.oauth_tokens)
+    sub_info = get_user_subscription_info(user, db)
+    kill_switch = sub_info.get("kill_switch_active", False)
+    
+    # Query active subscription tiers for landing pricing table (empty if kill switch is active)
+    tiers = db.query(SubscriptionTier).filter(SubscriptionTier.is_active == True).order_by(SubscriptionTier.id.asc()).all()
+    public_tiers = [] if kill_switch else [t for t in tiers if t.code != "master_admin"]
+    
     return templates.TemplateResponse(
         request=request,
         name="landing.html",
@@ -522,8 +818,11 @@ def landing_page(request: Request, db: Session = Depends(get_db)):
             "app_descriptor": config.APP_DESCRIPTOR,
             "user": user,
             "is_logged_in": is_logged_in,
+            "sub_info": sub_info,
+            "tiers": public_tiers,
             "google_client_id": config.GOOGLE_CLIENT_ID,
             "dev_mode": config.DEV_MODE,
+            "subscription_kill_switch": kill_switch,
         }
     )
 
@@ -541,9 +840,12 @@ def workspace_page(request: Request, db: Session = Depends(get_db)):
         return RedirectResponse(url="/maintenance", status_code=307)
     user = get_current_user(db, request)
     is_logged_in = bool(user and user.oauth_tokens)
-    is_master_admin = bool(is_logged_in and config.is_master_admin(user.email))
+    is_master_admin = bool(is_logged_in and (getattr(user, "is_admin", False) or config.is_master_admin(user.email)))
     all_domains = seo_engine.get_all_domains(db)
     total_valid = sum(d.get("count", 0) for d in all_domains) or 55119
+    sub_info = get_user_subscription_info(user, db)
+    kill_switch = sub_info.get("kill_switch_active", False)
+    
     return templates.TemplateResponse(
         request=request,
         name="index.html",
@@ -554,6 +856,13 @@ def workspace_page(request: Request, db: Session = Depends(get_db)):
             "user": user if is_logged_in else None,
             "is_logged_in": is_logged_in,
             "is_master_admin": is_master_admin,
+            "sub_info": sub_info,
+            "subscription_kill_switch": kill_switch,
+            "user_subscription_tier": sub_info["tier_code"],
+            "user_subscription_tier_name": sub_info["tier_name"],
+            "user_daily_limit": sub_info["daily_pitch_limit"],
+            "user_sent_today": sub_info["pitches_sent_today"],
+            "user_remaining": sub_info["pitches_remaining"],
             "google_client_id": config.GOOGLE_CLIENT_ID,
             "dev_mode": config.DEV_MODE,
             "domains": all_domains,
@@ -617,9 +926,12 @@ async def google_verification_file(token: str):
         file_path = os.path.join(os.path.dirname(__file__), filename)
         if os.path.exists(file_path):
             return FileResponse(file_path, media_type="text/html")
-        return HTMLResponse(content=f"google-site-verification: google{clean_token}.html\n", media_type="text/html", status_code=200)
+        # text/plain + sanitized token only: never reflect raw user input as HTML.
+        return PlainTextResponse(content=f"google-site-verification: google{clean_token}.html\n", status_code=200)
     except Exception:
-        return HTMLResponse(content=f"google-site-verification: google{token}.html\n", media_type="text/html", status_code=200)
+        # Fallback must also use the sanitized token and a non-HTML content type.
+        safe = "".join(c for c in (token or "") if c.isalnum() or c in "-_")
+        return PlainTextResponse(content=f"google-site-verification: google{safe}.html\n", status_code=200)
 
 
 @app.api_route("/robots.txt", methods=["GET", "HEAD"], include_in_schema=False)
@@ -826,6 +1138,7 @@ def directory_city_hub(city_slug: str, request: Request, db: Session = Depends(g
         ("Directory", f"{base_url}/directory"),
         (city_name, canonical_url)
     ]
+    bc_schema = seo_engine.build_breadcrumb_schema(breadcrumbs)
     bc_schema = seo_engine.build_breadcrumb_schema(breadcrumbs)
     itemlist_schema = seo_engine.build_itemlist_schema(companies, base_url, f"Top {dom_display} Companies in {city_name}")
     faq_schema = seo_engine.build_faq_schema(faqs)
@@ -2230,14 +2543,138 @@ def get_company_detail(company_id: int, request: Request, db: Session = Depends(
 def auth_status(request: Request, db: Session = Depends(get_db)):
     user = get_current_user(db, request)
     is_logged_in = bool(user and user.oauth_tokens)
-    is_master = bool(is_logged_in and config.is_master_admin(user.email))
+    is_master = bool(user and (getattr(user, "is_admin", False) or config.is_master_admin(user.email)))
+    kill_switch = is_subscription_kill_switch_active(db)
+
+    # Guest users always get zero limits regardless of kill switch
+    if not is_logged_in:
+        daily_limit = 0
+        sent_today = 0
+        remaining = 0
+        tier_code = "guest"
+        tier_name = "Guest"
+    elif is_master:
+        daily_limit = 999999
+        sent_today = getattr(user, "pitches_sent_today", 0) or 0
+        remaining = 999999
+        # Always read the real underlying tier from DB for master - display name override only
+        tier_code = getattr(user, "subscription_tier", "free") or "free"
+        tier_name = "Master Admin"
+    elif kill_switch:
+        # Kill switch ON + logged in → infinite, but real tier preserved in DB (not mutated)
+        daily_limit = 999999
+        sent_today = getattr(user, "pitches_sent_today", 0) or 0
+        remaining = 999999
+        tier_code = "temp_user"
+        tier_name = "Temp User (Infinite Pitches)"
+    else:
+        # Normal path: read real tier from user record (kill switch OFF restores this automatically)
+        tier_code = getattr(user, "subscription_tier", "free") or "free"
+        tier_name_map = {
+            "free": "Free Job Seeker",
+            "pro": "Pro Outreach",
+            "premium_plus": "Premium+ Unlimited",
+            "master_admin": "Master Admin"
+        }
+        tier_name = tier_name_map.get(tier_code, tier_code.replace("_", " ").title())
+        daily_limit = getattr(user, "daily_pitch_limit", 10) or 10
+        sent_today = getattr(user, "pitches_sent_today", 0) or 0
+        remaining = max(0, daily_limit - sent_today)
+    
+    # Preserve the user's real purchased/assigned tier in a separate field.
+    # This is ALWAYS read from the DB (never mutated by kill switch),
+    # so when kill switch is deactivated the UI can immediately restore the correct tier display.
+    real_tier_code = (getattr(user, "subscription_tier", "free") or "free") if is_logged_in else "guest"
+    real_tier_name_map = {
+        "free": "Free Job Seeker",
+        "pro": "Pro Outreach",
+        "premium_plus": "Premium+ Unlimited",
+        "master_admin": "Master Admin"
+    }
+    real_tier_name = "Master Admin" if is_master else real_tier_name_map.get(real_tier_code, real_tier_code.replace("_", " ").title())
+
     return {
         "is_logged_in": is_logged_in,
         "email": user.email if is_logged_in else None,
         "name": user.name if is_logged_in else None,
         "picture": user.picture if is_logged_in else None,
         "is_master_admin": is_master,
+        "subscription_kill_switch": kill_switch,
+        # Effective (displayed) tier — overridden when kill switch is on
+        "subscription_tier": tier_code,
+        "subscription_tier_name": tier_name,
+        # Real (persisted) tier — always reflects what user actually purchased/has assigned
+        "real_subscription_tier": real_tier_code,
+        "real_subscription_tier_name": real_tier_name,
+        "subscription_status": getattr(user, "subscription_status", "active") if is_logged_in else "active",
+        "daily_pitch_limit": daily_limit,
+        "pitches_sent_today": sent_today,
+        "pitches_remaining": remaining,
+        "is_banned": bool(getattr(user, "is_banned", False)) if is_logged_in else False,
         "dev_mode": config.DEV_MODE
+    }
+
+
+@app.get("/api/tiers")
+def get_public_tiers(db: Session = Depends(get_db)):
+    """Public customer-facing pricing and subscription plan specification."""
+    if is_subscription_kill_switch_active(db):
+        return {
+            "kill_switch_active": True,
+            "tiers": []
+        }
+    tiers = db.query(SubscriptionTier).filter(SubscriptionTier.is_active == True).order_by(SubscriptionTier.id.asc()).all()
+    public_tiers = [t for t in tiers if t.code != "master_admin"]
+    if not public_tiers:
+        return {
+            "tiers": [
+                {
+                    "code": "free",
+                    "name": "Free Job Seeker",
+                    "subtitle": "Starter Tier",
+                    "price_inr": 0,
+                    "daily_pitch_limit": 10,
+                    "features": ["10 pitches / day", "Full company directory access", "Verified contact email discovery", "Standard Gmail OAuth sending"],
+                    "badge": None,
+                    "is_popular": False
+                },
+                {
+                    "code": "pro",
+                    "name": "Pro Outreach",
+                    "subtitle": "Growth Tier",
+                    "price_inr": 499,
+                    "daily_pitch_limit": 50,
+                    "features": ["50 pitches / day", "Deep AI Website crawler analysis", "Auto-PDF Resume attachment", "Bulk pitch generator engine"],
+                    "badge": "Most Popular",
+                    "is_popular": True
+                },
+                {
+                    "code": "premium_plus",
+                    "name": "Premium+ Unlimited",
+                    "subtitle": "Maximum Velocity",
+                    "price_inr": 999,
+                    "daily_pitch_limit": 100,
+                    "features": ["100 pitches / day", "Highest priority email queue", "Tech-stack deep matching", "Unlimited AI pitch regenerations"],
+                    "badge": "Maximum Velocity",
+                    "is_popular": False
+                }
+            ]
+        }
+    return {
+        "tiers": [
+            {
+                "id": t.id,
+                "code": t.code,
+                "name": t.name,
+                "subtitle": t.subtitle or "",
+                "price_inr": t.price_inr,
+                "daily_pitch_limit": t.daily_pitch_limit,
+                "features": t.features or [],
+                "badge": t.badge or "",
+                "is_popular": t.code == "pro"
+            }
+            for t in public_tiers
+        ]
     }
 
 
@@ -2258,25 +2695,35 @@ async def demo_login(
     if req_email and config.is_master_admin(req_email):
         target_email = req_email
         name = "Master Admin"
+        is_admin_flag = True
     elif req_email:
         target_email = req_email
         name = "Verified User"
+        is_admin_flag = False
     else:
         target_email = "demo_user@outreachpilot.ai"
         name = "Verified Pilot User"
+        is_admin_flag = False
 
     user = db.query(User).filter(User.email == target_email).first()
     if not user:
-        is_admin = config.is_master_admin(target_email)
         user = User(
             email=target_email,
             name=name,
             target_role="",
-            daily_send_limit=100 if is_admin else 50
+            is_admin=is_admin_flag,
+            daily_pitch_limit=999999 if is_admin_flag else 10,
+            subscription_tier="premium_plus" if is_admin_flag else "free",
+            daily_send_limit=100 if is_admin_flag else 50
         )
         db.add(user)
         db.commit()
         db.refresh(user)
+    elif is_admin_flag:
+        user.is_admin = True
+        user.daily_pitch_limit = 999999
+        user.subscription_tier = "premium_plus"
+        db.commit()
 
     user.oauth_tokens = config.encrypt_tokens({
         "token": "sandbox_demo_token",
@@ -2291,7 +2738,7 @@ async def demo_login(
         "is_logged_in": True,
         "email": user.email,
         "name": user.name,
-        "is_master_admin": config.is_master_admin(user.email)
+        "is_master_admin": bool(user.is_admin or config.is_master_admin(user.email))
     })
     signed_cookie = config.sign_user_email(user.email)
     resp.set_cookie(key="pilot_user_email", value=signed_cookie, path="/", httponly=True, samesite="lax", max_age=config.SESSION_COOKIE_MAX_AGE)
@@ -2473,6 +2920,11 @@ async def enrich_single_company(
             status_code=401,
             detail="Authentication required. Please connect your Google account or log in to run Deep Enrichment."
         )
+    if getattr(user, "is_banned", False):
+        raise HTTPException(
+            status_code=403,
+            detail=f"Account suspended: {user.ban_reason or 'Access denied by administrator.'}"
+        )
 
     client_id = f"{user.id}_{request.client.host if request and request.client else 'unknown'}"
     enforce_rate_limit(f"enrich_single_{client_id}", max_calls=20, window_seconds=60)
@@ -2493,6 +2945,11 @@ async def enrich_bulk_companies(
         raise HTTPException(
             status_code=401,
             detail="Authentication required. Please connect your Google account or log in to run Deep Enrichment."
+        )
+    if getattr(user, "is_banned", False):
+        raise HTTPException(
+            status_code=403,
+            detail=f"Account suspended: {user.ban_reason or 'Access denied by administrator.'}"
         )
 
     client_id = f"{user.id}_{request.client.host if request and request.client else 'unknown'}"
@@ -2547,6 +3004,11 @@ async def upload_resume(
         raise HTTPException(
             status_code=401,
             detail="Authentication required. Please sign in with Google to analyze your resume."
+        )
+    if getattr(user, "is_banned", False):
+        raise HTTPException(
+            status_code=403,
+            detail=f"Account suspended: {user.ban_reason or 'Access denied by administrator.'}"
         )
 
     client_id = f"{user.id}_{request.client.host if request and request.client else 'unknown'}"
@@ -2682,6 +3144,11 @@ async def generate_single_pitch(
             status_code=401,
             detail="Authentication required. Please connect your Google account to generate personalized pitches."
         )
+    if getattr(user, "is_banned", False):
+        raise HTTPException(
+            status_code=403,
+            detail=f"Account suspended: {user.ban_reason or 'Access denied by administrator.'}"
+        )
 
     client_id = f"{user.id}_{request.client.host if request and request.client else 'unknown'}"
     enforce_rate_limit(f"pitch_gen_{client_id}", max_calls=30, window_seconds=60)
@@ -2761,28 +3228,38 @@ async def generate_single_pitch(
     body = (pitch_data.get("email_body") or pitch_data.get("primary_email") or "").strip()
 
     if not subj:
-        subj = f"Application: {t_role} - {c_name_clean}"
+        subj = f"Inquiring about {t_role} opportunities at {company.name} - {c_name_clean}"
 
     if not body:
-        skills_str = ", ".join(cand_profile.get("top_skills", [])[:5]) or "Python, Flask, PostgreSQL, MySQL"
+        skills_str = ", ".join(cand_profile.get("top_skills", [])[:6]) or "Python, JavaScript, PostgreSQL, FastAPI, React"
         raw_proofs = cand_profile.get("key_achievements") or cand_profile.get("strong_points") or []
-        proof_text = ""
-        if raw_proofs:
-            proof_text = f"In my recent work, I {raw_proofs[0]}"
-            if len(raw_proofs) > 1:
-                proof_text += f", and {raw_proofs[1]}"
-            proof_text += ".\n\n"
-        else:
-            proof_text = "In my recent projects, I developed high-throughput backend services, optimized database queries, and engineered automated workflow pipelines.\n\n"
+        if not raw_proofs:
+            raw_proofs = [
+                f"Architected scalable backend microservices and high-throughput REST API endpoints utilizing {skills_str}",
+                "Rewrote and optimized complex database queries and indexing strategies, significantly decreasing runtime and memory overhead",
+                "Built automated data pipelines, continuous integration (CI/CD) workflows, and automated regression testing suites",
+                "Engineered responsive user interfaces with modular component architectures and real-time state synchronization"
+            ]
 
-        resume_ref = f" (Portfolio / Code: {cand_profile.get('resume_link')})" if cand_profile.get('resume_link') else " (Resume attached)"
+        proof_bullets = []
+        for p in raw_proofs[:4]:
+            p_clean = p.strip().lstrip("-*•").strip()
+            if p_clean:
+                proof_bullets.append(f"• {p_clean}")
+
+        achievements_block = "\n".join(proof_bullets)
+        resume_ref = f" (Portfolio / Code: {cand_profile.get('resume_link')})" if cand_profile.get("resume_link") else ""
+        comp_tech_focus = comp_profile_data.get("tech_stack", [])[0] if comp_profile_data.get("tech_stack") else "modern software engineering"
+
         body = (
             f"Hi {company.name} team,\n\n"
-            f"I am writing to inquire about open or upcoming {t_role} opportunities on your engineering team at {company.name}.\n\n"
-            f"As a {t_role} specializing in {skills_str}, I focus on building robust, high-performance web systems and data-driven infrastructure.\n\n"
-            f"{proof_text}"
-            f"Given {company.name}'s engineering focus, I would love to bring my technical experience to your team. "
-            f"I have shared my resume for your consideration{resume_ref}. Are you currently hiring for {t_role} roles, or open to considering my profile for upcoming engineering needs?\n\n"
+            f"I am writing to inquire about open or upcoming {t_role} opportunities at {company.name}. "
+            f"Given your focus on {comp_tech_focus}, my technical experience across {skills_str} aligns directly with your engineering requirements.\n\n"
+            f"As a {t_role}, here are key highlights and verified technical achievements from my recent experience:\n\n"
+            f"{achievements_block}\n\n"
+            f"My core stack encompasses {skills_str}, enabling me to contribute immediately across your architecture and product feature roadmap. "
+            f"My detailed resume is attached for your review{resume_ref}.\n\n"
+            f"Are you currently hiring for {t_role} positions, or open to considering my profile for upcoming engineering needs?\n\n"
             f"Best regards,\n"
             f"{c_name_clean}"
         )
@@ -2856,6 +3333,11 @@ async def generate_bulk_pitches(
         raise HTTPException(
             status_code=401,
             detail="Authentication required. Please connect your Google account to generate personalized pitches."
+        )
+    if getattr(user, "is_banned", False):
+        raise HTTPException(
+            status_code=403,
+            detail=f"Account suspended: {user.ban_reason or 'Access denied by administrator.'}"
         )
 
     client_id = f"{user.id}_{request.client.host if request and request.client else 'unknown'}"
@@ -3029,11 +3511,28 @@ async def send_single_pitch_direct(
             status_code=401,
             detail="Authentication required. Please connect your Google account to send direct emails."
         )
+    if getattr(user, "is_banned", False):
+        raise HTTPException(status_code=403, detail=f"Account suspended: {user.ban_reason or 'Contact administrator'}")
+
+    client_id = f"{user.id}_{request.client.host if request and request.client else 'unknown'}"
+    enforce_rate_limit(f"send_direct_{client_id}", max_calls=30, window_seconds=60)
+
+    is_master = bool(getattr(user, "is_admin", False) or config.is_master_admin(user.email))
+    is_unrestricted = is_master or is_subscription_kill_switch_active(db)
+    if not is_unrestricted:
+        limit = getattr(user, "daily_pitch_limit", 10) or 10
+        sent = getattr(user, "pitches_sent_today", 0) or 0
+        if sent >= limit:
+            raise HTTPException(
+                status_code=403,
+                detail=f"Daily dispatch limit reached ({sent}/{limit} pitches sent today). Upgrade your subscription tier for additional volume."
+            )
+
     pitch = db.query(ColdPitch).filter(ColdPitch.id == pitch_id).first()
     if not pitch:
         raise HTTPException(status_code=404, detail="Pitch not found")
 
-    if not config.is_master_admin(user.email) and pitch.user_id != user.id:
+    if not is_master and pitch.user_id != user.id:
         raise HTTPException(status_code=403, detail="Forbidden: You do not own this pitch record.")
 
     content_type = request.headers.get("content-type", "") if request else ""
@@ -3098,6 +3597,8 @@ async def send_single_pitch_direct(
         pitch.status = "SENT"
         pitch.sent_at = datetime.utcnow()
         pitch.delivery_method = "OAUTH_DIRECT"
+        if not is_master:
+            user.pitches_sent_today = (getattr(user, "pitches_sent_today", 0) or 0) + 1
         db.commit()
         return {"success": True, "message_id": result.get("message_id")}
     else:
@@ -3115,6 +3616,13 @@ async def bulk_send_outreach(
             status_code=401,
             detail="Authentication required. Please connect your Google account to perform direct outreach."
         )
+    if getattr(user, "is_banned", False):
+        raise HTTPException(status_code=403, detail=f"Account suspended: {user.ban_reason or 'Contact administrator'}")
+
+    client_id = f"{user.id}_{request.client.host if request and request.client else 'unknown'}"
+    enforce_rate_limit(f"bulk_send_{client_id}", max_calls=10, window_seconds=60)
+
+    is_master = bool(getattr(user, "is_admin", False) or config.is_master_admin(user.email))
 
     content_type = request.headers.get("content-type", "")
     resume_bytes = None
@@ -3153,6 +3661,19 @@ async def bulk_send_outreach(
         except (ValueError, TypeError):
             delay_min, delay_max = 2.0, 3.5
 
+    is_unrestricted = is_master or is_subscription_kill_switch_active(db)
+    if not is_unrestricted:
+        limit = getattr(user, "daily_pitch_limit", 10) or 10
+        sent = getattr(user, "pitches_sent_today", 0) or 0
+        remaining = max(0, limit - sent)
+        if remaining <= 0:
+            raise HTTPException(
+                status_code=403,
+                detail=f"Daily dispatch limit reached ({sent}/{limit} pitches sent today). Upgrade your subscription tier to send more pitches."
+            )
+        if len(pitch_ids) > remaining:
+            pitch_ids = pitch_ids[:remaining]
+
     result = await dispatch_batch_outreach(
         pitch_ids=pitch_ids,
         user=user,
@@ -3162,6 +3683,11 @@ async def bulk_send_outreach(
         resume_attachment_bytes=resume_bytes,
         resume_attachment_name=resume_name
     )
+
+    if not is_master and result and result.get("sent_count"):
+        user.pitches_sent_today = (getattr(user, "pitches_sent_today", 0) or 0) + result.get("sent_count")
+        db.commit()
+
     return result
 
 
@@ -3372,17 +3898,31 @@ async def google_callback(code: str, request: Request, db: Session = Depends(get
 
         user_email_clean = user_email.strip().lower()
         user = db.query(User).filter(User.email == user_email_clean).first()
+
+        # Strict Security Enforcement: Instantly reject login if account is banned
+        if user and getattr(user, "is_banned", False):
+            ban_reason = user.ban_reason or "Your account has been suspended by an administrator."
+            return RedirectResponse(url=f"/?auth_error=Account+Suspended:+{urllib.parse.quote_plus(ban_reason)}")
+
+        is_admin = config.is_master_admin(user_email_clean)
         if not user:
-            is_admin = config.is_master_admin(user_email_clean)
             user = User(
                 email=user_email_clean,
                 name="Master Admin (Rahul Vora)" if is_admin else "Pilot User",
                 target_role="",
+                is_admin=is_admin,
+                daily_pitch_limit=999999 if is_admin else 10,
+                subscription_tier="premium_plus" if is_admin else "free",
                 daily_send_limit=100 if is_admin else 50
             )
             db.add(user)
             db.commit()
             db.refresh(user)
+        elif is_admin and not getattr(user, "is_admin", False):
+            user.is_admin = True
+            user.daily_pitch_limit = 999999
+            user.subscription_tier = "premium_plus"
+            db.commit()
 
         # Encrypt OAuth credentials before persisting in PostgreSQL
         existing_tokens = {}
@@ -3417,6 +3957,1487 @@ async def google_callback(code: str, request: Request, db: Session = Depends(get
         return response
     except Exception as e:
         return RedirectResponse(url=f"/?auth_error={urllib.parse.quote(str(e))}")
+
+
+# =====================================================================
+# ENTERPRISE MASTER ADMIN DASHBOARD & GOVERNANCE ENDPOINTS
+# =====================================================================
+
+@app.api_route("/admin", methods=["GET", "HEAD"], response_class=HTMLResponse)
+def admin_dashboard_page(request: Request, db: Session = Depends(get_db)):
+    """Enterprise Master Admin Dashboard"""
+    user = get_current_user(db, request)
+    is_logged_in = bool(user and user.oauth_tokens)
+    is_admin = bool(user and (getattr(user, "is_admin", False) or config.is_master_admin(user.email)))
+    if not is_logged_in:
+        return RedirectResponse(url="/app?login=1", status_code=307)
+    if not is_admin:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access restricted: Master Admin privileges required."
+        )
+    return templates.TemplateResponse(
+        request=request,
+        name="admin.html",
+        context={
+            "project_name": config.PROJECT_NAME,
+            "tagline": config.TAGLINE,
+            "user": user,
+            "is_master_admin": True,
+            "dev_mode": config.DEV_MODE
+        }
+    )
+
+
+@app.get("/api/admin/metrics")
+def get_admin_metrics(
+    force: bool = Query(False),
+    admin: User = Depends(require_master_admin),
+    db: Session = Depends(get_db)
+):
+    now = time.time()
+    if not force and _admin_metrics_cache["data"] and (now - _admin_metrics_cache["timestamp"] < 30.0):
+        return _admin_metrics_cache["data"]
+
+    # 1. Single aggregate query for users (Neon PostgreSQL fast path)
+    user_row = db.query(
+        func.count(User.id).label("total"),
+        func.count(User.id).filter(User.oauth_tokens != None).label("oauth"),
+        func.count(User.id).filter(or_(User.is_admin == True, User.email.in_(config.MASTER_ADMIN_EMAILS))).label("admins"),
+        func.count(User.id).filter(or_(User.subscription_tier == "free", User.subscription_tier == None)).label("free"),
+        func.count(User.id).filter(User.subscription_tier == "pro").label("pro"),
+        func.count(User.id).filter(User.subscription_tier == "premium_plus").label("premium_plus"),
+        func.coalesce(func.sum(User.pitches_sent_today), 0).label("pitches")
+    ).first()
+
+    # 2. Single aggregate query for companies
+    comp_row = db.query(
+        func.count(Company.id).filter(Company.is_invalid == False).label("valid"),
+        func.count(Company.id).filter(Company.is_invalid == True).label("invalid"),
+        func.count(Company.id).filter(Company.is_enriched == True).label("enriched")
+    ).first()
+
+    # 3. Single count for verified emails
+    verified_emails = db.query(func.count(CompanyEmail.id)).scalar() or 0
+
+    data = {
+        "users_total": user_row.total if user_row else 0,
+        "users_with_oauth": user_row.oauth if user_row else 0,
+        "master_admins": user_row.admins if user_row else 0,
+        "subscribers_free": user_row.free if user_row else 0,
+        "subscribers_pro": user_row.pro if user_row else 0,
+        "subscribers_premium_plus": user_row.premium_plus if user_row else 0,
+        "pitches_sent_today": user_row.pitches if user_row else 0,
+        "companies_valid": comp_row.valid if comp_row else 0,
+        "companies_invalid": comp_row.invalid if comp_row else 0,
+        "verified_emails": verified_emails,
+        "companies_researched": comp_row.enriched if comp_row else 0,
+        "database": "Neon PostgreSQL Cloud"
+    }
+
+    _admin_metrics_cache["timestamp"] = now
+    _admin_metrics_cache["data"] = data
+    return data
+
+
+@app.get("/api/admin/users")
+def list_admin_users(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(15, ge=1, le=100),
+    search: str = Query(""),
+    tier: str = Query(""),
+    role: str = Query(""),
+    sort_by: str = Query("id"),
+    sort_order: str = Query("desc"),
+    admin: User = Depends(require_master_admin),
+    db: Session = Depends(get_db)
+):
+    q = db.query(User)
+    if search:
+        s = f"%{search.strip().lower()}%"
+        q = q.filter(or_(User.email.ilike(s), User.name.ilike(s)))
+    if tier:
+        q = q.filter(User.subscription_tier == tier)
+    if role == "admin":
+        q = q.filter(or_(User.is_admin == True, User.email.in_(config.MASTER_ADMIN_EMAILS)))
+    elif role == "user":
+        q = q.filter(User.is_admin == False, ~User.email.in_(config.MASTER_ADMIN_EMAILS))
+
+    total_count = q.count()
+    total_pages = max(1, (total_count + page_size - 1) // page_size)
+
+    sort_order_clean = sort_order.lower() if sort_order in ("asc", "desc") else "desc"
+    is_asc = sort_order_clean == "asc"
+    if sort_by == "email":
+        order_target = User.email.asc() if is_asc else User.email.desc()
+    elif sort_by == "role":
+        order_target = User.is_admin.asc() if is_asc else User.is_admin.desc()
+    elif sort_by == "tier":
+        order_target = User.subscription_tier.asc() if is_asc else User.subscription_tier.desc()
+    elif sort_by == "pitches":
+        order_target = User.pitches_sent_today.asc() if is_asc else User.pitches_sent_today.desc()
+    elif sort_by == "status":
+        order_target = User.is_banned.asc() if is_asc else User.is_banned.desc()
+    else:
+        order_target = User.id.asc() if is_asc else User.id.desc()
+
+    users = q.order_by(order_target, User.id.desc()).offset((page - 1) * page_size).limit(page_size).all()
+
+    return {
+        "total_count": total_count,
+        "total_pages": total_pages,
+        "current_page": page,
+        "page_size": page_size,
+        "users": [
+            {
+                "id": u.id,
+                "email": u.email,
+                "name": u.name or "Pilot User",
+                "is_admin": bool(u.is_admin or config.is_master_admin(u.email)),
+                "subscription_tier": u.subscription_tier or "free",
+                "subscription_status": u.subscription_status or "active",
+                "daily_pitch_limit": 999999 if (u.is_admin or config.is_master_admin(u.email)) else (u.daily_pitch_limit or 10),
+                "pitches_sent_today": u.pitches_sent_today or 0,
+                "is_banned": bool(u.is_banned),
+                "ban_reason": u.ban_reason or "",
+                "created_at": u.created_at.strftime("%Y-%m-%d %H:%M") if hasattr(u, "created_at") and u.created_at else None
+            }
+            for u in users
+        ]
+    }
+
+
+@app.post("/api/admin/users/{user_id}/toggle-admin")
+def toggle_user_admin(
+    user_id: int,
+    admin: User = Depends(require_master_admin),
+    db: Session = Depends(get_db)
+):
+    target = db.query(User).filter(User.id == user_id).first()
+    if not target:
+        raise HTTPException(status_code=404, detail="User not found")
+    if target.id == admin.id:
+        raise HTTPException(status_code=400, detail="Cannot modify your own administrative status")
+
+    new_is_admin = not bool(target.is_admin)
+    target.is_admin = new_is_admin
+    if new_is_admin:
+        target.daily_pitch_limit = 999999
+        target.subscription_tier = "premium_plus"
+    else:
+        target.daily_pitch_limit = 10
+        target.subscription_tier = "free"
+    db.commit()
+    return {
+        "success": True,
+        "is_admin": new_is_admin,
+        "message": f"User {target.email} is now {'a Master Admin (infinite pitches granted)' if new_is_admin else 'a Regular User'}."
+    }
+
+
+@app.post("/api/admin/users/{user_id}/update-plan")
+def update_user_plan(
+    user_id: int,
+    payload: UpdatePlanRequest,
+    admin: User = Depends(require_master_admin),
+    db: Session = Depends(get_db)
+):
+    target = db.query(User).filter(User.id == user_id).first()
+    if not target:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    tier = payload.tier.lower().strip()
+    tier_obj = db.query(SubscriptionTier).filter(SubscriptionTier.code == tier).first()
+    if not tier_obj and tier not in ("free", "pro", "premium_plus"):
+        raise HTTPException(status_code=400, detail="Invalid tier. Choose free, pro, premium_plus or an active custom tier.")
+
+    target.subscription_tier = tier
+    if payload.custom_limit:
+        target.daily_pitch_limit = payload.custom_limit
+    elif tier_obj:
+        target.daily_pitch_limit = tier_obj.daily_pitch_limit
+    elif tier == "premium_plus":
+        target.daily_pitch_limit = 100
+    elif tier == "pro":
+        target.daily_pitch_limit = 50
+    else:
+        target.daily_pitch_limit = 10
+
+    db.commit()
+    return {
+        "success": True,
+        "tier": target.subscription_tier,
+        "daily_pitch_limit": target.daily_pitch_limit,
+        "message": f"Updated subscription to {tier.upper()} ({target.daily_pitch_limit} pitches/day)."
+    }
+
+
+@app.post("/api/admin/users/{user_id}/ban")
+def toggle_user_ban(
+    user_id: int,
+    payload: BanUserRequest,
+    admin: User = Depends(require_master_admin),
+    db: Session = Depends(get_db)
+):
+    target = db.query(User).filter(User.id == user_id).first()
+    if not target:
+        raise HTTPException(status_code=404, detail="User not found")
+    if target.id == admin.id:
+        raise HTTPException(status_code=400, detail="Cannot ban your own administrator account")
+
+    target.is_banned = payload.is_banned
+    target.ban_reason = payload.reason if payload.is_banned else None
+    db.commit()
+    return {
+        "success": True,
+        "is_banned": target.is_banned,
+        "message": f"User {target.email} has been {'suspended' if target.is_banned else 'reactivated'}."
+    }
+
+
+@app.post("/api/admin/companies/add")
+def add_company_admin(
+    payload: AddCompanyAdminRequest,
+    admin: User = Depends(require_master_admin),
+    db: Session = Depends(get_db)
+):
+    raw_domain = (payload.domain or "").strip().lower()
+    clean_dom = re.sub(r'^(?:https?://)?(?:www\.)?', '', raw_domain).split('/')[0].split(':')[0]
+    if not clean_dom or not is_genuine_company_domain(clean_dom):
+        raise HTTPException(status_code=400, detail="Invalid domain format or disallowed domain type.")
+
+    existing = db.query(Company).filter(Company.domain == clean_dom).first()
+    if existing:
+        raise HTTPException(status_code=400, detail=f"Company with domain '{clean_dom}' already exists in directory (ID: {existing.id}).")
+
+    clean_name = clean_company_name(payload.name.strip(), clean_dom) or payload.name.strip()
+
+    company = Company(
+        name=clean_name,
+        domain=clean_dom,
+        website_url=f"https://{clean_dom}",
+        city=payload.city.strip() if payload.city else None,
+        phone=payload.phone.strip() if payload.phone else None,
+        source_query=payload.category or "Admin Added",
+        search_keyword=payload.category or "Information Technology & Software",
+        is_invalid=False
+    )
+    db.add(company)
+    db.commit()
+    db.refresh(company)
+
+    if payload.email and "@" in payload.email:
+        email_obj = CompanyEmail(
+            company_id=company.id,
+            email_address=payload.email.strip().lower(),
+            is_primary=True,
+            email_type="primary"
+        )
+        db.add(email_obj)
+        company.has_email = True
+
+    if payload.tech_stack:
+        tech_list = [t.strip() for t in payload.tech_stack.split(",") if t.strip()]
+        profile = CompanyProfile(
+            company_id=company.id,
+            tech_stack=tech_list,
+            summary_short=payload.summary or f"{clean_name} is an enterprise operating in {company.city or 'India'}.",
+            industry=payload.category or "Tech"
+        )
+        db.add(profile)
+        company.is_enriched = True
+
+    db.commit()
+    invalidate_filter_cache()
+
+    return {
+        "success": True,
+        "company_id": company.id,
+        "name": company.name,
+        "domain": company.domain,
+        "message": f"Successfully registered '{company.name}'."
+    }
+
+
+@app.post("/api/admin/companies/bulk-upload")
+async def bulk_upload_companies_csv(
+    file: UploadFile = File(...),
+    admin: User = Depends(require_master_admin),
+    db: Session = Depends(get_db)
+):
+    if not file.filename.lower().endswith(".csv"):
+        raise HTTPException(status_code=400, detail="Only .csv files are supported.")
+
+    content = await file.read()
+    text_content = content.decode("utf-8", errors="ignore")
+    reader = csv.DictReader(io.StringIO(text_content))
+
+    existing_domains = {r[0] for r in db.query(Company.domain).all()}
+
+    imported_count = 0
+    duplicate_count = 0
+    invalid_domain_count = 0
+    total_rows = 0
+
+    companies_to_add = []
+
+    for row in reader:
+        total_rows += 1
+        name_raw = row.get("name") or row.get("company_name") or row.get("company") or ""
+        domain_raw = row.get("domain") or row.get("website") or row.get("url") or ""
+        city_raw = row.get("city") or row.get("location") or ""
+        cat_raw = row.get("category") or row.get("industry") or "Information Technology & Software"
+        phone_raw = row.get("phone") or row.get("contact") or ""
+
+        if not domain_raw or not name_raw:
+            continue
+
+        clean_dom = re.sub(r'^(?:https?://)?(?:www\.)?', '', domain_raw.strip().lower()).split('/')[0].split(':')[0]
+        if not clean_dom or not is_genuine_company_domain(clean_dom):
+            invalid_domain_count += 1
+            continue
+
+        if clean_dom in existing_domains:
+            duplicate_count += 1
+            continue
+
+        clean_name = clean_company_name(name_raw.strip(), clean_dom) or name_raw.strip()
+
+        comp = Company(
+            name=clean_name,
+            domain=clean_dom,
+            website_url=f"https://{clean_dom}",
+            city=city_raw.strip() if city_raw else None,
+            phone=phone_raw.strip() if phone_raw else None,
+            source_query=cat_raw.strip(),
+            search_keyword=cat_raw.strip(),
+            is_invalid=False
+        )
+        companies_to_add.append(comp)
+        existing_domains.add(clean_dom)
+        imported_count += 1
+
+        if len(companies_to_add) >= 500:
+            db.bulk_save_objects(companies_to_add)
+            db.commit()
+            companies_to_add = []
+
+    if companies_to_add:
+        db.bulk_save_objects(companies_to_add)
+        db.commit()
+
+    if imported_count > 0:
+        invalidate_filter_cache()
+
+    return {
+        "success": True,
+        "total_rows": total_rows,
+        "imported": imported_count,
+        "skipped_duplicates": duplicate_count,
+        "invalid_domains": invalid_domain_count
+    }
+
+
+@app.get("/api/admin/companies/invalid")
+def list_invalid_companies(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(15, ge=1, le=100),
+    search: str = Query(""),
+    sort_by: str = Query("id"),
+    sort_order: str = Query("desc"),
+    admin: User = Depends(require_master_admin),
+    db: Session = Depends(get_db)
+):
+    q = db.query(Company).filter(Company.is_invalid == True)
+    if search:
+        s = f"%{search.strip().lower()}%"
+        q = q.filter(or_(Company.name.ilike(s), Company.domain.ilike(s)))
+
+    total_count = q.count()
+    total_pages = max(1, (total_count + page_size - 1) // page_size)
+
+    sort_order_clean = sort_order.lower() if sort_order in ("asc", "desc") else "desc"
+    is_asc = sort_order_clean == "asc"
+    if sort_by == "name":
+        order_target = Company.name.asc() if is_asc else Company.name.desc()
+    elif sort_by == "domain":
+        order_target = Company.domain.asc() if is_asc else Company.domain.desc()
+    elif sort_by == "reason":
+        order_target = Company.invalid_reason.asc() if is_asc else Company.invalid_reason.desc()
+    else:
+        order_target = Company.id.asc() if is_asc else Company.id.desc()
+
+    comps = q.order_by(order_target, Company.id.desc()).offset((page - 1) * page_size).limit(page_size).all()
+
+    return {
+        "total_count": total_count,
+        "total_pages": total_pages,
+        "current_page": page,
+        "page_size": page_size,
+        "companies": [
+            {
+                "id": c.id,
+                "name": c.name,
+                "domain": c.domain,
+                "invalid_reason": c.invalid_reason or "Flagged as non-company entity",
+                "invalid_at": c.invalid_at.strftime("%Y-%m-%d %H:%M") if c.invalid_at else None
+            }
+            for c in comps
+        ]
+    }
+
+
+@app.delete("/api/admin/companies/{company_id}")
+def delete_company_admin(
+    company_id: int,
+    admin: User = Depends(require_master_admin),
+    db: Session = Depends(get_db)
+):
+    company = db.query(Company).filter(Company.id == company_id).first()
+    if not company:
+        raise HTTPException(status_code=404, detail="Company not found")
+
+    db.query(CompanyEmail).filter(CompanyEmail.company_id == company_id).delete()
+    db.query(CompanyProfile).filter(CompanyProfile.company_id == company_id).delete()
+    db.query(ColdPitch).filter(ColdPitch.company_id == company_id).delete()
+    db.query(OutreachLog).filter(OutreachLog.company_id == company_id).delete()
+    db.delete(company)
+    db.commit()
+    invalidate_filter_cache()
+    return {"success": True, "message": f"Company #{company_id} permanently deleted."}
+
+
+@app.get("/api/admin/companies")
+def list_companies_admin(
+    page: int = Query(1, ge=1),
+    page_size: int = Query(15, ge=1, le=100),
+    search: str = Query(""),
+    status: str = Query("valid"),  # 'valid', 'invalid', 'all'
+    city: str = Query(""),
+    category: str = Query(""),
+    sort_by: str = Query("id"),
+    sort_order: str = Query("desc"),
+    admin: User = Depends(require_master_admin),
+    db: Session = Depends(get_db)
+):
+    q = db.query(Company)
+    if status == "valid":
+        q = q.filter(Company.is_invalid == False)
+    elif status == "invalid":
+        q = q.filter(Company.is_invalid == True)
+
+    if search:
+        s = f"%{search.strip().lower()}%"
+        q = q.filter(or_(Company.name.ilike(s), Company.domain.ilike(s), Company.city.ilike(s)))
+    if city:
+        q = q.filter(Company.city.ilike(f"%{city.strip()}%"))
+    if category:
+        q = q.filter(or_(Company.source_query.ilike(f"%{category.strip()}%"), Company.search_keyword.ilike(f"%{category.strip()}%")))
+
+    # Fast total count: check cache if unfiltered to prevent scanning 132k rows on every click
+    is_unfiltered = (not search and not city and not category)
+    if is_unfiltered and status == "valid" and _admin_metrics_cache["data"] and _admin_metrics_cache["data"].get("companies_valid"):
+        total_count = _admin_metrics_cache["data"]["companies_valid"]
+    elif is_unfiltered and status == "invalid" and _admin_metrics_cache["data"] and _admin_metrics_cache["data"].get("companies_invalid"):
+        total_count = _admin_metrics_cache["data"]["companies_invalid"]
+    else:
+        total_count = q.with_entities(func.count(Company.id)).scalar() or 0
+
+    total_pages = max(1, (total_count + page_size - 1) // page_size)
+
+    sort_order_clean = sort_order.lower() if sort_order in ("asc", "desc") else "desc"
+    is_asc = sort_order_clean == "asc"
+
+    if sort_by == "name":
+        order_target = Company.name.asc() if is_asc else Company.name.desc()
+    elif sort_by == "domain":
+        order_target = Company.domain.asc() if is_asc else Company.domain.desc()
+    elif sort_by in ("city", "location"):
+        order_target = Company.city.asc() if is_asc else Company.city.desc()
+    elif sort_by in ("email", "has_email"):
+        order_target = Company.has_email.asc() if is_asc else Company.has_email.desc()
+    elif sort_by == "category":
+        order_target = Company.source_query.asc() if is_asc else Company.source_query.desc()
+    elif sort_by == "created_at":
+        order_target = Company.created_at.asc() if is_asc else Company.created_at.desc()
+    else:
+        order_target = Company.id.asc() if is_asc else Company.id.desc()
+
+    comps = q.with_entities(
+        Company.id,
+        Company.name,
+        Company.domain,
+        Company.website_url,
+        Company.city,
+        Company.phone,
+        Company.source_query,
+        Company.search_keyword,
+        Company.has_email,
+        Company.is_invalid,
+        Company.invalid_reason,
+        Company.created_at
+    ).order_by(order_target, Company.id.desc()).offset((page - 1) * page_size).limit(page_size).all()
+
+    comp_ids = [c[0] for c in comps]
+    emails_by_comp = {}
+    if comp_ids:
+        emails = db.query(CompanyEmail.company_id, CompanyEmail.email_address, CompanyEmail.is_primary)\
+                   .filter(CompanyEmail.company_id.in_(comp_ids)).all()
+        for em in emails:
+            if em[0] not in emails_by_comp or em[2]:
+                emails_by_comp[em[0]] = em[1]
+
+    profiles_by_comp = {}
+    if comp_ids:
+        profiles = db.query(CompanyProfile.company_id, CompanyProfile.tech_stack, CompanyProfile.summary_short)\
+                     .filter(CompanyProfile.company_id.in_(comp_ids)).all()
+        for p in profiles:
+            profiles_by_comp[p[0]] = p
+
+    results = []
+    for c in comps:
+        prof = profiles_by_comp.get(c[0])
+        results.append({
+            "id": c[0],
+            "name": c[1],
+            "domain": c[2],
+            "website_url": c[3] or f"https://{c[2]}",
+            "city": c[4] or "Unknown",
+            "phone": c[5] or "",
+            "category": c[6] or c[7] or "Tech",
+            "email": emails_by_comp.get(c[0]) or "",
+            "has_email": c[8] or bool(emails_by_comp.get(c[0])),
+            "tech_stack": prof[1] if prof and prof[1] else [],
+            "summary": prof[2] if prof and prof[2] else "",
+            "is_invalid": c[9],
+            "invalid_reason": c[10] or "",
+            "created_at": c[11].strftime("%Y-%m-%d %H:%M") if c[11] else None
+        })
+
+    return {
+        "total_count": total_count,
+        "total_pages": total_pages,
+        "current_page": page,
+        "page_size": page_size,
+        "companies": results
+    }
+
+
+@app.get("/api/admin/companies/{company_id}")
+def get_company_admin(
+    company_id: int,
+    admin: User = Depends(require_master_admin),
+    db: Session = Depends(get_db)
+):
+    c = db.query(Company).filter(Company.id == company_id).first()
+    if not c:
+        raise HTTPException(status_code=404, detail="Company not found")
+
+    primary_email = db.query(CompanyEmail).filter(CompanyEmail.company_id == c.id, CompanyEmail.is_primary == True).first()
+    if not primary_email:
+        primary_email = db.query(CompanyEmail).filter(CompanyEmail.company_id == c.id).first()
+
+    prof = db.query(CompanyProfile).filter(CompanyProfile.company_id == c.id).first()
+
+    return {
+        "id": c.id,
+        "name": c.name,
+        "domain": c.domain,
+        "website_url": c.website_url or f"https://{c.domain}",
+        "city": c.city or "",
+        "phone": c.phone or "",
+        "category": c.source_query or c.search_keyword or "Tech",
+        "email": primary_email.email_address if primary_email else "",
+        "tech_stack": prof.tech_stack if prof and prof.tech_stack else [],
+        "tech_stack_str": ", ".join(prof.tech_stack) if prof and prof.tech_stack else "",
+        "summary": prof.summary_short if prof else "",
+        "is_invalid": c.is_invalid,
+        "invalid_reason": c.invalid_reason or ""
+    }
+
+
+@app.put("/api/admin/companies/{company_id}")
+def update_company_admin(
+    company_id: int,
+    payload: UpdateCompanyAdminRequest,
+    admin: User = Depends(require_master_admin),
+    db: Session = Depends(get_db)
+):
+    c = db.query(Company).filter(Company.id == company_id).first()
+    if not c:
+        raise HTTPException(status_code=404, detail="Company not found")
+
+    raw_domain = (payload.domain or c.domain).strip().lower()
+    clean_dom = re.sub(r'^(?:https?://)?(?:www\.)?', '', raw_domain).split('/')[0].split(':')[0]
+    clean_name = clean_company_name(payload.name.strip(), clean_dom) or payload.name.strip()
+
+    c.name = clean_name
+    c.domain = clean_dom
+    c.website_url = payload.website_url.strip() if payload.website_url else f"https://{clean_dom}"
+    c.city = payload.city.strip() if payload.city else None
+    c.phone = payload.phone.strip() if payload.phone else None
+    if payload.category:
+        c.source_query = payload.category.strip()
+        c.search_keyword = payload.category.strip()
+
+    if payload.is_invalid is not None:
+        c.is_invalid = payload.is_invalid
+        if payload.is_invalid:
+            c.invalid_reason = payload.invalid_reason or "Manually quarantined by administrator"
+            c.invalid_at = datetime.utcnow()
+        else:
+            c.invalid_reason = None
+            c.invalid_at = None
+
+    # Update or add email
+    if payload.email is not None:
+        clean_email = payload.email.strip().lower()
+        if "@" in clean_email:
+            existing_email = db.query(CompanyEmail).filter(CompanyEmail.company_id == c.id).first()
+            if existing_email:
+                existing_email.email_address = clean_email
+                existing_email.is_primary = True
+            else:
+                db.add(CompanyEmail(company_id=c.id, email_address=clean_email, is_primary=True, email_type="primary"))
+            c.has_email = True
+        elif clean_email == "":
+            db.query(CompanyEmail).filter(CompanyEmail.company_id == c.id).delete()
+            c.has_email = False
+
+    # Update profile & tech stack
+    prof = db.query(CompanyProfile).filter(CompanyProfile.company_id == c.id).first()
+    if payload.tech_stack is not None or payload.summary is not None:
+        tech_list = [t.strip() for t in payload.tech_stack.split(",") if t.strip()] if payload.tech_stack else []
+        if prof:
+            prof.tech_stack = tech_list
+            if payload.summary:
+                prof.summary_short = payload.summary.strip()
+        else:
+            db.add(CompanyProfile(
+                company_id=c.id,
+                tech_stack=tech_list,
+                summary_short=payload.summary.strip() if payload.summary else f"{clean_name} enterprise profile",
+                industry=c.source_query or "Tech"
+            ))
+        c.is_enriched = True
+
+    db.commit()
+    invalidate_filter_cache()
+    return {
+        "success": True,
+        "company_id": c.id,
+        "name": c.name,
+        "domain": c.domain,
+        "message": f"Successfully updated '{c.name}'."
+    }
+
+
+@app.post("/api/admin/companies/{company_id}/quarantine")
+def quarantine_company_admin(
+    company_id: int,
+    payload: QuarantineCompanyRequest,
+    admin: User = Depends(require_master_admin),
+    db: Session = Depends(get_db)
+):
+    c = db.query(Company).filter(Company.id == company_id).first()
+    if not c:
+        raise HTTPException(status_code=404, detail="Company not found")
+    c.is_invalid = True
+    c.invalid_reason = payload.reason or "Quarantined by Master Admin"
+    c.invalid_at = datetime.utcnow()
+    db.commit()
+    invalidate_filter_cache()
+    return {"success": True, "message": f"Company '{c.name}' quarantined."}
+
+
+@app.post("/api/admin/companies/{company_id}/restore")
+def restore_company_admin(
+    company_id: int,
+    admin: User = Depends(require_master_admin),
+    db: Session = Depends(get_db)
+):
+    c = db.query(Company).filter(Company.id == company_id).first()
+    if not c:
+        raise HTTPException(status_code=404, detail="Company not found")
+    c.is_invalid = False
+    c.invalid_reason = None
+    c.invalid_at = None
+    db.commit()
+    invalidate_filter_cache()
+    return {"success": True, "message": f"Company '{c.name}' restored to active directory."}
+
+
+# --- Live Database Maintenance Engines ---
+
+@app.post("/api/admin/maintenance/sanitize-names")
+def sanitize_names_admin(
+    payload: SanitizeNamesRequest,
+    admin: User = Depends(require_master_admin),
+    db: Session = Depends(get_db)
+):
+    t0 = time.time()
+    delimiters = [' - ', ' | ', ' : ', ' – ', ' — ', ' • ', ' · ', '|']
+    chunk_size = 1000
+    last_id = 0
+    scanned = 0
+    cleaned = 0
+    samples = []
+
+    limit = max(100, min(10000, payload.limit or 2000))
+
+    while scanned < limit:
+        rows = (
+            db.query(Company.id, Company.name, Company.domain)
+            .filter(Company.id > last_id)
+            .order_by(Company.id.asc())
+            .limit(chunk_size)
+            .all()
+        )
+        if not rows:
+            break
+        last_id = rows[-1][0]
+        scanned += len(rows)
+
+        updates = []
+        for cid, cname, cdomain in rows:
+            if not cname:
+                continue
+            if any(d in cname for d in delimiters):
+                cleaned_name = clean_company_name(cname, cdomain)
+                if cleaned_name and cleaned_name != cname:
+                    cleaned += 1
+                    if len(samples) < 15:
+                        samples.append({"before": cname, "after": cleaned_name, "domain": cdomain})
+                    updates.append({"id": cid, "name": cleaned_name})
+
+        if not payload.dry_run and updates:
+            db.bulk_update_mappings(Company, updates)
+            db.commit()
+
+    if not payload.dry_run and cleaned > 0:
+        invalidate_filter_cache()
+
+    return {
+        "success": True,
+        "dry_run": payload.dry_run,
+        "scanned": scanned,
+        "cleaned": cleaned,
+        "elapsed_seconds": round(time.time() - t0, 2),
+        "samples": samples,
+        "message": f"{'Previewed' if payload.dry_run else 'Sanitized'} {cleaned} company names out of {scanned} scanned records."
+    }
+
+
+@app.post("/api/admin/maintenance/purge-non-companies")
+def purge_non_companies_admin(
+    payload: PurgeNonCompaniesRequest,
+    admin: User = Depends(require_master_admin),
+    db: Session = Depends(get_db)
+):
+    from filter_non_companies import is_non_company
+    t0 = time.time()
+    os.makedirs("logs", exist_ok=True)
+    csv_path = os.path.join("logs", "removed_non_companies_log.csv")
+
+    batch_size = 2000
+    last_id = 0
+    scanned = 0
+    flagged_records = []
+    limit = max(500, min(15000, payload.limit or 5000))
+
+    while scanned < limit:
+        rows = (
+            db.query(Company.id, Company.name, Company.domain, Company.city, Company.source_query)
+            .filter(Company.is_invalid == False, Company.id > last_id)
+            .order_by(Company.id.asc())
+            .limit(batch_size)
+            .all()
+        )
+        if not rows:
+            break
+        last_id = rows[-1][0]
+        scanned += len(rows)
+
+        for cid, cname, cdom, ccity, cquery in rows:
+            flagged, reason = is_non_company(cname, cdom)
+            if flagged:
+                flagged_records.append({
+                    "id": cid,
+                    "name": cname,
+                    "domain": cdom,
+                    "city": ccity or "",
+                    "source_query": cquery or "",
+                    "reason": reason
+                })
+
+    if flagged_records:
+        with open(csv_path, "w", newline="", encoding="utf-8") as f:
+            writer = csv.DictWriter(f, fieldnames=["id", "name", "domain", "city", "source_query", "reason"])
+            writer.writeheader()
+            writer.writerows(flagged_records)
+
+    if not payload.dry_run and flagged_records:
+        flagged_ids = [r["id"] for r in flagged_records]
+        now = datetime.utcnow()
+        for i in range(0, len(flagged_ids), 500):
+            chunk = flagged_ids[i:i + 500]
+            db.query(Company).filter(Company.id.in_(chunk)).update(
+                {
+                    Company.is_invalid: True,
+                    Company.invalid_reason: "Automated Non-Company Filter: Institute / Academy / Coaching / Portfolio / Education",
+                    Company.invalid_at: now
+                },
+                synchronize_session=False
+            )
+            db.commit()
+        invalidate_filter_cache()
+
+    return {
+        "success": True,
+        "dry_run": payload.dry_run,
+        "scanned": scanned,
+        "flagged": len(flagged_records),
+        "elapsed_seconds": round(time.time() - t0, 2),
+        "samples": flagged_records[:20],
+        "csv_download_url": "/api/admin/maintenance/download-non-companies-csv" if flagged_records else None,
+        "message": f"{'Identified' if payload.dry_run else 'Quarantined'} {len(flagged_records)} non-company leads out of {scanned} scanned records."
+    }
+
+
+@app.get("/api/admin/maintenance/download-non-companies-csv")
+def download_non_companies_csv(
+    admin: User = Depends(require_master_admin)
+):
+    csv_path = os.path.join("logs", "removed_non_companies_log.csv")
+    if not os.path.exists(csv_path):
+        raise HTTPException(status_code=404, detail="No audit CSV generated yet. Run the non-company filter first.")
+    return FileResponse(csv_path, filename="removed_non_companies_log.csv", media_type="text/csv")
+
+
+# --- GitHub CI/CD Workflows Telemetry ---
+
+def get_local_workflow_definitions() -> list[dict]:
+    """
+    Dynamically scans .github/workflows directory and extracts workflow dispatch inputs,
+    types, default values, options, and descriptions. Uses PyYAML when available,
+    with a resilient fallback line-parser to guarantee 100% zero-dependency execution.
+    """
+    workflows_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".github", "workflows")
+    if not os.path.isdir(workflows_dir):
+        return []
+
+    results = []
+    has_yaml = False
+    try:
+        import yaml
+        has_yaml = True
+    except ImportError:
+        pass
+
+    for fname in sorted(os.listdir(workflows_dir)):
+        if not (fname.endswith(".yml") or fname.endswith(".yaml")):
+            continue
+        fpath = os.path.join(workflows_dir, fname)
+        try:
+            with open(fpath, "r", encoding="utf-8") as f:
+                content_str = f.read()
+
+            wf_name = fname
+            has_dispatch = False
+            parsed_inputs = []
+
+            if has_yaml:
+                try:
+                    data = yaml.safe_load(content_str)
+                    if isinstance(data, dict):
+                        wf_name = data.get("name") or fname
+                        on_block = data.get(True) or data.get("on") or {}
+                        raw_inputs = {}
+                        if isinstance(on_block, dict):
+                            if "workflow_dispatch" in on_block:
+                                has_dispatch = True
+                                dispatch_cfg = on_block.get("workflow_dispatch") or {}
+                                if isinstance(dispatch_cfg, dict):
+                                    raw_inputs = dispatch_cfg.get("inputs") or {}
+                        elif isinstance(on_block, list) and "workflow_dispatch" in on_block:
+                            has_dispatch = True
+                        elif on_block == "workflow_dispatch":
+                            has_dispatch = True
+
+                        if isinstance(raw_inputs, dict):
+                            for p_name, p_cfg in raw_inputs.items():
+                                if not isinstance(p_cfg, dict):
+                                    p_cfg = {}
+                                parsed_inputs.append({
+                                    "name": str(p_name),
+                                    "description": str(p_cfg.get("description", "")),
+                                    "required": bool(p_cfg.get("required", False)),
+                                    "default": "" if p_cfg.get("default") is None else str(p_cfg.get("default")),
+                                    "type": str(p_cfg.get("type", "string")).lower(),
+                                    "options": [str(opt) for opt in p_cfg.get("options", [])] if isinstance(p_cfg.get("options"), list) else []
+                                })
+                except Exception as y_err:
+                    print(f"[Workflow PyYAML Error] {fname}: {y_err}")
+
+            # Fallback regex parser if yaml is absent or returned no inputs while workflow_dispatch exists
+            if not parsed_inputs and "workflow_dispatch" in content_str:
+                has_dispatch = True
+                name_match = re.search(r"^name:\s*(.+)$", content_str, re.MULTILINE)
+                if name_match:
+                    wf_name = name_match.group(1).strip().strip("'\"")
+
+                inputs_match = re.search(r"workflow_dispatch:\s*\n(?:\s*inputs:\s*\n)?((?:[ \t]{4,}.*\n?)+)", content_str)
+                if inputs_match:
+                    inputs_block = inputs_match.group(1)
+                    param_chunks = re.findall(r"^(\s{4,8})(\w+):\s*\n((?:\1\s{2,}.*\n?)+)", inputs_block, re.MULTILINE)
+                    for indent, p_name, body in param_chunks:
+                        desc_m = re.search(r'description:\s*["\']?(.*?)["\']?\s*$', body, re.MULTILINE)
+                        req_m = re.search(r'required:\s*(true|false)', body, re.MULTILINE | re.IGNORECASE)
+                        def_m = re.search(r'default:\s*["\']?(.*?)["\']?\s*$', body, re.MULTILINE)
+                        type_m = re.search(r'type:\s*(\w+)', body, re.MULTILINE)
+                        options_m = re.findall(r'-\s*(.+)$', body, re.MULTILINE)
+
+                        parsed_inputs.append({
+                            "name": p_name,
+                            "description": desc_m.group(1).strip() if desc_m else "",
+                            "required": req_m.group(1).lower() == "true" if req_m else False,
+                            "default": def_m.group(1).strip() if def_m else "",
+                            "type": type_m.group(1).lower() if type_m else "string",
+                            "options": [opt.strip().strip("'\"") for opt in options_m] if options_m else []
+                        })
+
+            results.append({
+                "file_name": fname,
+                "name": wf_name,
+                "path": f".github/workflows/{fname}",
+                "has_dispatch": has_dispatch or ("workflow_dispatch" in content_str),
+                "inputs": parsed_inputs
+            })
+        except Exception as file_err:
+            print(f"[Workflow Parser Error] {fname}: {file_err}")
+
+    return results
+
+
+@app.get("/api/admin/github/telemetry")
+async def get_github_telemetry(
+    workflow: str = Query("cloud_scout.yml"),
+    force: bool = Query(False),
+    admin: User = Depends(require_master_admin)
+):
+    repo = "vorarahul4700/outreachPilot"
+    # Clean workflow parameter
+    clean_wf = workflow.split("/")[-1] if workflow else "cloud_scout.yml"
+    if not clean_wf.endswith(".yml") and not clean_wf.endswith(".yaml"):
+        clean_wf += ".yml"
+
+    now = time.time()
+    cached = _github_telemetry_cache.get(clean_wf)
+    if not force and cached and (now - cached.get("timestamp", 0) < 30.0):
+        return cached["data"]
+
+    # 1. Dynamically discover all local workflows and their schemas
+    local_defs = get_local_workflow_definitions()
+    local_map = {w["file_name"]: w for w in local_defs}
+
+    headers = {
+        "User-Agent": "OutreachPilot-MasterAdmin",
+        "Accept": "application/vnd.github.v3+json"
+    }
+    gh_token = os.getenv("GITHUB_TOKEN") or os.getenv("GH_TOKEN")
+    if gh_token:
+        headers["Authorization"] = f"Bearer {gh_token}"
+
+    runs_data = []
+    workflows_data = []
+
+    try:
+        import httpx
+        async with httpx.AsyncClient(timeout=8.0) as client:
+            runs_url = f"https://api.github.com/repos/{repo}/actions/workflows/{clean_wf}/runs?per_page=10"
+            wf_url = f"https://api.github.com/repos/{repo}/actions/workflows"
+
+            # Parallel non-blocking execution via asyncio.gather
+            runs_resp, wf_resp = await asyncio.gather(
+                client.get(runs_url, headers=headers),
+                client.get(wf_url, headers=headers),
+                return_exceptions=True
+            )
+
+            # Handle runs response (fallback to general runs if workflow not found)
+            if not isinstance(runs_resp, Exception) and runs_resp.status_code != 200:
+                try:
+                    runs_resp = await client.get(f"https://api.github.com/repos/{repo}/actions/runs?per_page=10", headers=headers)
+                except Exception:
+                    pass
+
+            if not isinstance(runs_resp, Exception) and getattr(runs_resp, "status_code", None) == 200:
+                raw_runs = runs_resp.json().get("workflow_runs", [])
+                for r in raw_runs:
+                    duration_str = "--"
+                    if r.get("run_started_at") and r.get("updated_at"):
+                        try:
+                            start = datetime.fromisoformat(r["run_started_at"].replace("Z", "+00:00"))
+                            end = datetime.fromisoformat(r["updated_at"].replace("Z", "+00:00"))
+                            secs = int((end - start).total_seconds())
+                            duration_str = f"{secs // 60}m {secs % 60}s" if secs >= 60 else f"{secs}s"
+                        except Exception:
+                            pass
+
+                    runs_data.append({
+                        "id": r.get("id"),
+                        "run_number": r.get("run_number"),
+                        "name": r.get("name"),
+                        "display_title": r.get("display_title") or r.get("name"),
+                        "event": r.get("event"),
+                        "status": r.get("status"),
+                        "conclusion": r.get("conclusion"),
+                        "branch": r.get("head_branch") or "main",
+                        "commit_sha": (r.get("head_sha") or "")[:7],
+                        "commit_msg": (r.get("head_commit") or {}).get("message", "").split("\n")[0][:60],
+                        "html_url": r.get("html_url"),
+                        "created_at": r.get("created_at"),
+                        "duration": duration_str,
+                        "actor": {
+                            "login": (r.get("actor") or {}).get("login", "automation"),
+                            "avatar_url": (r.get("actor") or {}).get("avatar_url", "")
+                        }
+                    })
+
+            if not isinstance(wf_resp, Exception) and getattr(wf_resp, "status_code", None) == 200:
+                raw_wfs = wf_resp.json().get("workflows", [])
+                seen_files = set()
+                for w in raw_wfs:
+                    fname = w.get("path", "").split("/")[-1]
+                    seen_files.add(fname)
+                    loc = local_map.get(fname, {})
+                    workflows_data.append({
+                        "id": w.get("id"),
+                        "name": w.get("name") or loc.get("name", fname),
+                        "path": w.get("path") or f".github/workflows/{fname}",
+                        "file_name": fname,
+                        "state": w.get("state") or "active",
+                        "html_url": w.get("html_url") or f"https://github.com/{repo}/actions/workflows/{fname}",
+                        "badge_url": w.get("badge_url"),
+                        "has_dispatch": loc.get("has_dispatch", True),
+                        "inputs": loc.get("inputs", [])
+                    })
+
+                # Append any local workflows not present in GitHub API response
+                for loc in local_defs:
+                    if loc["file_name"] not in seen_files:
+                        workflows_data.append({
+                            "id": loc["file_name"],
+                            "name": loc["name"],
+                            "path": loc["path"],
+                            "file_name": loc["file_name"],
+                            "state": "active",
+                            "html_url": f"https://github.com/{repo}/actions/workflows/{loc['file_name']}",
+                            "badge_url": None,
+                            "has_dispatch": loc.get("has_dispatch", True),
+                            "inputs": loc.get("inputs", [])
+                        })
+    except Exception as fetch_err:
+        print(f"[GitHub API Error] {fetch_err}")
+
+    # Fallback if GitHub API was unreachable: use full dynamic local definitions
+    if not workflows_data:
+        for loc in local_defs:
+            workflows_data.append({
+                "id": loc["file_name"],
+                "name": loc["name"],
+                "path": loc["path"],
+                "file_name": loc["file_name"],
+                "state": "active",
+                "html_url": f"https://github.com/{repo}/actions/workflows/{loc['file_name']}",
+                "badge_url": None,
+                "has_dispatch": loc.get("has_dispatch", True),
+                "inputs": loc.get("inputs", [])
+            })
+
+    result_payload = {
+        "repo": repo,
+        "repo_actions_url": f"https://github.com/{repo}/actions",
+        "has_server_token": bool(gh_token),
+        "selected_workflow": clean_wf,
+        "workflows": workflows_data,
+        "runs": runs_data
+    }
+    _github_telemetry_cache[clean_wf] = {
+        "timestamp": time.time(),
+        "data": result_payload
+    }
+    return result_payload
+
+
+@app.post("/api/admin/github/workflows/{workflow_file}/dispatch")
+async def dispatch_github_workflow(
+    workflow_file: str,
+    payload: DispatchWorkflowRequest,
+    admin: User = Depends(require_master_admin)
+):
+    repo = "vorarahul4700/outreachPilot"
+    # Only ever use the server-side token. A caller-supplied token is ignored so a
+    # compromised/forged admin session can't smuggle in its own credentials.
+    token = os.getenv("GITHUB_TOKEN") or os.getenv("GH_TOKEN")
+    if not token:
+        raise HTTPException(
+            status_code=400,
+            detail="GitHub token is not configured on the server. Set GITHUB_TOKEN in the environment."
+        )
+
+    clean_file = workflow_file.split("/")[-1]
+    if not clean_file.endswith(".yml") and not clean_file.endswith(".yaml"):
+        clean_file += ".yml"
+
+    # Allowlist: only dispatch workflows that actually exist in .github/workflows,
+    # never an arbitrary filename passed in the URL.
+    _wf_dir = os.path.join(os.path.dirname(__file__), ".github", "workflows")
+    try:
+        _allowed = {f for f in os.listdir(_wf_dir) if f.endswith((".yml", ".yaml"))}
+    except Exception:
+        _allowed = set()
+    if clean_file not in _allowed:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Unknown workflow '{clean_file}'. Allowed: {sorted(_allowed) or 'none found'}."
+        )
+
+    headers = {
+        "User-Agent": "OutreachPilot-MasterAdmin",
+        "Accept": "application/vnd.github.v3+json",
+        "Authorization": f"Bearer {token}"
+    }
+
+    dispatch_url = f"https://api.github.com/repos/{repo}/actions/workflows/{clean_file}/dispatches"
+
+    # GitHub dispatch expects inputs as string dictionary
+    formatted_inputs = {k: str(v) for k, v in payload.inputs.items() if v is not None} if payload.inputs else {}
+
+    try:
+        import httpx
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            resp = await client.post(
+                dispatch_url,
+                json={"ref": payload.ref or "main", "inputs": formatted_inputs},
+                headers=headers
+            )
+            if resp.status_code in (204, 201, 200):
+                return {
+                    "success": True,
+                    "workflow": clean_file,
+                    "message": f"Successfully triggered '{clean_file}'! GitHub runner jobs will spin up within seconds."
+                }
+            else:
+                err_body = resp.text
+                try:
+                    err_json = resp.json()
+                    err_msg = err_json.get("message", err_body)
+                except Exception:
+                    err_msg = err_body
+                raise HTTPException(
+                    status_code=resp.status_code,
+                    detail=f"GitHub API Error: {err_msg}"
+                )
+    except HTTPException:
+        raise
+    except Exception as ex:
+        raise HTTPException(status_code=500, detail=f"Failed to communicate with GitHub: {str(ex)}")
+
+
+# --- Subscription Tier Administration ---
+
+@app.get("/api/admin/tiers")
+def list_tiers_admin(
+    admin: User = Depends(require_master_admin),
+    db: Session = Depends(get_db)
+):
+    tiers = db.query(SubscriptionTier).order_by(SubscriptionTier.id.asc()).all()
+    sub_counts = dict(
+        db.query(User.subscription_tier, func.count(User.id))
+        .group_by(User.subscription_tier)
+        .all()
+    )
+
+    return {
+        "tiers": [
+            {
+                "id": t.id,
+                "code": t.code,
+                "name": t.name,
+                "subtitle": t.subtitle or "",
+                "price_inr": t.price_inr,
+                "daily_pitch_limit": t.daily_pitch_limit,
+                "features": t.features or [],
+                "badge": t.badge or "",
+                "is_active": t.is_active,
+                "subscriber_count": sub_counts.get(t.code, 0)
+            }
+            for t in tiers
+        ]
+    }
+
+
+@app.post("/api/admin/tiers")
+def create_tier_admin(
+    payload: CreateTierRequest,
+    admin: User = Depends(require_master_admin),
+    db: Session = Depends(get_db)
+):
+    code = payload.code.strip().lower()
+    existing = db.query(SubscriptionTier).filter(SubscriptionTier.code == code).first()
+    if existing:
+        raise HTTPException(status_code=400, detail=f"Tier with code '{code}' already exists.")
+
+    tier = SubscriptionTier(
+        code=code,
+        name=payload.name.strip(),
+        subtitle=payload.subtitle.strip() if payload.subtitle else "",
+        price_inr=payload.price_inr,
+        daily_pitch_limit=payload.daily_pitch_limit,
+        features=payload.features or [],
+        badge=payload.badge.strip() if payload.badge else None,
+        is_active=True
+    )
+    db.add(tier)
+    db.commit()
+    db.refresh(tier)
+    return {"success": True, "tier_id": tier.id, "message": f"Created tier '{tier.name}'."}
+
+
+@app.put("/api/admin/tiers/{tier_id}")
+def update_tier_admin(
+    tier_id: int,
+    payload: UpdateTierRequest,
+    admin: User = Depends(require_master_admin),
+    db: Session = Depends(get_db)
+):
+    tier = db.query(SubscriptionTier).filter(SubscriptionTier.id == tier_id).first()
+    if not tier:
+        raise HTTPException(status_code=404, detail="Subscription tier not found")
+
+    tier.name = payload.name.strip()
+    tier.subtitle = payload.subtitle.strip() if payload.subtitle else ""
+    tier.price_inr = payload.price_inr
+    tier.daily_pitch_limit = payload.daily_pitch_limit
+    tier.features = payload.features or []
+    tier.badge = payload.badge.strip() if payload.badge else None
+    tier.is_active = payload.is_active
+
+    users_synced = 0
+    if payload.sync_users and tier.code != "master_admin":
+        users_synced = db.query(User).filter(User.subscription_tier == tier.code).update(
+            {User.daily_pitch_limit: tier.daily_pitch_limit},
+            synchronize_session=False
+        )
+
+    db.commit()
+    return {
+        "success": True,
+        "tier_id": tier.id,
+        "name": tier.name,
+        "daily_pitch_limit": tier.daily_pitch_limit,
+        "price_inr": tier.price_inr,
+        "users_synced": users_synced,
+        "message": f"Updated '{tier.name}' tier plan successfully ({users_synced} users synced to {tier.daily_pitch_limit} pitches/day)."
+    }
+
+
+# --- Admin: Cold Outreach Pitches & Delivery Telemetry ---
+@app.get("/api/admin/pitches")
+def list_pitches_admin(
+    filter: str = Query("today"),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(25, ge=5, le=100),
+    search: str = Query(""),
+    sort_by: str = Query("sent_at"),
+    sort_order: str = Query("desc"),
+    admin: User = Depends(require_master_admin),
+    db: Session = Depends(get_db)
+):
+    """
+    Returns verified cold outreach pitches dispatched across all users.
+    Supports time filtering (today vs all), search, sorting, and pagination.
+    """
+    import math
+    now_utc = datetime.utcnow()
+    today_start = datetime(now_utc.year, now_utc.month, now_utc.day, 0, 0, 0)
+
+    # 1. Base query from OutreachLog
+    query = db.query(OutreachLog).options(
+        joinedload(OutreachLog.company),
+        joinedload(OutreachLog.user)
+    )
+
+    # Pre-calculate counts
+    today_count = db.query(func.count(OutreachLog.id)).filter(OutreachLog.sent_at >= today_start).scalar() or 0
+    total_count_all = db.query(func.count(OutreachLog.id)).scalar() or 0
+
+    if filter == "today":
+        query = query.filter(OutreachLog.sent_at >= today_start)
+
+    if search:
+        search_term = f"%{search.strip().lower()}%"
+        query = query.outerjoin(Company, OutreachLog.company_id == Company.id)\
+                     .outerjoin(User, OutreachLog.user_id == User.id)\
+                     .filter(
+                         or_(
+                             func.lower(OutreachLog.recipient_email).like(search_term),
+                             func.lower(OutreachLog.subject).like(search_term),
+                             func.lower(Company.name).like(search_term),
+                             func.lower(Company.domain).like(search_term),
+                             func.lower(User.email).like(search_term)
+                         )
+                     )
+
+    # Sorting
+    is_asc = (sort_order.lower() == "asc")
+    if sort_by == "sent_at":
+        order_col = OutreachLog.sent_at.asc() if is_asc else OutreachLog.sent_at.desc()
+    elif sort_by == "recipient":
+        order_col = OutreachLog.recipient_email.asc() if is_asc else OutreachLog.recipient_email.desc()
+    elif sort_by == "subject":
+        order_col = OutreachLog.subject.asc() if is_asc else OutreachLog.subject.desc()
+    elif sort_by == "status":
+        order_col = OutreachLog.status.asc() if is_asc else OutreachLog.status.desc()
+    else:
+        order_col = OutreachLog.sent_at.desc()
+
+    total_filtered = query.count()
+    records = query.order_by(order_col).offset((page - 1) * page_size).limit(page_size).all()
+
+    # Fallback to ColdPitch table if OutreachLog is empty
+    if total_filtered == 0 and total_count_all == 0:
+        cp_query = db.query(ColdPitch).options(
+            joinedload(ColdPitch.company),
+            joinedload(ColdPitch.user)
+        )
+        if filter == "today":
+            cp_query = cp_query.filter(ColdPitch.sent_at >= today_start)
+        else:
+            cp_query = cp_query.filter(ColdPitch.status == "SENT")
+
+        if search:
+            search_term = f"%{search.strip().lower()}%"
+            cp_query = cp_query.outerjoin(Company, ColdPitch.company_id == Company.id)\
+                               .outerjoin(User, ColdPitch.user_id == User.id)\
+                               .filter(
+                                   or_(
+                                       func.lower(ColdPitch.target_email).like(search_term),
+                                       func.lower(ColdPitch.subject_line).like(search_term),
+                                       func.lower(Company.name).like(search_term),
+                                       func.lower(Company.domain).like(search_term),
+                                       func.lower(User.email).like(search_term)
+                                   )
+                               )
+
+        total_filtered = cp_query.count()
+        today_count = db.query(func.count(ColdPitch.id)).filter(ColdPitch.sent_at >= today_start).scalar() or 0
+        total_count_all = db.query(func.count(ColdPitch.id)).filter(ColdPitch.status == "SENT").scalar() or 0
+        cp_records = cp_query.order_by(ColdPitch.sent_at.desc() if not is_asc else ColdPitch.sent_at.asc()).offset((page - 1) * page_size).limit(page_size).all()
+
+        pitches_list = [
+            {
+                "id": cp.id,
+                "company_id": cp.company_id,
+                "company_name": cp.company.name if cp.company else "Unknown",
+                "company_domain": cp.company.domain if cp.company else "",
+                "company_city": cp.company.city if cp.company else "",
+                "recipient_email": cp.target_email or "",
+                "sender_email": cp.user.email if cp.user else "System",
+                "sender_name": cp.user.name if cp.user else "Admin",
+                "subject": cp.subject_line,
+                "email_body": cp.email_body or "",
+                "delivery_method": cp.delivery_method or "OAUTH_DIRECT",
+                "status": cp.status or "SENT",
+                "error_message": None,
+                "sent_at": cp.sent_at.strftime("%b %d, %Y %I:%M %p") if cp.sent_at else (cp.created_at.strftime("%b %d, %Y %I:%M %p") if cp.created_at else "")
+            }
+            for cp in cp_records
+        ]
+    else:
+        pitches_list = [
+            {
+                "id": log.id,
+                "company_id": log.company_id,
+                "company_name": log.company.name if log.company else "Unknown",
+                "company_domain": log.company.domain if log.company else "",
+                "company_city": log.company.city if log.company else "",
+                "recipient_email": log.recipient_email,
+                "sender_email": log.user.email if log.user else "System",
+                "sender_name": log.user.name if log.user else "Admin",
+                "subject": log.subject,
+                "email_body": log.email_body or "",
+                "delivery_method": log.delivery_method or "GMAIL_OAUTH",
+                "status": log.status or "SENT",
+                "error_message": log.error_message,
+                "sent_at": log.sent_at.strftime("%b %d, %Y %I:%M %p") if log.sent_at else ""
+            }
+            for log in records
+        ]
+
+    return {
+        "filter": filter,
+        "page": page,
+        "page_size": page_size,
+        "total": total_filtered,
+        "today_count": today_count,
+        "total_count_all": total_count_all,
+        "total_pages": max(1, math.ceil(total_filtered / page_size)),
+        "pitches": pitches_list
+    }
+
+
+# --- Master Kill Switch Administration ---
+@app.get("/api/admin/system/kill-switch")
+def get_kill_switch_status(
+    admin: User = Depends(require_master_admin),
+    db: Session = Depends(get_db)
+):
+    """Returns the current state of the Subscription & RBAC Kill Switch."""
+    return {
+        "active": is_subscription_kill_switch_active(db)
+    }
+
+
+@app.post("/api/admin/system/kill-switch")
+async def toggle_kill_switch_status(
+    request: Request,
+    admin: User = Depends(require_master_admin),
+    db: Session = Depends(get_db)
+):
+    """
+    Toggles the Master Subscription & RBAC Kill Switch.
+
+    Design contract (state preservation):
+    - The kill switch is a GLOBAL OVERLAY flag only. It never touches individual
+      User.subscription_tier or User.daily_pitch_limit columns.
+    - When OFF → each user's real purchased/assigned tier is automatically restored
+      because auth_status and get_user_subscription_info always read from the DB row.
+    - When ON  → all logged-in users are presented as Temp Users (infinite pitches)
+      without any DB mutation. Their real tier is preserved in real_subscription_tier.
+    """
+    try:
+        body = await request.json()
+    except Exception:
+        body = {}
+    new_state = bool(body.get("active", False))
+    previous_state = is_subscription_kill_switch_active(db)
+    set_subscription_kill_switch(new_state, db)
+    return {
+        "active": new_state,
+        "previous_state": previous_state,
+        "state_preserved": True,  # User DB rows are never mutated; real tiers always persist
+        "message": (
+            "Kill Switch ENABLED — Open-access mode active. All logged-in users "
+            "get infinite pitch generation. Subscription UI suppressed. "
+            "Individual user tiers are preserved in DB and will be fully restored on disable."
+            if new_state else
+            "Kill Switch DISABLED — Standard subscription tiers, RBAC, and daily quota limits "
+            "restored. Each user's previously purchased/assigned plan is automatically in effect."
+        )
+    }
+
 
 
 if __name__ == "__main__":

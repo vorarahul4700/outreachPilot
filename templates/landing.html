@@ -202,6 +202,11 @@
         <a class="hover:text-primary transition-colors whitespace-nowrap" href="#security">
           <span class="hidden xl:inline text-secondary/70">04 / </span>Safe Gmail
         </a>
+        {% if not subscription_kill_switch %}
+        <a class="hover:text-primary transition-colors whitespace-nowrap" href="#pricing">
+          <span class="hidden xl:inline text-secondary/70">05 / </span>Pricing
+        </a>
+        {% endif %}
       </nav>
 
       <!-- Right Action Cluster -->
@@ -672,6 +677,218 @@
         </div>
       </div>
     </section>
+
+    {% if not subscription_kill_switch %}
+    <!-- SECTION 05: SUBSCRIPTION PLANS & DAILY QUOTAS -->
+    <section class="w-full max-w-6xl px-6 py-12" id="pricing">
+      <div class="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-outline pb-4">
+        <div>
+          <div class="inline-flex items-center gap-1.5 text-xs font-mono text-secondary mb-1">
+            <span class="material-symbols-outlined text-sm">loyalty</span>
+            <span>05 / TRANSPARENT PRICING &amp; DAILY QUOTAS</span>
+          </div>
+          <h2 class="text-2xl sm:text-3xl font-display font-bold text-primary">
+            Predictable Outreach Limits. Zero Spam Tax.
+          </h2>
+          <p class="text-xs sm:text-sm text-on-surface-variant mt-1 max-w-2xl">
+            Start 100% free with 10 verified founder pitches every day. Scale your daily quota with Pro or Premium+ as your job search or client acquisition accelerates.
+          </p>
+        </div>
+        {% if is_logged_in and sub_info %}
+        <div class="shrink-0 p-3 rounded-xl bg-surface-container border border-secondary/30 flex items-center gap-3">
+          <div class="w-2.5 h-2.5 rounded-full bg-secondary animate-pulse"></div>
+          <div class="flex flex-col text-xs font-mono">
+            <span class="text-on-surface font-semibold">Active: <span class="text-secondary">{{ sub_info.tier_name }}</span></span>
+            <span class="text-[11px] text-on-surface-variant">{{ sub_info.pitches_remaining }} / {{ sub_info.daily_pitch_limit }} pitches left today</span>
+          </div>
+          <a href="/app" class="px-2.5 py-1 rounded bg-secondary text-on-secondary text-xs font-bold font-mono hover:opacity-90 transition">Open App</a>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- Pricing Cards Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        <!-- Tier 1: Free Starter -->
+        <div class="bento-cell p-6 sm:p-7 border border-outline flex flex-col justify-between relative">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-mono uppercase tracking-wider text-on-surface-variant font-bold">Starter Pack</span>
+              <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-surface-container text-on-surface-variant">FREE FOREVER</span>
+            </div>
+            <h3 class="text-xl font-display font-bold text-primary">Free Job Seeker</h3>
+            <p class="text-xs text-on-surface-variant mt-1 mb-4">Essential lead discovery &amp; personalized outreach for casual applicants.</p>
+
+            <div class="flex items-baseline gap-1 my-4 pb-4 border-b border-outline/50">
+              <span class="text-3xl font-display font-bold text-primary">₹0</span>
+              <span class="text-xs font-mono text-on-surface-variant">/ forever</span>
+            </div>
+
+            <!-- Daily Quota Callout -->
+            <div class="p-3 rounded-lg bg-surface-container/70 border border-outline-variant/40 mb-4 flex items-center justify-between">
+              <span class="text-xs font-mono font-semibold text-primary">Daily Outreach Quota</span>
+              <span class="text-xs font-mono font-bold text-secondary">10 Pitches / Day</span>
+            </div>
+
+            <ul class="space-y-2.5 text-xs text-on-surface mb-6">
+              <li class="flex items-start gap-2">
+                <span class="material-symbols-outlined text-secondary text-sm shrink-0 mt-0.5">check_circle</span>
+                <span><strong>10 AI Cold Pitches / Day</strong> (300 / mo)</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="material-symbols-outlined text-secondary text-sm shrink-0 mt-0.5">check_circle</span>
+                <span>Access 132,000+ verified Indian tech firms</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="material-symbols-outlined text-secondary text-sm shrink-0 mt-0.5">check_circle</span>
+                <span>Direct founder &amp; HR contact email discovery</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="material-symbols-outlined text-secondary text-sm shrink-0 mt-0.5">check_circle</span>
+                <span>Resume skill parsing &amp; match scoring</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="material-symbols-outlined text-secondary text-sm shrink-0 mt-0.5">check_circle</span>
+                <span>Standard Gmail OAuth sending from your inbox</span>
+              </li>
+              <li class="flex items-start gap-2 text-on-surface-variant">
+                <span class="material-symbols-outlined text-sm shrink-0 mt-0.5">schedule</span>
+                <span>Automatic quota refresh at midnight UTC</span>
+              </li>
+            </ul>
+          </div>
+
+          <div class="pt-4 border-t border-outline/40">
+            {% if is_logged_in %}
+            <a href="/app" class="w-full py-2.5 px-4 rounded-lg bg-surface-container hover:bg-surface-container-high border border-outline text-on-surface text-xs font-mono font-bold text-center block transition">
+              {% if sub_info.tier_code == 'free' %}Current Active Plan{% else %}Switch to Free{% endif %}
+            </a>
+            {% else %}
+            <a href="/auth/google/login" class="w-full py-2.5 px-4 rounded-lg bg-surface-container hover:bg-surface-container-high border border-outline text-on-surface text-xs font-mono font-bold text-center block transition">
+              Get Started Free
+            </a>
+            {% endif %}
+          </div>
+        </div>
+
+        <!-- Tier 2: Pro Outreach (Popular) -->
+        <div class="bento-cell p-6 sm:p-7 border-2 border-primary bg-primary/5 shadow-lg flex flex-col justify-between relative ring-1 ring-primary/30">
+          <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-primary text-on-primary text-[10px] font-mono font-bold uppercase tracking-wider shadow">
+            Most Popular
+          </div>
+          <div>
+            <div class="flex items-center justify-between mb-3 pt-1">
+              <span class="text-xs font-mono uppercase tracking-wider text-primary font-bold">Growth Velocity</span>
+              <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-primary/20 text-primary border border-primary/30">PRO PLAN</span>
+            </div>
+            <h3 class="text-xl font-display font-bold text-primary">Pro Outreach</h3>
+            <p class="text-xs text-on-surface-variant mt-1 mb-4">High-impact multi-channel outreach for active applicants scaling replies.</p>
+
+            <div class="flex items-baseline gap-1 my-4 pb-4 border-b border-primary/20">
+              <span class="text-3xl font-display font-bold text-primary">₹499</span>
+              <span class="text-xs font-mono text-on-surface-variant">/ month</span>
+            </div>
+
+            <!-- Daily Quota Callout -->
+            <div class="p-3 rounded-lg bg-primary/10 border border-primary/30 mb-4 flex items-center justify-between">
+              <span class="text-xs font-mono font-semibold text-primary">Daily Outreach Quota</span>
+              <span class="text-xs font-mono font-bold text-primary">50 Pitches / Day</span>
+            </div>
+
+            <ul class="space-y-2.5 text-xs text-on-surface mb-6">
+              <li class="flex items-start gap-2">
+                <span class="material-symbols-outlined text-primary text-sm shrink-0 mt-0.5">check_circle</span>
+                <span><strong>50 AI Cold Pitches / Day</strong> (1,500 / mo)</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="material-symbols-outlined text-primary text-sm shrink-0 mt-0.5">check_circle</span>
+                <span>Deep website crawler &amp; tech-stack telemetry</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="material-symbols-outlined text-primary text-sm shrink-0 mt-0.5">check_circle</span>
+                <span>Auto-PDF resume attachment on Gmail dispatch</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="material-symbols-outlined text-primary text-sm shrink-0 mt-0.5">check_circle</span>
+                <span>Custom pitch tone tuning (Executive, Technical, Direct)</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="material-symbols-outlined text-primary text-sm shrink-0 mt-0.5">check_circle</span>
+                <span>Bulk AI pitch generator for filtered batches</span>
+              </li>
+              <li class="flex items-start gap-2 text-on-surface-variant">
+                <span class="material-symbols-outlined text-sm shrink-0 mt-0.5">support_agent</span>
+                <span>Standard priority email support</span>
+              </li>
+            </ul>
+          </div>
+
+          <div class="pt-4 border-t border-primary/20">
+            <a href="/app" class="btn-tactile-ecru w-full py-2.5 px-4 rounded-lg text-xs font-mono font-bold text-center block shadow transition">
+              {% if is_logged_in and sub_info.tier_code == 'pro' %}Current Active Plan{% else %}Upgrade to Pro{% endif %}
+            </a>
+          </div>
+        </div>
+
+        <!-- Tier 3: Premium+ Unlimited -->
+        <div class="bento-cell p-6 sm:p-7 border border-outline flex flex-col justify-between relative">
+          <div>
+            <div class="flex items-center justify-between mb-3">
+              <span class="text-xs font-mono uppercase tracking-wider text-secondary font-bold">Intensive Agency &amp; Senior</span>
+              <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-secondary/15 text-secondary border border-secondary/30">PREMIUM+</span>
+            </div>
+            <h3 class="text-xl font-display font-bold text-primary">Premium+ Unlimited</h3>
+            <p class="text-xs text-on-surface-variant mt-1 mb-4">Maximum outreach volume with 1-click batch sending and cloud priority.</p>
+
+            <div class="flex items-baseline gap-1 my-4 pb-4 border-b border-outline/50">
+              <span class="text-3xl font-display font-bold text-primary">₹999</span>
+              <span class="text-xs font-mono text-on-surface-variant">/ month</span>
+            </div>
+
+            <!-- Daily Quota Callout -->
+            <div class="p-3 rounded-lg bg-secondary/10 border border-secondary/30 mb-4 flex items-center justify-between">
+              <span class="text-xs font-mono font-semibold text-secondary">Daily Outreach Quota</span>
+              <span class="text-xs font-mono font-bold text-secondary">100 Pitches / Day</span>
+            </div>
+
+            <ul class="space-y-2.5 text-xs text-on-surface mb-6">
+              <li class="flex items-start gap-2">
+                <span class="material-symbols-outlined text-secondary text-sm shrink-0 mt-0.5">check_circle</span>
+                <span><strong>100 AI Cold Pitches / Day</strong> (3,000 / mo)</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="material-symbols-outlined text-secondary text-sm shrink-0 mt-0.5">check_circle</span>
+                <span>Highest priority cloud scraper worker queue</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="material-symbols-outlined text-secondary text-sm shrink-0 mt-0.5">check_circle</span>
+                <span>1-Click direct Gmail batch dispatch</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="material-symbols-outlined text-secondary text-sm shrink-0 mt-0.5">check_circle</span>
+                <span>Unlimited AI pitch regenerations &amp; rewrites</span>
+              </li>
+              <li class="flex items-start gap-2">
+                <span class="material-symbols-outlined text-secondary text-sm shrink-0 mt-0.5">check_circle</span>
+                <span>Export enriched CSV with phone &amp; LinkedIn profiles</span>
+              </li>
+              <li class="flex items-start gap-2 text-on-surface-variant">
+                <span class="material-symbols-outlined text-sm shrink-0 mt-0.5">star</span>
+                <span>Dedicated 24/7 priority founder support</span>
+              </li>
+            </ul>
+          </div>
+
+          <div class="pt-4 border-t border-outline/40">
+            <a href="/app" class="w-full py-2.5 px-4 rounded-lg bg-surface-container hover:bg-surface-container-high border border-outline text-on-surface text-xs font-mono font-bold text-center block transition">
+              {% if is_logged_in and sub_info.tier_code == 'premium_plus' %}Current Active Plan{% else %}Get Premium+{% endif %}
+            </a>
+          </div>
+        </div>
+
+      </div>
+    </section>
+    {% endif %}
 
     <!-- FINAL CTA BANNER -->
     <section class="w-full max-w-5xl px-6 py-16 text-center">

@@ -113,7 +113,7 @@
   </script>
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-  <link rel="stylesheet" href="/static/css/style.css?v=8.6">
+  <link rel="stylesheet" href="/static/css/style.css?v=8.7">
 </head>
 <body class="bg-surface text-on-surface font-body-md antialiased min-h-screen flex selection:bg-primary-container selection:text-on-primary-container overflow-x-hidden">
 
@@ -172,6 +172,13 @@
           <span class="active-dot hidden ml-auto w-1.5 h-1.5 rounded-full bg-primary sidebar-badge"></span>
         </button>
 
+        <!-- Admin Panel Link (Master Admins Only) -->
+        <a href="/admin" id="nav-admin-link" class="{% if not is_master_admin %}hidden{% endif %} flex items-center gap-3 px-3 py-2 rounded-lg bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 border border-amber-500/30 font-medium transition cursor-pointer text-left w-full mt-2" title="Master Admin Dashboard">
+          <span class="material-symbols-outlined text-[18px] shrink-0">admin_panel_settings</span>
+          <span class="text-label-md font-label-md sidebar-text font-bold">Admin Panel</span>
+          <span class="ml-auto px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500 text-black">MASTER</span>
+        </a>
+
       </nav>
     </div>
 
@@ -187,6 +194,28 @@
       </div>
       {% endif %}
 
+      {% if not subscription_kill_switch %}
+      <!-- Sidebar Subscription & Quota Status Card (Clickable to open modal) -->
+      <div id="sidebar-quota-card" class="p-2.5 rounded-xl bg-surface-container border border-outline-variant/30 flex flex-col gap-2 cursor-pointer hover:border-primary/50 transition group select-none" title="View Subscription Details & Daily Quota">
+        <div class="flex items-center justify-between gap-2 min-w-0">
+          <span id="sidebar-tier-badge" class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-primary/10 text-primary border border-primary/20 shrink-0 truncate max-w-[130px]" title="Role &amp; Plan">
+            {{ user_subscription_tier_name if user_subscription_tier_name else "Free Starter" }}
+          </span>
+          <span class="text-[11px] text-on-surface-variant font-mono shrink-0 whitespace-nowrap text-right">
+            <strong id="sidebar-quota-remaining" class="text-on-surface">{{ user_remaining if user_remaining is defined else 10 }}</strong> / <span id="sidebar-quota-total">{{ user_daily_limit if user_daily_limit is defined else 10 }}</span> left
+          </span>
+        </div>
+        <!-- Mini Progress Bar -->
+        <div class="w-full h-1.5 bg-surface-container-highest rounded-full overflow-hidden">
+          <div id="sidebar-quota-progress" class="h-full bg-primary rounded-full transition-all duration-300" style="width: 100%;"></div>
+        </div>
+        <div class="flex items-center justify-between text-[10px] text-on-surface-variant group-hover:text-primary transition-colors">
+          <span>Manage Subscription &amp; Quota</span>
+          <span class="material-symbols-outlined text-[13px]">chevron_right</span>
+        </div>
+      </div>
+      {% endif %}
+
       <!-- State 1: Logged In (Only shown when authenticated) -->
       <div id="auth-box-logged-in" class="{% if not is_logged_in %}hidden{% endif %} flex items-center justify-between px-2">
         <div class="flex items-center gap-2.5 min-w-0">
@@ -198,6 +227,9 @@
             <div class="flex items-center gap-1.5">
               <span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
               <span class="text-caption font-caption text-secondary">Google Connected</span>
+              {% if subscription_kill_switch and not is_master_admin %}
+              <span class="text-[9px] font-mono px-1.5 py-0.2 rounded bg-amber-500/15 text-amber-500 border border-amber-500/30">TEMP USER</span>
+              {% endif %}
             </div>
           </div>
         </div>
@@ -266,7 +298,29 @@
             <h1 class="text-headline-xl font-headline-xl text-on-surface font-bold tracking-tight">Companies</h1>
             <p id="header-leads-subtitle" class="text-body-md font-body-md text-on-surface-variant mt-1">Browse, research, and reach out to <span id="header-leads-counter">33603</span> verified businesses.</p>
           </div>
-          <div class="flex items-center gap-3">
+          <div class="flex flex-wrap items-center gap-2.5 sm:gap-3">
+            {% if not subscription_kill_switch %}
+            <!-- Header Subscription & Daily Quota Widget (Click to open modal) -->
+            <div id="header-quota-widget" class="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-surface-container border border-outline-variant/40 shadow-sm cursor-pointer hover:border-primary/60 transition group select-none" title="Click to view subscription plan details and daily quota limits">
+              <div class="flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-primary text-[18px]">verified_user</span>
+                <span id="user-header-tier-badge" class="px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wider bg-primary/10 text-primary border border-primary/20 shrink-0 whitespace-nowrap">
+                  {{ user_subscription_tier_name if user_subscription_tier_name else "Free Starter" }}
+                </span>
+              </div>
+              <div class="h-4 w-px bg-outline-variant/40"></div>
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-mono text-on-surface-variant">
+                  Daily Quota: <strong id="user-header-quota-remaining" class="text-on-surface">{{ user_remaining if user_remaining is defined else 10 }}</strong> / <span id="user-header-quota-total">{{ user_daily_limit if user_daily_limit is defined else 10 }}</span> left
+                </span>
+                <div class="w-14 h-1.5 bg-surface-container-highest rounded-full overflow-hidden hidden sm:block">
+                  <div id="user-header-quota-bar" class="h-full bg-primary rounded-full transition-all duration-300" style="width: 100%;"></div>
+                </div>
+              </div>
+              <span class="material-symbols-outlined text-[16px] text-on-surface-variant group-hover:text-primary transition-colors">expand_more</span>
+            </div>
+            {% endif %}
+
             <button id="btn-header-refresh" type="button" class="btn-tactile-slate flex items-center gap-2 px-3.5 py-2 rounded text-label-md font-label-md font-semibold transition-colors cursor-pointer" title="Refresh Directory">
               <span class="material-symbols-outlined text-[18px]">refresh</span>
               <span>Refresh</span>
@@ -1344,6 +1398,156 @@
     </div>
   </div>
 
+  {% if not subscription_kill_switch %}
+  <!-- SUBSCRIPTION & DAILY QUOTA MANAGER MODAL -->
+  <div id="modal-user-subscription" class="fixed inset-0 z-[135] w-screen h-screen bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+    <div class="relative bg-surface-container-low border border-outline-variant/30 rounded-2xl max-w-3xl w-full p-5 sm:p-7 space-y-6 shadow-2xl my-auto max-h-[90vh] overflow-y-auto">
+      
+      <!-- Modal Header -->
+      <div class="flex items-start justify-between border-b border-outline-variant/20 pb-4">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0">
+            <span class="material-symbols-outlined text-[22px]">loyalty</span>
+          </div>
+          <div>
+            <h3 class="text-headline-md font-headline-md font-bold text-on-surface">Subscription &amp; Daily Outreach Quota</h3>
+            <p class="text-xs text-on-surface-variant font-mono">Real-time daily sending limits &amp; tier upgrade options</p>
+          </div>
+        </div>
+        <button id="btn-close-sub-modal" type="button" class="text-on-surface-variant hover:text-on-surface p-1.5 rounded-lg hover:bg-surface-container transition cursor-pointer" title="Close Modal">
+          <span class="material-symbols-outlined text-[20px]">close</span>
+        </button>
+      </div>
+
+      <!-- Current Quota & Plan Status Card -->
+      <div class="p-4 sm:p-5 rounded-xl bg-surface-container border border-outline-variant/40 flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div class="space-y-1">
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-mono text-on-surface-variant uppercase tracking-wider font-semibold">Active Plan</span>
+            <span id="sub-modal-tier-badge" class="px-2.5 py-0.5 rounded text-[11px] font-mono font-bold uppercase tracking-wider bg-primary/15 text-primary border border-primary/30">
+              {{ user_subscription_tier_name if user_subscription_tier_name else "Free Starter" }}
+            </span>
+          </div>
+          <h4 id="sub-modal-tier-title" class="text-lg font-bold text-on-surface">{{ user_subscription_tier_name if user_subscription_tier_name else "Free Job Seeker" }}</h4>
+          <p class="text-xs text-on-surface-variant leading-relaxed">
+            Your daily quota resets automatically every day at <strong class="text-on-surface font-mono">00:00 UTC</strong> (05:30 AM IST).
+          </p>
+        </div>
+
+        <div class="shrink-0 flex items-center gap-3 bg-surface-container-lowest p-3 rounded-xl border border-outline-variant/30">
+          <div class="flex flex-col text-right">
+            <span class="text-[11px] font-mono text-on-surface-variant uppercase">Remaining Today</span>
+            <span class="text-2xl font-bold font-mono text-primary tabular-nums" id="sub-modal-remaining-count">{{ user_remaining if user_remaining is defined else 10 }}</span>
+            <span class="text-[10px] text-on-surface-variant font-mono">of <span id="sub-modal-total-limit">{{ user_daily_limit if user_daily_limit is defined else 10 }}</span> daily limit</span>
+          </div>
+          <div class="w-12 h-12 rounded-full border-4 border-surface-container-high flex items-center justify-center relative">
+            <span class="material-symbols-outlined text-primary text-[20px]">send</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Available Subscription Packs Grid -->
+      <div>
+        <div class="flex items-center justify-between mb-3">
+          <h4 class="text-xs font-mono uppercase tracking-wider text-on-surface-variant font-bold">Available Outreach Packs</h4>
+          <span class="text-[11px] text-on-surface-variant font-mono">Switch or upgrade at any time</span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="sub-modal-plans-grid">
+          
+          <!-- Free Pack Card -->
+          <div class="p-4 rounded-xl bg-surface-container border border-outline-variant/30 flex flex-col justify-between" data-tier-card="free">
+            <div>
+              <div class="flex items-center justify-between mb-1.5">
+                <span class="text-xs font-bold text-on-surface">Free Job Seeker</span>
+                <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-surface-container-highest text-on-surface-variant font-semibold">FREE</span>
+              </div>
+              <div class="flex items-baseline gap-1 my-2">
+                <span class="text-2xl font-bold text-on-surface font-mono">₹0</span>
+                <span class="text-[11px] text-on-surface-variant font-mono">/ forever</span>
+              </div>
+              <div class="p-2 rounded bg-surface-container-lowest text-xs font-mono font-semibold text-primary mb-3">
+                10 Pitches / Day
+              </div>
+              <ul class="text-[11px] space-y-1.5 text-on-surface-variant">
+                <li class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[14px] text-primary">check</span> 10 cold pitches / day</li>
+                <li class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[14px] text-primary">check</span> Verified founder emails</li>
+                <li class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[14px] text-primary">check</span> Standard Gmail sending</li>
+              </ul>
+            </div>
+            <div class="pt-3 mt-3 border-t border-outline-variant/20">
+              <button type="button" class="btn-tier-action w-full py-1.5 rounded-lg text-xs font-mono font-semibold text-center border border-outline-variant/40 bg-surface-container-lowest text-on-surface disabled:opacity-50" data-tier-code="free">
+                Active Plan
+              </button>
+            </div>
+          </div>
+
+          <!-- Pro Pack Card -->
+          <div class="p-4 rounded-xl bg-primary/5 border-2 border-primary flex flex-col justify-between relative shadow-sm" data-tier-card="pro">
+            <div class="absolute -top-2.5 left-1/2 -translate-x-1/2 px-2 py-0.2 rounded-full bg-primary text-on-primary text-[9px] font-mono font-bold uppercase tracking-wider">
+              POPULAR
+            </div>
+            <div>
+              <div class="flex items-center justify-between mb-1.5 pt-1">
+                <span class="text-xs font-bold text-primary">Pro Outreach</span>
+                <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-primary/20 text-primary font-semibold">PRO</span>
+              </div>
+              <div class="flex items-baseline gap-1 my-2">
+                <span class="text-2xl font-bold text-primary font-mono">₹499</span>
+                <span class="text-[11px] text-on-surface-variant font-mono">/ month</span>
+              </div>
+              <div class="p-2 rounded bg-primary/10 text-xs font-mono font-semibold text-primary mb-3">
+                50 Pitches / Day
+              </div>
+              <ul class="text-[11px] space-y-1.5 text-on-surface">
+                <li class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[14px] text-primary">check</span> 50 cold pitches / day</li>
+                <li class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[14px] text-primary">check</span> Deep website crawler</li>
+                <li class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[14px] text-primary">check</span> Auto-PDF resume attachment</li>
+                <li class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[14px] text-primary">check</span> Custom pitch tone tuning</li>
+              </ul>
+            </div>
+            <div class="pt-3 mt-3 border-t border-primary/20">
+              <a href="mailto:founder@outreachpilot.in?subject=Upgrade%20to%20Pro%20Plan" class="btn-tier-action w-full py-1.5 rounded-lg text-xs font-mono font-bold text-center block bg-primary text-on-primary hover:opacity-90 shadow transition" data-tier-code="pro">
+                Upgrade to Pro
+              </a>
+            </div>
+          </div>
+
+          <!-- Premium+ Pack Card -->
+          <div class="p-4 rounded-xl bg-surface-container border border-outline-variant/30 flex flex-col justify-between" data-tier-card="premium_plus">
+            <div>
+              <div class="flex items-center justify-between mb-1.5">
+                <span class="text-xs font-bold text-on-surface">Premium+ Unlimited</span>
+                <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-secondary/15 text-secondary font-semibold">PREMIUM+</span>
+              </div>
+              <div class="flex items-baseline gap-1 my-2">
+                <span class="text-2xl font-bold text-on-surface font-mono">₹999</span>
+                <span class="text-[11px] text-on-surface-variant font-mono">/ month</span>
+              </div>
+              <div class="p-2 rounded bg-surface-container-lowest text-xs font-mono font-semibold text-secondary mb-3">
+                100 Pitches / Day
+              </div>
+              <ul class="text-[11px] space-y-1.5 text-on-surface-variant">
+                <li class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[14px] text-secondary">check</span> 100 cold pitches / day</li>
+                <li class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[14px] text-secondary">check</span> 1-Click batch auto-dispatch</li>
+                <li class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[14px] text-secondary">check</span> Cloud Scout priority queue</li>
+                <li class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[14px] text-secondary">check</span> Unlimited pitch rewrites</li>
+              </ul>
+            </div>
+            <div class="pt-3 mt-3 border-t border-outline-variant/20">
+              <a href="mailto:founder@outreachpilot.in?subject=Upgrade%20to%20Premium%2B%20Plan" class="btn-tier-action w-full py-1.5 rounded-lg text-xs font-mono font-semibold text-center border border-outline-variant/40 bg-surface-container-lowest text-on-surface hover:border-secondary transition block" data-tier-code="premium_plus">
+                Upgrade to Premium+
+              </a>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+  {% endif %}
+
   <!-- LOGIN REQUIRED MODAL -->
   <div id="login-modal" class="fixed inset-0 z-[140] w-screen h-screen bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4 overflow-hidden">
     <div class="relative bg-surface-container-low border border-outline-variant/30 rounded-2xl max-w-lg w-full p-6 sm:p-7 space-y-4 shadow-2xl my-auto text-center">
@@ -1418,6 +1622,11 @@
       "is_logged_in": {{ 'true' if is_logged_in else 'false' }},
       "email": {% if user and is_logged_in %}"{{ user.email }}"{% else %}null{% endif %},
       "is_master_admin": {{ 'true' if is_master_admin else 'false' }},
+      "subscription_tier": "{{ user_subscription_tier if user_subscription_tier else 'free' }}",
+      "subscription_tier_name": "{{ user_subscription_tier_name if user_subscription_tier_name else 'Free Job Seeker' }}",
+      "daily_pitch_limit": {{ user_daily_limit if user_daily_limit is defined else 10 }},
+      "pitches_sent_today": {{ user_sent_today if user_sent_today is defined else 0 }},
+      "pitches_remaining": {{ user_remaining if user_remaining is defined else 10 }},
       "dev_mode": {{ 'true' if dev_mode else 'false' }}
     }
   </script>
@@ -1428,6 +1637,6 @@
       window.__INITIAL_AUTH__ = { is_logged_in: false, email: null, is_master_admin: false, dev_mode: false };
     }
   </script>
-  <script src="/static/js/app.js?v=10.4"></script>
+  <script src="/static/js/app.js?v=10.7"></script>
 </body>
 </html>

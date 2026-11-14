@@ -323,6 +323,75 @@ body.light .btn-primary:hover *,
   color: #FFFFFF !important;
 }
 
+/* Fix Light Mode Black Button Contrast:
+   Ensure buttons and action CTAs using .bg-primary in light mode render with
+   warm tactile amber gold (#F59E0B) and deep slate text (#090A0D) instead of harsh pitch-black blocks. */
+html.light button.bg-primary,
+body.light button.bg-primary,
+.light button.bg-primary,
+html:not(.dark) button.bg-primary,
+html.light a.bg-primary,
+body.light a.bg-primary,
+.light a.bg-primary,
+html:not(.dark) a.bg-primary,
+html.light .bg-primary.text-on-primary,
+body.light .bg-primary.text-on-primary,
+.light .bg-primary.text-on-primary,
+html:not(.dark) .bg-primary.text-on-primary {
+  background-color: #F59E0B !important;
+  color: #090A0D !important;
+  border-color: #D97706 !important;
+  box-shadow: 0 1px 3px rgba(217, 119, 6, 0.25), 0 1px 2px rgba(0, 0, 0, 0.05) !important;
+}
+
+html.light button.bg-primary *,
+body.light button.bg-primary *,
+.light button.bg-primary *,
+html:not(.dark) button.bg-primary *,
+html.light a.bg-primary *,
+body.light a.bg-primary *,
+.light a.bg-primary *,
+html:not(.dark) a.bg-primary *,
+html.light .bg-primary.text-on-primary *,
+body.light .bg-primary.text-on-primary *,
+.light .bg-primary.text-on-primary *,
+html:not(.dark) .bg-primary.text-on-primary * {
+  color: #090A0D !important;
+}
+
+html.light button.bg-primary:hover,
+body.light button.bg-primary:hover,
+.light button.bg-primary:hover,
+html:not(.dark) button.bg-primary:hover,
+html.light a.bg-primary:hover,
+body.light a.bg-primary:hover,
+.light a.bg-primary:hover,
+html:not(.dark) a.bg-primary:hover,
+html.light .bg-primary.text-on-primary:hover,
+body.light .bg-primary.text-on-primary:hover,
+.light .bg-primary.text-on-primary:hover,
+html:not(.dark) .bg-primary.text-on-primary:hover {
+  background-color: #D97706 !important;
+  color: #FFFFFF !important;
+  border-color: #B45309 !important;
+  box-shadow: 0 3px 8px rgba(217, 119, 6, 0.35) !important;
+}
+
+html.light button.bg-primary:hover *,
+body.light button.bg-primary:hover *,
+.light button.bg-primary:hover *,
+html:not(.dark) button.bg-primary:hover *,
+html.light a.bg-primary:hover *,
+body.light a.bg-primary:hover *,
+.light a.bg-primary:hover *,
+html:not(.dark) a.bg-primary:hover *,
+html.light .bg-primary.text-on-primary:hover *,
+body.light .bg-primary.text-on-primary:hover *,
+.light .bg-primary.text-on-primary:hover *,
+html:not(.dark) .bg-primary.text-on-primary:hover * {
+  color: #FFFFFF !important;
+}
+
 .btn-tactile-slate,
 .btn-secondary {
   background-color: rgb(var(--color-surface-container)) !important;

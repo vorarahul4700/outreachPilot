@@ -39,6 +39,22 @@ class User(Base):
     resume_summary = Column(JsonType, nullable=True)
     resume_link = Column(String(500), nullable=True)
     daily_send_limit = Column(Integer, default=50)
+
+    # --- Role & Admin Controls ---
+    is_admin = Column(Boolean, default=False, index=True)
+    is_banned = Column(Boolean, default=False, index=True)
+    ban_reason = Column(String(255), nullable=True)
+
+    # --- Subscription & Tier Controls ---
+    subscription_tier = Column(String(50), default="free", index=True)  # 'free', 'pro', 'premium_plus'
+    subscription_status = Column(String(50), default="active")          # 'active', 'past_due', 'canceled'
+    subscription_end_date = Column(DateTime, nullable=True)
+
+    # --- Pitch Quotas (Free: 10, Pro: 50, Premium+: 100, Admin: 999999) ---
+    daily_pitch_limit = Column(Integer, default=10)
+    pitches_sent_today = Column(Integer, default=0)
+    last_pitch_reset_date = Column(DateTime, default=datetime.utcnow)
+
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
@@ -167,6 +183,31 @@ class ScoutJob(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
+class SubscriptionTier(Base):
+    __tablename__ = "subscription_tiers"
+
+    id = Column(Integer, primary_key=True, index=True)
+    code = Column(String(50), unique=True, index=True, nullable=False)  # 'free', 'pro', 'premium_plus'
+    name = Column(String(100), nullable=False)
+    subtitle = Column(String(100), nullable=True)
+    price_inr = Column(Integer, default=0)
+    daily_pitch_limit = Column(Integer, default=10)
+    features = Column(JsonType, default=list)
+    badge = Column(String(50), nullable=True)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class SystemSetting(Base):
+    __tablename__ = "system_settings"
+
+    key = Column(String(100), primary_key=True, index=True)
+    value = Column(Text, nullable=False)
+    description = Column(String(255), nullable=True)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
 # Database engine & Session factory
 clean_db_url = (DATABASE_URL or "").strip().strip("\"'").strip()
 clean_db_url = clean_db_url.replace("&channel_binding=require", "").replace("?channel_binding=require&", "?").replace("?channel_binding=require", "")
@@ -249,6 +290,78 @@ def init_db():
                 conn.execute(text("CREATE INDEX IF NOT EXISTS ix_company_profiles_company_id ON company_profiles(company_id);"))
                 conn.execute(text("CREATE INDEX IF NOT EXISTS ix_outreach_logs_user_company ON outreach_logs(user_id, company_id);"))
                 conn.commit()
+
+        # Seed default subscription tiers if none exist
+        try:
+            with SessionLocal() as db_session:
+                if db_session.query(SubscriptionTier.id).first() is None:
+                    default_tiers = [
+                        SubscriptionTier(
+                            code="free",
+                            name="Free Job Seeker",
+                            subtitle="Starter Tier",
+                            price_inr=0,
+                            daily_pitch_limit=10,
+                            features=[
+                                "10 pitches / day",
+                                "Full company directory access",
+                                "Verified contact email discovery",
+                                "Standard Gmail OAuth sending"
+                            ],
+                            badge=None,
+                            is_active=True
+                        ),
+                        SubscriptionTier(
+                            code="pro",
+                            name="Pro Outreach",
+                            subtitle="Growth Tier",
+                            price_inr=499,
+                            daily_pitch_limit=50,
+                            features=[
+                                "50 pitches / day",
+                                "Deep AI Website crawler analysis",
+                                "Auto-PDF Resume attachment",
+                                "Bulk pitch generator engine"
+                            ],
+                            badge="Most Popular",
+                            is_active=True
+                        ),
+                        SubscriptionTier(
+                            code="premium_plus",
+                            name="Premium+ Unlimited",
+                            subtitle="Maximum Velocity",
+                            price_inr=999,
+                            daily_pitch_limit=100,
+                            features=[
+                                "100 pitches / day",
+                                "Highest priority email queue",
+                                "Tech-stack deep matching",
+                                "Unlimited AI pitch regenerations"
+                            ],
+                            badge="Maximum Velocity",
+                            is_active=True
+                        ),
+                        SubscriptionTier(
+                            code="master_admin",
+                            name="Master Admin Persona",
+                            subtitle="Superuser",
+                            price_inr=0,
+                            daily_pitch_limit=999999,
+                            features=[
+                                "Infinite pitches / day (Bypass)",
+                                "Zero subscription payment needed",
+                                "Full user and lead administration",
+                                "Act as regular job seeker on /app"
+                            ],
+                            badge="Dual Persona",
+                            is_active=True
+                        ),
+                    ]
+                    db_session.add_all(default_tiers)
+                    db_session.commit()
+                    print("[DB] Initialized default subscription tiers.")
+        except Exception as seed_err:
+            print(f"[DB Warning] Could not seed subscription tiers: {seed_err}")
     except Exception as ex:
         print(f"[DB Warning] Could not auto-create/migrate tables: {ex}")
 

@@ -119,4 +119,20 @@ Thumbs.db
 # ------------------------------------------------------------------------------
 LOCAL_BUSINESS_SCRAPER_CONVERSATION_LOG.md
 
+# Internal audit / review docs — keep local, never publish to the public repo
+SECURITY_PENTEST_REPORT_*.md
+UX_AUDIT_*.md
+UX_FULL_OVERVIEW_*.md
+
+# Runtime logs directory
+logs/
+
+# ------------------------------------------------------------------------------
+# 10. Local Ollama model tooling (LOCAL ONLY — never commit, per owner policy)
+# ------------------------------------------------------------------------------
+local_enrich.py
+*ollama*
+*_ollama_*
+ollama_*
+
 

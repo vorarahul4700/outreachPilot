@@ -1,0 +1,1402 @@
+<!DOCTYPE html>
+<html class="dark" lang="en">
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg">
+  <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
+  <link rel="shortcut icon" href="/static/favicon.ico">
+  <link rel="apple-touch-icon" sizes="180x180" href="/static/favicon.ico">
+  <script>
+    (function() {
+      try {
+        const saved = localStorage.getItem('pilot_theme');
+        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const theme = saved ? saved : (prefersDark ? 'dark' : 'light');
+        if (theme === 'light') {
+          document.documentElement.classList.remove('dark');
+          document.documentElement.classList.add('light');
+        } else {
+          document.documentElement.classList.add('dark');
+          document.documentElement.classList.remove('light');
+        }
+      } catch (e) {}
+    })();
+  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="OutreachPilot Master Admin Dashboard - Lead intelligence, user quotas, subscription tiers, and pipeline telemetry.">
+  <meta name="theme-color" content="#111319">
+  <title>Admin Hub - {{ project_name }}</title>
+
+  <!-- Typography & Fonts (Exact Match) -->
+  <link rel="preload" href="/static/fonts/spacegrotesk-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="/static/fonts/dmsans-latin.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/static/css/fonts.css">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com/3.4.17?plugins=forms@0.5.10,container-queries@0.1.1"></script>
+  <script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          colors: {
+            "background": "rgb(var(--color-background) / <alpha-value>)",
+            "on-background": "rgb(var(--color-on-background) / <alpha-value>)",
+            "surface": "rgb(var(--color-surface) / <alpha-value>)",
+            "surface-dim": "rgb(var(--color-surface-dim) / <alpha-value>)",
+            "surface-bright": "rgb(var(--color-surface-bright) / <alpha-value>)",
+            "surface-container-lowest": "rgb(var(--color-surface-container-lowest) / <alpha-value>)",
+            "surface-container-low": "rgb(var(--color-surface-container-low) / <alpha-value>)",
+            "surface-container": "rgb(var(--color-surface-container) / <alpha-value>)",
+            "surface-container-high": "rgb(var(--color-surface-container-high) / <alpha-value>)",
+            "surface-container-highest": "rgb(var(--color-surface-container-highest) / <alpha-value>)",
+            "surface-variant": "rgb(var(--color-surface-variant) / <alpha-value>)",
+            "on-surface": "rgb(var(--color-on-surface) / <alpha-value>)",
+            "on-surface-variant": "rgb(var(--color-on-surface-variant) / <alpha-value>)",
+            "outline": "rgb(var(--color-outline) / <alpha-value>)",
+            "outline-variant": "rgb(var(--color-outline-variant) / <alpha-value>)",
+            "primary": "rgb(var(--color-primary) / <alpha-value>)",
+            "primary-container": "rgb(var(--color-primary-container) / <alpha-value>)",
+            "on-primary": "rgb(var(--color-on-primary) / <alpha-value>)",
+            "on-primary-container": "rgb(var(--color-on-primary-container) / <alpha-value>)",
+            "primary-fixed": "rgb(var(--color-primary) / <alpha-value>)",
+            "primary-fixed-dim": "rgb(var(--color-primary-container) / <alpha-value>)",
+            "inverse-primary": "rgb(var(--color-on-primary) / <alpha-value>)",
+            "surface-tint": "rgb(var(--color-primary) / <alpha-value>)",
+            "secondary": "rgb(var(--color-secondary) / <alpha-value>)",
+            "secondary-container": "rgb(var(--color-secondary-container) / <alpha-value>)",
+            "on-secondary": "rgb(var(--color-on-secondary) / <alpha-value>)",
+            "on-secondary-container": "rgb(var(--color-on-surface) / <alpha-value>)",
+            "secondary-fixed": "rgb(var(--color-secondary) / <alpha-value>)",
+            "secondary-fixed-dim": "rgb(var(--color-secondary-container) / <alpha-value>)",
+            "tertiary": "rgb(var(--color-tertiary) / <alpha-value>)",
+            "tertiary-container": "rgb(var(--color-tertiary-container) / <alpha-value>)",
+            "on-tertiary": "rgb(var(--color-on-tertiary) / <alpha-value>)",
+            "on-tertiary-container": "rgb(var(--color-on-surface) / <alpha-value>)",
+            "error": "rgb(var(--color-error) / <alpha-value>)",
+            "error-container": "rgb(var(--color-error) / 0.15)",
+            "on-error": "#FFFFFF",
+            "on-error-container": "rgb(var(--color-error) / <alpha-value>)"
+          },
+          fontFamily: {
+            "headline": ["Space Grotesk", "sans-serif"],
+            "caption": ["JetBrains Mono", "monospace"],
+            "body-md": ["DM Sans", "Inter", "sans-serif"],
+            "headline-md": ["Space Grotesk", "sans-serif"],
+            "label-sm": ["JetBrains Mono", "monospace"],
+            "headline-lg": ["Space Grotesk", "sans-serif"],
+            "headline-xl": ["Space Grotesk", "sans-serif"],
+            "body-sm": ["DM Sans", "Inter", "sans-serif"],
+            "headline-xl-mobile": ["Space Grotesk", "sans-serif"],
+            "metric-num": ["Space Grotesk", "sans-serif"],
+            "headline-sm": ["Space Grotesk", "sans-serif"],
+            "label-md": ["JetBrains Mono", "monospace"],
+            "body-lg": ["DM Sans", "Inter", "sans-serif"]
+          },
+          fontSize: {
+            "caption": ["11px", { "lineHeight": "14px", "letterSpacing": "0.04em", "fontWeight": "500" }],
+            "body-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0em", "fontWeight": "400" }],
+            "headline-md": ["20px", { "lineHeight": "26px", "letterSpacing": "-0.015em", "fontWeight": "600" }],
+            "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.06em", "fontWeight": "600" }],
+            "headline-lg": ["24px", { "lineHeight": "30px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+            "headline-xl": ["32px", { "lineHeight": "38px", "letterSpacing": "-0.025em", "fontWeight": "600" }],
+            "body-sm": ["13px", { "lineHeight": "18px", "letterSpacing": "0em", "fontWeight": "400" }],
+            "headline-xl-mobile": ["26px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+            "metric-num": ["28px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+            "headline-sm": ["16px", { "lineHeight": "22px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+            "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.04em", "fontWeight": "500" }],
+            "body-lg": ["16px", { "lineHeight": "24px", "letterSpacing": "-0.005em", "fontWeight": "400" }]
+          }
+        }
+      }
+    };
+  </script>
+  <link rel="stylesheet" href="/static/css/style.css?v=8.7">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+</head>
+<body class="bg-surface text-on-surface font-body-md antialiased min-h-screen flex selection:bg-primary-container selection:text-on-primary-container overflow-x-hidden">
+
+  <!-- Mobile Overlay Backdrop -->
+  <div id="admin-mobile-backdrop" class="hidden fixed inset-0 z-30 bg-black/60 backdrop-blur-sm md:hidden"></div>
+
+  <!-- ========================================== -->
+  <!-- LEFT SIDEBAR NAVIGATION                     -->
+  <!-- ========================================== -->
+  <aside id="admin-sidebar" class="fixed top-0 left-0 h-screen w-64 z-40 bg-surface-container-low border-r border-outline-variant/30 flex flex-col justify-between transition-transform duration-200 -translate-x-full md:translate-x-0">
+    <div class="p-4 flex flex-col gap-6">
+      <!-- Brand & Admin Tag -->
+      <div class="flex items-center justify-between px-2 pt-1">
+        <a href="/admin" class="flex items-center gap-3 hover:opacity-85 transition cursor-pointer">
+          <div class="w-8 h-8 rounded-lg bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-500 shadow-inner shrink-0">
+            <span class="material-symbols-outlined text-[20px]">admin_panel_settings</span>
+          </div>
+          <div class="flex flex-col">
+            <span class="text-headline-sm font-headline-sm font-bold text-on-surface tracking-tight">{{ project_name }}</span>
+            <span class="text-[11px] font-mono text-amber-500 font-semibold tracking-wider uppercase">Master Admin</span>
+          </div>
+        </a>
+        <button id="btn-theme-toggle" type="button" aria-label="Toggle Theme" class="w-8 h-8 rounded-lg flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container border border-outline-variant/40 transition cursor-pointer">
+          <span id="theme-toggle-icon" class="material-symbols-outlined text-[19px]">light_mode</span>
+        </button>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="flex flex-col gap-1.5" id="admin-nav">
+        <button data-tab="overview" class="admin-tab-btn active flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary-container text-on-primary-container font-medium transition cursor-pointer text-left w-full">
+          <span class="material-symbols-outlined text-[19px]">monitoring</span>
+          <span class="text-label-md">Overview & KPIs</span>
+        </button>
+
+        <button data-tab="users" class="admin-tab-btn flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition cursor-pointer text-left w-full">
+          <span class="material-symbols-outlined text-[19px]">group</span>
+          <span class="text-label-md">User Accounts</span>
+          <span id="badge-users-count" class="ml-auto text-caption bg-surface-container px-2 py-0.5 rounded-full font-mono">0</span>
+        </button>
+
+        <button data-tab="companies" class="admin-tab-btn flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition cursor-pointer text-left w-full">
+          <span class="material-symbols-outlined text-[19px]">domain</span>
+          <span class="text-label-md">Company Leads</span>
+        </button>
+
+        <button data-tab="pitches" class="admin-tab-btn flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition cursor-pointer text-left w-full">
+          <span class="material-symbols-outlined text-[19px]">send</span>
+          <span class="text-label-md">Sent Pitches</span>
+          <span id="badge-pitches-count" class="ml-auto text-caption bg-purple-500/15 text-purple-400 px-2 py-0.5 rounded-full font-mono font-bold">0</span>
+        </button>
+
+        <button data-tab="subscriptions" class="admin-tab-btn flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition cursor-pointer text-left w-full">
+          <span class="material-symbols-outlined text-[19px]">loyalty</span>
+          <span class="text-label-md">Tiers & Plans</span>
+        </button>
+
+        <button data-tab="github" class="admin-tab-btn flex items-center gap-3 px-3 py-2.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition cursor-pointer text-left w-full">
+          <span class="material-symbols-outlined text-[19px]">integration_instructions</span>
+          <span class="text-label-md">GitHub Actions</span>
+          <span class="ml-auto text-[10px] text-emerald-500 font-semibold px-1.5 py-0.5 rounded bg-emerald-500/10">CI/CD</span>
+        </button>
+      </nav>
+    </div>
+
+    <!-- Bottom Actions: Switch to Job Seeker View -->
+    <div class="p-4 border-t border-outline-variant/30 flex flex-col gap-3">
+      <a href="/app" class="flex items-center justify-between px-3 py-2 rounded-lg bg-surface-container hover:bg-surface-container-high border border-outline-variant/40 text-on-surface transition text-label-md">
+        <span class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-[18px] text-primary">arrow_back</span>
+          <span>Job Seeker App</span>
+        </span>
+        <span class="material-symbols-outlined text-[16px] text-on-surface-variant">open_in_new</span>
+      </a>
+
+      <div class="flex items-center gap-3 px-2 pt-2">
+        <div class="w-8 h-8 rounded-full bg-primary/20 text-primary font-bold flex items-center justify-center text-xs">
+          {{ user.email[0].upper() if user and user.email else "A" }}
+        </div>
+        <div class="flex flex-col min-w-0">
+          <span class="text-xs font-semibold text-on-surface truncate">{{ user.name or "Master Admin" }}</span>
+          <span class="text-[11px] text-on-surface-variant truncate font-mono">{{ user.email }}</span>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ========================================== -->
+  <!-- MAIN ADMIN CONTENT AREA                     -->
+  <!-- ========================================== -->
+  <main class="flex-1 md:ml-64 p-4 md:p-8 max-w-7xl mx-auto flex flex-col gap-8 pb-20">
+
+    <!-- Top Admin Header -->
+    <header class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-outline-variant/30 pb-6">
+      <div>
+        <div class="flex items-center gap-2 text-xs font-medium text-on-surface-variant mb-1">
+          <span>Enterprise Portal</span>
+          <span>/</span>
+          <span class="text-primary font-semibold" id="current-view-title">Overview</span>
+        </div>
+        <h1 class="text-headline-lg font-headline-lg font-bold text-on-surface tracking-tight" id="header-heading">Telemetry & System Controls</h1>
+      </div>
+
+      <div class="flex items-center gap-3">
+        <!-- DB Live Health Badge -->
+        <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-surface-container border border-outline-variant/40 text-xs font-medium">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span class="text-on-surface font-medium">Neon PostgreSQL Cloud</span>
+        </div>
+
+        <button id="btn-refresh-data" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high border border-outline-variant/40 text-on-surface text-xs font-medium transition cursor-pointer">
+          <span class="material-symbols-outlined text-[16px]">refresh</span>
+          <span>Sync</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- TAB 1: OVERVIEW & KPIS -->
+    <section id="tab-content-overview" class="admin-tab-panel flex flex-col gap-8">
+      <!-- Primary KPI Grid (Interactive & Routable Cards) -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Total Users Card -->
+        <div id="card-kpi-users" class="bg-surface-container-low border border-outline-variant/30 hover:border-primary/50 hover:bg-surface-container/70 rounded-xl p-5 flex flex-col justify-between transition-all duration-150 cursor-pointer group shadow-sm hover:shadow" title="Click to view and manage user accounts">
+          <div class="flex items-center justify-between text-on-surface-variant mb-2">
+            <span class="text-xs font-semibold text-on-surface-variant group-hover:text-primary transition-colors">Registered Users</span>
+            <div class="flex items-center gap-1 text-on-surface-variant group-hover:text-primary transition-colors">
+              <span class="material-symbols-outlined text-primary text-[20px]">group</span>
+              <span class="material-symbols-outlined text-[16px] opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all">chevron_right</span>
+            </div>
+          </div>
+          <div class="flex items-baseline gap-2.5">
+            <span class="text-headline-lg font-headline-lg font-bold text-on-surface tracking-tight tabular-nums" id="kpi-total-users">--</span>
+            <span class="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full" id="kpi-active-users">-- active</span>
+          </div>
+          <div class="text-xs text-on-surface-variant mt-2 font-normal flex items-center justify-between">
+            <span><strong id="kpi-master-admins" class="text-amber-500 font-semibold">--</strong> Master Admins</span>
+            <span class="text-[11px] text-primary opacity-0 group-hover:opacity-100 transition-opacity font-medium">Manage →</span>
+          </div>
+        </div>
+
+        <!-- Verified Companies Card -->
+        <div id="card-kpi-companies" class="bg-surface-container-low border border-outline-variant/30 hover:border-primary/50 hover:bg-surface-container/70 rounded-xl p-5 flex flex-col justify-between transition-all duration-150 cursor-pointer group shadow-sm hover:shadow" title="Click to open Companies Lead Pipeline">
+          <div class="flex items-center justify-between text-on-surface-variant mb-2">
+            <span class="text-xs font-semibold text-on-surface-variant group-hover:text-primary transition-colors">Genuine Companies</span>
+            <div class="flex items-center gap-1 text-on-surface-variant group-hover:text-primary transition-colors">
+              <span class="material-symbols-outlined text-amber-500 text-[20px]">domain</span>
+              <span class="material-symbols-outlined text-[16px] opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all">chevron_right</span>
+            </div>
+          </div>
+          <div class="flex items-baseline gap-2.5">
+            <span class="text-headline-lg font-headline-lg font-bold text-on-surface tracking-tight tabular-nums" id="kpi-total-companies">--</span>
+          </div>
+          <div class="text-xs text-on-surface-variant mt-2 font-normal flex items-center justify-between">
+            <span><strong id="kpi-verified-emails" class="text-emerald-500 font-semibold">--</strong> verified contact emails</span>
+            <span class="text-[11px] text-primary opacity-0 group-hover:opacity-100 transition-opacity font-medium">View →</span>
+          </div>
+        </div>
+
+        <!-- Today's Pitches Dispatched Card -->
+        <div id="card-kpi-pitches" class="bg-surface-container-low border border-outline-variant/30 hover:border-primary/50 hover:bg-surface-container/70 rounded-xl p-5 flex flex-col justify-between transition-all duration-150 cursor-pointer group shadow-sm hover:shadow" title="Click to view cold outreach pitches sent today">
+          <div class="flex items-center justify-between text-on-surface-variant mb-2">
+            <span class="text-xs font-semibold text-on-surface-variant group-hover:text-primary transition-colors">Pitches Sent Today</span>
+            <div class="flex items-center gap-1 text-on-surface-variant group-hover:text-primary transition-colors">
+              <span class="material-symbols-outlined text-purple-400 text-[20px]">send</span>
+              <span class="material-symbols-outlined text-[16px] opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all">chevron_right</span>
+            </div>
+          </div>
+          <div class="flex items-baseline gap-2.5">
+            <span class="text-headline-lg font-headline-lg font-bold text-on-surface tracking-tight tabular-nums" id="kpi-pitches-today">--</span>
+            <span class="text-[11px] font-medium text-purple-600 dark:text-purple-400 bg-purple-500/10 border border-purple-500/20 px-2 py-0.5 rounded-full">across all users</span>
+          </div>
+          <div class="text-xs text-on-surface-variant mt-2 font-normal flex items-center justify-between">
+            <span>Resets daily at midnight UTC</span>
+            <span class="text-[11px] text-primary opacity-0 group-hover:opacity-100 transition-opacity font-medium">Pitches →</span>
+          </div>
+        </div>
+
+        <!-- Subscribers Card -->
+        <div id="card-kpi-subs" class="bg-surface-container-low border border-outline-variant/30 hover:border-primary/50 hover:bg-surface-container/70 rounded-xl p-5 flex flex-col justify-between transition-all duration-150 cursor-pointer group shadow-sm hover:shadow" title="Click to view subscription plans and tier governance">
+          <div class="flex items-center justify-between text-on-surface-variant mb-2">
+            <span class="text-xs font-semibold text-on-surface-variant group-hover:text-primary transition-colors">Active Subscribers</span>
+            <div class="flex items-center gap-1 text-on-surface-variant group-hover:text-primary transition-colors">
+              <span class="material-symbols-outlined text-emerald-400 text-[20px]">loyalty</span>
+              <span class="material-symbols-outlined text-[16px] opacity-0 group-hover:opacity-100 group-hover:translate-x-0.5 transition-all">chevron_right</span>
+            </div>
+          </div>
+          <div class="flex items-baseline gap-2.5">
+            <span class="text-headline-lg font-headline-lg font-bold text-on-surface tracking-tight tabular-nums" id="kpi-active-subs">--</span>
+            <span class="text-[11px] font-medium text-on-surface-variant bg-surface-container px-2 py-0.5 rounded-full border border-outline-variant/30" id="kpi-sub-breakdown">0 Pro / 0 Prem+</span>
+          </div>
+          <div class="text-xs text-on-surface-variant mt-2 font-normal flex items-center justify-between">
+            <span><strong id="kpi-free-users" class="text-on-surface font-semibold">--</strong> Free tier accounts</span>
+            <span class="text-[11px] text-primary opacity-0 group-hover:opacity-100 transition-opacity font-medium">Plans →</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Master Kill Switch Quick Card (Overview) -->
+      <div id="overview-kill-switch-card" class="bg-surface-container-low border border-outline-variant/30 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-500 flex items-center justify-center shrink-0">
+            <span class="material-symbols-outlined text-[20px]">power_settings_new</span>
+          </div>
+          <div class="flex flex-col">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="text-xs font-bold text-on-surface">Master Kill Switch: Subscription &amp; RBAC Bypass</span>
+              <span id="overview-kill-switch-pill" class="px-2 py-0.5 rounded text-[10px] font-mono font-bold">Checking...</span>
+            </div>
+            <span class="text-[11px] text-on-surface-variant">Suppress subscription UI across landing &amp; app; treat all users as Temp Users with infinite pitches.</span>
+          </div>
+        </div>
+        <button type="button" id="btn-overview-toggle-kill-switch" class="px-3 py-1.5 rounded-lg border border-outline-variant hover:bg-surface-container text-xs font-medium text-on-surface transition cursor-pointer shrink-0 self-end sm:self-center flex items-center gap-1">
+          <span>Manage Switch</span>
+          <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+        </button>
+      </div>
+
+      <!-- Quick Action Row -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="bg-surface-container-low border border-outline-variant/30 rounded-xl p-5 flex items-center justify-between">
+          <div class="flex flex-col">
+            <span class="text-sm font-semibold text-on-surface">Add Company to Directory</span>
+            <span class="text-xs text-on-surface-variant">Single lead manual entry with name clean</span>
+          </div>
+          <button id="btn-quick-add-company" class="px-3 py-2 rounded-lg bg-primary text-on-primary text-xs font-semibold hover:opacity-90 transition cursor-pointer">
+            + Add Company
+          </button>
+        </div>
+
+        <div class="bg-surface-container-low border border-outline-variant/30 rounded-xl p-5 flex items-center justify-between">
+          <div class="flex flex-col">
+            <span class="text-sm font-semibold text-on-surface">Bulk CSV Lead Importer</span>
+            <span class="text-xs text-on-surface-variant">Upload CSV with domain deduplication</span>
+          </div>
+          <button id="btn-quick-csv-upload" class="px-3 py-2 rounded-lg bg-surface-container-high border border-outline-variant text-on-surface text-xs font-semibold hover:bg-surface-container-highest transition cursor-pointer">
+            Upload CSV
+          </button>
+        </div>
+
+        <div class="bg-surface-container-low border border-outline-variant/30 rounded-xl p-5 flex items-center justify-between">
+          <div class="flex flex-col">
+            <span class="text-sm font-semibold text-on-surface">Excluded Non-Companies</span>
+            <span class="text-xs text-on-surface-variant" id="kpi-invalid-summary">Quarantine Queue</span>
+          </div>
+          <button id="btn-quick-view-invalid" class="px-3 py-2 rounded-lg bg-surface-container-high border border-outline-variant text-on-surface text-xs font-semibold hover:bg-surface-container-highest transition cursor-pointer">
+            Review Queue
+          </button>
+        </div>
+      </div>
+
+      <!-- System Operations & Live Database Maintenance Section -->
+      <div class="bg-surface-container-low border border-outline-variant/30 rounded-xl p-6 flex flex-col gap-5">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-outline-variant/20 pb-4">
+          <div>
+            <h2 class="text-headline-sm font-headline-sm font-bold text-on-surface">System Operations & Live Data Engines</h2>
+            <p class="text-xs text-on-surface-variant">Execute autonomous database sanitation, eliminate SEO taglines, and purge non-company entities with real-time feedback.</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-[11px] font-semibold text-emerald-500 bg-emerald-500/10 px-2.5 py-1 rounded-full border border-emerald-500/20">Production Safe</span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <!-- 1. Company Name Sanitation Engine -->
+          <div class="bg-surface-container border border-outline-variant/40 rounded-xl p-5 flex flex-col justify-between gap-4">
+            <div class="flex flex-col gap-2">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold text-primary uppercase tracking-wide">Name Sanitation Engine</span>
+                <span class="material-symbols-outlined text-primary text-[20px]">spellcheck</span>
+              </div>
+              <h3 class="text-sm font-semibold text-on-surface">Auto-Clean Taglines & SEO Clutter</h3>
+              <p class="text-xs text-on-surface-variant">Scans company names across Neon PostgreSQL and strips SEO marketing slogans (e.g. <em>"iRoid Solutions - Best IT Company in India"</em> → <em>"iRoid Solutions"</em>).</p>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2 pt-2 border-t border-outline-variant/20">
+              <button id="btn-sanitize-preview" class="px-3.5 py-2 rounded-lg bg-surface-container-highest hover:bg-surface-container-high border border-outline-variant/50 text-xs font-semibold text-on-surface transition cursor-pointer flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-[16px]">visibility</span>
+                <span>Dry Run Preview</span>
+              </button>
+              <button id="btn-sanitize-execute" class="px-3.5 py-2 rounded-lg bg-primary hover:opacity-90 text-on-primary text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 shadow-sm">
+                <span class="material-symbols-outlined text-[16px]">play_arrow</span>
+                <span>Run Live Sanitation</span>
+              </button>
+            </div>
+
+            <!-- Sanitation Status / Log Box -->
+            <div id="sanitize-result-box" class="hidden p-3 rounded-lg bg-surface-container-lowest border border-outline-variant/30 text-xs flex flex-col gap-1.5">
+              <div class="flex items-center justify-between text-on-surface font-semibold">
+                <span id="sanitize-status-heading">Sanitation Results</span>
+                <span id="sanitize-status-time" class="text-on-surface-variant text-[11px]"></span>
+              </div>
+              <div id="sanitize-samples" class="text-[11px] text-on-surface-variant flex flex-col gap-1 max-h-36 overflow-y-auto"></div>
+            </div>
+          </div>
+
+          <!-- 2. Non-Company Entity Purge Engine -->
+          <div class="bg-surface-container border border-outline-variant/40 rounded-xl p-5 flex flex-col justify-between gap-4">
+            <div class="flex flex-col gap-2">
+              <div class="flex items-center justify-between">
+                <span class="text-xs font-semibold text-amber-500 uppercase tracking-wide">Lead Quality Auditor</span>
+                <span class="material-symbols-outlined text-amber-500 text-[20px]">filter_alt</span>
+              </div>
+              <h3 class="text-sm font-semibold text-on-surface">Purge Coaching Institutes & Portfolios</h3>
+              <p class="text-xs text-on-surface-variant">Detects coaching centers, tuition classes, academies, schools, universities, and personal developer portfolios (.github.io, etc.) and moves them to Quarantine.</p>
+            </div>
+
+            <div class="flex flex-wrap items-center gap-2 pt-2 border-t border-outline-variant/20">
+              <button id="btn-purge-preview" class="px-3.5 py-2 rounded-lg bg-surface-container-highest hover:bg-surface-container-high border border-outline-variant/50 text-xs font-semibold text-on-surface transition cursor-pointer flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-[16px]">search</span>
+                <span>Audit Preview</span>
+              </button>
+              <button id="btn-purge-execute" class="px-3.5 py-2 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 shadow-sm">
+                <span class="material-symbols-outlined text-[16px]">delete_sweep</span>
+                <span>Quarantine Non-Companies</span>
+              </button>
+              <a id="btn-download-audit-csv" href="/api/admin/maintenance/download-non-companies-csv" target="_blank" class="px-3.5 py-2 rounded-lg bg-surface-container-highest hover:bg-surface-container-high border border-outline-variant/50 text-xs font-semibold text-on-surface transition cursor-pointer flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-[16px]">download</span>
+                <span>Audit CSV Log</span>
+              </a>
+            </div>
+
+            <!-- Purge Status / Log Box -->
+            <div id="purge-result-box" class="hidden p-3 rounded-lg bg-surface-container-lowest border border-outline-variant/30 text-xs flex flex-col gap-1.5">
+              <div class="flex items-center justify-between text-on-surface font-semibold">
+                <span id="purge-status-heading">Audit Results</span>
+                <span id="purge-status-time" class="text-on-surface-variant text-[11px]"></span>
+              </div>
+              <div id="purge-samples" class="text-[11px] text-on-surface-variant flex flex-col gap-1 max-h-36 overflow-y-auto"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: USER ACCOUNTS & ACCESS -->
+    <section id="tab-content-users" class="admin-tab-panel hidden flex flex-col gap-6">
+      <!-- Search & Filters -->
+      <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
+        <div class="relative flex-1 max-w-md">
+          <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">search</span>
+          <input type="text" id="users-search" placeholder="Search by email or name..." class="w-full pl-9 pr-4 py-2 bg-surface-container-low border border-outline-variant/40 rounded-lg text-sm text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:border-primary">
+        </div>
+
+        <div class="flex items-center gap-3">
+          <!-- Custom Tier Dropdown Matching /app Design -->
+          <div class="custom-dropdown relative w-44" id="dropdown-filter-tier">
+            <input type="hidden" id="users-filter-tier" value="">
+            <button type="button" class="custom-dropdown-btn text-xs" aria-haspopup="listbox" aria-expanded="false" title="Filter by Subscription Tier">
+              <span class="custom-dropdown-label truncate">All Tiers</span>
+              <span class="material-symbols-outlined text-[16px] text-on-surface-variant dropdown-chevron">expand_more</span>
+            </button>
+            <div class="custom-dropdown-menu align-right">
+              <div class="custom-dropdown-list custom-scrollbar" role="listbox">
+                <div class="custom-dropdown-item is-selected" data-value="">
+                  <span class="truncate">All Subscription Tiers</span>
+                  <span class="material-symbols-outlined check-icon">check</span>
+                </div>
+                <div class="custom-dropdown-item" data-value="free">
+                  <span class="truncate">Free (10/day)</span>
+                  <span class="material-symbols-outlined check-icon">check</span>
+                </div>
+                <div class="custom-dropdown-item" data-value="pro">
+                  <span class="truncate">Pro (50/day)</span>
+                  <span class="material-symbols-outlined check-icon">check</span>
+                </div>
+                <div class="custom-dropdown-item" data-value="premium_plus">
+                  <span class="truncate">Premium+ (100/day)</span>
+                  <span class="material-symbols-outlined check-icon">check</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Custom Role Dropdown Matching /app Design -->
+          <div class="custom-dropdown relative w-36" id="dropdown-filter-role">
+            <input type="hidden" id="users-filter-role" value="">
+            <button type="button" class="custom-dropdown-btn text-xs" aria-haspopup="listbox" aria-expanded="false" title="Filter by Admin Role">
+              <span class="custom-dropdown-label truncate">All Roles</span>
+              <span class="material-symbols-outlined text-[16px] text-on-surface-variant dropdown-chevron">expand_more</span>
+            </button>
+            <div class="custom-dropdown-menu align-right">
+              <div class="custom-dropdown-list custom-scrollbar" role="listbox">
+                <div class="custom-dropdown-item is-selected" data-value="">
+                  <span class="truncate">All Roles</span>
+                  <span class="material-symbols-outlined check-icon">check</span>
+                </div>
+                <div class="custom-dropdown-item" data-value="admin">
+                  <span class="truncate">Master Admins</span>
+                  <span class="material-symbols-outlined check-icon">check</span>
+                </div>
+                <div class="custom-dropdown-item" data-value="user">
+                  <span class="truncate">Regular Users</span>
+                  <span class="material-symbols-outlined check-icon">check</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Users Table -->
+      <div class="bg-surface-container-low border border-outline-variant/30 rounded-xl overflow-hidden shadow-sm">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm text-on-surface">
+            <thead class="bg-surface-container text-xs text-on-surface-variant uppercase font-mono border-b border-outline-variant/30">
+              <tr>
+                <th class="px-4 py-3 cursor-pointer select-none group hover:text-on-surface transition-colors sortable-user-header" data-sort="email" title="Click to sort by User Email">
+                  <div class="flex items-center gap-1.5">
+                    <span>User</span>
+                    <span class="material-symbols-outlined text-[15px] sort-icon text-on-surface-variant/40 group-hover:text-on-surface-variant transition-colors">unfold_more</span>
+                  </div>
+                </th>
+                <th class="px-4 py-3 cursor-pointer select-none group hover:text-on-surface transition-colors sortable-user-header" data-sort="role" title="Click to sort by Role">
+                  <div class="flex items-center gap-1.5">
+                    <span>Role</span>
+                    <span class="material-symbols-outlined text-[15px] sort-icon text-on-surface-variant/40 group-hover:text-on-surface-variant transition-colors">unfold_more</span>
+                  </div>
+                </th>
+                <th class="px-4 py-3 cursor-pointer select-none group hover:text-on-surface transition-colors sortable-user-header" data-sort="tier" title="Click to sort by Subscription Tier">
+                  <div class="flex items-center gap-1.5">
+                    <span>Subscription</span>
+                    <span class="material-symbols-outlined text-[15px] sort-icon text-on-surface-variant/40 group-hover:text-on-surface-variant transition-colors">unfold_more</span>
+                  </div>
+                </th>
+                <th class="px-4 py-3 cursor-pointer select-none group hover:text-on-surface transition-colors sortable-user-header" data-sort="pitches" title="Click to sort by Pitches Sent Today">
+                  <div class="flex items-center gap-1.5">
+                    <span>Pitch Quota</span>
+                    <span class="material-symbols-outlined text-[15px] sort-icon text-on-surface-variant/40 group-hover:text-on-surface-variant transition-colors">unfold_more</span>
+                  </div>
+                </th>
+                <th class="px-4 py-3 cursor-pointer select-none group hover:text-on-surface transition-colors sortable-user-header" data-sort="status" title="Click to sort by Ban Status">
+                  <div class="flex items-center gap-1.5">
+                    <span>Status</span>
+                    <span class="material-symbols-outlined text-[15px] sort-icon text-on-surface-variant/40 group-hover:text-on-surface-variant transition-colors">unfold_more</span>
+                  </div>
+                </th>
+                <th class="px-4 py-3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="users-table-body" class="divide-y divide-outline-variant/20 font-body-sm">
+              <tr>
+                <td colspan="6" class="px-4 py-8 text-center text-on-surface-variant">Loading user directory...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Users Pagination -->
+        <div class="px-4 py-3 bg-surface-container flex items-center justify-between text-xs text-on-surface-variant border-t border-outline-variant/30 font-mono">
+          <span id="users-page-info">Showing page 1</span>
+          <div class="flex items-center gap-2">
+            <button id="users-btn-prev" class="px-3 py-1 rounded bg-surface-container-highest hover:text-on-surface disabled:opacity-40" disabled>Previous</button>
+            <button id="users-btn-next" class="px-3 py-1 rounded bg-surface-container-highest hover:text-on-surface disabled:opacity-40">Next</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: COMPANIES & PIPELINE -->
+    <section id="tab-content-companies" class="admin-tab-panel hidden flex flex-col gap-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-headline-sm font-headline-sm text-on-surface">Directory & Leads Pipeline</h2>
+          <p class="text-xs text-on-surface-variant">Manage database entries, add new companies, or review quarantined non-company entities.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="btn-open-add-company-modal" class="px-3 py-2 rounded-lg bg-primary text-on-primary text-xs font-semibold hover:opacity-90 transition cursor-pointer flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-[16px]">add_circle</span>
+            <span>Add Single Company</span>
+          </button>
+          <button id="btn-open-csv-upload-modal" class="px-3 py-2 rounded-lg bg-surface-container-high border border-outline-variant text-on-surface text-xs font-semibold hover:bg-surface-container-highest transition cursor-pointer flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-[16px]">upload_file</span>
+            <span>Bulk CSV Upload</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Sub-Tabs: Active Companies vs Quarantined Leads -->
+      <div class="flex items-center gap-3 border-b border-outline-variant/30 pb-3">
+        <button id="btn-subtab-active-companies" class="companies-subtab-btn active px-4 py-2 rounded-lg bg-primary-container text-on-primary-container font-semibold text-xs transition cursor-pointer flex items-center gap-2">
+          <span class="material-symbols-outlined text-[16px]">domain</span>
+          <span>Active Verified Directory</span>
+          <span id="badge-active-comps-count" class="px-2 py-0.5 rounded-full bg-surface/50 text-[11px] font-mono font-bold">--</span>
+        </button>
+
+        <button id="btn-subtab-quarantine-companies" class="companies-subtab-btn px-4 py-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container font-semibold text-xs transition cursor-pointer flex items-center gap-2">
+          <span class="material-symbols-outlined text-[16px]">shield_person</span>
+          <span>Quarantined Leads</span>
+          <span id="badge-invalid-count" class="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-500 text-[11px] font-mono font-bold">--</span>
+        </button>
+      </div>
+
+      <!-- VIEW 1: ACTIVE COMPANIES DIRECTORY -->
+      <div id="view-companies-active" class="flex flex-col gap-4">
+        <!-- Search & Filter Controls -->
+        <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+          <div class="relative flex-1 max-w-md">
+            <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[18px]">search</span>
+            <input type="text" id="active-comps-search" placeholder="Search by company name, domain, or city..." class="w-full pl-9 pr-4 py-2 bg-surface-container-low border border-outline-variant/40 rounded-lg text-xs text-on-surface placeholder:text-on-surface-variant focus:outline-none focus:border-primary">
+          </div>
+
+          <div class="flex items-center gap-2">
+            <!-- Custom Category Dropdown Matching /app Design -->
+            <div class="custom-dropdown relative w-52" id="dropdown-filter-category">
+              <input type="hidden" id="active-comps-filter-category" value="">
+              <button type="button" class="custom-dropdown-btn text-xs" aria-haspopup="listbox" aria-expanded="false" title="Filter by Category">
+                <span class="custom-dropdown-label truncate">All Categories</span>
+                <span class="material-symbols-outlined text-[16px] text-on-surface-variant dropdown-chevron">expand_more</span>
+              </button>
+              <div class="custom-dropdown-menu align-right">
+                <div class="custom-dropdown-list custom-scrollbar" role="listbox">
+                  <div class="custom-dropdown-item is-selected" data-value="">
+                    <span class="truncate">All Categories</span>
+                    <span class="material-symbols-outlined check-icon">check</span>
+                  </div>
+                  <div class="custom-dropdown-item" data-value="Information Technology">
+                    <span class="truncate">Information Technology & Software</span>
+                    <span class="material-symbols-outlined check-icon">check</span>
+                  </div>
+                  <div class="custom-dropdown-item" data-value="Marketing">
+                    <span class="truncate">Marketing & PR</span>
+                    <span class="material-symbols-outlined check-icon">check</span>
+                  </div>
+                  <div class="custom-dropdown-item" data-value="Sales">
+                    <span class="truncate">Sales & BPO</span>
+                    <span class="material-symbols-outlined check-icon">check</span>
+                  </div>
+                  <div class="custom-dropdown-item" data-value="Finance">
+                    <span class="truncate">Finance & Legal</span>
+                    <span class="material-symbols-outlined check-icon">check</span>
+                  </div>
+                  <div class="custom-dropdown-item" data-value="Pharmaceuticals">
+                    <span class="truncate">Pharma & Healthcare</span>
+                    <span class="material-symbols-outlined check-icon">check</span>
+                  </div>
+                  <div class="custom-dropdown-item" data-value="Manufacturing">
+                    <span class="truncate">Manufacturing & Industrial</span>
+                    <span class="material-symbols-outlined check-icon">check</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <button id="btn-refresh-active-comps" class="p-2 rounded-lg bg-surface-container hover:bg-surface-container-high border border-outline-variant/40 text-on-surface transition cursor-pointer" title="Refresh Table">
+              <span class="material-symbols-outlined text-[18px]">refresh</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Active Companies Table -->
+        <div class="bg-surface-container-low border border-outline-variant/30 rounded-xl overflow-hidden shadow-sm">
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm text-on-surface">
+              <thead class="bg-surface-container text-xs text-on-surface-variant uppercase font-mono border-b border-outline-variant/30">
+                <tr>
+                  <th class="px-4 py-3 cursor-pointer select-none group hover:text-on-surface transition-colors sortable-comp-header" data-sort="name" title="Click to sort by Company Name">
+                    <div class="flex items-center gap-1.5">
+                      <span>Company &amp; Domain</span>
+                      <span class="material-symbols-outlined text-[15px] sort-icon text-on-surface-variant/40 group-hover:text-on-surface-variant transition-colors">unfold_more</span>
+                    </div>
+                  </th>
+                  <th class="px-4 py-3 cursor-pointer select-none group hover:text-on-surface transition-colors sortable-comp-header" data-sort="city" title="Click to sort by Location / City">
+                    <div class="flex items-center gap-1.5">
+                      <span>Industry / Location</span>
+                      <span class="material-symbols-outlined text-[15px] sort-icon text-on-surface-variant/40 group-hover:text-on-surface-variant transition-colors">unfold_more</span>
+                    </div>
+                  </th>
+                  <th class="px-4 py-3 cursor-pointer select-none group hover:text-on-surface transition-colors sortable-comp-header" data-sort="has_email" title="Click to sort by Contact Email">
+                    <div class="flex items-center gap-1.5">
+                      <span>Contact Email</span>
+                      <span class="material-symbols-outlined text-[15px] sort-icon text-on-surface-variant/40 group-hover:text-on-surface-variant transition-colors">unfold_more</span>
+                    </div>
+                  </th>
+                  <th class="px-4 py-3 cursor-pointer select-none group hover:text-on-surface transition-colors sortable-comp-header" data-sort="created_at" title="Click to sort by Date Discovered">
+                    <div class="flex items-center gap-1.5">
+                      <span>Tech Stack</span>
+                      <span class="material-symbols-outlined text-[15px] sort-icon text-on-surface-variant/40 group-hover:text-on-surface-variant transition-colors">unfold_more</span>
+                    </div>
+                  </th>
+                  <th class="px-4 py-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="active-comps-table-body" class="divide-y divide-outline-variant/20 font-body-sm">
+                <tr>
+                  <td colspan="5" class="px-4 py-8 text-center text-on-surface-variant">Loading verified companies...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Active Pagination -->
+          <div class="px-4 py-3 bg-surface-container flex items-center justify-between text-xs text-on-surface-variant border-t border-outline-variant/30 font-mono">
+            <span id="active-comps-page-info">Showing page 1</span>
+            <div class="flex items-center gap-2">
+              <button id="active-comps-btn-prev" class="px-3 py-1 rounded bg-surface-container-highest hover:text-on-surface disabled:opacity-40" disabled>Previous</button>
+              <button id="active-comps-btn-next" class="px-3 py-1 rounded bg-surface-container-highest hover:text-on-surface disabled:opacity-40">Next</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- VIEW 2: QUARANTINED COMPANIES QUEUE -->
+      <div id="view-companies-quarantine" class="hidden flex flex-col gap-4">
+        <div class="bg-surface-container-low border border-outline-variant/30 rounded-xl overflow-hidden shadow-sm">
+          <div class="p-4 border-b border-outline-variant/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div class="flex items-center gap-2">
+              <span class="material-symbols-outlined text-amber-500 text-[18px]">verified_user</span>
+              <span class="text-sm font-semibold text-on-surface">Quarantined / Excluded Entities</span>
+            </div>
+            <div class="relative max-w-xs w-full">
+              <input type="text" id="invalid-search" placeholder="Search invalid queue..." class="w-full pl-8 pr-3 py-1.5 bg-surface-container border border-outline-variant/40 rounded-lg text-xs text-on-surface focus:outline-none">
+              <span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-on-surface-variant text-[16px]">search</span>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm text-on-surface">
+              <thead class="bg-surface-container text-xs text-on-surface-variant uppercase font-mono border-b border-outline-variant/30">
+                <tr>
+                  <th class="px-4 py-3 cursor-pointer select-none group hover:text-on-surface transition-colors sortable-invalid-header" data-sort="name" title="Click to sort by Entity Name">
+                    <div class="flex items-center gap-1.5">
+                      <span>Entity Name</span>
+                      <span class="material-symbols-outlined text-[15px] sort-icon text-on-surface-variant/40 group-hover:text-on-surface-variant transition-colors">unfold_more</span>
+                    </div>
+                  </th>
+                  <th class="px-4 py-3 cursor-pointer select-none group hover:text-on-surface transition-colors sortable-invalid-header" data-sort="domain" title="Click to sort by Domain">
+                    <div class="flex items-center gap-1.5">
+                      <span>Domain</span>
+                      <span class="material-symbols-outlined text-[15px] sort-icon text-on-surface-variant/40 group-hover:text-on-surface-variant transition-colors">unfold_more</span>
+                    </div>
+                  </th>
+                  <th class="px-4 py-3 cursor-pointer select-none group hover:text-on-surface transition-colors sortable-invalid-header" data-sort="reason" title="Click to sort by Exclusion Reason">
+                    <div class="flex items-center gap-1.5">
+                      <span>Exclusion Reason</span>
+                      <span class="material-symbols-outlined text-[15px] sort-icon text-on-surface-variant/40 group-hover:text-on-surface-variant transition-colors">unfold_more</span>
+                    </div>
+                  </th>
+                  <th class="px-4 py-3 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="invalid-table-body" class="divide-y divide-outline-variant/20 font-body-sm">
+                <tr>
+                  <td colspan="4" class="px-4 py-8 text-center text-on-surface-variant">Loading quarantined records...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Invalid Pagination -->
+          <div class="px-4 py-3 bg-surface-container flex items-center justify-between text-xs text-on-surface-variant border-t border-outline-variant/30 font-mono">
+            <span id="invalid-page-info">Showing page 1</span>
+            <div class="flex items-center gap-2">
+              <button id="invalid-btn-prev" class="px-3 py-1 rounded bg-surface-container-highest hover:text-on-surface disabled:opacity-40" disabled>Previous</button>
+              <button id="invalid-btn-next" class="px-3 py-1 rounded bg-surface-container-highest hover:text-on-surface disabled:opacity-40">Next</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: TIERS & PLANS MATRIX -->
+    <section id="tab-content-subscriptions" class="admin-tab-panel hidden flex flex-col gap-8">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-headline-sm font-headline-sm text-on-surface">Subscription Tiers & Quota Governance</h2>
+          <p class="text-xs text-on-surface-variant">Configure daily dispatch allocations, pricing in ₹, features, and review subscriber monetization health.</p>
+        </div>
+        <button id="btn-add-custom-tier" class="px-3.5 py-2 rounded-lg bg-primary text-on-primary text-xs font-semibold hover:opacity-90 transition cursor-pointer flex items-center gap-1.5 shadow-sm">
+          <span class="material-symbols-outlined text-[16px]">add_circle</span>
+          <span>Add Custom Tier Plan</span>
+        </button>
+      </div>
+
+      <!-- Master Kill Switch Banner: Open Access Mode (Bypass Subscriptions & RBAC) -->
+      <div id="card-kill-switch-banner" class="bg-surface-container-low border border-outline-variant/30 rounded-xl p-5 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4 transition-all">
+        <div class="flex items-start gap-3.5">
+          <div id="kill-switch-icon-box" class="w-11 h-11 rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-400 flex items-center justify-center shrink-0 mt-0.5">
+            <span class="material-symbols-outlined text-[24px]">power_settings_new</span>
+          </div>
+          <div class="flex flex-col gap-1">
+            <div class="flex items-center gap-2 flex-wrap">
+              <span class="text-sm font-bold text-on-surface">Master Kill Switch: Subscription &amp; RBAC Bypass</span>
+              <span id="kill-switch-status-pill" class="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold tracking-wider bg-surface-container border border-outline-variant text-on-surface-variant flex items-center gap-1.5">
+                <span class="w-1.5 h-1.5 rounded-full bg-on-surface-variant"></span>
+                <span>SYNCING...</span>
+              </span>
+            </div>
+            <p class="text-xs text-on-surface-variant max-w-2xl leading-relaxed">
+              When toggled <strong>ON</strong>, completely suppresses all subscription DOM from the public landing and app pages (removes pricing tables, quota badges, and upgrade modals). All users are designated as <strong>Temp Users</strong> with <strong>infinite pitch generation</strong> and zero quota limits (open legacy system mode).
+            </p>
+          </div>
+        </div>
+        <div class="flex items-center gap-3 shrink-0 self-end md:self-center">
+          <label class="relative inline-flex items-center cursor-pointer select-none" title="Toggle Subscription &amp; RBAC Kill Switch">
+            <input type="checkbox" id="toggle-subscription-kill-switch" class="sr-only peer">
+            <div class="w-12 h-6.5 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500 shadow-inner"></div>
+          </label>
+        </div>
+      </div>
+
+      <!-- Dynamic Plans Matrix Container -->
+      <div id="tiers-grid-container" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="p-8 text-center text-on-surface-variant col-span-full">Loading tier configurations...</div>
+      </div>
+
+      <!-- Payment Gateway Integration Note (Zero Upfront Developer Cost) -->
+      <div class="bg-surface-container-low border border-outline-variant/30 rounded-xl p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div class="flex items-start gap-4">
+          <div class="w-10 h-10 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 flex items-center justify-center shrink-0">
+            <span class="material-symbols-outlined text-[24px]">payments</span>
+          </div>
+          <div class="flex flex-col">
+            <h4 class="text-sm font-semibold text-on-surface">Developer Zero-Cost Payment Architecture</h4>
+            <p class="text-xs text-on-surface-variant max-w-2xl mt-1">
+              Both <strong>Razorpay (India UPI/Cards)</strong> and <strong>Stripe (Global)</strong> have <strong>$0 setup fee</strong>, <strong>$0 monthly fee</strong>, and 100% free sandbox testing. You pay zero upfront charges; standard merchant fees (~2%) apply strictly upon successful user transactions.
+            </p>
+          </div>
+        </div>
+        <div class="px-3 py-1.5 rounded-lg bg-emerald-500/10 text-emerald-500 text-xs font-mono font-semibold">
+          100% Free Sandbox
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB: COLD OUTREACH PITCHES & DELIVERY LOGS -->
+    <section id="tab-content-pitches" class="admin-tab-panel hidden flex flex-col gap-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-headline-sm font-headline-sm text-on-surface flex items-center gap-2">
+            <span class="material-symbols-outlined text-purple-400">send</span>
+            <span>Cold Outreach Pitches &amp; Delivery Telemetry</span>
+          </h2>
+          <p class="text-xs text-on-surface-variant">Real-time audit log of cold pitches generated and dispatched across all users.</p>
+        </div>
+        <div class="flex items-center gap-2.5">
+          <button id="btn-refresh-pitches" class="p-2 rounded-lg bg-surface-container hover:bg-surface-container-high border border-outline-variant/40 text-on-surface transition cursor-pointer" title="Refresh Pitches">
+            <span class="material-symbols-outlined text-[18px]">refresh</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Filters & Search Controls -->
+      <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 p-4 rounded-xl bg-surface-container-low border border-outline-variant/30 shadow-sm">
+        <div class="flex items-center gap-1.5 p-1 rounded-lg bg-surface-container-lowest border border-outline-variant/30 text-xs">
+          <button type="button" class="pitch-filter-btn px-3 py-1.5 rounded-md font-semibold transition active bg-purple-500/15 text-purple-400 border border-purple-500/30" data-pitch-filter="today">
+            Today's Pitches (<span id="pitches-today-pill-count">0</span>)
+          </button>
+          <button type="button" class="pitch-filter-btn px-3 py-1.5 rounded-md font-semibold text-on-surface-variant hover:text-on-surface transition" data-pitch-filter="all">
+            All Sent Pitches (<span id="pitches-all-pill-count">0</span>)
+          </button>
+        </div>
+
+        <div class="relative flex-1 sm:max-w-xs">
+          <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-[18px] text-on-surface-variant">search</span>
+          <input type="text" id="pitches-search-input" placeholder="Search company, recipient, sender, subject..." class="w-full pl-9 pr-3 py-2 bg-surface-container-lowest border border-outline-variant/40 rounded-lg text-xs text-on-surface focus:outline-none focus:border-primary">
+        </div>
+      </div>
+
+      <!-- Pitches Table -->
+      <div class="bg-surface-container-low border border-outline-variant/30 rounded-xl overflow-hidden flex flex-col shadow-sm">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm text-on-surface">
+            <thead class="bg-surface-container text-xs text-on-surface-variant uppercase font-mono border-b border-outline-variant/30">
+              <tr>
+                <th class="px-4 py-3">ID</th>
+                <th class="px-4 py-3">Company &amp; Domain</th>
+                <th class="px-4 py-3">Recipient &amp; Sender</th>
+                <th class="px-4 py-3">Subject Line</th>
+                <th class="px-4 py-3">Method</th>
+                <th class="px-4 py-3">Status</th>
+                <th class="px-4 py-3">Sent At</th>
+                <th class="px-4 py-3 text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody id="pitches-table-body" class="divide-y divide-outline-variant/20 font-body-sm">
+              <tr>
+                <td colspan="8" class="px-4 py-8 text-center text-on-surface-variant">Loading pitch records...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination Bar -->
+        <div id="pitches-pagination-bar" class="p-4 border-t border-outline-variant/20 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-on-surface-variant">
+          <span id="pitches-pagination-info">Showing 0-0 of 0 pitches</span>
+          <div class="flex items-center gap-2">
+            <button id="btn-pitches-prev" class="px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high border border-outline-variant/40 text-on-surface transition disabled:opacity-40" disabled>Previous</button>
+            <span id="pitches-page-indicator" class="font-mono text-on-surface px-2">Page 1</span>
+            <button id="btn-pitches-next" class="px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high border border-outline-variant/40 text-on-surface transition disabled:opacity-40" disabled>Next</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 5: GITHUB ACTIONS & CI/CD WORKFLOWS -->
+    <section id="tab-content-github" class="admin-tab-panel hidden flex flex-col gap-6">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 class="text-headline-sm font-headline-sm text-on-surface">GitHub Actions CI/CD Telemetry</h2>
+          <p class="text-xs text-on-surface-variant">Select an autonomous workflow to inspect its latest 10 runs or trigger execution directly.</p>
+        </div>
+        <div class="flex items-center gap-2.5">
+          <button id="btn-trigger-selected-workflow" class="px-4 py-2 rounded-lg bg-primary hover:opacity-90 text-on-primary text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 shadow-md">
+            <span class="material-symbols-outlined text-[16px]">play_arrow</span>
+            <span>Run Selected Workflow</span>
+          </button>
+          <a id="link-github-repo" href="https://github.com/vorarahul4700/outreachPilot/actions" target="_blank" class="px-3 py-2 rounded-lg bg-surface-container hover:bg-surface-container-high border border-outline-variant/40 text-on-surface text-xs font-semibold transition cursor-pointer flex items-center gap-1.5">
+            <span class="material-symbols-outlined text-[15px]">open_in_new</span>
+            <span>GitHub Actions</span>
+          </a>
+          <button id="btn-refresh-github" class="p-2 rounded-lg bg-surface-container hover:bg-surface-container-high border border-outline-variant/40 text-on-surface transition cursor-pointer" title="Sync Workflows & Runs">
+            <span class="material-symbols-outlined text-[18px]">refresh</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Workflow Selector Cards (Select Workflow 1st) -->
+      <div>
+        <div class="text-xs font-semibold text-on-surface-variant uppercase tracking-wider mb-2">1. Select Target Workflow to Inspect & Run:</div>
+        <div id="github-workflows-grid" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <!-- Populated by admin.js with active selection -->
+        </div>
+      </div>
+
+      <!-- Recent 10 Workflow Runs / Jobs Table -->
+      <div class="bg-surface-container-low border border-outline-variant/30 rounded-xl overflow-hidden flex flex-col shadow-sm">
+        <div class="p-4 border-b border-outline-variant/30 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary text-[18px]">history</span>
+            <span class="text-sm font-semibold text-on-surface" id="github-runs-heading">Latest 10 Executions for: Cloud Scout & Autonomous Neon DB Queue Worker</span>
+          </div>
+          <span class="text-xs text-on-surface-variant">Click any execution row to open its console logs directly on GitHub</span>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm text-on-surface">
+            <thead class="bg-surface-container text-xs text-on-surface-variant uppercase font-mono border-b border-outline-variant/30">
+              <tr>
+                <th class="px-4 py-3">Run #</th>
+                <th class="px-4 py-3">Execution Title</th>
+                <th class="px-4 py-3">Status</th>
+                <th class="px-4 py-3">Trigger</th>
+                <th class="px-4 py-3">Branch & Commit</th>
+                <th class="px-4 py-3">Duration</th>
+                <th class="px-4 py-3 text-right">GitHub Link</th>
+              </tr>
+            </thead>
+            <tbody id="github-runs-table-body" class="divide-y divide-outline-variant/20 font-body-sm">
+              <tr>
+                <td colspan="7" class="px-4 py-8 text-center text-on-surface-variant">Fetching GitHub Actions runs...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ========================================== -->
+  <!-- MODALS                                      -->
+  <!-- ========================================== -->
+
+  <!-- MODAL: ADD SINGLE COMPANY -->
+  <div id="modal-add-company" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+    <div class="bg-surface-container-low border border-outline-variant/40 rounded-2xl w-full max-w-lg p-6 shadow-2xl flex flex-col gap-5">
+      <div class="flex items-center justify-between border-b border-outline-variant/20 pb-3">
+        <h3 class="text-headline-sm font-headline-sm text-on-surface">Add Company to Directory</h3>
+        <button class="modal-close text-on-surface-variant hover:text-on-surface">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <form id="form-add-company" class="flex flex-col gap-4 text-xs">
+        <div>
+          <label class="block text-on-surface font-semibold mb-1">Company Name *</label>
+          <input type="text" id="add-cname" required placeholder="e.g. Acme Technologies" class="w-full px-3 py-2 bg-surface-container border border-outline-variant/40 rounded-lg text-on-surface text-sm focus:outline-none focus:border-primary">
+          <span class="text-[11px] text-on-surface-variant">SEO slogans and location tags will be automatically stripped.</span>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-on-surface font-semibold mb-1">Domain *</label>
+            <input type="text" id="add-cdomain" required placeholder="acmetech.in" class="w-full px-3 py-2 bg-surface-container border border-outline-variant/40 rounded-lg text-on-surface text-sm focus:outline-none focus:border-primary">
+          </div>
+          <div>
+            <label class="block text-on-surface font-semibold mb-1">City</label>
+            <input type="text" id="add-ccity" placeholder="Ahmedabad" class="w-full px-3 py-2 bg-surface-container border border-outline-variant/40 rounded-lg text-on-surface text-sm focus:outline-none focus:border-primary">
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-on-surface font-semibold mb-1">Primary Email</label>
+            <input type="email" id="add-cemail" placeholder="careers@acmetech.in" class="w-full px-3 py-2 bg-surface-container border border-outline-variant/40 rounded-lg text-on-surface text-sm focus:outline-none focus:border-primary">
+          </div>
+          <div>
+            <label class="block text-on-surface font-semibold mb-1">Phone</label>
+            <input type="text" id="add-cphone" placeholder="+91 9876543210" class="w-full px-3 py-2 bg-surface-container border border-outline-variant/40 rounded-lg text-on-surface text-sm focus:outline-none focus:border-primary">
+          </div>
+        </div>
+        <div>
+          <label class="block text-on-surface font-semibold mb-1">Tech Stack (comma separated)</label>
+          <input type="text" id="add-ctech" placeholder="Python, FastAPI, React, PostgreSQL" class="w-full px-3 py-2 bg-surface-container border border-outline-variant/40 rounded-lg text-on-surface text-sm focus:outline-none focus:border-primary">
+        </div>
+        <div>
+          <label class="block text-on-surface font-semibold mb-1">Industry / Category</label>
+          <select id="add-ccat" class="w-full px-3 py-2 bg-surface-container border border-outline-variant/40 rounded-lg text-on-surface text-sm focus:outline-none">
+            <option value="Information Technology & Software">Information Technology & Software</option>
+            <option value="Marketing & Advertising">Marketing & Advertising</option>
+            <option value="Sales & Lead Generation">Sales & Lead Generation</option>
+            <option value="Finance & Legal">Finance & Legal</option>
+            <option value="Pharmaceuticals & Healthcare">Pharmaceuticals & Healthcare</option>
+            <option value="Manufacturing & Industrial">Manufacturing & Industrial</option>
+          </select>
+        </div>
+        <div class="flex items-center justify-end gap-2 pt-2 border-t border-outline-variant/20">
+          <button type="button" class="modal-close px-4 py-2 rounded-lg bg-surface-container text-on-surface hover:bg-surface-container-high transition">Cancel</button>
+          <button type="submit" id="btn-submit-add-company" class="px-4 py-2 rounded-lg bg-primary text-on-primary font-semibold hover:opacity-90 transition">Save Company</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: BULK CSV UPLOAD -->
+  <div id="modal-bulk-csv" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+    <div class="bg-surface-container-low border border-outline-variant/40 rounded-2xl w-full max-w-xl p-6 shadow-2xl flex flex-col gap-5">
+      <div class="flex items-center justify-between border-b border-outline-variant/20 pb-3">
+        <h3 class="text-headline-sm font-headline-sm text-on-surface">Bulk CSV Lead Importer</h3>
+        <button class="modal-close text-on-surface-variant hover:text-on-surface">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+
+      <div class="flex flex-col gap-4 text-xs">
+        <div class="p-3 bg-surface-container rounded-lg border border-outline-variant/30 flex flex-col gap-1 text-[11px] font-mono text-on-surface-variant">
+          <span class="text-on-surface font-semibold">Accepted CSV Column Headers:</span>
+          <span><code>name, domain, city, category, email, phone, tech_stack</code></span>
+          <span class="text-emerald-500 mt-1">✓ Automated name cleaning & domain deduplication applied instantly.</span>
+        </div>
+
+        <!-- Dropzone -->
+        <div id="csv-dropzone" class="border-2 border-dashed border-outline-variant/60 hover:border-primary/60 rounded-xl p-8 flex flex-col items-center justify-center gap-2 cursor-pointer transition bg-surface-container/50">
+          <span class="material-symbols-outlined text-[36px] text-primary">upload_file</span>
+          <span class="text-sm font-medium text-on-surface" id="csv-filename-label">Click or drag & drop a .CSV file here</span>
+          <span class="text-xs text-on-surface-variant">Maximum 10,000 rows per batch</span>
+          <input type="file" id="csv-file-input" accept=".csv" class="hidden">
+        </div>
+
+        <!-- Result Box -->
+        <div id="csv-result-box" class="hidden p-4 rounded-xl bg-surface-container border border-outline-variant/40 flex flex-col gap-1 text-xs font-mono">
+          <span id="csv-result-title" class="font-bold text-on-surface">Processing...</span>
+          <span id="csv-result-details" class="text-on-surface-variant"></span>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-2 border-t border-outline-variant/20">
+          <button type="button" class="modal-close px-4 py-2 rounded-lg bg-surface-container text-on-surface hover:bg-surface-container-high transition">Close</button>
+          <button type="button" id="btn-submit-csv-upload" class="px-4 py-2 rounded-lg bg-primary text-on-primary font-semibold hover:opacity-90 transition disabled:opacity-40" disabled>Start Import</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: EDIT USER PLAN -->
+  <div id="modal-edit-plan" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+    <div class="bg-surface-container-low border border-outline-variant/40 rounded-2xl w-full max-w-md p-6 shadow-2xl flex flex-col gap-4">
+      <div class="flex items-center justify-between border-b border-outline-variant/20 pb-3">
+        <h3 class="text-headline-sm font-headline-sm text-on-surface">Modify User Subscription</h3>
+        <button class="modal-close text-on-surface-variant hover:text-on-surface">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+
+      <div class="flex flex-col gap-3 text-xs">
+        <div>
+          <span class="text-on-surface-variant">Target User:</span>
+          <span id="edit-plan-user-email" class="font-mono font-semibold text-on-surface block">user@example.com</span>
+        </div>
+
+        <div class="flex flex-col gap-2 mt-2">
+          <label class="block text-on-surface font-semibold">Select Subscription Tier:</label>
+          <div class="flex flex-col gap-2">
+            <label class="flex items-center gap-2 p-2.5 rounded-lg bg-surface-container border border-outline-variant/30 cursor-pointer">
+              <input type="radio" name="plan-tier" value="free" class="text-primary focus:ring-primary">
+              <span class="text-sm font-medium text-on-surface">Free (10 pitches / day)</span>
+            </label>
+            <label class="flex items-center gap-2 p-2.5 rounded-lg bg-surface-container border border-outline-variant/30 cursor-pointer">
+              <input type="radio" name="plan-tier" value="pro" class="text-primary focus:ring-primary">
+              <span class="text-sm font-medium text-on-surface">Pro (50 pitches / day)</span>
+            </label>
+            <label class="flex items-center gap-2 p-2.5 rounded-lg bg-surface-container border border-outline-variant/30 cursor-pointer">
+              <input type="radio" name="plan-tier" value="premium_plus" class="text-primary focus:ring-primary">
+              <span class="text-sm font-medium text-on-surface">Premium+ (100 pitches / day)</span>
+            </label>
+          </div>
+        </div>
+
+        <input type="hidden" id="edit-plan-user-id">
+
+        <div class="flex items-center justify-end gap-2 pt-3 border-t border-outline-variant/20">
+          <button type="button" class="modal-close px-4 py-2 rounded-lg bg-surface-container text-on-surface hover:bg-surface-container-high transition">Cancel</button>
+          <button type="button" id="btn-confirm-save-plan" class="px-4 py-2 rounded-lg bg-primary text-on-primary font-semibold hover:opacity-90 transition">Save Changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: EDIT COMPANY DIRECTORY RECORD -->
+  <div id="modal-edit-company" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+    <div class="bg-surface-container-low border border-outline-variant/40 rounded-2xl w-full max-w-xl p-6 shadow-2xl flex flex-col gap-5 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-outline-variant/20 pb-3">
+        <div>
+          <h3 class="text-headline-sm font-headline-sm text-on-surface">Edit Company Profile</h3>
+          <p class="text-xs text-on-surface-variant">Update contact email, tech stack, location, or categorize this enterprise lead.</p>
+        </div>
+        <button class="modal-close text-on-surface-variant hover:text-on-surface">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+
+      <form id="form-edit-company" class="flex flex-col gap-4 text-xs">
+        <input type="hidden" id="edit-company-id">
+
+        <div>
+          <label class="block text-on-surface font-semibold mb-1">Company Name *</label>
+          <input type="text" id="edit-company-name" required class="w-full px-3 py-2 bg-surface-container border border-outline-variant/40 rounded-lg text-on-surface text-sm focus:outline-none focus:border-primary">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-on-surface font-semibold mb-1">Domain *</label>
+            <input type="text" id="edit-company-domain" required class="w-full px-3 py-2 bg-surface-container border border-outline-variant/40 rounded-lg text-on-surface text-sm focus:outline-none focus:border-primary">
+          </div>
+          <div>
+            <label class="block text-on-surface font-semibold mb-1">Website URL</label>
+            <input type="text" id="edit-company-website" class="w-full px-3 py-2 bg-surface-container border border-outline-variant/40 rounded-lg text-on-surface text-sm focus:outline-none focus:border-primary">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-on-surface font-semibold mb-1">Location / City</label>
+            <input type="text" id="edit-company-city" class="w-full px-3 py-2 bg-surface-container border border-outline-variant/40 rounded-lg text-on-surface text-sm focus:outline-none focus:border-primary">
+          </div>
+          <div>
+            <label class="block text-on-surface font-semibold mb-1">Industry / Category</label>
+            <select id="edit-company-category" class="w-full px-3 py-2 bg-surface-container border border-outline-variant/40 rounded-lg text-on-surface text-sm focus:outline-none">
+              <option value="Information Technology & Software">Information Technology & Software</option>
+              <option value="Marketing & Advertising">Marketing & Advertising</option>
+              <option value="Sales & Lead Generation">Sales & Lead Generation</option>
+              <option value="Finance & Legal">Finance & Legal</option>
+              <option value="Pharmaceuticals & Healthcare">Pharmaceuticals & Healthcare</option>
+              <option value="Manufacturing & Industrial">Manufacturing & Industrial</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-on-surface font-semibold mb-1">Primary Contact Email</label>
+            <input type="email" id="edit-company-email" placeholder="hr@company.com" class="w-full px-3 py-2 bg-surface-container border border-outline-variant/40 rounded-lg text-on-surface text-sm focus:outline-none focus:border-primary">
+          </div>
+          <div>
+            <label class="block text-on-surface font-semibold mb-1">Phone Number</label>
+            <input type="text" id="edit-company-phone" class="w-full px-3 py-2 bg-surface-container border border-outline-variant/40 rounded-lg text-on-surface text-sm focus:outline-none focus:border-primary">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-on-surface font-semibold mb-1">Tech Stack (comma-separated tags)</label>
+          <input type="text" id="edit-company-tech" placeholder="Python, Django, AWS, PostgreSQL, React" class="w-full px-3 py-2 bg-surface-container border border-outline-variant/40 rounded-lg text-on-surface text-sm focus:outline-none focus:border-primary">
+        </div>
+
+        <div>
+          <label class="block text-on-surface font-semibold mb-1">Profile Overview / Summary</label>
+          <textarea id="edit-company-summary" rows="3" class="w-full px-3 py-2 bg-surface-container border border-outline-variant/40 rounded-lg text-on-surface text-sm focus:outline-none focus:border-primary placeholder:text-on-surface-variant"></textarea>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-2 border-t border-outline-variant/20">
+          <button type="button" class="modal-close px-4 py-2 rounded-lg bg-surface-container text-on-surface hover:bg-surface-container-high transition">Cancel</button>
+          <button type="submit" id="btn-submit-edit-company" class="px-4 py-2 rounded-lg bg-primary text-on-primary font-semibold hover:opacity-90 transition">Save Company</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: QUARANTINE / EXCLUDE COMPANY -->
+  <div id="modal-quarantine-company" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+    <div class="bg-surface-container-low border border-outline-variant/40 rounded-2xl w-full max-w-md p-6 shadow-2xl flex flex-col gap-4">
+      <div class="flex items-center justify-between border-b border-outline-variant/20 pb-3">
+        <h3 class="text-headline-sm font-headline-sm text-on-surface flex items-center gap-2">
+          <span class="material-symbols-outlined text-amber-500">warning</span>
+          <span>Quarantine Lead</span>
+        </h3>
+        <button class="modal-close text-on-surface-variant hover:text-on-surface">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+
+      <div class="flex flex-col gap-3 text-xs">
+        <div>
+          <span class="text-on-surface-variant">Entity to Quarantine:</span>
+          <span id="quarantine-target-name" class="font-bold text-on-surface block text-sm">--</span>
+        </div>
+
+        <div>
+          <label class="block text-on-surface font-semibold mb-1">Reason for Exclusion *</label>
+          <input type="text" id="quarantine-reason-input" value="Educational institute / coaching academy / personal portfolio" class="w-full px-3 py-2 bg-surface-container border border-outline-variant/40 rounded-lg text-on-surface text-sm focus:outline-none focus:border-primary">
+        </div>
+
+        <input type="hidden" id="quarantine-target-id">
+
+        <div class="flex items-center justify-end gap-2 pt-3 border-t border-outline-variant/20">
+          <button type="button" class="modal-close px-4 py-2 rounded-lg bg-surface-container text-on-surface hover:bg-surface-container-high transition">Cancel</button>
+          <button type="button" id="btn-confirm-quarantine" class="px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-500 text-white font-semibold transition">Confirm Quarantine</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: CONFIGURE SUBSCRIPTION TIER -->
+  <div id="modal-tier-form" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+    <div class="bg-surface-container-low border border-outline-variant/40 rounded-2xl w-full max-w-lg p-6 shadow-2xl flex flex-col gap-5 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-outline-variant/20 pb-3">
+        <div>
+          <h3 class="text-headline-sm font-headline-sm text-on-surface" id="tier-modal-title">Configure Tier Plan</h3>
+          <p class="text-xs text-on-surface-variant">Manage dispatch allocations, pricing in ₹, and feature limits.</p>
+        </div>
+        <button class="modal-close text-on-surface-variant hover:text-on-surface">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+
+      <form id="form-tier-config" class="flex flex-col gap-4 text-xs">
+        <input type="hidden" id="tier-form-id">
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-on-surface font-semibold mb-1">Tier Code / Identifier *</label>
+            <input type="text" id="tier-form-code" required placeholder="e.g. pro" class="w-full px-3 py-2 bg-surface-container border border-outline-variant/40 rounded-lg text-on-surface text-sm focus:outline-none focus:border-primary">
+          </div>
+          <div>
+            <label class="block text-on-surface font-semibold mb-1">Display Name *</label>
+            <input type="text" id="tier-form-name" required placeholder="e.g. Pro Outreach" class="w-full px-3 py-2 bg-surface-container border border-outline-variant/40 rounded-lg text-on-surface text-sm focus:outline-none focus:border-primary">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-on-surface font-semibold mb-1">Subtitle / Tagline</label>
+            <input type="text" id="tier-form-subtitle" placeholder="e.g. Growth Tier" class="w-full px-3 py-2 bg-surface-container border border-outline-variant/40 rounded-lg text-on-surface text-sm focus:outline-none focus:border-primary">
+          </div>
+          <div>
+            <label class="block text-on-surface font-semibold mb-1">Badge Text (optional)</label>
+            <input type="text" id="tier-form-badge" placeholder="e.g. Most Popular" class="w-full px-3 py-2 bg-surface-container border border-outline-variant/40 rounded-lg text-on-surface text-sm focus:outline-none focus:border-primary">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-on-surface font-semibold mb-1">Monthly Price in INR (₹) *</label>
+            <input type="number" id="tier-form-price" min="0" required placeholder="499" class="w-full px-3 py-2 bg-surface-container border border-outline-variant/40 rounded-lg text-on-surface text-sm focus:outline-none focus:border-primary">
+          </div>
+          <div>
+            <label class="block text-on-surface font-semibold mb-1">Daily Pitch Limit *</label>
+            <input type="number" id="tier-form-limit" min="1" max="10000" required placeholder="50" class="w-full px-3 py-2 bg-surface-container border border-outline-variant/40 rounded-lg text-on-surface text-sm focus:outline-none focus:border-primary">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-on-surface font-semibold mb-1">Plan Features (one bullet per line)</label>
+          <textarea id="tier-form-features" rows="4" placeholder="50 pitches / day&#10;Deep AI Website crawler analysis&#10;Auto-PDF Resume attachment&#10;Bulk pitch generator engine" class="w-full px-3 py-2 bg-surface-container border border-outline-variant/40 rounded-lg text-on-surface text-sm focus:outline-none focus:border-primary"></textarea>
+        </div>
+
+        <label class="flex items-center gap-2 p-2 rounded-lg bg-surface-container border border-outline-variant/30 cursor-pointer">
+          <input type="checkbox" id="tier-form-sync-users" checked class="rounded text-primary focus:ring-primary">
+          <span class="text-xs text-on-surface font-medium">Sync all existing subscribers on this plan to the new daily pitch limit</span>
+        </label>
+
+        <div class="flex items-center justify-end gap-2 pt-2 border-t border-outline-variant/20">
+          <button type="button" class="modal-close px-4 py-2 rounded-lg bg-surface-container text-on-surface hover:bg-surface-container-high transition">Cancel</button>
+          <button type="submit" id="btn-submit-tier-form" class="px-4 py-2 rounded-lg bg-primary text-on-primary font-semibold hover:opacity-90 transition">Save Tier Plan</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: RUN GITHUB ACTIONS WORKFLOW -->
+  <div id="modal-run-workflow" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+    <div class="bg-surface-container-low border border-outline-variant/40 rounded-2xl w-full max-w-lg p-6 shadow-2xl flex flex-col gap-5 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between border-b border-outline-variant/20 pb-3">
+        <div>
+          <h3 class="text-headline-sm font-headline-sm text-on-surface flex items-center gap-2">
+            <span class="material-symbols-outlined text-primary">play_arrow</span>
+            <span id="run-wf-modal-title">Run Workflow</span>
+          </h3>
+          <p class="text-xs text-on-surface-variant font-mono" id="run-wf-modal-path">.github/workflows/cloud_scout.yml</p>
+        </div>
+        <button class="modal-close text-on-surface-variant hover:text-on-surface">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+
+      <form id="form-run-workflow" class="flex flex-col gap-4 text-xs">
+        <input type="hidden" id="run-wf-file" value="cloud_scout.yml">
+
+        <!-- Target Branch -->
+        <div>
+          <label class="block text-on-surface font-semibold mb-1">Git Branch / Ref</label>
+          <input type="text" id="run-wf-ref" value="main" required class="w-full px-3 py-2 bg-surface-container border border-outline-variant/40 rounded-lg text-on-surface font-mono text-xs focus:outline-none focus:border-primary">
+        </div>
+
+        <!-- Dynamic Workflow Parameters Container -->
+        <div id="wf-dynamic-inputs-container" class="flex flex-col gap-3 p-3.5 rounded-xl bg-surface-container border border-outline-variant/30">
+          <div class="flex items-center justify-between pb-2 border-b border-outline-variant/20">
+            <span class="text-xs font-semibold text-primary uppercase tracking-wide flex items-center gap-1.5">
+              <span class="material-symbols-outlined text-[16px]">tune</span>
+              <span>Workflow Parameters</span>
+            </span>
+            <span class="text-[11px] text-on-surface-variant font-mono" id="wf-dynamic-inputs-count">Dynamic Schema</span>
+          </div>
+
+          <div id="wf-dynamic-fields-wrapper" class="flex flex-col gap-3">
+            <!-- Dynamically populated from workflow YAML schema -->
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-2 border-t border-outline-variant/20">
+          <button type="button" class="modal-close px-4 py-2 rounded-lg bg-surface-container text-on-surface hover:bg-surface-container-high transition">Cancel</button>
+          <button type="submit" id="btn-submit-dispatch" class="px-4 py-2 rounded-lg bg-primary text-on-primary font-semibold hover:opacity-90 transition flex items-center gap-1.5 shadow-md">
+            <span class="material-symbols-outlined text-[16px]">bolt</span>
+            <span>Trigger Execution</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: VIEW SENT COLD PITCH EMAIL -->
+  <div id="modal-admin-view-pitch" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+    <div class="bg-surface-container-low border border-outline-variant/40 rounded-2xl w-full max-w-2xl p-6 shadow-2xl flex flex-col gap-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-start justify-between border-b border-outline-variant/20 pb-3">
+        <div>
+          <h3 class="text-headline-sm font-headline-sm text-on-surface flex items-center gap-2">
+            <span class="material-symbols-outlined text-purple-400">mark_email_read</span>
+            <span>Dispatched Cold Pitch</span>
+          </h3>
+          <p class="text-xs text-on-surface-variant font-mono mt-0.5" id="view-pitch-meta">Recipient &amp; Timestamp</p>
+        </div>
+        <button class="modal-close text-on-surface-variant hover:text-on-surface p-1">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+
+      <div class="flex flex-col gap-3 text-xs">
+        <div class="p-3 rounded-lg bg-surface-container border border-outline-variant/30 flex flex-col gap-1.5">
+          <div class="flex items-center justify-between">
+            <span class="text-on-surface-variant font-mono">Company: <strong id="view-pitch-company" class="text-on-surface">--</strong></span>
+            <span id="view-pitch-status-badge" class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-400">SENT</span>
+          </div>
+          <div class="text-on-surface-variant font-mono">Recipient: <strong id="view-pitch-recipient" class="text-on-surface font-mono">--</strong></div>
+          <div class="text-on-surface-variant font-mono">Dispatched By: <span id="view-pitch-sender" class="text-on-surface font-mono">--</span></div>
+        </div>
+
+        <div>
+          <label class="block text-on-surface font-semibold mb-1">Subject Line</label>
+          <div id="view-pitch-subject" class="w-full px-3 py-2 bg-surface-container-lowest border border-outline-variant/40 rounded-lg text-on-surface font-medium select-text"></div>
+        </div>
+
+        <div>
+          <label class="block text-on-surface font-semibold mb-1">Email Body</label>
+          <div id="view-pitch-body" class="w-full px-3.5 py-3 bg-surface-container-lowest border border-outline-variant/40 rounded-lg text-on-surface font-mono text-xs leading-relaxed whitespace-pre-wrap max-h-80 overflow-y-auto select-text"></div>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-between pt-2 border-t border-outline-variant/20">
+        <button type="button" id="btn-copy-view-pitch" class="px-3.5 py-2 rounded-lg bg-surface-container hover:bg-surface-container-high border border-outline-variant/30 text-on-surface text-xs font-semibold flex items-center gap-1.5 transition cursor-pointer">
+          <span class="material-symbols-outlined text-[15px]">content_copy</span>
+          <span>Copy Email Text</span>
+        </button>
+        <button type="button" class="modal-close px-4 py-2 rounded-lg bg-surface-container-high hover:bg-surface-container-highest text-on-surface text-xs font-semibold transition cursor-pointer">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOAST NOTIFICATION CONTAINER -->
+  <div id="admin-toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- Admin Application Client Controller Script -->
+  <script src="/static/js/admin.js?v=2.0"></script>
+</body>
+</html>
