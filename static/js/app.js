@@ -831,9 +831,9 @@ document.addEventListener("DOMContentLoaded", () => {
             : `<span class="px-2 py-0.5 rounded text-caption font-mono bg-surface-container text-on-surface-variant border border-outline-variant/60 text-[10px] shrink-0">Verified</span>`);
 
       const ratingDisplay = (c.rating && c.rating > 0)
-        ? `<span class="text-tertiary font-semibold flex items-center space-x-1 font-mono text-[11px]">
-             <span class="material-symbols-outlined text-[13px] text-tertiary">star</span><span>${Number(c.rating).toFixed(1)}</span>
-             <span class="text-on-surface-variant font-normal text-[10px]">(${c.reviews_count || 0})</span>
+        ? `<span class="text-on-surface-variant font-semibold flex items-center space-x-1 font-mono text-[11px]">
+             <span class="material-symbols-outlined text-[12px] text-on-surface-variant">star</span><span class="text-on-surface">${Number(c.rating).toFixed(1)}</span>
+             <span class="text-on-surface-variant font-normal text-[10px]">Google (${c.reviews_count || 0})</span>
            </span>`
         : `<span class="text-on-surface-variant text-[10px] font-mono">No ratings</span>`;
 
@@ -878,9 +878,9 @@ document.addEventListener("DOMContentLoaded", () => {
             <div class="flex items-center justify-between text-caption font-caption py-2 border-y border-outline-variant/40 mb-3 gap-2">
               <div class="flex items-center gap-1 text-on-surface shrink-0 font-mono text-[11px]">
                 ${ratingVal ? `
-                  <span class="material-symbols-outlined text-[14px] text-tertiary">star</span>
-                  <span class="font-semibold text-tertiary">${ratingVal}</span>
-                  <span class="text-on-surface-variant">(${c.reviews_count || 0})</span>
+                  <span class="material-symbols-outlined text-[13px] text-on-surface-variant">star</span>
+                  <span class="font-semibold text-on-surface">${ratingVal}</span>
+                  <span class="text-on-surface-variant">Google (${c.reviews_count || 0})</span>
                 ` : `<span class="text-on-surface-variant">No ratings</span>`}
               </div>
               ${c.phone ? `
@@ -2296,10 +2296,10 @@ document.addEventListener("DOMContentLoaded", () => {
           // Rating & Reviews display
           const ratingVal = (c.rating && c.rating > 0) ? Number(c.rating).toFixed(1) : null;
           const ratingDisplay = ratingVal
-            ? `<div class="flex items-center gap-1 text-tertiary text-caption font-semibold shrink-0">
-                 <span class="material-symbols-outlined text-[14px] text-tertiary">star</span>
-                 <span>${ratingVal}</span>
-                 <span class="text-on-surface-variant font-normal">(${c.reviews_count || 0})</span>
+            ? `<div class="flex items-center gap-1 text-on-surface-variant text-caption font-semibold shrink-0">
+                 <span class="material-symbols-outlined text-[13px] text-on-surface-variant">star</span>
+                 <span class="text-on-surface">${ratingVal}</span>
+                 <span class="text-on-surface-variant font-normal">Google (${c.reviews_count || 0})</span>
                </div>`
             : '';
 
@@ -3398,7 +3398,13 @@ document.addEventListener("DOMContentLoaded", () => {
     if (headerTierBadge) headerTierBadge.textContent = tierName;
     if (headerRemaining) headerRemaining.textContent = remainingStr;
     if (headerTotal) headerTotal.textContent = totalLimitStr;
-    if (headerBar) headerBar.style.width = `${pct}%`;
+    if (headerBar) {
+      headerBar.style.width = `${pct}%`;
+      // Unlimited quota has no meaningful progress; hide the bar track so it
+      // doesn't render as a solid filled block. Use inline display (not the
+      // "hidden" class) so it isn't overridden by the track's sm:block utility.
+      if (headerBar.parentElement) headerBar.parentElement.style.display = (isMaster || isKillSwitch) ? "none" : "";
+    }
 
     // 2. Sidebar Quota Card
     const sidebarTierBadge = document.getElementById("sidebar-tier-badge");
@@ -3409,7 +3415,10 @@ document.addEventListener("DOMContentLoaded", () => {
     if (sidebarTierBadge) sidebarTierBadge.textContent = tierName;
     if (sidebarRemaining) sidebarRemaining.textContent = remainingStr;
     if (sidebarTotal) sidebarTotal.textContent = totalLimitStr;
-    if (sidebarBar) sidebarBar.style.width = `${pct}%`;
+    if (sidebarBar) {
+      sidebarBar.style.width = `${pct}%`;
+      if (sidebarBar.parentElement) sidebarBar.parentElement.style.display = (isMaster || isKillSwitch) ? "none" : "";
+    }
 
     // 3. Subscription & Quota Modal
     const subModalTierBadge = document.getElementById("sub-modal-tier-badge");
@@ -4851,7 +4860,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const ratingVal = (c.rating && c.rating > 0) ? Number(c.rating).toFixed(1) : null;
       const ratingDisplay = ratingVal
-        ? `<span class="text-tertiary font-semibold flex items-center gap-1 font-mono text-[11px]"><span class="material-symbols-outlined text-[13px] text-tertiary">star</span><span>${ratingVal}</span><span class="text-on-surface-variant font-normal text-[10px]">(${c.reviews_count || 0})</span></span>`
+        ? `<span class="text-on-surface-variant font-semibold flex items-center gap-1 font-mono text-[11px]"><span class="material-symbols-outlined text-[12px] text-on-surface-variant">star</span><span class="text-on-surface">${ratingVal}</span><span class="text-on-surface-variant font-normal text-[10px]">Google (${c.reviews_count || 0})</span></span>`
         : `<span class="text-on-surface-variant text-[10px] font-mono">No reviews</span>`;
 
       const statusBadge = c.already_contacted

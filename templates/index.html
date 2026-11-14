@@ -296,7 +296,7 @@
         <header class="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 class="text-headline-xl font-headline-xl text-on-surface font-bold tracking-tight">Companies</h1>
-            <p id="header-leads-subtitle" class="text-body-md font-body-md text-on-surface-variant mt-1">Browse, research, and reach out to <span id="header-leads-counter">33603</span> verified businesses.</p>
+            <p id="header-leads-subtitle" class="text-body-md font-body-md text-on-surface-variant mt-1">Browse, research, and reach out to <span id="header-leads-counter" class="tabular-nums"></span> verified businesses.</p>
           </div>
           <div class="flex flex-wrap items-center gap-2.5 sm:gap-3">
             {% if not subscription_kill_switch %}
@@ -331,7 +331,7 @@
         <!-- Quick Stats Metric Cards (2x2 on mobile, 4-col on desktop) -->
         <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <!-- Stat 1: Total Prospects -->
-          <div id="stat-card-all" class="bg-surface-container-low border border-outline-variant/30 rounded-xl p-3.5 sm:p-5 flex flex-col justify-between hover:border-outline-variant/60 transition-colors cursor-pointer">
+          <div id="stat-card-all" class="bg-surface-container-low border border-outline-variant/30 rounded-xl p-3.5 sm:p-5 min-h-[122px] flex flex-col justify-between hover:border-outline-variant/60 transition-colors cursor-pointer">
             <div class="flex items-center justify-between text-on-surface-variant mb-2">
               <span class="text-label-sm font-label-sm">Total Companies</span>
               <span class="material-symbols-outlined text-[18px] text-primary">domain</span>
@@ -339,11 +339,11 @@
             <div class="flex items-baseline gap-2">
               <span id="companies-total-count" class="text-metric-num font-metric-num text-on-surface font-semibold tabular-nums">0</span>
             </div>
-            <p id="stat-all-subtext" class="text-caption font-caption text-on-surface-variant mt-2 font-mono text-[11px] truncate">Verified businesses</p>
+            <p id="stat-all-subtext" class="text-caption font-caption text-on-surface-variant mt-2 font-mono text-[11px] leading-snug">Verified businesses</p>
           </div>
 
           <!-- Stat 2: Enriched Emails -->
-          <div id="stat-card-emails" class="bg-surface-container-low border border-outline-variant/30 rounded-xl p-3.5 sm:p-5 flex flex-col justify-between hover:border-outline-variant/60 transition-colors cursor-pointer">
+          <div id="stat-card-emails" class="bg-surface-container-low border border-outline-variant/30 rounded-xl p-3.5 sm:p-5 min-h-[122px] flex flex-col justify-between hover:border-outline-variant/60 transition-colors cursor-pointer">
             <div class="flex items-center justify-between text-on-surface-variant mb-2">
               <span class="text-label-sm font-label-sm">Verified Emails</span>
               <span class="material-symbols-outlined text-[18px] text-secondary">verified</span>
@@ -352,11 +352,11 @@
               <span id="stat-emails-count" class="text-metric-num font-metric-num text-on-surface font-semibold tabular-nums">0</span>
               <span class="text-caption font-caption text-on-surface-variant font-mono">/ <span id="stat-emails-total">0</span></span>
             </div>
-            <p id="stat-yield-text" class="text-caption font-caption text-on-surface-variant mt-2 font-mono text-[11px] truncate">0% have email</p>
+            <p id="stat-yield-text" class="text-caption font-caption text-on-surface-variant mt-2 font-mono text-[11px] leading-snug">0% have email</p>
           </div>
 
           <!-- Stat 3: AI Researched -->
-          <div id="stat-card-enriched" class="bg-surface-container-low border border-outline-variant/30 rounded-xl p-3.5 sm:p-5 flex flex-col justify-between hover:border-outline-variant/60 transition-colors cursor-pointer">
+          <div id="stat-card-enriched" class="bg-surface-container-low border border-outline-variant/30 rounded-xl p-3.5 sm:p-5 min-h-[122px] flex flex-col justify-between hover:border-outline-variant/60 transition-colors cursor-pointer">
             <div class="flex items-center justify-between text-on-surface-variant mb-2">
               <span class="text-label-sm font-label-sm">Researched by AI</span>
               <span class="material-symbols-outlined text-[18px] text-tertiary">auto_awesome</span>
@@ -365,11 +365,11 @@
               <span id="stat-enriched-count" class="text-metric-num font-metric-num text-on-surface font-semibold tabular-nums">0</span>
               <span id="stat-enriched-badge" class="text-caption font-caption text-secondary px-1.5 py-0.5 rounded bg-secondary/10 font-mono text-[11px]">0 Active</span>
             </div>
-            <p class="text-caption font-caption text-on-surface-variant mt-2 font-mono text-[11px] truncate">Ready to reach out</p>
+            <p class="text-caption font-caption text-on-surface-variant mt-2 font-mono text-[11px] leading-snug">Ready to reach out</p>
           </div>
 
           <!-- Stat 4: Pitched -->
-          <div id="stat-card-contacted" class="bg-surface-container-low border border-outline-variant/30 rounded-xl p-3.5 sm:p-5 flex flex-col justify-between hover:border-outline-variant/60 transition-colors cursor-pointer" title="Click to view sent pitches (requires sign-in)">
+          <div id="stat-card-contacted" class="bg-surface-container-low border border-outline-variant/30 rounded-xl p-3.5 sm:p-5 min-h-[122px] flex flex-col justify-between hover:border-outline-variant/60 transition-colors cursor-pointer" title="Click to view sent pitches (requires sign-in)">
             <div class="flex items-center justify-between text-on-surface-variant mb-2">
               <span class="text-label-sm font-label-sm">Emails Sent</span>
               <span class="material-symbols-outlined text-[18px] text-primary">send</span>
@@ -378,7 +378,7 @@
               <span id="stat-contacted-count" class="text-metric-num font-metric-num text-on-surface font-semibold tabular-nums">0</span>
               <span id="stat-contacted-badge" class="text-caption font-caption text-outline px-1.5 py-0.5 rounded bg-surface-container-highest font-mono text-[11px]">Sign in</span>
             </div>
-            <p id="stat-contacted-text" class="text-caption font-caption text-on-surface-variant mt-2 font-mono text-[11px] truncate">Sign in to track sent emails</p>
+            <p id="stat-contacted-text" class="text-caption font-caption text-on-surface-variant mt-2 font-mono text-[11px] leading-snug">Sign in to track sent emails</p>
           </div>
         </div>
 

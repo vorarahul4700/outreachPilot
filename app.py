@@ -2119,10 +2119,10 @@ def get_companies(
                 }
             query = base_query.filter(Company.is_invalid.is_(True))
         else:
-            if not is_admin:
-                query = base_query.filter(Company.is_invalid.is_(False))
-            else:
-                query = base_query
+            # Everyone (admins included) browses the VALID directory by default;
+            # invalid/excluded companies remain reachable via the dedicated "invalid"
+            # view. This keeps the list total consistent with the "Total Companies" KPI.
+            query = base_query.filter(Company.is_invalid.is_(False))
 
         # 2. Metric / Status filter
         if status == "enriched":
@@ -2293,7 +2293,10 @@ def get_companies(
 
         if not has_custom_filters and _filter_cache.get("data") and "stats" in _filter_cache["data"]:
             stats_cache = _filter_cache["data"]["stats"]
-            if status == "all" and not is_admin:
+            if status == "all":
+                # stats_cache["total"] is already the VALID count (is_invalid=FALSE),
+                # matching the default list filter and the "Total Companies" KPI.
+                # (Applies to admins too, now that the default list excludes invalid.)
                 total_count = stats_cache.get("total", 0)
             elif status == "enriched":
                 total_count = stats_cache.get("enriched", 0)
