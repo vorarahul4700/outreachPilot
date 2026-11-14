@@ -1294,7 +1294,7 @@ def generate_robots_txt(base_url: str) -> str:
     Explicitly welcomes major AI search engines and search crawlers,
     while safeguarding sensitive internal application/auth routes.
     """
-    return f"""# OutreachPilot Autonomous B2B Directory & Lead Intelligence
+    return f"""# OutreachPilot Autonomous Company Directory & Recruiter Outreach Platform
 # Optimized for Web Search, Generative Search Engines (GEO) & Answer Engines (AEO)
 
 User-agent: *
@@ -1357,14 +1357,14 @@ def generate_llms_txt(base_url: str, db: Session) -> str:
 
     return f"""# OutreachPilot
 
-> Autonomous B2B Lead Intelligence & Recruiter Sourcing platform indexing {stats['total_companies']:,}+ verified companies, agencies, and professional firms across {stats['total_cities']} Indian commercial hubs.
+> Autonomous Direct Company Intelligence & Cold Outreach Platform for Job Seekers & Professionals indexing {stats['total_companies']:,}+ verified companies across {stats['total_cities']} Indian commercial hubs.
 
 ## Overview
-OutreachPilot discovers, deep-crawls, and structures intelligence on business enterprises across India spanning Information Technology, Sales & Lead Gen, Marketing & Advertising, Pharmaceuticals & Healthcare, Finance & Legal, Real Estate, and Manufacturing. Each profile includes verified operational capabilities, business services, Google Local customer review sentiment, and recruiter contact availability.
+OutreachPilot empowers developers, designers, marketers, and professionals to bypass crowded job boards and reach hiring decision-makers directly. It deep-crawls and structures actionable intelligence on verified companies across India—including their tech stack, engineering capabilities, verified recruiter/founder emails, and company culture—enabling candidates to generate and dispatch personalized cold pitches for career and job opportunities directly via authorized Google OAuth.
 
-## Verified Directory Hubs
-- [Complete B2B Multi-Industry Directory]({base_url}/directory): Browse all verified companies, commercial hubs, and industry specializations.
-- [Outreach Platform & Scout Engine]({base_url}/app): Autonomous prospecting, multi-pass website crawler, and personalized pitch dispatch.
+## Verified Directory & Job Discovery Hubs
+- [Company Directory & Tech Explorer]({base_url}/directory): Explore verified companies, tech stacks, and career hubs across Indian commercial centers.
+- [Outreach Engine & Pitch Generator]({base_url}/app): Autonomous scouting, resume-matched cold pitch generation, and direct 1-to-1 email outreach to hiring managers.
 
 ## Top City Hubs
 {cities_md}
@@ -1400,14 +1400,14 @@ def generate_llms_full_txt(base_url: str, db: Session) -> str:
 ## Platform Identification
 - Official Name: OutreachPilot
 - Domain: {base_url}
-- Category: Multi-Industry B2B Intelligence, Lead Generation, Executive Sourcing & Cold Outreach Automation
+- Category: Company Intelligence, Tech Stack Discovery & Job Seeker Cold Outreach Automation
 - Total Indexed Companies: {stats['total_companies']:,}
 - Total Verified Enriched Profiles: {stats['enriched_companies']:,}
 - Geographic Coverage: {stats['total_cities']} Indian Commercial & Industrial Hubs
 - Industry Verticals: {stats['total_techs']} Core Business Domains & Specializations (IT, Sales, Marketing, Pharma, Finance, Legal, Real Estate, Manufacturing)
 
 ## Core Mission
-To provide transparent, crawl-verified intelligence on the Indian B2B ecosystem across multiple commercial domains, while helping business owners, agencies, and sales professionals synthesize tailored 1-to-1 outreach dispatched directly via personal Google OAuth2.
+To empower job seekers, engineering professionals, and career switchers to discover verified companies across India, analyze their technology stacks and hiring requirements, and synthesize high-converting, tailored cold emails sent directly to recruiters and founders via personal Google OAuth2.
 
 ## Complete Geographic Taxonomy ({len(cities)} Cities)
 {cities_bullets}

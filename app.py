@@ -41,11 +41,13 @@ _filter_cache = {
     "timestamp": 0.0,
     "data": None
 }
+_dynamic_filter_cache = {}
 
 def invalidate_filter_cache():
-    global _filter_cache
+    global _filter_cache, _dynamic_filter_cache
     _filter_cache["timestamp"] = 0.0
     _filter_cache["data"] = None
+    _dynamic_filter_cache.clear()
 
 
 import config
@@ -1312,15 +1314,51 @@ async def stop_scrape():
 
 
 @app.get("/api/companies/filters")
-def get_companies_filters(request: Request, db: Session = Depends(get_db)):
-    """Cached filter metadata (tech stacks, cities, and aggregate metric counts)"""
-    global _filter_cache
+def get_companies_filters(
+    request: Request,
+    domain: str = "",
+    city: str = "",
+    tech: str = "",
+    status: str = "all",
+    search: str = "",
+    db: Session = Depends(get_db)
+):
+    """
+    Dynamic, interdependent faceted filter metadata.
+    Computes responsive option counts for Cities, Tech Stacks, and Domains
+    based on active user selections across Companies and Outreach Hub.
+    """
+    global _filter_cache, _dynamic_filter_cache
     now = time.time()
     try:
         user = get_current_user(db, request)
         is_admin = bool(user and config.is_master_admin(user.email))
 
-        # Pitched / contacted count is strictly PER-USER and ONLY available when logged in
+        # Extract multi-values
+        raw_cities = request.query_params.getlist("city")
+        city_terms = []
+        for c_val in raw_cities:
+            city_terms.extend([x.strip().lower() for x in c_val.split(",") if x.strip()])
+        if not city_terms and city and city.strip():
+            city_terms = [x.strip().lower() for x in city.split(",") if x.strip()]
+
+        raw_techs = request.query_params.getlist("tech") or request.query_params.getlist("tech_stack")
+        tech_terms = []
+        for t_val in raw_techs:
+            tech_terms.extend([x.strip().lower() for x in t_val.split(",") if x.strip()])
+        if not tech_terms and tech and tech.strip():
+            tech_terms = [x.strip().lower() for x in tech.split(",") if x.strip()]
+
+        domain_val = (domain or "").strip().lower()
+        if domain_val == "all":
+            domain_val = ""
+        status_val = (status or "all").strip().lower()
+        search_val = (search or "").strip().lower()
+
+        # Check if user has zero active filters (global view)
+        is_global = (not city_terms and not tech_terms and not domain_val and status_val == "all" and not search_val)
+
+        # Per-user contacted count
         user_contacted_count = None
         if user:
             user_contacted_count = (
@@ -1330,72 +1368,174 @@ def get_companies_filters(request: Request, db: Session = Depends(get_db)):
                 .count()
             )
 
-        # 5-minute cache TTL (300s) for aggregate metrics, cities, and tech stacks
-        if _filter_cache.get("data") and (now - _filter_cache.get("timestamp", 0) < 300):
-            cached = copy.deepcopy(_filter_cache["data"])
-            cached["is_master_admin"] = is_admin
-            if "stats" in cached and isinstance(cached["stats"], dict):
-                cached["stats"]["contacted"] = user_contacted_count
-                cached["stats"]["is_logged_in"] = bool(user)
-            return cached
+        # 1. Global Cache hit
+        if is_global:
+            if _filter_cache.get("data") and (now - _filter_cache.get("timestamp", 0) < 300):
+                cached = copy.deepcopy(_filter_cache["data"])
+                cached["is_master_admin"] = is_admin
+                if "stats" in cached and isinstance(cached["stats"], dict):
+                    cached["stats"]["contacted"] = user_contacted_count
+                    cached["stats"]["is_logged_in"] = bool(user)
+                return cached
+        else:
+            # Dynamic Filter Cache hit
+            cache_key = (domain_val, tuple(sorted(city_terms)), tuple(sorted(tech_terms)), status_val, search_val)
+            if cache_key in _dynamic_filter_cache:
+                entry = _dynamic_filter_cache[cache_key]
+                if now - entry["timestamp"] < 120:
+                    cached = copy.deepcopy(entry["data"])
+                    cached["is_master_admin"] = is_admin
+                    if "stats" in cached and isinstance(cached["stats"], dict):
+                        cached["stats"]["contacted"] = user_contacted_count
+                        cached["stats"]["is_logged_in"] = bool(user)
+                    return cached
 
-        # Fast single SQL query for valid, invalid, and enriched counts
-        counts_res = db.execute(text("""
-            SELECT 
-                COUNT(*) FILTER (WHERE is_invalid = FALSE) AS total_valid,
-                COUNT(*) FILTER (WHERE is_invalid = TRUE) AS invalid_count,
-                COUNT(*) FILTER (WHERE is_invalid = FALSE AND is_enriched = TRUE) AS enriched_count
-            FROM companies
-            WHERE domain NOT LIKE '%.local' AND domain LIKE '%.%';
-        """)).fetchone()
+        # Helper: Build Tech condition
+        def build_tech_condition(t_terms):
+            if not t_terms:
+                return None
+            profile_conds = []
+            company_tech_conds = []
+            for t_term in t_terms:
+                t_slug = seo_engine.tech_to_slug(t_term)
+                canon_name = seo_engine.slug_to_tech_name(t_slug)
+                tokens = {t_term}
+                if canon_name:
+                    tokens.add(canon_name.lower())
+                if t_term in ("net", ".net", "dotnet"):
+                    tokens.update([".net", "dotnet"])
+                elif t_term in ("node", "nodejs", "node.js"):
+                    tokens.update(["node", "nodejs"])
+                elif t_term in ("react", "reactjs", "react.js"):
+                    tokens.update(["react", "react js"])
+                elif t_term in ("vue", "vuejs", "vue.js"):
+                    tokens.update(["vue", "vue.js"])
+                elif t_term in ("angular", "angularjs"):
+                    tokens.update(["angular", "angularjs"])
+                elif t_term in ("aws", "amazon web services"):
+                    tokens.update(["aws", "amazon web services"])
 
-        total_valid = (counts_res[0] if counts_res else 0) or 0
-        invalid_count = (counts_res[1] if counts_res else 0) or 0
-        enriched_count = (counts_res[2] if counts_res else 0) or 0
+                for tok in tokens:
+                    profile_conds.append(CompanyProfile.tech_stack.cast(String).ilike(f"%{tok}%"))
+                    company_tech_conds.append(Company.search_keyword.ilike(f"%{tok}%"))
+                    company_tech_conds.append(Company.normalized_keyword.ilike(f"%{tok}%"))
+                    company_tech_conds.append(Company.source_query.ilike(f"%{tok}%"))
 
-        # Distinct company email count
-        with_emails_count = db.execute(text("""
-            SELECT COUNT(DISTINCT ce.company_id)
-            FROM company_emails ce
-            JOIN companies c ON c.id = ce.company_id
-            WHERE c.is_invalid = FALSE;
-        """)).scalar() or 0
+            if profile_conds:
+                prof_sub = db.query(CompanyProfile.company_id).filter(or_(*profile_conds))
+                company_tech_conds.append(Company.id.in_(prof_sub))
 
-        # Pre-calculated, domain-aware cached city directory
-        cities_meta = seo_engine.get_all_cities(db)
-        sorted_cities = [
-            {
-                "name": c["name"],
-                "slug": c["slug"],
-                "count": c["count"],
-                "domain_counts": c.get("domain_counts", {})
-            }
-            for c in cities_meta if c.get("name")
-        ]
-        sorted_cities.sort(key=lambda x: x["name"].lower())
+            return or_(*company_tech_conds)
 
-        # PostgreSQL JSONB aggregation for tech stacks
-        tech_map = defaultdict(int)
-        try:
-            tech_rows = db.execute(text("""
-                SELECT item, COUNT(*) AS count
-                FROM company_profiles,
+        # Helper: Build Domain condition
+        def build_domain_condition(d_val):
+            if not d_val or d_val == "all":
+                return None
+            if d_val in ("it", "it-software"):
+                non_it = [raw for raw, cat in seo_engine.SEED_KEYWORD_OVERRIDES.items() if seo_engine.get_category_domain_code(cat) != "it"]
+                if non_it:
+                    return ~Company.search_keyword.in_(non_it)
+            else:
+                dom_kws = [raw for raw, cat in seo_engine.SEED_KEYWORD_OVERRIDES.items() if seo_engine.get_category_domain_code(cat) == d_val]
+                if dom_kws:
+                    return Company.search_keyword.in_(dom_kws)
+                else:
+                    return Company.id == -1
+            return None
+
+        # Helper: Build City condition
+        def build_city_condition(c_terms):
+            if not c_terms:
+                return None
+            city_conds = []
+            for c_term in c_terms:
+                c_pat = f"%{c_term}%"
+                city_conds.append(Company.city.ilike(c_pat))
+            return or_(*city_conds)
+
+        # Helper: Build Status condition
+        def build_status_condition(st_val):
+            if st_val == "enriched":
+                return Company.is_enriched.is_(True)
+            elif st_val == "emails":
+                emails_sub = db.query(CompanyEmail.company_id).distinct()
+                return Company.id.in_(emails_sub)
+            elif st_val in ("contacted", "sent"):
+                if user:
+                    sent_sub = db.query(OutreachLog.company_id).filter(
+                        OutreachLog.status == "SENT", OutreachLog.user_id == user.id
+                    ).distinct()
+                    return Company.id.in_(sent_sub)
+                return Company.id == -1
+            return None
+
+        d_cond = build_domain_condition(domain_val)
+        t_cond = build_tech_condition(tech_terms)
+        c_cond = build_city_condition(city_terms)
+        st_cond = build_status_condition(status_val)
+
+        # --- FACET 1: Cities (scoped to domain, tech, status - NOT city itself) ---
+        if tech_terms or domain_val or status_val != "all":
+            q_cities = db.query(Company.city, func.count(Company.id)).filter(
+                Company.is_invalid.is_(False),
+                Company.city.isnot(None),
+                func.trim(Company.city) != ""
+            )
+            if d_cond is not None:
+                q_cities = q_cities.filter(d_cond)
+            if t_cond is not None:
+                q_cities = q_cities.filter(t_cond)
+            if st_cond is not None:
+                q_cities = q_cities.filter(st_cond)
+
+            city_counts = q_cities.group_by(Company.city).all()
+            sorted_cities = [
+                {"name": r[0].strip().title(), "slug": seo_engine.city_to_slug(r[0]), "count": r[1]}
+                for r in city_counts if r[0] and r[1] > 0
+            ]
+            sorted_cities.sort(key=lambda x: x["name"].lower())
+        else:
+            cities_meta = seo_engine.get_all_cities(db)
+            sorted_cities = [
+                {
+                    "name": c["name"],
+                    "slug": c["slug"],
+                    "count": c["count"],
+                    "domain_counts": c.get("domain_counts", {})
+                }
+                for c in cities_meta if c.get("name") and c.get("count", 0) > 0
+            ]
+            sorted_cities.sort(key=lambda x: x["name"].lower())
+
+        # --- FACET 2: Tech Stacks (scoped to domain, city, status - NOT tech itself) ---
+        if city_terms or domain_val or status_val != "all":
+            tech_map = defaultdict(int)
+            city_tuple = tuple(city_terms) if city_terms else None
+            
+            # Profile tech_stack query
+            prof_sql = """
+                SELECT item, COUNT(DISTINCT c.id) AS count
+                FROM companies c
+                JOIN company_profiles cp ON cp.company_id = c.id,
                      jsonb_array_elements_text(
                          CASE 
-                             WHEN jsonb_typeof(tech_stack) = 'array' THEN tech_stack 
+                             WHEN jsonb_typeof(cp.tech_stack) = 'array' THEN cp.tech_stack 
                              ELSE '[]'::jsonb 
                          END
                      ) AS item
-                WHERE item IS NOT NULL AND trim(item) != ''
-                GROUP BY item
-                ORDER BY count DESC
-                LIMIT 60;
-            """)).fetchall()
-
-            for t_name, count in tech_rows:
-                if t_name:
-                    clean = t_name.strip()
-                    if clean:
+                WHERE c.is_invalid = FALSE
+            """
+            params = {}
+            if city_tuple:
+                prof_sql += " AND LOWER(c.city) IN :cities"
+                params["cities"] = city_tuple
+            prof_sql += " AND item IS NOT NULL AND trim(item) != '' GROUP BY item ORDER BY count DESC LIMIT 60;"
+            
+            try:
+                t_rows = db.execute(text(prof_sql), params).fetchall()
+                for t_name, count in t_rows:
+                    if t_name and t_name.strip():
+                        clean = t_name.strip()
                         key = clean.lower()
                         if key == ".net" or key.startswith(".net "):
                             display = ".NET" + clean[4:]
@@ -1408,34 +1548,170 @@ def get_companies_filters(request: Request, db: Session = Depends(get_db)):
                         else:
                             display = clean.title() if len(clean) > 3 else clean.upper()
                         tech_map[display] += count
-        except Exception as tech_err:
-            print(f"[Filters Warning] JSONB tech stack query fallback: {tech_err}")
+            except Exception as e:
+                print(f"[Filters Warning] Profile tech aggregation fallback: {e}")
 
-        sorted_tech = [
-            {"name": tech_name, "count": count}
-            for tech_name, count in sorted(tech_map.items(), key=lambda x: x[0].lower())
-        ]
+            # Also check scout keywords for companies in these cities
+            kw_sql = """
+                SELECT 
+                    CASE 
+                        WHEN LOWER(c.search_keyword) LIKE '%php%' OR LOWER(c.source_query) LIKE '%php%' THEN 'PHP'
+                        WHEN LOWER(c.search_keyword) LIKE '%react%' OR LOWER(c.source_query) LIKE '%react%' THEN 'React'
+                        WHEN LOWER(c.search_keyword) LIKE '%python%' OR LOWER(c.source_query) LIKE '%python%' THEN 'Python'
+                        WHEN LOWER(c.search_keyword) LIKE '%node%' OR LOWER(c.source_query) LIKE '%node%' THEN 'Node.js'
+                        WHEN LOWER(c.search_keyword) LIKE '%angular%' OR LOWER(c.source_query) LIKE '%angular%' THEN 'Angular'
+                        WHEN LOWER(c.search_keyword) LIKE '%aws%' OR LOWER(c.source_query) LIKE '%aws%' THEN 'AWS'
+                        WHEN LOWER(c.search_keyword) LIKE '%flutter%' OR LOWER(c.source_query) LIKE '%flutter%' THEN 'Flutter'
+                        WHEN LOWER(c.search_keyword) LIKE '%wordpress%' OR LOWER(c.source_query) LIKE '%wordpress%' THEN 'WordPress'
+                        WHEN LOWER(c.search_keyword) LIKE '%shopify%' OR LOWER(c.source_query) LIKE '%shopify%' THEN 'Shopify'
+                        WHEN LOWER(c.search_keyword) LIKE '%magento%' OR LOWER(c.source_query) LIKE '%magento%' THEN 'Magento'
+                        WHEN LOWER(c.search_keyword) LIKE '%laravel%' OR LOWER(c.source_query) LIKE '%laravel%' THEN 'Laravel'
+                        WHEN LOWER(c.search_keyword) LIKE '%vue%' OR LOWER(c.source_query) LIKE '%vue%' THEN 'Vue.js'
+                        ELSE NULL
+                    END AS tech_name,
+                    COUNT(DISTINCT c.id) AS cnt
+                FROM companies c
+                WHERE c.is_invalid = FALSE
+            """
+            kw_params = {}
+            if city_tuple:
+                kw_sql += " AND LOWER(c.city) IN :cities"
+                kw_params["cities"] = city_tuple
+            kw_sql += " GROUP BY 1 HAVING 1 IS NOT NULL;"
+            
+            try:
+                kw_rows = db.execute(text(kw_sql), kw_params).fetchall()
+                for r in kw_rows:
+                    if r[0] and r[1]:
+                        tech_map[r[0]] = max(tech_map[r[0]], r[1])
+            except Exception as e:
+                print(f"[Filters Warning] Keyword tech aggregation fallback: {e}")
 
-        # Multi-Domain Hierarchy List with live counts
+            sorted_tech = [
+                {"name": tech_name, "count": count}
+                for tech_name, count in sorted(tech_map.items(), key=lambda x: x[0].lower())
+                if count > 0
+            ]
+        else:
+            # Global tech stacks
+            tech_map = defaultdict(int)
+            try:
+                tech_rows = db.execute(text("""
+                    SELECT item, COUNT(*) AS count
+                    FROM company_profiles,
+                         jsonb_array_elements_text(
+                             CASE 
+                                 WHEN jsonb_typeof(tech_stack) = 'array' THEN tech_stack 
+                                 ELSE '[]'::jsonb 
+                             END
+                         ) AS item
+                    WHERE item IS NOT NULL AND trim(item) != ''
+                    GROUP BY item
+                    ORDER BY count DESC
+                    LIMIT 60;
+                """)).fetchall()
+
+                for t_name, count in tech_rows:
+                    if t_name and t_name.strip():
+                        clean = t_name.strip()
+                        key = clean.lower()
+                        if key == ".net" or key.startswith(".net "):
+                            display = ".NET" + clean[4:]
+                        elif key in ["aws", "php", "html", "css", "sql", "api", "seo", "crm", "erp"]:
+                            display = clean.upper()
+                        elif key == "javascript":
+                            display = "JavaScript"
+                        elif key == "typescript":
+                            display = "TypeScript"
+                        else:
+                            display = clean.title() if len(clean) > 3 else clean.upper()
+                        tech_map[display] += count
+            except Exception as tech_err:
+                print(f"[Filters Warning] JSONB tech stack query fallback: {tech_err}")
+
+            sorted_tech = [
+                {"name": tech_name, "count": count}
+                for tech_name, count in sorted(tech_map.items(), key=lambda x: x[0].lower())
+                if count > 0
+            ]
+
+        # --- FACET 3: Domains (scoped to city, tech, status - NOT domain itself) ---
         all_domains = seo_engine.get_all_domains(db)
+        if city_terms or tech_terms:
+            q_dom = db.query(
+                Company.normalized_keyword, Company.search_keyword, func.count(Company.id)
+            ).filter(Company.is_invalid.is_(False))
+            if c_cond is not None:
+                q_dom = q_dom.filter(c_cond)
+            if t_cond is not None:
+                q_dom = q_dom.filter(t_cond)
+            if st_cond is not None:
+                q_dom = q_dom.filter(st_cond)
+
+            dom_kw_rows = q_dom.group_by(Company.normalized_keyword, Company.search_keyword).all()
+            d_counts = defaultdict(int)
+            total_scoped = 0
+            for norm_kw, search_kw, cnt in dom_kw_rows:
+                total_scoped += cnt
+                raw_kw = (norm_kw or "").strip() or (search_kw or "").strip()
+                if raw_kw:
+                    cat = seo_engine.normalize_keyword_to_category(raw_kw)
+                    code = seo_engine.get_category_domain_code(cat)
+                    if code != "it" and code != "all":
+                        d_counts[code] += cnt
+
+            non_it = sum(d_counts.values())
+            d_counts["it"] = max(0, total_scoped - non_it)
+            d_counts["all"] = total_scoped
+
+            domains_result = []
+            for d in all_domains:
+                domains_result.append({**d, "count": d_counts.get(d["code"], 0)})
+        else:
+            domains_result = all_domains
+
+        # --- STATS: Total matching leads with ALL active filters applied ---
+        q_total = db.query(func.count(Company.id)).filter(Company.is_invalid.is_(False))
+        if d_cond is not None:
+            q_total = q_total.filter(d_cond)
+        if c_cond is not None:
+            q_total = q_total.filter(c_cond)
+        if t_cond is not None:
+            q_total = q_total.filter(t_cond)
+        if st_cond is not None:
+            q_total = q_total.filter(st_cond)
+        total_valid = q_total.scalar() or 0
+
+        # Enriched count with filters
+        q_enriched = q_total.filter(Company.is_enriched.is_(True))
+        enriched_count = q_enriched.scalar() or 0
+
+        # Email count with filters
+        emails_sub = db.query(CompanyEmail.company_id).distinct()
+        with_emails_count = q_total.filter(Company.id.in_(emails_sub)).scalar() or 0
 
         result = {
             "cities": sorted_cities,
             "tech_stacks": sorted_tech,
-            "domains": all_domains,
+            "domains": domains_result,
             "stats": {
                 "total": total_valid,
                 "enriched": enriched_count,
                 "emails": with_emails_count,
-                "invalid": invalid_count,
+                "invalid": 0,
                 "contacted": user_contacted_count,
                 "is_logged_in": bool(user)
             },
             "is_master_admin": is_admin
         }
 
-        _filter_cache["timestamp"] = now
-        _filter_cache["data"] = result
+        if is_global:
+            _filter_cache["timestamp"] = now
+            _filter_cache["data"] = result
+        else:
+            cache_key = (domain_val, tuple(sorted(city_terms)), tuple(sorted(tech_terms)), status_val, search_val)
+            _dynamic_filter_cache[cache_key] = {"timestamp": now, "data": result}
+
         return result
     except Exception as e:
         print(f"[API Error] /api/companies/filters failed: {e}")
@@ -1443,6 +1719,21 @@ def get_companies_filters(request: Request, db: Session = Depends(get_db)):
             db.rollback()
         except Exception:
             pass
+        return {
+            "cities": [],
+            "tech_stacks": [],
+            "domains": [],
+            "stats": {
+                "total": 0,
+                "enriched": 0,
+                "emails": 0,
+                "invalid": 0,
+                "contacted": None,
+                "is_logged_in": False
+            },
+            "is_master_admin": False,
+            "error": str(e)
+        }
         if _filter_cache.get("data"):
             fallback = copy.deepcopy(_filter_cache["data"])
             fallback["error"] = str(e)
@@ -1577,7 +1868,6 @@ def get_companies(
             for c_term in city_terms:
                 c_pat = f"%{c_term}%"
                 city_conds.append(Company.city.ilike(c_pat))
-                city_conds.append(Company.address.ilike(c_pat))
             query = query.filter(or_(*city_conds))
 
         # 5. Tech stack filter (multi-select supported via comma-separated string or multiple query params)

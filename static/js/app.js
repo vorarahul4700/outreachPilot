@@ -1986,79 +1986,105 @@ document.addEventListener("DOMContentLoaded", () => {
   let totalServerPages = 1;
 
   let filterOptionsLoaded = false;
-  let filterFetchPromise = null;
+  let filterFetchAbortController = null;
+  let lastFilterFetchKey = "";
 
-  // Fetch cached filter options (Tech Stacks & Cities with counts) from backend
-  async function fetchCompaniesFilters() {
-    if (filterOptionsLoaded && filterFetchPromise === null) return;
-    if (filterFetchPromise) return filterFetchPromise;
+  // Fetch dynamic, interdependent filter options (Tech Stacks, Cities, Domains with reactive counts) from backend
+  async function fetchCompaniesFilters(opts = {}) {
+    const context = opts.context || "companies"; // "companies" or "outreach"
+    const isOutreach = context === "outreach";
 
-    filterFetchPromise = (async () => {
-      try {
-        const res = await fetch("/api/companies/filters");
-        if (!res.ok) return;
-        const data = await res.json();
-        filterOptionsLoaded = true;
+    const domain = opts.domain !== undefined ? opts.domain : (isOutreach ? "" : (activeDomainFilter || "all"));
+    const city = opts.city !== undefined ? opts.city : (isOutreach ? (outreachCitySelect?.value || outreachSelectedCity || "") : (filterCitySelect?.value || ""));
+    const tech = opts.tech !== undefined ? opts.tech : (isOutreach ? (outreachTechSelect?.value || outreachSelectedTech || "") : (filterTechSelect?.value || ""));
+    const status = opts.status !== undefined ? opts.status : (isOutreach ? (outreachActiveFilter || "all") : (activeMetricFilter || "all"));
+    const search = opts.search !== undefined ? opts.search : (isOutreach ? (outreachSearchInput?.value || outreachSearchQuery || "") : (filterInput?.value || ""));
 
-        // Build tech options
+    const filterKey = `${context}|${domain}|${city}|${tech}|${status}|${search}`;
+    if (filterKey === lastFilterFetchKey && filterOptionsLoaded) return;
+
+    if (filterFetchAbortController) {
+      try { filterFetchAbortController.abort(); } catch (_) {}
+    }
+    filterFetchAbortController = new AbortController();
+    const signal = filterFetchAbortController.signal;
+
+    try {
+      const qParams = new URLSearchParams({
+        domain: (domain && domain !== "all") ? domain : "",
+        city: city || "",
+        tech: tech || "",
+        status: status || "all",
+        search: search || ""
+      });
+
+      const res = await fetch(`/api/companies/filters?${qParams.toString()}`, { signal });
+      if (!res.ok) return;
+      const data = await res.json();
+      lastFilterFetchKey = filterKey;
+      filterOptionsLoaded = true;
+
+      // 1. Reactive Tech Options
+      if (data.tech_stacks && Array.isArray(data.tech_stacks)) {
         const techOpts = [{ value: "", label: "Tech Stack (All)", count: null }];
-        (data.tech_stacks || []).forEach(t => {
-          techOpts.push({ value: t.name.toLowerCase(), label: t.name, count: t.count });
+        data.tech_stacks.forEach(t => {
+          if (t && t.name) {
+            techOpts.push({ value: t.name.toLowerCase(), label: t.name, count: t.count });
+          }
         });
-        if (ddFilterTech) ddFilterTech.setOptions(techOpts);
-        if (ddOutreachTech) ddOutreachTech.setOptions(techOpts);
-
-        // Cache and build domain-aware city options
-        cachedCitiesData = data.cities || [];
-        updateCityDropdownOptions(activeDomainFilter || "all");
-
-        // Update domain filter counts
-        if (data.domains && Array.isArray(data.domains)) {
-          domainsData = data.domains;
-          let totalAllDomains = 0;
-          data.domains.forEach(d => {
-            totalAllDomains += (d.count || 0);
-            const countEl = document.getElementById(`domain-count-${d.code}`);
-            if (countEl) {
-              countEl.textContent = d.count ? `(${Number(d.count).toLocaleString()})` : "(0)";
-            }
-          });
-          const countAllEl = document.getElementById("domain-count-all");
-          if (countAllEl) {
-            const allCount = (data.stats && typeof data.stats.total === "number") ? data.stats.total : totalAllDomains;
-            countAllEl.textContent = `(${Number(allCount).toLocaleString()})`;
-          }
+        if (isOutreach) {
+          if (ddOutreachTech) ddOutreachTech.setOptions(techOpts);
+        } else {
+          if (ddFilterTech) ddFilterTech.setOptions(techOpts);
         }
-
-        if (data.stats) {
-          globalStats = { ...data.stats };
-          if (!activeDomainFilter || activeDomainFilter === "all") {
-            updateCompanyMetrics(data.stats);
-            updateHeaderSubtitle("all", data.stats.total);
-          } else {
-            const domItem = domainsData.find(d => d.code === activeDomainFilter);
-            const domCount = domItem ? (domItem.count || 0) : 0;
-            const domEnriched = domItem ? (domItem.enriched_count || 0) : 0;
-            const domEmails = domItem ? (domItem.emails_count || 0) : 0;
-            updateCompanyMetrics({
-              total: domCount,
-              enriched: domEnriched,
-              emails: domEmails,
-              contacted: (activeDomainFilter === "it") ? (data.stats.contacted || 0) : 0,
-              invalid: (activeDomainFilter === "it") ? (data.stats.invalid || 0) : 0,
-              is_logged_in: Boolean(currentUser && currentUser.is_logged_in)
-            });
-            updateHeaderSubtitle(activeDomainFilter, domCount);
-          }
-        }
-      } catch (e) {
-        console.warn("Failed to fetch company filters:", e);
-      } finally {
-        filterFetchPromise = null;
       }
-    })();
 
-    return filterFetchPromise;
+      // 2. Reactive City Options (Only show cities that have matching records; counts match pagination exactly)
+      if (data.cities && Array.isArray(data.cities)) {
+        cachedCitiesData = data.cities;
+        const cityOpts = [{ value: "", label: "All Cities", count: null }];
+        data.cities.forEach(c => {
+          if (c && c.name && (c.count === undefined || c.count > 0)) {
+            cityOpts.push({ value: (c.name || "").toLowerCase(), label: c.name, count: c.count });
+          }
+        });
+        if (isOutreach) {
+          if (ddOutreachCity) ddOutreachCity.setOptions(cityOpts);
+        } else {
+          if (ddFilterCity) ddFilterCity.setOptions(cityOpts);
+        }
+      }
+
+      // 3. Reactive Domain Filter Counts (Companies tab)
+      if (!isOutreach && data.domains && Array.isArray(data.domains)) {
+        domainsData = data.domains;
+        let totalAllDomains = 0;
+        data.domains.forEach(d => {
+          totalAllDomains += (d.count || 0);
+          const countEl = document.getElementById(`domain-count-${d.code}`);
+          if (countEl) {
+            countEl.textContent = d.count ? `(${Number(d.count).toLocaleString()})` : "(0)";
+          }
+        });
+        const countAllEl = document.getElementById("domain-count-all");
+        if (countAllEl) {
+          const allCount = (data.stats && typeof data.stats.total === "number") ? data.stats.total : totalAllDomains;
+          countAllEl.textContent = `(${Number(allCount).toLocaleString()})`;
+        }
+      }
+
+      // 4. Reactive Metrics
+      if (data.stats) {
+        globalStats = { ...data.stats };
+        if (!isOutreach) {
+          updateCompanyMetrics(data.stats);
+          updateHeaderSubtitle(domain || "all", data.stats.total);
+        }
+      }
+    } catch (e) {
+      if (e.name === "AbortError") return;
+      console.warn("Failed to fetch reactive company filters:", e);
+    }
   }
 
   let companiesAbortController = null;
@@ -2120,10 +2146,8 @@ document.addEventListener("DOMContentLoaded", () => {
         updateHeaderSubtitle(activeDomainFilter, data.stats.total);
       }
 
-      // Populate filter dropdowns on initial load
-      if (!filterOptionsLoaded) {
-        fetchCompaniesFilters();
-      }
+      // Keep filter dropdowns and option counts reactive to active selection
+      fetchCompaniesFilters({ context: "companies" });
 
       updateMetricCardStyles();
       // Purge any invalid company IDs from multi-selection if viewing active leads
@@ -4451,6 +4475,13 @@ document.addEventListener("DOMContentLoaded", () => {
         if (data.stats) {
           updateCompanyMetrics(data.stats);
         }
+        fetchCompaniesFilters({
+          context: "outreach",
+          tech: selectedTech,
+          city: selectedCity,
+          status: outreachActiveFilter || "all",
+          search: q
+        });
       }
     } catch (err) {
       if (err.name === "AbortError") return;
