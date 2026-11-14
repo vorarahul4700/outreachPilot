@@ -33,6 +33,7 @@ if hasattr(sys.stdout, "reconfigure"):
 
 from db import Company, ScoutJob, SessionLocal
 from scraper_engine import GoogleBlockedException, GoogleScraper, is_genuine_company_domain
+from clean_db_company_names import clean_company_name
 
 
 def log_job(db, job_id: int, msg: str, progress: int = None, live_card: dict = None):
@@ -151,7 +152,7 @@ def execute_scout_job(job_id: int, auto_enrich: bool = False) -> bool:
         registered_cards = []
         for item in valid_items:
             c_dom = item["domain"].strip().lower()
-            c_name = item["name"].strip()
+            c_name = clean_company_name(item["name"].strip(), item["domain"].strip())
             try:
                 company = db.query(Company).filter(Company.domain == c_dom).first()
                 if not company:
