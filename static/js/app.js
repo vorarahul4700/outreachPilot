@@ -3935,7 +3935,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const modalTargetEmail = document.getElementById("modal-target-email");
   const modalSubject = document.getElementById("modal-subject");
   const modalBody = document.getElementById("modal-body");
-  const btnLaunchGmail = document.getElementById("btn-launch-gmail");
   const btnSendDirectOauth = document.getElementById("btn-send-direct-oauth");
   const btnSendDirectText = document.getElementById("btn-send-direct-text");
   const btnCopyPitch = document.getElementById("btn-copy-pitch");
@@ -4143,23 +4142,14 @@ document.addEventListener("DOMContentLoaded", () => {
     pitchWordCount.className = "text-caption font-mono text-outline";
   }
 
-  function updateGmailComposeUrls() {
-    if (!btnLaunchGmail) return;
-    const to = currentPitchTargetEmail || "";
-    const subj = (modalSubject?.value || "").trim();
-    const body = (modalBody?.value || "").trim();
-    btnLaunchGmail.href = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(to)}&su=${encodeURIComponent(subj)}&body=${encodeURIComponent(body)}`;
-  }
-
   if (modalBody) {
     modalBody.addEventListener("input", () => {
       updatePitchWordCount();
-      updateGmailComposeUrls();
     });
   }
 
   if (modalSubject) {
-    modalSubject.addEventListener("input", updateGmailComposeUrls);
+    modalSubject.addEventListener("input", () => {});
   }
 
   function setupSubjectAngleButtons(subjs, initialActive = "specificity") {
@@ -4224,7 +4214,6 @@ document.addEventListener("DOMContentLoaded", () => {
         modalSubject.value = data.subject_line || "";
         modalBody.value = data.email_body || data.primary_email || "";
         updatePitchWordCount();
-        updateGmailComposeUrls();
         updateResumeAttachmentUI();
         modal.classList.remove("hidden");
         refreshIcons();
@@ -4312,19 +4301,6 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     });
   }
-
-  btnLaunchGmail.addEventListener("click", async (e) => {
-    if (!currentPitchTargetEmail || !currentPitchTargetEmail.trim()) {
-      e.preventDefault();
-      showToast("Company email not found! Cannot send email.", "error");
-      return;
-    }
-    if (currentPitchId) {
-      await fetch(`/api/pitch/${currentPitchId}/log-sent?method=GMAIL_WEB`, { method: "POST" });
-      await fetchCompanies();
-      fetchAuditLogs();
-    }
-  });
 
   btnCopyPitch.addEventListener("click", () => {
     const text = `Subject: ${modalSubject.value}\n\n${modalBody.value}`;

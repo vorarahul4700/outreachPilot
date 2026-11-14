@@ -71,7 +71,6 @@ from db import (
 from enricher import deep_enrich_company, is_recruitment_email
 from outreach import (
     dispatch_batch_outreach,
-    generate_gmail_web_link,
     generate_mailto_link,
     send_via_google_oauth,
 )
@@ -2444,11 +2443,6 @@ async def generate_single_pitch(
         if c_name_clean.lower() != "candidate" and c_name_clean.lower() not in existing_body.lower():
             existing_pitch = None
         elif existing_body:
-            gmail_web_url = generate_gmail_web_link(
-                to_email=target_email or existing_pitch.target_email or "",
-                subject=existing_pitch.subject_line,
-                body=existing_pitch.email_body
-            )
             mailto_url = generate_mailto_link(
                 to_email=target_email or existing_pitch.target_email or "",
                 subject=existing_pitch.subject_line,
@@ -2464,7 +2458,6 @@ async def generate_single_pitch(
                 "primary_email": existing_pitch.email_body,
                 "cover_letter": existing_pitch.cover_letter or "",
                 "matched_skills": existing_pitch.matched_skills if isinstance(existing_pitch.matched_skills, list) else [],
-                "gmail_web_url": gmail_web_url,
                 "mailto_url": mailto_url
             }
 
@@ -2533,11 +2526,6 @@ async def generate_single_pitch(
         db.commit()
         db.refresh(pitch_obj)
 
-    gmail_web_url = generate_gmail_web_link(
-        to_email=target_email or "",
-        subject=pitch_obj.subject_line,
-        body=pitch_obj.email_body
-    )
     mailto_url = generate_mailto_link(
         to_email=target_email or "",
         subject=pitch_obj.subject_line,
@@ -2559,7 +2547,6 @@ async def generate_single_pitch(
         "personalization_notes": pitch_data.get("personalization_notes", []),
         "what_to_change_if": pitch_data.get("what_to_change_if", {}),
         "matched_skills": pitch_data.get("matched_skills", []),
-        "gmail_web_url": gmail_web_url,
         "mailto_url": mailto_url
     }
 
@@ -2825,51 +2812,6 @@ async def send_single_pitch_direct(
         return {"success": True, "message_id": result.get("message_id")}
     else:
         return {"success": False, "error": result.get("error", "Failed to dispatch email via Google OAuth.")}
-
-
-@app.post("/api/pitch/{pitch_id}/log-sent")
-async def log_sent_manual(
-    pitch_id: int,
-    method: str = "GMAIL_WEB",
-    request: Request = None,
-    db: Session = Depends(get_db)
-):
-    user = get_current_user(db, request)
-    pitch = db.query(ColdPitch).filter(ColdPitch.id == pitch_id).first()
-    if not pitch:
-        raise HTTPException(status_code=404, detail="Pitch not found")
-
-    # IDOR Protection: verify user owns this pitch unless Master Admin
-    if not config.is_master_admin(user.email) and pitch.user_id != user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Forbidden: You do not own this cold pitch record."
-        )
-
-    target = (pitch.target_email or "").strip()
-    if not target:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Company email not found! Cannot send or log email without recipient."
-        )
-
-    pitch.status = "SENT"
-    pitch.sent_at = datetime.utcnow()
-    pitch.delivery_method = method
-
-    log_entry = OutreachLog(
-        company_id=pitch.company_id,
-        user_id=pitch.user_id,
-        recipient_email=target,
-        subject=pitch.subject_line,
-        email_body=pitch.email_body,
-        delivery_method=method,
-        status="SENT",
-        sent_at=datetime.utcnow()
-    )
-    db.add(log_entry)
-    db.commit()
-    return {"success": True, "message": "Outreach timestamp logged successfully."}
 
 
 @app.post("/api/pitch/bulk-send")
