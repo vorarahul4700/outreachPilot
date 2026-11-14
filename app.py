@@ -1525,32 +1525,32 @@ def get_companies(
         if status == "enriched":
             query = query.filter(Company.is_enriched.is_(True))
         elif status == "emails":
-            emails_sub = db.query(CompanyEmail.company_id).distinct().subquery()
+            emails_sub = db.query(CompanyEmail.company_id).distinct()
             query = query.filter(Company.id.in_(emails_sub))
         elif status in ("contacted", "sent"):
             if user:
                 sent_sub = db.query(OutreachLog.company_id).filter(
                     OutreachLog.status == "SENT",
                     OutreachLog.user_id == user.id
-                ).distinct().subquery()
+                ).distinct()
                 query = query.filter(Company.id.in_(sent_sub))
             else:
                 query = query.filter(Company.id == -1)
         elif status == "ready":
-            emails_sub = db.query(CompanyEmail.company_id).distinct().subquery()
+            emails_sub = db.query(CompanyEmail.company_id).distinct()
             query = query.filter(Company.id.in_(emails_sub))
             if user:
                 sent_sub = db.query(OutreachLog.company_id).filter(
                     OutreachLog.status == "SENT",
                     OutreachLog.user_id == user.id
-                ).distinct().subquery()
+                ).distinct()
                 query = query.filter(~Company.id.in_(sent_sub))
         elif status == "uncontacted":
             if user:
                 sent_sub = db.query(OutreachLog.company_id).filter(
                     OutreachLog.status == "SENT",
                     OutreachLog.user_id == user.id
-                ).distinct().subquery()
+                ).distinct()
                 query = query.filter(~Company.id.in_(sent_sub))
 
         # 3. Search query filter
@@ -1590,13 +1590,41 @@ def get_companies(
             tech_terms = [x.strip().lower() for x in tech.split(",") if x.strip()]
 
         if tech_terms:
-            tech_conds = [
-                CompanyProfile.tech_stack.cast(String).ilike(f"%{t_term}%")
-                for t_term in tech_terms
-            ]
-            query = query.join(CompanyProfile, Company.id == CompanyProfile.company_id).filter(
-                or_(*tech_conds)
-            ).distinct()
+            profile_conds = []
+            company_tech_conds = []
+            for t_term in tech_terms:
+                t_slug = seo_engine.tech_to_slug(t_term)
+                canon_name = seo_engine.slug_to_tech_name(t_slug)
+                tokens = {t_term}
+                if canon_name:
+                    tokens.add(canon_name.lower())
+
+                # Expand specific common tech terms & synonyms
+                if t_term in ("net", ".net", "dotnet"):
+                    tokens.update([".net", "dotnet"])
+                elif t_term in ("node", "nodejs", "node.js"):
+                    tokens.update(["node", "nodejs"])
+                elif t_term in ("react", "reactjs", "react.js"):
+                    tokens.update(["react", "react js"])
+                elif t_term in ("vue", "vuejs", "vue.js"):
+                    tokens.update(["vue", "vue.js"])
+                elif t_term in ("angular", "angularjs"):
+                    tokens.update(["angular", "angularjs"])
+                elif t_term in ("aws", "amazon web services"):
+                    tokens.update(["aws", "amazon web services"])
+
+                for tok in tokens:
+                    profile_conds.append(CompanyProfile.tech_stack.cast(String).ilike(f"%{tok}%"))
+                    company_tech_conds.append(Company.search_keyword.ilike(f"%{tok}%"))
+                    company_tech_conds.append(Company.normalized_keyword.ilike(f"%{tok}%"))
+                    company_tech_conds.append(Company.source_query.ilike(f"%{tok}%"))
+
+            # Match either AI-extracted tech stack in profile OR scout search keywords without table joins
+            if profile_conds:
+                prof_sub = db.query(CompanyProfile.company_id).filter(or_(*profile_conds))
+                company_tech_conds.append(Company.id.in_(prof_sub))
+
+            query = query.filter(or_(*company_tech_conds))
 
         # 5b. Industry Domain Filter (IT, Sales, Marketing, Pharma, Finance, etc.)
         if domain and domain.strip() and domain.strip().lower() != "all":
@@ -1619,7 +1647,7 @@ def get_companies(
                     query = query.filter(Company.id == -1)
 
         # 6. Sorting (Strictly prioritize companies with verified emails and AI enrichment first)
-        email_order = literal_column("has_email").desc()
+        email_order = Company.has_email.desc()
         enriched_order = Company.is_enriched.desc()
 
         if sort == "rating_desc":
@@ -1672,9 +1700,9 @@ def get_companies(
             elif status == "invalid" and is_admin:
                 total_count = stats_cache.get("invalid", 0)
             else:
-                total_count = query.count()
+                total_count = query.order_by(None).count()
         else:
-            total_count = query.count()
+            total_count = query.order_by(None).count()
 
         # 7. Server-side pagination
         # If page_size is 0, -1, or all=true, return all matching companies

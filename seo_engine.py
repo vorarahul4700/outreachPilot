@@ -1037,13 +1037,18 @@ def get_companies_list(
         if not matching_keywords:
             matching_keywords = [clean_tech, canonical_name]
 
+        prof_sub = db.query(CompanyProfile.company_id).filter(
+            CompanyProfile.tech_stack.cast(String).ilike(f"%{clean_tech.lower()}%")
+        )
+
         query = query.filter(
             or_(
                 Company.search_keyword.in_(matching_keywords),
                 func.lower(Company.search_keyword).ilike(f"%{clean_tech.lower()}%"),
                 func.lower(Company.normalized_keyword).ilike(f"%{clean_tech.lower()}%"),
                 func.lower(Company.search_keyword).ilike(f"%{canonical_name.lower()}%"),
-                func.lower(Company.normalized_keyword) == tech_slug
+                func.lower(Company.normalized_keyword) == tech_slug,
+                Company.id.in_(prof_sub)
             )
         )
 

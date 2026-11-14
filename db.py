@@ -69,6 +69,7 @@ class Company(Base):
     is_invalid = Column(Boolean, default=False, nullable=False, index=True)
     invalid_reason = Column(String(255), nullable=True)
     invalid_at = Column(DateTime, nullable=True)
+    has_email = Column(Boolean, default=False, nullable=True, index=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
