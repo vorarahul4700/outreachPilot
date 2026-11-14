@@ -33,7 +33,7 @@
       try {
         const saved = localStorage.getItem('pilot_theme');
         const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const theme = saved ? saved : (prefersDark ? 'dark' : 'light');
+        const theme = saved ? saved : 'light'; /* default: light */
         if (theme === 'light') {
           document.documentElement.classList.remove('dark');
           document.documentElement.classList.add('light');
@@ -119,8 +119,8 @@
         </a>
         <nav class="hidden md:flex items-center gap-4 text-xs font-mono text-on-surface-variant whitespace-nowrap shrink-0">
           <a href="/directory" class="text-primary font-semibold border-b-2 border-secondary pb-0.5 whitespace-nowrap">Directory</a>
-          <a href="/#workflow" class="hover:text-primary transition-colors whitespace-nowrap">Protocol</a>
-          <a href="/#capabilities" class="hover:text-primary transition-colors whitespace-nowrap">Engine</a>
+          <a href="/#workflow" class="hover:text-primary transition-colors whitespace-nowrap">How It Works</a>
+          <a href="/#capabilities" class="hover:text-primary transition-colors whitespace-nowrap">Features</a>
         </nav>
       </div>
 
