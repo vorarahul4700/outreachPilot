@@ -191,6 +191,37 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btn-open-add-company-modal")?.addEventListener("click", () => openModal("modal-add-company"));
   document.getElementById("btn-open-csv-upload-modal")?.addEventListener("click", () => openModal("modal-bulk-csv"));
 
+  // --- Phone sidebar (below 768px it is off-screen and slides in from the menu button) ---
+  const adminSidebar = document.getElementById("admin-sidebar");
+  const adminBackdrop = document.getElementById("admin-mobile-backdrop");
+  const btnAdminMenu = document.getElementById("btn-admin-mobile-menu");
+  const btnAdminMenuClose = document.getElementById("btn-admin-sidebar-close");
+  const phoneQuery = window.matchMedia("(max-width: 767px)");
+
+  function setAdminSidebar(open) {
+    if (!adminSidebar) return;
+    const show = Boolean(open) && phoneQuery.matches;
+    adminSidebar.classList.toggle("mobile-open", show);
+    adminBackdrop?.classList.toggle("hidden", !show);
+    btnAdminMenu?.setAttribute("aria-expanded", show ? "true" : "false");
+    updateBodyScrollLock();
+  }
+
+  btnAdminMenu?.addEventListener("click", () => setAdminSidebar(true));
+  btnAdminMenuClose?.addEventListener("click", () => setAdminSidebar(false));
+  adminBackdrop?.addEventListener("click", () => setAdminSidebar(false));
+  // Picking a section closes the menu so its content is visible straight away.
+  tabButtons.forEach(btn => btn.addEventListener("click", () => setAdminSidebar(false)));
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && adminSidebar?.classList.contains("mobile-open")) setAdminSidebar(false);
+  });
+  // Growing past phone width (rotation, resize) puts the sidebar back in place.
+  if (phoneQuery.addEventListener) {
+    phoneQuery.addEventListener("change", () => setAdminSidebar(false));
+  } else if (phoneQuery.addListener) {
+    phoneQuery.addListener(() => setAdminSidebar(false));
+  }
+
   // --- Reusable Custom Dropdown Component Controller ---
   function initStaticCustomDropdown(containerId, onSelectCallback) {
     const container = document.getElementById(containerId);
