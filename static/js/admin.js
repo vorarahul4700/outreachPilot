@@ -38,28 +38,46 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // --- Toast Notifications ---
+  // --- Notifications: same place and look as the workspace (/app) ---
+  // Top centre, slide down, coloured border + short label, close button,
+  // auto-dismiss after 3.5s (warning 4.5s, error 5.5s).
   const toastContainer = document.getElementById("admin-toast-container");
+  const TOAST_STYLES = {
+    success: { ring: "border-secondary/60 ring-1 ring-secondary/40", icon: "check_circle", tone: "text-secondary", label: "Success", chip: "bg-secondary/20 text-secondary border-secondary/40" },
+    error:   { ring: "border-error/60 ring-1 ring-error/40",         icon: "error",        tone: "text-error",     label: "Error",   chip: "bg-error/20 text-error border-error/40" },
+    warning: { ring: "border-tertiary/60 ring-1 ring-tertiary/40",   icon: "warning",      tone: "text-tertiary",  label: "Attention", chip: "bg-tertiary/20 text-tertiary border-tertiary/40" },
+    info:    { ring: "border-outline-variant/50",                    icon: "info",         tone: "text-primary",   label: "Info",    chip: "bg-primary/10 text-primary border-primary/30" },
+  };
+
   function showToast(message, type = "success") {
     if (!toastContainer) return;
+    const s = TOAST_STYLES[type] || TOAST_STYLES.info;
     const toast = document.createElement("div");
-    const bgClass = type === "error" 
-      ? "bg-rose-600 text-white" 
-      : type === "warning"
-      ? "bg-amber-500 text-[#090A0D]"
-      : "bg-surface-container-highest text-on-surface border border-outline-variant/50";
-
-    toast.className = `px-4 py-3 rounded-xl shadow-xl flex items-center gap-3 text-xs font-semibold tracking-wide transition-all transform duration-300 pointer-events-auto ${bgClass}`;
+    toast.setAttribute("role", type === "error" ? "alert" : "status");
+    toast.className = `bg-surface-container-low/95 text-on-surface border ${s.ring} rounded-2xl px-4 sm:px-5 py-3 flex items-center gap-3 shadow-xl backdrop-blur-md pointer-events-auto transition-all duration-300 -translate-y-4 opacity-0 w-full sm:w-auto sm:min-w-[500px] max-w-full`;
     toast.innerHTML = `
-      <span class="material-symbols-outlined text-[18px]">${type === "error" ? "error" : type === "warning" ? "warning" : "check_circle"}</span>
-      <span>${message}</span>
+      <span class="material-symbols-outlined text-[20px] shrink-0 ${s.tone}" aria-hidden="true">${s.icon}</span>
+      <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border shrink-0 ${s.chip}">${s.label}</span>
+      <span class="toast-message text-sm leading-relaxed flex-1 min-w-0"></span>
+      <button type="button" class="toast-close p-1.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition shrink-0 cursor-pointer" aria-label="Dismiss">
+        <span class="material-symbols-outlined text-[18px]" aria-hidden="true">close</span>
+      </button>
     `;
+    // Plain text, so server error messages can never inject markup.
+    toast.querySelector(".toast-message").textContent = message;
+
+    const dismiss = () => {
+      toast.classList.add("opacity-0", "-translate-y-4");
+      setTimeout(() => toast.remove(), 250);
+    };
+    toast.querySelector(".toast-close")?.addEventListener("click", dismiss);
+
     toastContainer.appendChild(toast);
-    setTimeout(() => {
-      toast.style.opacity = "0";
-      toast.style.transform = "translateY(10px)";
-      setTimeout(() => toast.remove(), 300);
-    }, 4000);
+    void toast.offsetWidth; // apply the start position so the slide-down animates
+    toast.classList.remove("-translate-y-4", "opacity-0");
+
+    const duration = type === "error" ? 5500 : type === "warning" ? 4500 : 3500;
+    setTimeout(() => { if (toast.isConnected) dismiss(); }, duration);
   }
 
   // --- Tab Navigation ---
