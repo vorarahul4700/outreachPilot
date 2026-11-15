@@ -133,9 +133,10 @@
   <!-- ========================================== -->
   <aside id="admin-sidebar" aria-label="Admin menu" class="fixed top-0 left-0 h-screen h-[100dvh] w-72 md:w-64 z-40 bg-surface-container-low border-r border-outline-variant/30 flex flex-col justify-between overflow-y-auto overscroll-contain transition-transform duration-200 -translate-x-full md:translate-x-0">
     <div class="p-4 flex flex-col gap-6">
-      <!-- Brand & Admin Tag -->
-      <div class="flex items-center justify-between px-2 pt-1">
-        <a href="/admin" class="flex items-center gap-3 hover:opacity-85 transition cursor-pointer">
+      <!-- Brand, plus the round profile button that opens the account menu -->
+      {% set account_initial = (user.email[0] if user and user.email else "A")|upper %}
+      <div class="relative flex items-center justify-between gap-2 px-2 pt-1">
+        <a href="/admin" class="flex items-center gap-3 min-w-0 hover:opacity-85 transition cursor-pointer">
           <div class="w-8 h-8 rounded-lg bg-amber-500/20 border border-amber-500/40 flex items-center justify-center text-amber-500 shadow-inner shrink-0">
             <span class="material-symbols-outlined text-[20px]">admin_panel_settings</span>
           </div>
@@ -144,14 +145,39 @@
             <span class="text-[11px] font-mono text-amber-500 font-semibold tracking-wider uppercase">Master Admin</span>
           </div>
         </a>
-        <div class="flex items-center gap-1.5">
-          <button id="btn-theme-toggle" type="button" aria-label="Toggle Theme" class="w-8 h-8 rounded-lg flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container border border-outline-variant/40 transition cursor-pointer">
-            <span id="theme-toggle-icon" class="material-symbols-outlined text-[19px]">light_mode</span>
+        <div class="flex items-center gap-1.5 shrink-0">
+          <button id="btn-admin-profile" type="button" aria-label="Account menu" aria-haspopup="menu" aria-expanded="false" aria-controls="admin-profile-menu" title="{{ user.email if user and user.email else 'Account' }}" class="w-9 h-9 rounded-full bg-primary/15 border border-outline-variant/60 text-primary font-bold text-sm flex items-center justify-center hover:border-primary/60 hover:bg-primary/20 transition cursor-pointer">
+            {{ account_initial }}
           </button>
           <!-- Phone only: close the slide-in menu -->
           <button id="btn-admin-sidebar-close" type="button" aria-label="Close menu" class="md:hidden w-8 h-8 rounded-lg flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container border border-outline-variant/40 transition cursor-pointer">
             <span class="material-symbols-outlined text-[19px]">close</span>
           </button>
+        </div>
+
+        <!-- Account menu -->
+        <div id="admin-profile-menu" role="menu" aria-labelledby="btn-admin-profile" class="hidden absolute right-0 top-full mt-2 w-56 z-50 rounded-xl border border-outline-variant/50 bg-surface-container-lowest shadow-xl p-1.5">
+          <div class="flex items-center gap-3 px-2.5 py-2.5">
+            <div class="w-10 h-10 rounded-full bg-primary/15 border border-outline-variant/60 text-primary font-bold flex items-center justify-center shrink-0">{{ account_initial }}</div>
+            <div class="flex flex-col min-w-0">
+              <span class="text-sm font-semibold text-on-surface break-words">{{ user.name if user and user.name else "Master Admin" }}</span>
+              {% if user and user.email %}<span class="text-[11px] text-on-surface-variant font-mono break-all">{{ user.email }}</span>{% endif %}
+            </div>
+          </div>
+          <div class="my-1 border-t border-outline-variant/40"></div>
+          <a href="/app" role="menuitem" class="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm text-on-surface hover:bg-surface-container transition">
+            <span class="material-symbols-outlined text-[18px] text-on-surface-variant">arrow_back</span>
+            <span>Job Seeker App</span>
+          </a>
+          <button id="btn-theme-toggle" type="button" role="menuitem" class="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm text-on-surface hover:bg-surface-container transition cursor-pointer text-left">
+            <span id="theme-toggle-icon" class="material-symbols-outlined text-[18px] text-on-surface-variant">light_mode</span>
+            <span id="theme-toggle-label">Light mode</span>
+          </button>
+          <div class="my-1 border-t border-outline-variant/40"></div>
+          <a href="/auth/logout" role="menuitem" class="flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 transition">
+            <span class="material-symbols-outlined text-[18px]">logout</span>
+            <span>Sign out</span>
+          </a>
         </div>
       </div>
 
@@ -190,27 +216,6 @@
           <span class="ml-auto text-[10px] text-emerald-500 font-semibold px-1.5 py-0.5 rounded bg-emerald-500/10">CI/CD</span>
         </button>
       </nav>
-    </div>
-
-    <!-- Bottom Actions: Switch to Job Seeker View -->
-    <div class="p-4 border-t border-outline-variant/30 flex flex-col gap-3">
-      <a href="/app" class="flex items-center justify-between px-3 py-2 rounded-lg bg-surface-container hover:bg-surface-container-high border border-outline-variant/40 text-on-surface transition text-label-md">
-        <span class="flex items-center gap-2">
-          <span class="material-symbols-outlined text-[18px] text-primary">arrow_back</span>
-          <span>Job Seeker App</span>
-        </span>
-        <span class="material-symbols-outlined text-[16px] text-on-surface-variant">open_in_new</span>
-      </a>
-
-      <div class="flex items-center gap-3 px-2 pt-2">
-        <div class="w-8 h-8 rounded-full bg-primary/20 text-primary font-bold flex items-center justify-center text-xs">
-          {{ user.email[0].upper() if user and user.email else "A" }}
-        </div>
-        <div class="flex flex-col min-w-0">
-          <span class="text-xs font-semibold text-on-surface truncate">{{ user.name or "Master Admin" }}</span>
-          <span class="text-[11px] text-on-surface-variant truncate font-mono">{{ user.email }}</span>
-        </div>
-      </div>
     </div>
   </aside>
 
@@ -1433,6 +1438,6 @@
 
   <!-- Admin Application Client Controller Script -->
   <script src="/static/js/scroll-lock.js?v=1.3"></script>
-  <script src="/static/js/admin.js?v=2.6"></script>
+  <script src="/static/js/admin.js?v=2.7"></script>
 </body>
 </html>

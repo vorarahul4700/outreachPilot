@@ -8,10 +8,16 @@ document.addEventListener("DOMContentLoaded", () => {
   const themeBtn = document.getElementById("btn-theme-toggle");
   const themeIcon = document.getElementById("theme-toggle-icon");
 
+  const themeLabel = document.getElementById("theme-toggle-label");
+
+  // The account menu item names the theme it switches to.
   function updateThemeIcon() {
     const isDark = document.documentElement.classList.contains("dark");
     if (themeIcon) {
       themeIcon.textContent = isDark ? "light_mode" : "dark_mode";
+    }
+    if (themeLabel) {
+      themeLabel.textContent = isDark ? "Light mode" : "Dark mode";
     }
   }
   updateThemeIcon();
@@ -191,6 +197,29 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btn-open-add-company-modal")?.addEventListener("click", () => openModal("modal-add-company"));
   document.getElementById("btn-open-csv-upload-modal")?.addEventListener("click", () => openModal("modal-bulk-csv"));
 
+  // --- Account menu (round profile button at the top of the sidebar) ---
+  const btnProfile = document.getElementById("btn-admin-profile");
+  const profileMenu = document.getElementById("admin-profile-menu");
+
+  function setProfileMenu(open) {
+    if (!btnProfile || !profileMenu) return;
+    profileMenu.classList.toggle("hidden", !open);
+    btnProfile.setAttribute("aria-expanded", open ? "true" : "false");
+  }
+
+  btnProfile?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    setProfileMenu(profileMenu?.classList.contains("hidden"));
+  });
+  // Close on any click outside the menu, or on Escape.
+  document.addEventListener("click", (e) => {
+    if (!profileMenu || profileMenu.classList.contains("hidden")) return;
+    if (!profileMenu.contains(e.target) && !btnProfile?.contains(e.target)) setProfileMenu(false);
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") setProfileMenu(false);
+  });
+
   // --- Phone sidebar (below 768px it is off-screen and slides in from the menu button) ---
   const adminSidebar = document.getElementById("admin-sidebar");
   const adminBackdrop = document.getElementById("admin-mobile-backdrop");
@@ -201,6 +230,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function setAdminSidebar(open) {
     if (!adminSidebar) return;
     const show = Boolean(open) && phoneQuery.matches;
+    if (!show) setProfileMenu(false);
     adminSidebar.classList.toggle("mobile-open", show);
     adminBackdrop?.classList.toggle("hidden", !show);
     btnAdminMenu?.setAttribute("aria-expanded", show ? "true" : "false");
