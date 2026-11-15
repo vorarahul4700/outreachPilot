@@ -11,7 +11,7 @@ import time
 import urllib.parse
 from collections import defaultdict
 from contextlib import asynccontextmanager
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any, Optional
 
@@ -218,11 +218,71 @@ def _prewarm_cache():
         print(f"[Cache Warning] Pre-warming filter cache failed: {e}")
 
 
+# --- Daily pitch quota: one day = midnight to midnight IST ---
+IST = timezone(timedelta(hours=5, minutes=30))
+
+
+def quota_day_start_utc(now: datetime | None = None) -> datetime:
+    """Start of the current quota day (00:00 IST) as a naive UTC datetime,
+    matching how timestamps are stored (datetime.utcnow())."""
+    now_ist = (now.replace(tzinfo=timezone.utc) if now else datetime.now(timezone.utc)).astimezone(IST)
+    midnight_ist = now_ist.replace(hour=0, minute=0, second=0, microsecond=0)
+    return midnight_ist.astimezone(timezone.utc).replace(tzinfo=None)
+
+
+def next_quota_reset_utc(now: datetime | None = None) -> datetime:
+    return quota_day_start_utc(now) + timedelta(days=1)
+
+
+def reset_daily_quota_if_due(user) -> bool:
+    """Zero the user's daily pitch counter if it was last reset before today's
+    00:00 IST. Returns True when it changed something (caller commits)."""
+    last = getattr(user, "last_pitch_reset_date", None)
+    if last is None or last < quota_day_start_utc():
+        user.pitches_sent_today = 0
+        user.last_pitch_reset_date = datetime.utcnow()
+        return True
+    return False
+
+
+def _bulk_reset_daily_quotas() -> int:
+    """Reset every user whose counter is from a previous IST day in one UPDATE.
+    Idempotent, so it is safe with several workers or a late wake-up."""
+    try:
+        with SessionLocal() as s:
+            n = (
+                s.query(User)
+                .filter(or_(User.last_pitch_reset_date.is_(None),
+                            User.last_pitch_reset_date < quota_day_start_utc()))
+                .update({User.pitches_sent_today: 0, User.last_pitch_reset_date: datetime.utcnow()},
+                        synchronize_session=False)
+            )
+            s.commit()
+            return n or 0
+    except Exception as e:
+        print(f"[Quota] Daily reset failed: {e}")
+        return 0
+
+
+async def _daily_quota_reset_loop():
+    """Runs the bulk reset at startup and then just after each midnight IST.
+    The per-request check in get_current_user stays as the guarantee, so a
+    sleeping or restarted server never leaves a user blocked."""
+    while True:
+        n = await asyncio.to_thread(_bulk_reset_daily_quotas)
+        if n:
+            print(f"[Quota] Reset daily pitch counters for {n} user(s).")
+        wait = (next_quota_reset_utc() - datetime.utcnow()).total_seconds() + 5
+        await asyncio.sleep(max(60, wait))
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
     asyncio.create_task(asyncio.to_thread(_prewarm_cache))
+    quota_task = asyncio.create_task(_daily_quota_reset_loop())
     yield
+    quota_task.cancel()
 
 
 app = FastAPI(
@@ -588,11 +648,8 @@ def get_current_user(db: Session, request: Request | None = None) -> User | None
             user.subscription_tier = "premium_plus"
             needs_commit = True
 
-        # Midnight reset of daily pitches sent
-        now_utc = datetime.utcnow()
-        if user.last_pitch_reset_date is None or user.last_pitch_reset_date.date() < now_utc.date():
-            user.pitches_sent_today = 0
-            user.last_pitch_reset_date = now_utc
+        # Daily pitch quota resets at midnight IST.
+        if reset_daily_quota_if_due(user):
             needs_commit = True
 
         if needs_commit:
@@ -1353,23 +1410,34 @@ def company_showcase_profile(slug: str, request: Request, db: Session = Depends(
 
     base_url = seo_engine.get_canonical_base_url(request)
     canonical_url = f"{base_url}/company/{company['slug']}"
-    city_slug = seo_engine.city_to_slug(company["city"])
+    city_name = company["city"] or ""
+    city_slug = seo_engine.city_to_slug(city_name) if city_name else ""
 
-    # Related companies in same city
-    nearby_companies, _ = seo_engine.get_companies_list(db, city=company["city"], limit=4)
-    nearby_filtered = [c for c in nearby_companies if c["id"] != company["id"]][:3]
+    # Related companies in same city (light, cached per city)
+    nearby_filtered = seo_engine.get_nearby_companies(db, city_name, company["id"], limit=3)
 
-    breadcrumbs = [
-        ("Home", f"{base_url}/"),
-        ("Directory", f"{base_url}/directory"),
-        (company["city"], f"{base_url}/directory/city/{city_slug}"),
-        (company["name"], canonical_url)
-    ]
+    breadcrumbs = [("Home", f"{base_url}/"), ("Directory", f"{base_url}/directory")]
+    if city_slug:
+        breadcrumbs.append((city_name, f"{base_url}/directory/city/{city_slug}"))
+    breadcrumbs.append((company["name"], canonical_url))
     bc_schema = seo_engine.build_breadcrumb_schema(breadcrumbs)
     org_schema = seo_engine.build_local_business_schema(company, base_url)
     combined_schema = json.dumps([bc_schema, org_schema], ensure_ascii=False)
 
-    meta_description = f"{company['name']} in {company['city']}, India. Verified technology stack: {', '.join(company['profile'].get('tech_stack', [])[:4])}. Client rating: {company['rating']}★. View full B2B intelligence dossier."
+    # Meta description states only facts we actually hold.
+    prof = company["profile"]
+    parts = [f"{company['name']}" + (f" in {city_name}, India." if city_name else ".")]
+    if prof.get("summary"):
+        parts.append(prof["summary"])
+    elif company.get("category"):
+        parts.append(f"Listed under {company['category']}.")
+    if company.get("rating") and company.get("reviews_count"):
+        parts.append(f"Rated {company['rating']:.1f} on Google from {company['reviews_count']:,} reviews.")
+    if prof.get("tech_stack"):
+        parts.append("Uses " + ", ".join(prof["tech_stack"][:4]) + ".")
+    meta_description = " ".join(parts)
+    if len(meta_description) > 158:
+        meta_description = meta_description[:155].rsplit(" ", 1)[0] + "..."
 
     response = templates.TemplateResponse(
         request=request,
@@ -2622,6 +2690,7 @@ def auth_status(request: Request, db: Session = Depends(get_db)):
         "daily_pitch_limit": daily_limit,
         "pitches_sent_today": sent_today,
         "pitches_remaining": remaining,
+        "quota_resets_at": next_quota_reset_utc().replace(tzinfo=timezone.utc).isoformat(),
         "is_banned": bool(getattr(user, "is_banned", False)) if is_logged_in else False,
         "dev_mode": config.DEV_MODE
     }
@@ -4035,8 +4104,7 @@ def get_admin_metrics(
     # 4. Pitches actually sent today: count OutreachLog rows (same source as the
     #    Sent Pitches tab), not sum(User.pitches_sent_today): the per-user quota
     #    counter is not incremented for master-admin sends, so it under-reports.
-    _now = datetime.utcnow()
-    _today_start = datetime(_now.year, _now.month, _now.day)
+    _today_start = quota_day_start_utc()  # same IST day as the quota
     pitches_today = db.query(func.count(OutreachLog.id)).filter(OutreachLog.sent_at >= _today_start).scalar() or 0
 
     data = {
@@ -4101,6 +4169,7 @@ def list_admin_users(
         order_target = User.id.asc() if is_asc else User.id.desc()
 
     users = q.order_by(order_target, User.id.desc()).offset((page - 1) * page_size).limit(page_size).all()
+    _quota_start = quota_day_start_utc()
 
     return {
         "total_count": total_count,
@@ -4116,7 +4185,8 @@ def list_admin_users(
                 "subscription_tier": u.subscription_tier or "free",
                 "subscription_status": u.subscription_status or "active",
                 "daily_pitch_limit": 999999 if (u.is_admin or config.is_master_admin(u.email)) else (u.daily_pitch_limit or 10),
-                "pitches_sent_today": u.pitches_sent_today or 0,
+                "pitches_sent_today": (u.pitches_sent_today or 0)
+                    if (u.last_pitch_reset_date and u.last_pitch_reset_date >= _quota_start) else 0,
                 "is_banned": bool(u.is_banned),
                 "ban_reason": u.ban_reason or "",
                 "created_at": u.created_at.strftime("%Y-%m-%d %H:%M") if hasattr(u, "created_at") and u.created_at else None

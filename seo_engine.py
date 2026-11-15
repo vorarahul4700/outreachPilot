@@ -16,7 +16,7 @@ import math
 import os
 import re
 import time
-from collections import defaultdict
+from collections import OrderedDict, defaultdict
 from typing import Any, Optional
 from urllib.parse import quote, urlparse
 from fastapi import Request
@@ -59,6 +59,34 @@ def ensure_category_maps(db: Session) -> None:
 def clear_seo_cache():
     global _SEO_CACHE
     _SEO_CACHE = {}
+    _COMPANY_DETAIL_CACHE.clear()
+
+
+# Bounded LRU cache for public company profile pages. Each profile is ~2-6 KB, so
+# 2,000 entries stay well under a small instance's memory even while crawlers walk
+# all ~130K profiles. A short TTL keeps admin edits visible within minutes.
+_COMPANY_DETAIL_CACHE: "OrderedDict[int, tuple[float, dict]]" = OrderedDict()
+_COMPANY_DETAIL_CACHE_MAX = 2000
+_COMPANY_DETAIL_TTL = 900  # 15 minutes
+
+
+def _company_cache_get(company_id: int) -> dict | None:
+    entry = _COMPANY_DETAIL_CACHE.get(company_id)
+    if not entry:
+        return None
+    ts, val = entry
+    if time.time() - ts > _COMPANY_DETAIL_TTL:
+        _COMPANY_DETAIL_CACHE.pop(company_id, None)
+        return None
+    _COMPANY_DETAIL_CACHE.move_to_end(company_id)
+    return val
+
+
+def _company_cache_set(company_id: int, val: dict) -> None:
+    _COMPANY_DETAIL_CACHE[company_id] = (time.time(), val)
+    _COMPANY_DETAIL_CACHE.move_to_end(company_id)
+    while len(_COMPANY_DETAIL_CACHE) > _COMPANY_DETAIL_CACHE_MAX:
+        _COMPANY_DETAIL_CACHE.popitem(last=False)
 
 
 # --- Base URL & Canonical Resolution ---
@@ -1253,8 +1281,30 @@ def render_dossier_markdown(md_text: str) -> str:
     return "\n".join(html_parts)
 
 
+_HIRING_PLACEHOLDER_RE = re.compile(
+    r"^\s*(no\b|none\b|n/?a\b|not\s+(explicitly\s+)?(disclosed|mentioned|found|available|evident)|standard engineering growth)"
+    r"|or 'standard engineering growth' if not explicit",
+    re.IGNORECASE,
+)
+
+
+def _real_hiring_signal(value: str | None) -> str | None:
+    """Drop the stored placeholder answers ('No explicit hiring signals',
+    'Standard engineering growth', ...) so the page only shows real findings."""
+    v = (value or "").strip()
+    if not v or _HIRING_PLACEHOLDER_RE.search(v):
+        return None
+    return v
+
+
 def get_company_details(db: Session, company_id: int) -> dict[str, Any] | None:
-    """Retrieves full company dossier for the public profile page."""
+    """Retrieves a company's public profile. Only real data: anything the database
+    does not have stays empty (None / []) so the page can show an honest empty
+    state instead of invented text, ratings or services."""
+    cached = _company_cache_get(company_id)
+    if cached is not None:
+        return cached
+
     c = (
         db.query(Company)
         .options(joinedload(Company.profile), joinedload(Company.emails))
@@ -1264,62 +1314,88 @@ def get_company_details(db: Session, company_id: int) -> dict[str, Any] | None:
     if not c:
         return None
 
-    detailed_raw = c.profile.detailed_analysis if (c.profile and c.profile.detailed_analysis) else None
+    p = c.profile
+    detailed_raw = p.detailed_analysis if (p and p.detailed_analysis) else None
     detailed_html = render_dossier_markdown(detailed_raw) if detailed_raw else None
 
-    profile_data = {
-        "summary": "Verified technology company providing custom software, web application development, and engineering consulting services.",
-        "detailed_analysis": detailed_raw,
-        "detailed_analysis_html": detailed_html,
-        "industry": "Custom Software & Information Technology",
-        "tech_stack": [],
-        "services": ["Web Application Development", "Custom Software Engineering"],
-        "hiring_signals": "Active engineering and technology operations",
-        "tone": "Professional"
-    }
-
-    if c.profile:
-        profile_data = {
-            "summary": c.profile.summary_short or profile_data["summary"],
-            "detailed_analysis": detailed_raw,
-            "detailed_analysis_html": detailed_html,
-            "industry": c.profile.industry or profile_data["industry"],
-            "tech_stack": c.profile.tech_stack or [],
-            "services": c.profile.services or profile_data["services"],
-            "hiring_signals": c.profile.hiring_signals or profile_data["hiring_signals"],
-            "tone": c.profile.tone or "Professional"
-        }
-
-    # Ensure at least primary normalized_keyword is in tech stack
-    if c.normalized_keyword and c.normalized_keyword not in profile_data["tech_stack"]:
-        profile_data["tech_stack"].insert(0, c.normalized_keyword)
-
-    slug = company_to_slug(c.name, c.domain, c.id)
+    tech_stack = list(p.tech_stack or []) if p else []
+    services = list(p.services or []) if p else []
 
     comp_cat = normalize_keyword_to_category(c.search_keyword or c.normalized_keyword or "")
-    comp_dom = get_category_domain(comp_cat)
-    comp_dom_code = get_category_domain_code(comp_cat)
+    # The search category is not a technology; keep it out of the tech list.
+    tech_stack = [t for t in tech_stack if t and t != comp_cat]
 
-    return {
+    profile_data = {
+        "summary": (p.summary_short or "").strip() or None if p else None,
+        "detailed_analysis": detailed_raw,
+        "detailed_analysis_html": detailed_html,
+        "industry": (p.industry if p else None) or None,
+        "tech_stack": tech_stack,
+        "services": services,
+        "hiring_signals": _real_hiring_signal(p.hiring_signals if p else None),
+        "tone": (p.tone if p else None) or None,
+    }
+
+    rating = float(c.rating) if c.rating and float(c.rating) > 0 else None
+    reviews = int(c.reviews_count or 0)
+
+    result = {
         "id": c.id,
         "name": c.name,
         "domain": c.domain,
-        "industry_domain": comp_dom,
-        "domain_code": comp_dom_code,
-        "category": comp_cat,
-        "website_url": c.website_url or f"https://{c.domain}",
+        "industry_domain": get_category_domain(comp_cat),
+        "domain_code": get_category_domain_code(comp_cat),
+        "category": comp_cat or None,
+        "category_slug": tech_to_slug(comp_cat) if comp_cat else None,
+        "website_url": c.website_url or (f"https://{c.domain}" if c.domain else None),
         "phone": c.phone or None,
         "address": c.address or None,
         "location_url": c.location_url or None,
-        "city": c.city or "India",
-        "rating": float(c.rating or 4.2),
-        "reviews_count": int(c.reviews_count or 0),
-        "is_enriched": c.is_enriched,
-        "has_emails": bool(c.emails and len(c.emails) > 0),
+        "city": c.city or None,
+        "rating": rating,
+        "reviews_count": reviews,
+        "is_enriched": bool(c.is_enriched),
+        "has_emails": bool(c.emails),
         "emails_count": len(c.emails) if c.emails else 0,
-        "slug": slug,
-        "profile": profile_data
+        "slug": company_to_slug(c.name, c.domain, c.id),
+        "profile": profile_data,
     }
+    _company_cache_set(company_id, result)
+    return result
+
+
+def get_nearby_companies(db: Session, city: str | None, exclude_id: int, limit: int = 3) -> list[dict[str, Any]]:
+    """Top-rated companies in the same city for the 'More in <city>' block.
+
+    Deliberately light: one small indexed query, no total count, no profile or
+    email loading, cached per city. (Reusing get_companies_list here counted every
+    company in the city on each profile view.)"""
+    if not city:
+        return []
+    key = f"nearby_top:{city.strip().lower()}"
+    top = get_cached(key)
+    if top is None:
+        rows = (
+            db.query(Company.id, Company.name, Company.domain, Company.rating, Company.reviews_count)
+            .filter(Company.is_invalid.is_(False), func.lower(Company.city) == city.strip().lower())
+            .order_by(Company.is_enriched.desc(), Company.rating.desc().nullslast(),
+                      Company.reviews_count.desc().nullslast(), Company.id.asc())
+            .limit(limit + 1)
+            .all()
+        )
+        top = [
+            {
+                "id": r.id,
+                "name": r.name,
+                "domain": r.domain,
+                "rating": float(r.rating) if r.rating and float(r.rating) > 0 else None,
+                "reviews_count": int(r.reviews_count or 0),
+                "slug": company_to_slug(r.name, r.domain, r.id),
+            }
+            for r in rows
+        ]
+        set_cached(key, top)
+    return [n for n in top if n["id"] != exclude_id][:limit]
 
 
 # --- GEO Generation: /robots.txt, /llms.txt, /llms-full.txt ---
@@ -1655,11 +1731,15 @@ def build_local_business_schema(comp: dict[str, Any], base_url: str) -> dict[str
         "sameAs": [f"{base_url}/company/{comp['slug']}"],
         "knowsAbout": comp["profile"].get("tech_stack", [])
     }
-    if comp.get("rating") and comp["rating"] > 0:
+    summary = (comp.get("profile") or {}).get("summary")
+    if summary:
+        schema["description"] = summary
+    # Only real ratings backed by real reviews (no defaults, no minimum padding).
+    if comp.get("rating") and comp["rating"] > 0 and (comp.get("reviews_count") or 0) > 0:
         schema["aggregateRating"] = {
             "@type": "AggregateRating",
             "ratingValue": str(comp["rating"]),
-            "reviewCount": str(max(1, comp.get("reviews_count", 1))),
+            "reviewCount": str(comp["reviews_count"]),
             "bestRating": "5",
             "worstRating": "1"
         }

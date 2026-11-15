@@ -957,7 +957,7 @@
       <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
         <div>
           <h2 id="browse-directory-heading" class="text-2xl font-display font-bold text-on-surface">Browse the directory</h2>
-          <p class="mt-1 text-sm text-on-surface-variant">Verified companies across India, grouped by city and by what they do.</p>
+          <p class="mt-1 text-sm text-on-surface-variant">Cities and categories with the most companies listed, largest first.</p>
         </div>
         <a href="/directory" class="inline-flex items-center gap-1 text-sm font-medium text-primary hover:text-secondary transition-colors shrink-0">
           <span>See every city and category</span>
@@ -975,7 +975,7 @@
           <ul class="mt-4 flex flex-wrap gap-2" role="list">
             {% for c in browse_cities %}
             <li>
-              <a href="/directory/city/{{ c.slug }}" class="inline-flex items-center rounded-full border border-outline-variant/50 bg-surface px-3.5 py-1.5 text-sm text-on-surface hover:border-primary hover:text-primary transition-colors">{{ c.name }}</a>
+              <a href="/directory/city/{{ c.slug }}" class="inline-flex items-center rounded-full border border-outline-variant/50 bg-surface px-3.5 py-1.5 text-sm text-on-surface hover:border-primary hover:text-primary transition-colors gap-2"><span>{{ c.name }}</span>{% if c.count %}<span class="text-xs tabular-nums text-on-surface-variant">{{ "{:,}".format(c.count|int) }}</span>{% endif %}</a>
             </li>
             {% endfor %}
           </ul>
@@ -991,7 +991,7 @@
           <ul class="mt-4 flex flex-wrap gap-2" role="list">
             {% for t in browse_categories %}
             <li>
-              <a href="/directory/category/{{ t.slug }}" class="inline-flex items-center rounded-full border border-outline-variant/50 bg-surface px-3.5 py-1.5 text-sm text-on-surface hover:border-primary hover:text-primary transition-colors">{{ t.name }}</a>
+              <a href="/directory/category/{{ t.slug }}" class="inline-flex items-center rounded-full border border-outline-variant/50 bg-surface px-3.5 py-1.5 text-sm text-on-surface hover:border-primary hover:text-primary transition-colors gap-2"><span>{{ t.name }}</span>{% if t.count %}<span class="text-xs tabular-nums text-on-surface-variant">{{ "{:,}".format(t.count|int) }}</span>{% endif %}</a>
             </li>
             {% endfor %}
           </ul>
