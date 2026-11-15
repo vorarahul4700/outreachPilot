@@ -712,10 +712,11 @@
     <!-- TAB 3: CANDIDATE PROFILE & RESUME INGESTION -->
     <!-- ========================================== -->
     <section id="section-resume" class="tab-section hidden space-y-6">
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        
+      <!-- Golden-ratio split: input 38.2% / extracted-skills results 61.8% -->
+      <div class="grid grid-cols-1 lg:grid-cols-[1fr_1.618fr] gap-6">
+
         <!-- Upload Card -->
-        <div class="lg:col-span-5 bg-surface-container-low border border-outline-variant/30 rounded-xl p-5 sm:p-6 shadow-sm space-y-5 relative overflow-hidden">
+        <div class="bg-surface-container-low border border-outline-variant/30 rounded-xl p-5 sm:p-6 shadow-sm space-y-5 relative overflow-hidden">
           <div>
             <h2 class="text-headline-sm font-headline-sm text-on-surface font-semibold flex items-center gap-2">
               <span class="material-symbols-outlined text-[20px] text-primary">upload_file</span>
@@ -769,8 +770,8 @@
           </form>
         </div>
 
-        <!-- AI Parsed Profile Summary Card -->
-        <div class="lg:col-span-7 bg-surface-container-low border border-outline-variant/30 rounded-xl p-5 sm:p-6 shadow-sm space-y-5 relative overflow-hidden">
+        <!-- AI Parsed Profile Summary Card (golden 61.8% primary) -->
+        <div class="bg-surface-container-low border border-outline-variant/30 rounded-xl p-5 sm:p-6 shadow-sm space-y-5 relative overflow-hidden">
           <div class="flex items-center justify-between flex-wrap gap-2">
             <h2 class="text-headline-sm font-headline-sm text-on-surface font-semibold flex items-center gap-2">
               <span class="material-symbols-outlined text-[20px] text-primary">psychology</span>
