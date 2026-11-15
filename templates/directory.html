@@ -1,450 +1,216 @@
-<!DOCTYPE html>
-<html class="dark" lang="en">
-<head>
-  <meta charset="utf-8"/>
-  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-  <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg">
-  <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
-  <title>B2B Technology &amp; Software Company Directory (India) | OutreachPilot</title>
+{% extends "base.html" %}
+{% import "macros/ui.html" as ui %}
+{% set page_css = ["directory.css"] %}
+{% set nav_cta_href = "/app" %}
+{% set nav_cta_label = "Open Workspace" %}
+
+{% block title %}B2B Technology &amp; Software Company Directory (India) | OutreachPilot{% endblock %}
+
+{% block meta %}
   <meta name="description" content="Explore verified software agencies, web development companies, and tech firms across 73 Indian cities and 36 technology stacks. Verified ratings, tech stacks, and recruiter contacts."/>
   <link rel="canonical" href="{{ canonical_url }}"/>
-
-  <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website"/>
   <meta property="og:url" content="{{ canonical_url }}"/>
   <meta property="og:title" content="B2B Technology &amp; Software Company Directory (India) | OutreachPilot"/>
   <meta property="og:description" content="Explore verified software agencies across 73 Indian cities and 36 technology stacks."/>
   <meta property="og:site_name" content="OutreachPilot"/>
-
-  <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image"/>
   <meta name="twitter:title" content="B2B Technology &amp; Software Company Directory (India)"/>
   <meta name="twitter:description" content="Explore verified software agencies across 73 Indian cities and 36 tech stacks."/>
-
-  <!-- High-Performance Typography -->
-  <link rel="preload" href="/static/fonts/spacegrotesk-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="/static/fonts/dmsans-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="/static/css/fonts.css">
-  <link rel="stylesheet" href="/static/css/style.css?v=9.0">
-  <script src="https://cdn.tailwindcss.com/3.4.17?plugins=forms@0.5.10"></script>
-
-  <!-- Theme Script -->
-  <script>
-    // Card limits and "Show all" only apply when JavaScript runs; without it every card shows.
-    document.documentElement.classList.add('js');
-    (function() {
-      try {
-        const saved = localStorage.getItem('pilot_theme');
-        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const theme = saved ? saved : 'light'; /* default: light */
-        if (theme === 'light') {
-          document.documentElement.classList.remove('dark');
-          document.documentElement.classList.add('light');
-        } else {
-          document.documentElement.classList.add('dark');
-          document.documentElement.classList.remove('light');
-        }
-      } catch (e) {}
-    })();
-  </script>
-
-  <script>
-    tailwind.config = {
-      darkMode: "class",
-      theme: {
-        extend: {
-          colors: {
-            "background": "rgb(var(--color-background) / <alpha-value>)",
-            "on-background": "rgb(var(--color-on-background) / <alpha-value>)",
-            "surface": "rgb(var(--color-surface) / <alpha-value>)",
-            "surface-container-lowest": "rgb(var(--color-surface-container-lowest) / <alpha-value>)",
-            "surface-container-low": "rgb(var(--color-surface-container-low) / <alpha-value>)",
-            "surface-container": "rgb(var(--color-surface-container) / <alpha-value>)",
-            "surface-container-high": "rgb(var(--color-surface-container-high) / <alpha-value>)",
-            "outline": "rgb(var(--color-outline) / <alpha-value>)",
-            "outline-variant": "rgb(var(--color-outline-variant) / <alpha-value>)",
-            "primary": "rgb(var(--color-primary) / <alpha-value>)",
-            "primary-muted": "rgb(var(--color-primary) / 0.8)",
-            "secondary": "rgb(var(--color-secondary) / <alpha-value>)",
-            "tertiary": "rgb(var(--color-tertiary) / <alpha-value>)",
-            "on-surface": "rgb(var(--color-on-surface) / <alpha-value>)",
-            "on-surface-variant": "rgb(var(--color-on-surface-variant) / <alpha-value>)"
-          },
-          fontFamily: {
-            display: ["Space Grotesk", "-apple-system", "sans-serif"],
-            sans: ["DM Sans", "-apple-system", "sans-serif"],
-            mono: ["JetBrains Mono", "monospace"]
-          }
-        }
-      }
-    };
-  </script>
-
-  <style>
-    .tnum { font-variant-numeric: tabular-nums; }
-    .bento-cell {
-      background-color: rgb(var(--color-surface-container-low));
-      border: 1px solid rgb(var(--color-outline));
-      border-radius: 0.75rem;
-      transition: all 0.2s ease;
-    }
-    .bento-cell:hover {
-      border-color: rgb(var(--color-outline-variant));
-      transform: translateY(-2px);
-    }
-    .btn-tactile-ecru {
-      background-color: #EFECE6;
-      color: #111317;
-      border: 1px solid #EFECE6;
-      font-weight: 600;
-      transition: all 0.15s ease;
-    }
-    .btn-tactile-ecru:hover {
-      background-color: #DFDCD5;
-      transform: translateY(-1px);
-    }
-
-    /* Show the biggest cards first, in full rows for each screen size:
-       phone 8 (2 per row), tablet 12 (3 or 4 per row), laptop 18 (6 per row).
-       "Show all" reveals the rest. Ranks come from the server and are kept
-       current by applyFilters(). */
-    .dir-section { scroll-margin-top: 4.5rem; }
-    .dir-more-btn { display: none; }
-    @media (max-width: 639px) {
-      html.js .dir-grid.is-collapsed > .over-8 { display: none; }
-      html.js .dir-section:not(.is-searching) .dir-more-btn.more-than-8 { display: inline-flex; }
-    }
-    @media (min-width: 640px) and (max-width: 1023px) {
-      html.js .dir-grid.is-collapsed > .over-12 { display: none; }
-      html.js .dir-section:not(.is-searching) .dir-more-btn.more-than-12 { display: inline-flex; }
-    }
-    @media (min-width: 1024px) {
-      html.js .dir-grid.is-collapsed > .over-18 { display: none; }
-      html.js .dir-section:not(.is-searching) .dir-more-btn.more-than-18 { display: inline-flex; }
-    }
-
-    /* Phone: industry buttons in one row you swipe sideways, edge to edge,
-       with a fade on the right until the end of the row is reached. */
-    @media (max-width: 639px) {
-      #domain-filter-pills {
-        flex-wrap: nowrap;
-        overflow-x: auto;
-        scrollbar-width: none;
-        -webkit-overflow-scrolling: touch;
-        margin-inline: -1.5rem;
-        padding-inline: 1.5rem;
-        padding-bottom: 2px;
-        -webkit-mask-image: linear-gradient(to right, #000 82%, transparent);
-        mask-image: linear-gradient(to right, #000 82%, transparent);
-      }
-      #domain-filter-pills::-webkit-scrollbar { display: none; }
-      #domain-filter-pills.at-end {
-        -webkit-mask-image: none;
-        mask-image: none;
-      }
-      #domain-filter-pills .domain-pill { flex: none; white-space: nowrap; }
-    }
-  </style>
-
-  <!-- AEO Schema.org JSON-LD Structured Data -->
   <script type="application/ld+json">
   {{ json_ld_schema | safe }}
   </script>
-</head>
-<body class="bg-background text-on-background min-h-screen flex flex-col font-sans antialiased selection:bg-secondary/20 selection:text-secondary">
+{% endblock %}
 
-  <!-- NAVBAR -->
-  <header class="w-full border-b border-outline bg-background/90 backdrop-blur sticky top-0 z-40">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
-      <div class="flex items-center gap-4 sm:gap-6 shrink-0">
-        <a href="/" class="flex items-center gap-2 group shrink-0 whitespace-nowrap">
-          <div class="w-7 h-7 rounded-lg bg-surface-container-high border border-outline-variant flex items-center justify-center text-primary shrink-0">
-            <span class="material-symbols-outlined text-[17px]">rocket_launch</span>
-          </div>
-          <span class="font-display font-bold text-base tracking-tight text-primary whitespace-nowrap">Outreach<span class="text-secondary">Pilot</span></span>
-        </a>
-        <nav class="hidden md:flex items-center gap-4 text-xs font-mono text-on-surface-variant whitespace-nowrap shrink-0">
-          <a href="/directory" class="text-primary font-semibold border-b-2 border-secondary pb-0.5 whitespace-nowrap">Directory</a>
-          <a href="/#workflow" class="hover:text-primary transition-colors whitespace-nowrap">How It Works</a>
-          <a href="/#capabilities" class="hover:text-primary transition-colors whitespace-nowrap">Features</a>
-        </nav>
-      </div>
+{% block body_class %}page-directory has-map{% endblock %}
+{% block page_bg %}<canvas id="page-canvas" class="page-canvas" aria-hidden="true"></canvas>{% endblock %}
 
-      <div class="flex items-center gap-2.5 sm:gap-3 shrink-0 whitespace-nowrap">
-        <button id="btn-theme-toggle" type="button" aria-label="Toggle Theme" class="w-8 h-8 rounded-lg flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container border border-outline-variant/40 transition cursor-pointer shrink-0">
-          <span id="theme-toggle-icon" class="material-symbols-outlined text-[18px]">light_mode</span>
-        </button>
-        <a href="/app" class="btn-tactile-ecru flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-bold whitespace-nowrap shrink-0">
-          <span>Open Workspace</span>
-          <span class="material-symbols-outlined text-[14px] shrink-0">arrow_forward</span>
-        </a>
-      </div>
+{% block content %}
+<div class="crumb-bar">
+  <div class="container">
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a>
+      <span class="sep">/</span>
+      <span class="here">B2B Tech Directory</span>
+    </nav>
+  </div>
+</div>
+
+<!-- Hero, numbers and search (every number comes from the live database) -->
+<section class="dir-hero center">
+  <div class="container">
+    <span class="hero-badge reveal"><span class="dot dot-live"></span><span id="dir-badge-text">Verified companies across {{ domains|length }} industries</span></span>
+    <h1 class="display reveal" style="--d:.05s">
+      Browse <span id="dir-hero-count" class="tnum em">{{ "{:,}".format(stats.total_companies) }}</span> Verified <span id="dir-hero-domain"></span>Companies Across India
+    </h1>
+    <p id="dir-hero-subtitle" class="lead reveal" style="--d:.1s">
+      Company websites, direct contact emails and the services each company offers, across {{ stats.total_cities }} cities and {{ technologies|length }} categories.
+    </p>
+
+    <div class="stat-row cols-4 reveal" style="--d:.15s;max-width:980px">
+      <div class="stat-card"><span class="material-symbols-outlined" aria-hidden="true">domain</span><div id="dir-stat-total" class="v tnum">{{ "{:,}".format(stats.total_companies) }}</div><div class="k">Companies</div></div>
+      <div class="stat-card"><span class="material-symbols-outlined" aria-hidden="true">mark_email_read</span><div id="dir-stat-emails" class="v accent tnum">{{ "{:,}".format(stats.email_companies) }}</div><div class="k">With a contact email</div></div>
+      <div class="stat-card"><span class="material-symbols-outlined" aria-hidden="true">location_city</span><div id="dir-stat-cities" class="v tnum">{{ stats.total_cities }}</div><div class="k">Cities</div></div>
+      <div class="stat-card"><span class="material-symbols-outlined" aria-hidden="true">category</span><div id="dir-stat-techs" class="v tnum">{{ technologies|length }}</div><div class="k">Categories</div></div>
     </div>
-  </header>
 
-  <!-- BREADCRUMBS -->
-  <div class="w-full border-b border-outline/60 bg-surface-container-lowest/40">
-    <div class="max-w-6xl mx-auto px-6 py-2.5 text-xs font-mono text-on-surface-variant flex items-center gap-2">
-      <a href="/" class="hover:text-primary transition-colors">Home</a>
-      <span class="text-outline-variant">/</span>
-      <span class="text-primary font-medium">B2B Tech Directory</span>
+    <div class="dir-search reveal" style="--d:.2s">
+      <span class="material-symbols-outlined" aria-hidden="true">search</span>
+      <input type="text" id="dir-filter-input" placeholder="Search a city or category" aria-label="Search a city or category">
     </div>
   </div>
+</section>
 
-  <main class="flex-grow flex flex-col items-center w-full px-6 py-10">
-    <div class="w-full max-w-6xl space-y-12">
-
-      <!-- HERO & SEARCH -->
-      <section class="text-center space-y-4 pt-4">
-        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container-high border border-outline-variant text-xs font-mono text-secondary">
-          <span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
-          <span id="dir-badge-text">Verified companies across {{ domains|length }} industries</span>
-        </div>
-        <h1 class="text-3xl sm:text-4xl md:text-5xl font-display font-bold text-primary max-w-3xl mx-auto tracking-tight leading-tight">
-          Browse <span id="dir-hero-count" class="tnum">{{ "{:,}".format(stats.total_companies) }}</span> Verified <span id="dir-hero-domain"></span>Companies Across India
-        </h1>
-        <p id="dir-hero-subtitle" class="text-sm sm:text-base text-on-surface-variant max-w-2xl mx-auto leading-relaxed">
-          Company websites, direct contact emails and the services each company offers, across {{ stats.total_cities }} cities and {{ technologies|length }} categories.
-        </p>
-
-        <!-- Key numbers: every value comes from the live database -->
-        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-3xl mx-auto pt-4">
-          <div class="bento-cell p-4 text-center">
-            <div id="dir-stat-total" class="text-xl sm:text-2xl font-mono font-bold text-primary tnum">{{ "{:,}".format(stats.total_companies) }}</div>
-            <div class="text-[11px] font-mono text-on-surface-variant uppercase tracking-wider mt-1">Companies</div>
-          </div>
-          <div class="bento-cell p-4 text-center">
-            <div id="dir-stat-emails" class="text-xl sm:text-2xl font-mono font-bold text-secondary tnum">{{ "{:,}".format(stats.email_companies) }}</div>
-            <div class="text-[11px] font-mono text-on-surface-variant uppercase tracking-wider mt-1">With a contact email</div>
-          </div>
-          <div class="bento-cell p-4 text-center">
-            <div id="dir-stat-cities" class="text-xl sm:text-2xl font-mono font-bold text-primary tnum">{{ stats.total_cities }}</div>
-            <div class="text-[11px] font-mono text-on-surface-variant uppercase tracking-wider mt-1">Cities</div>
-          </div>
-          <div class="bento-cell p-4 text-center">
-            <div id="dir-stat-techs" class="text-xl sm:text-2xl font-mono font-bold text-primary tnum">{{ technologies|length }}</div>
-            <div class="text-[11px] font-mono text-on-surface-variant uppercase tracking-wider mt-1">Categories</div>
-          </div>
-        </div>
-
-        <!-- QUICK FILTER SEARCH -->
-        <div class="max-w-xl mx-auto pt-2">
-          <div class="relative">
-            <span class="absolute inset-y-0 left-3 flex items-center text-on-surface-variant">
-              <span class="material-symbols-outlined text-[18px]">search</span>
-            </span>
-            <input type="text" id="dir-filter-input" placeholder="Search a city or category" class="w-full pl-10 pr-4 py-2.5 rounded-lg bg-surface-container-high border border-outline text-xs font-mono text-primary placeholder:text-on-surface-variant/70 focus:outline-none focus:border-secondary transition">
-          </div>
-        </div>
-      </section>
-
-      <!-- SECTION: BROWSE BY SPECIALIZATION & CATEGORY -->
-      <section id="tech-section" class="dir-section space-y-4">
-        <div class="space-y-3 border-b border-outline pb-3">
-          <div class="flex items-center justify-between">
-            <div>
-              <h2 class="text-xl font-display font-bold text-primary">Browse by Industry &amp; Specialization</h2>
-              <p class="text-xs text-on-surface-variant">Explore verified companies across IT, Sales, Marketing, Healthcare, Finance, and Manufacturing.</p>
-            </div>
-            <span id="dir-categories-badge" class="text-xs font-mono text-secondary px-2 py-0.5 rounded bg-secondary/10 border border-secondary/25">{{ technologies|length }} Categories</span>
-          </div>
-
-          <!-- Multi-Industry Domain Filter Pills -->
-          <div class="flex flex-wrap items-center gap-1.5 pt-1" id="domain-filter-pills" role="tablist" aria-label="Filter directory by industry domain">
-            <button type="button" class="domain-pill active px-3 py-1.5 rounded-lg border border-secondary bg-secondary/15 text-primary text-xs font-mono font-semibold flex items-center gap-1.5 cursor-pointer transition" data-domain="all">
-              <span class="material-symbols-outlined text-[14px] text-secondary">apps</span>
-              <span>All Domains</span>
-              <span class="text-[10px] text-on-surface-variant font-normal tnum" id="dir-domain-count-all">({% if domains %}{{ domains|sum(attribute='count') }}{% else %}{{ stats.total_companies }}{% endif %})</span>
-            </button>
-            <button type="button" class="domain-pill px-3 py-1.5 rounded-lg border border-outline bg-surface-container text-on-surface-variant hover:text-primary hover:border-secondary/50 text-xs font-mono flex items-center gap-1.5 cursor-pointer transition" data-domain="it">
-              <span class="inline-block w-2 h-2 rounded-full bg-blue-400"></span>
-              <span>IT &amp; Software</span>
-              <span class="text-[10px] text-on-surface-variant font-normal tnum" id="dir-domain-count-it">({% for d in domains if d.code == 'it' %}{{ d.count }}{% else %}{{ stats.total_companies }}{% endfor %})</span>
-            </button>
-            <button type="button" class="domain-pill px-3 py-1.5 rounded-lg border border-outline bg-surface-container text-on-surface-variant hover:text-primary hover:border-secondary/50 text-xs font-mono flex items-center gap-1.5 cursor-pointer transition" data-domain="sales">
-              <span class="inline-block w-2 h-2 rounded-full bg-amber-400"></span>
-              <span>Sales &amp; BPO</span>
-              <span class="text-[10px] text-on-surface-variant font-normal tnum" id="dir-domain-count-sales">({% for d in domains if d.code == 'sales' %}{{ d.count }}{% else %}0{% endfor %})</span>
-            </button>
-            <button type="button" class="domain-pill px-3 py-1.5 rounded-lg border border-outline bg-surface-container text-on-surface-variant hover:text-primary hover:border-secondary/50 text-xs font-mono flex items-center gap-1.5 cursor-pointer transition" data-domain="marketing">
-              <span class="inline-block w-2 h-2 rounded-full bg-purple-400"></span>
-              <span>Marketing &amp; PR</span>
-              <span class="text-[10px] text-on-surface-variant font-normal tnum" id="dir-domain-count-marketing">({% for d in domains if d.code == 'marketing' %}{{ d.count }}{% else %}0{% endfor %})</span>
-            </button>
-            <button type="button" class="domain-pill px-3 py-1.5 rounded-lg border border-outline bg-surface-container text-on-surface-variant hover:text-primary hover:border-secondary/50 text-xs font-mono flex items-center gap-1.5 cursor-pointer transition" data-domain="pharma">
-              <span class="inline-block w-2 h-2 rounded-full bg-emerald-400"></span>
-              <span>Pharma &amp; Healthcare</span>
-              <span class="text-[10px] text-on-surface-variant font-normal tnum" id="dir-domain-count-pharma">({% for d in domains if d.code == 'pharma' %}{{ d.count }}{% else %}0{% endfor %})</span>
-            </button>
-            <button type="button" class="domain-pill px-3 py-1.5 rounded-lg border border-outline bg-surface-container text-on-surface-variant hover:text-primary hover:border-secondary/50 text-xs font-mono flex items-center gap-1.5 cursor-pointer transition" data-domain="finance">
-              <span class="inline-block w-2 h-2 rounded-full bg-emerald-600"></span>
-              <span>Finance &amp; Legal</span>
-              <span class="text-[10px] text-on-surface-variant font-normal tnum" id="dir-domain-count-finance">({% for d in domains if d.code == 'finance' %}{{ d.count }}{% else %}0{% endfor %})</span>
-            </button>
-            <button type="button" class="domain-pill px-3 py-1.5 rounded-lg border border-outline bg-surface-container text-on-surface-variant hover:text-primary hover:border-secondary/50 text-xs font-mono flex items-center gap-1.5 cursor-pointer transition" data-domain="manufacturing">
-              <span class="inline-block w-2 h-2 rounded-full bg-orange-400"></span>
-              <span>Manufacturing</span>
-              <span class="text-[10px] text-on-surface-variant font-normal tnum" id="dir-domain-count-manufacturing">({% for d in domains if d.code == 'manufacturing' %}{{ d.count }}{% else %}0{% endfor %})</span>
-            </button>
-            <button type="button" class="domain-pill px-3 py-1.5 rounded-lg border border-outline bg-surface-container text-on-surface-variant hover:text-primary hover:border-secondary/50 text-xs font-mono flex items-center gap-1.5 cursor-pointer transition" data-domain="realestate">
-              <span class="inline-block w-2 h-2 rounded-full bg-teal-400"></span>
-              <span>Real Estate</span>
-              <span class="text-[10px] text-on-surface-variant font-normal tnum" id="dir-domain-count-realestate">({% for d in domains if d.code == 'realestate' %}{{ d.count }}{% else %}0{% endfor %})</span>
-            </button>
-            <button type="button" class="domain-pill px-3 py-1.5 rounded-lg border border-outline bg-surface-container text-on-surface-variant hover:text-primary hover:border-secondary/50 text-xs font-mono flex items-center gap-1.5 cursor-pointer transition" data-domain="hr">
-              <span class="inline-block w-2 h-2 rounded-full bg-pink-400"></span>
-              <span>HR &amp; Staffing</span>
-              <span class="text-[10px] text-on-surface-variant font-normal tnum" id="dir-domain-count-hr">({% for d in domains if d.code == 'hr' %}{{ d.count }}{% else %}0{% endfor %})</span>
-            </button>
-          </div>
-        </div>
-
-        <div class="dir-grid is-collapsed grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2.5" id="tech-grid">
-          {% for t in technologies %}
-          <a href="/directory/tech/{{ t.slug }}" class="tech-card{% if loop.index > 8 %} over-8{% endif %}{% if loop.index > 12 %} over-12{% endif %}{% if loop.index > 18 %} over-18{% endif %} rounded-xl p-3.5 flex flex-col justify-between bg-surface-container-low border border-outline-variant shadow-[0_1px_2px_rgb(0_0_0/0.04)] hover:border-primary/60 hover:bg-surface-container hover:shadow-sm hover:-translate-y-0.5 transition-all group" data-name="{{ t.name|lower }}" data-domain="{{ t.domain_code or 'it' }}">
-            <div class="flex items-center justify-between gap-1.5">
-              <span class="font-display font-semibold text-xs sm:text-sm text-on-surface group-hover:text-primary transition-colors leading-snug break-words min-w-0" title="{{ t.name }}">{{ t.name }}</span>
-              <span class="material-symbols-outlined text-[13px] text-on-surface-variant group-hover:text-primary group-hover:translate-x-0.5 transition-all shrink-0">arrow_forward</span>
-            </div>
-            <div class="text-[11px] font-mono text-on-surface-variant mt-2.5 pt-2 border-t border-outline-variant/60 flex items-center justify-between gap-2">
-              <span class="tnum">{{ "{:,}".format(t.count) }} {{ 'firm' if t.count == 1 else 'firms' }}</span>
-              <span class="text-[9px] uppercase tracking-wider px-1 py-0.2 rounded bg-surface-container border border-outline-variant text-on-surface-variant">{{ t.domain_code or 'IT' }}</span>
-            </div>
-          </a>
-          {% endfor %}
-
-          <!-- High-Tactile Empty State for Domains without active specializations yet -->
-          <div id="tech-empty-state" class="col-span-full rounded-xl bg-surface-container-low border border-outline-variant/40 p-8 text-center space-y-3 hidden">
-            <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-surface-container-high border border-outline-variant/50 text-secondary mb-1">
-              <span class="material-symbols-outlined text-2xl">radar</span>
-            </div>
-            <h3 class="font-display font-bold text-base text-primary" id="empty-state-title">Onboarding Companies in <span id="empty-state-domain-name">Sales &amp; BPO</span></h3>
-            <p id="empty-state-domain-desc" class="text-xs text-on-surface-variant max-w-md mx-auto leading-relaxed">
-              We have not added companies in this industry yet. Switch back to <strong>All Domains</strong> to browse {{ "{:,}".format(stats.total_companies) }} companies.
-            </p>
-            <div class="pt-2">
-              <button type="button" id="btn-empty-state-reset" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-secondary bg-secondary/15 text-primary text-xs font-mono hover:bg-secondary/25 transition cursor-pointer">
-                <span class="material-symbols-outlined text-[15px]">arrow_back</span>
-                <span>View All Domains ({% if domains %}{{ domains|sum(attribute='count') }}{% else %}{{ stats.total_companies }}{% endif %})</span>
-              </button>
-            </div>
-          </div>
-        </div>
-        <div class="flex justify-center">
-          <button type="button" id="tech-more-btn" class="dir-more-btn{% if technologies|length > 8 %} more-than-8{% endif %}{% if technologies|length > 12 %} more-than-12{% endif %}{% if technologies|length > 18 %} more-than-18{% endif %} w-full sm:w-auto items-center justify-center gap-1.5 px-5 py-2.5 rounded-lg border border-outline-variant bg-surface-container-low text-sm font-medium text-on-surface hover:border-primary/60 hover:text-primary transition cursor-pointer" aria-controls="tech-grid" aria-expanded="false" data-section="tech" data-noun="categories">
-            <span class="dir-more-label">Show all {{ technologies|length }} categories</span>
-            <span class="dir-more-icon material-symbols-outlined text-[18px]" aria-hidden="true">expand_more</span>
-          </button>
-        </div>
-      </section>
-
-      <!-- SECTION: BROWSE BY CITY -->
-      <section id="city-section" class="dir-section space-y-4">
-        <div class="flex items-center justify-between border-b border-outline pb-3">
-          <div>
-            <h2 class="text-xl font-display font-bold text-primary">Browse by City</h2>
-            <p class="text-xs text-on-surface-variant">Companies grouped by city, from the big metros to Tier 2 and Tier 3 cities.</p>
-          </div>
-          <span class="text-xs font-mono text-secondary px-2 py-0.5 rounded bg-secondary/10 border border-secondary/25" id="city-section-badge">{{ cities|length }} Cities</span>
-        </div>
-
-        <div class="dir-grid is-collapsed grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2.5" id="city-grid">
-          {% for c in cities %}
-          <a href="/directory/city/{{ c.slug }}" class="city-card{% if loop.index > 8 %} over-8{% endif %}{% if loop.index > 12 %} over-12{% endif %}{% if loop.index > 18 %} over-18{% endif %} rounded-xl p-3.5 flex flex-col justify-between bg-surface-container-low border border-outline-variant shadow-[0_1px_2px_rgb(0_0_0/0.04)] hover:border-primary/60 hover:bg-surface-container hover:shadow-sm hover:-translate-y-0.5 transition-all group" data-name="{{ c.name|lower }}" data-slug="{{ c.slug }}" data-default-order="{{ loop.index }}" data-counts='{{ c.domain_counts|tojson }}'>
-            <div class="flex items-center justify-between gap-1.5">
-              <span class="font-display font-semibold text-xs sm:text-sm text-on-surface group-hover:text-primary transition-colors leading-snug break-words min-w-0" title="{{ c.name }}">{{ c.name }}</span>
-              <span class="material-symbols-outlined text-[13px] text-on-surface-variant group-hover:text-primary group-hover:translate-x-0.5 transition-all shrink-0">arrow_forward</span>
-            </div>
-            <div class="text-[11px] font-mono text-on-surface-variant mt-2.5 pt-2 border-t border-outline-variant/60 flex items-center justify-between gap-2">
-              <span class="tnum city-firm-count">{{ "{:,}".format(c.count) }} {{ 'company' if c.count == 1 else 'companies' }}</span>
-              <span class="hidden sm:inline text-[10px] text-on-surface-variant font-mono">India</span>
-            </div>
-          </a>
-          {% endfor %}
-          <div id="city-empty-state" class="col-span-full rounded-xl bg-surface-container-low border border-outline-variant/40 p-6 text-center text-xs font-mono text-on-surface-variant hidden">
-            No commercial hubs match your search term.
-          </div>
-        </div>
-        <div class="flex justify-center">
-          <button type="button" id="city-more-btn" class="dir-more-btn{% if cities|length > 8 %} more-than-8{% endif %}{% if cities|length > 12 %} more-than-12{% endif %}{% if cities|length > 18 %} more-than-18{% endif %} w-full sm:w-auto items-center justify-center gap-1.5 px-5 py-2.5 rounded-lg border border-outline-variant bg-surface-container-low text-sm font-medium text-on-surface hover:border-primary/60 hover:text-primary transition cursor-pointer" aria-controls="city-grid" aria-expanded="false" data-section="city" data-noun="cities">
-            <span class="dir-more-label">Show all {{ cities|length }} cities</span>
-            <span class="dir-more-icon material-symbols-outlined text-[18px]" aria-hidden="true">expand_more</span>
-          </button>
-        </div>
-      </section>
-
-      <!-- AEO FAQ SECTION (Direct Answer Optimized) -->
-      <section class="bento-cell p-6 space-y-4">
-        <div class="flex items-center gap-2 text-xs font-mono text-secondary">
-          <span class="material-symbols-outlined text-sm">help_outline</span>
-          <span>FREQUENTLY ASKED QUESTIONS</span>
-        </div>
-        <h2 class="text-xl font-display font-bold text-primary">About the OutreachPilot B2B Directory</h2>
-
-        <div class="space-y-3 pt-2">
-          <details class="group border border-outline rounded-lg p-3.5 bg-surface-container-high/40" open>
-            <summary class="font-display font-semibold text-sm text-primary cursor-pointer flex items-center justify-between">
-              <span>How does OutreachPilot find and verify company information?</span>
-              <span class="material-symbols-outlined text-sm group-open:rotate-180 transition-transform">expand_more</span>
-            </summary>
-            <p class="text-xs text-on-surface-variant leading-relaxed mt-2.5 pt-2 border-t border-outline/50">
-              We check each company's actual live website. Rather than relying on self-reported claims, our system scans their real website code, tools, and service offerings (such as Python, React, Flutter, or WordPress) so you get accurate, up-to-date information.
-            </p>
-          </details>
-
-          <details class="group border border-outline rounded-lg p-3.5 bg-surface-container-high/40">
-            <summary class="font-display font-semibold text-sm text-primary cursor-pointer flex items-center justify-between">
-              <span>Can I email these companies directly?</span>
-              <span class="material-symbols-outlined text-sm group-open:rotate-180 transition-transform">expand_more</span>
-            </summary>
-            <p class="text-xs text-on-surface-variant leading-relaxed mt-2.5 pt-2 border-t border-outline/50">
-              Yes! OutreachPilot finds verified contact emails from official company websites and career pages. You can draft a customized message and send it directly from your own Gmail account with one click.
-            </p>
-          </details>
-
-          <details class="group border border-outline rounded-lg p-3.5 bg-surface-container-high/40">
-            <summary class="font-display font-semibold text-sm text-primary cursor-pointer flex items-center justify-between">
-              <span>How often is this directory updated?</span>
-              <span class="material-symbols-outlined text-sm group-open:rotate-180 transition-transform">expand_more</span>
-            </summary>
-            <p class="text-xs text-on-surface-variant leading-relaxed mt-2.5 pt-2 border-t border-outline/50">
-              We regularly check company profiles to ensure contact emails, websites, services, and Google review ratings remain active and accurate.
-            </p>
-          </details>
-        </div>
-      </section>
-
+<!-- Categories -->
+<section id="tech-section" class="dir-section section tight">
+  <div class="container">
+    <div class="dir-head">
+      <div>
+        {{ ui.eyebrow("Industries") }}
+        <h2>Browse by Industry &amp; Specialization</h2>
+        <p>Explore verified companies across IT, Sales, Marketing, Healthcare, Finance, and Manufacturing.</p>
+      </div>
+      <span id="dir-categories-badge" class="badge badge-accent">{{ technologies|length }} Categories</span>
     </div>
-  </main>
 
-  <!-- FOOTER -->
-  <footer class="w-full border-t border-outline bg-background py-8 text-xs font-mono text-on-surface-variant">
-    <div class="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-      <div>&copy; 2026 OutreachPilot. Direct Recruiter Outreach & Career Discovery Engine. All rights reserved.</div>
-      <div class="flex items-center gap-4">
-        <a href="/llms.txt" class="hover:text-primary transition-colors">llms.txt</a>
-        <a href="/sitemap.xml" class="hover:text-primary transition-colors">sitemap.xml</a>
-        <a href="/privacy" class="hover:text-primary transition-colors">Privacy</a>
-        <a href="/terms" class="hover:text-primary transition-colors">Terms</a>
+    <div id="domain-filter-pills" role="tablist" aria-label="Filter directory by industry domain">
+      <button type="button" class="domain-pill active" data-domain="all">
+        <span class="material-symbols-outlined" aria-hidden="true">apps</span>
+        <span>All Domains</span>
+        <span class="n tnum" id="dir-domain-count-all">({% if domains %}{{ domains|sum(attribute='count') }}{% else %}{{ stats.total_companies }}{% endif %})</span>
+      </button>
+      <button type="button" class="domain-pill" data-domain="it">
+        <span class="material-symbols-outlined" aria-hidden="true">computer</span>
+        <span>IT &amp; Software</span>
+        <span class="n tnum" id="dir-domain-count-it">({% for d in domains if d.code == 'it' %}{{ d.count }}{% else %}{{ stats.total_companies }}{% endfor %})</span>
+      </button>
+      <button type="button" class="domain-pill" data-domain="sales">
+        <span class="material-symbols-outlined" aria-hidden="true">support_agent</span>
+        <span>Sales &amp; BPO</span>
+        <span class="n tnum" id="dir-domain-count-sales">({% for d in domains if d.code == 'sales' %}{{ d.count }}{% else %}0{% endfor %})</span>
+      </button>
+      <button type="button" class="domain-pill" data-domain="marketing">
+        <span class="material-symbols-outlined" aria-hidden="true">campaign</span>
+        <span>Marketing &amp; PR</span>
+        <span class="n tnum" id="dir-domain-count-marketing">({% for d in domains if d.code == 'marketing' %}{{ d.count }}{% else %}0{% endfor %})</span>
+      </button>
+      <button type="button" class="domain-pill" data-domain="pharma">
+        <span class="material-symbols-outlined" aria-hidden="true">medication</span>
+        <span>Pharma &amp; Healthcare</span>
+        <span class="n tnum" id="dir-domain-count-pharma">({% for d in domains if d.code == 'pharma' %}{{ d.count }}{% else %}0{% endfor %})</span>
+      </button>
+      <button type="button" class="domain-pill" data-domain="finance">
+        <span class="material-symbols-outlined" aria-hidden="true">account_balance</span>
+        <span>Finance &amp; Legal</span>
+        <span class="n tnum" id="dir-domain-count-finance">({% for d in domains if d.code == 'finance' %}{{ d.count }}{% else %}0{% endfor %})</span>
+      </button>
+      <button type="button" class="domain-pill" data-domain="manufacturing">
+        <span class="material-symbols-outlined" aria-hidden="true">precision_manufacturing</span>
+        <span>Manufacturing</span>
+        <span class="n tnum" id="dir-domain-count-manufacturing">({% for d in domains if d.code == 'manufacturing' %}{{ d.count }}{% else %}0{% endfor %})</span>
+      </button>
+      <button type="button" class="domain-pill" data-domain="realestate">
+        <span class="material-symbols-outlined" aria-hidden="true">apartment</span>
+        <span>Real Estate</span>
+        <span class="n tnum" id="dir-domain-count-realestate">({% for d in domains if d.code == 'realestate' %}{{ d.count }}{% else %}0{% endfor %})</span>
+      </button>
+      <button type="button" class="domain-pill" data-domain="hr">
+        <span class="material-symbols-outlined" aria-hidden="true">groups</span>
+        <span>HR &amp; Staffing</span>
+        <span class="n tnum" id="dir-domain-count-hr">({% for d in domains if d.code == 'hr' %}{{ d.count }}{% else %}0{% endfor %})</span>
+      </button>
+    </div>
+
+    <div class="dir-grid is-collapsed" id="tech-grid">
+      {% for t in technologies %}
+      <a href="/directory/tech/{{ t.slug }}" class="tech-card place-card{% if loop.index > 8 %} over-8{% endif %}{% if loop.index > 12 %} over-12{% endif %}{% if loop.index > 18 %} over-18{% endif %}" data-name="{{ t.name|lower }}" data-domain="{{ t.domain_code or 'it' }}">
+        <span class="pc-top"><span class="pc-name" title="{{ t.name }}">{{ t.name }}</span><span class="pc-go material-symbols-outlined" aria-hidden="true">arrow_forward</span></span>
+        <span class="pc-foot"><span class="tnum">{{ "{:,}".format(t.count) }} {{ 'firm' if t.count == 1 else 'firms' }}</span><span class="pc-tag">{{ t.domain_code or 'IT' }}</span></span>
+      </a>
+      {% endfor %}
+
+      <div id="tech-empty-state" class="empty hidden">
+        <span class="icon-tile"><span class="material-symbols-outlined" aria-hidden="true">radar</span></span>
+        <h3 id="empty-state-title">Onboarding Companies in <span id="empty-state-domain-name">Sales &amp; BPO</span></h3>
+        <p id="empty-state-domain-desc">
+          We have not added companies in this industry yet. Switch back to <strong>All Domains</strong> to browse {{ "{:,}".format(stats.total_companies) }} companies.
+        </p>
+        <button type="button" id="btn-empty-state-reset" class="btn btn-secondary btn-sm">
+          <span class="material-symbols-outlined" aria-hidden="true">arrow_back</span>
+          <span>View All Domains ({% if domains %}{{ domains|sum(attribute='count') }}{% else %}{{ stats.total_companies }}{% endif %})</span>
+        </button>
       </div>
     </div>
-  </footer>
+    <div class="more-row">
+      <button type="button" id="tech-more-btn" class="dir-more-btn btn btn-secondary{% if technologies|length > 8 %} more-than-8{% endif %}{% if technologies|length > 12 %} more-than-12{% endif %}{% if technologies|length > 18 %} more-than-18{% endif %}" aria-controls="tech-grid" aria-expanded="false" data-section="tech" data-noun="categories">
+        <span class="dir-more-label">Show all {{ technologies|length }} categories</span>
+        <span class="dir-more-icon material-symbols-outlined" aria-hidden="true">expand_more</span>
+      </button>
+    </div>
+  </div>
+</section>
 
-  <script>
-    // Pure Theme Toggle
-    function toggleTheme() {
-      const isLight = document.documentElement.classList.contains("light");
-      const next = isLight ? "dark" : "light";
-      document.documentElement.classList.toggle("dark", next === "dark");
-      document.documentElement.classList.toggle("light", next === "light");
-      try { localStorage.setItem("pilot_theme", next); } catch (_) {}
-      const icon = document.getElementById("theme-toggle-icon");
-      if (icon) icon.textContent = next === "light" ? "dark_mode" : "light_mode";
-    }
-    document.getElementById("btn-theme-toggle")?.addEventListener("click", toggleTheme);
-    const initialTheme = document.documentElement.classList.contains("light") ? "light" : "dark";
-    const initialIcon = document.getElementById("theme-toggle-icon");
-    if (initialIcon) initialIcon.textContent = initialTheme === "light" ? "dark_mode" : "light_mode";
+<!-- Cities -->
+<section id="city-section" class="dir-section section tight">
+  <div class="container">
+    <div class="dir-head">
+      <div>
+        {{ ui.eyebrow("Cities") }}
+        <h2>Browse by City</h2>
+        <p>Companies grouped by city, from the big metros to Tier 2 and Tier 3 cities.</p>
+      </div>
+      <span class="badge badge-accent" id="city-section-badge">{{ cities|length }} Cities</span>
+    </div>
+
+    <div class="dir-grid is-collapsed" id="city-grid">
+      {% for c in cities %}
+      <a href="/directory/city/{{ c.slug }}" class="city-card place-card{% if loop.index > 8 %} over-8{% endif %}{% if loop.index > 12 %} over-12{% endif %}{% if loop.index > 18 %} over-18{% endif %}" data-name="{{ c.name|lower }}" data-slug="{{ c.slug }}" data-default-order="{{ loop.index }}" data-counts='{{ c.domain_counts|tojson }}'>
+        <span class="pc-top"><span class="pc-name" title="{{ c.name }}">{{ c.name }}</span><span class="pc-go material-symbols-outlined" aria-hidden="true">arrow_forward</span></span>
+        <span class="pc-foot"><span class="tnum city-firm-count">{{ "{:,}".format(c.count) }} {{ 'company' if c.count == 1 else 'companies' }}</span><span class="pc-pin hide-sm"><span class="material-symbols-outlined" aria-hidden="true">location_on</span>India</span></span>
+      </a>
+      {% endfor %}
+      <div id="city-empty-state" class="dir-empty hidden">
+        No commercial hubs match your search term.
+      </div>
+    </div>
+    <div class="more-row">
+      <button type="button" id="city-more-btn" class="dir-more-btn btn btn-secondary{% if cities|length > 8 %} more-than-8{% endif %}{% if cities|length > 12 %} more-than-12{% endif %}{% if cities|length > 18 %} more-than-18{% endif %}" aria-controls="city-grid" aria-expanded="false" data-section="city" data-noun="cities">
+        <span class="dir-more-label">Show all {{ cities|length }} cities</span>
+        <span class="dir-more-icon material-symbols-outlined" aria-hidden="true">expand_more</span>
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- FAQ -->
+<section class="section tight">
+  <div class="container dir-faq">
+    <div class="section-head">
+      {{ ui.eyebrow("Questions") }}
+      <h2 class="h2">About the OutreachPilot B2B Directory</h2>
+    </div>
+    <div class="faq">
+      <details open>
+        <summary>How does OutreachPilot find and verify company information?<span class="plus" aria-hidden="true"></span></summary>
+        <div class="answer">We check each company's actual live website. Rather than relying on self-reported claims, our system scans their real website code, tools, and service offerings (such as Python, React, Flutter, or WordPress) so you get accurate, up-to-date information.</div>
+      </details>
+      <details>
+        <summary>Can I email these companies directly?<span class="plus" aria-hidden="true"></span></summary>
+        <div class="answer">Yes! OutreachPilot finds verified contact emails from official company websites and career pages. You can draft a customized message and send it directly from your own Gmail account with one click.</div>
+      </details>
+      <details>
+        <summary>How often is this directory updated?<span class="plus" aria-hidden="true"></span></summary>
+        <div class="answer">We regularly check company profiles to ensure contact emails, websites, services, and Google review ratings remain active and accurate.</div>
+      </details>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/site/page-canvas.js?v={{ asset_v }}" defer></script>
+<script>
+    // Theme toggle now comes from static/js/site/theme.js (toggleTheme).
 
     // Dynamic Multi-Domain Directory Metadata & Synchronized Filtering
     const DOMAIN_METRICS = {
@@ -770,6 +536,4 @@
     } catch (_) {}
     updatePillFade();
   </script>
-</body>
-</html>
-
+{% endblock %}

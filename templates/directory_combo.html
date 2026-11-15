@@ -1,373 +1,201 @@
-<!DOCTYPE html>
-<html class="dark" lang="en">
-<head>
-  <meta charset="utf-8"/>
-  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-  <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg">
-  <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
-  <title>Top {{ tech_name }} Companies &amp; Specialists in {{ city_name }} (2026 Directory) | OutreachPilot</title>
+{% extends "base.html" %}
+{% import "macros/ui.html" as ui %}
+{% set page_css = ["directory.css"] %}
+{% set nav_cta_href = "/app?city=" ~ (city_name | urlencode) ~ "&tech=" ~ (tech_name | urlencode) %}
+{% set nav_cta_label = "Pitch These Leads" %}
+
+{% block title %}Top {{ tech_name }} Companies &amp; Specialists in {{ city_name }} (2026 Directory) | OutreachPilot{% endblock %}
+
+{% block meta %}
   <meta name="description" content="Explore top-rated {{ tech_name }} companies and specialists in {{ city_name }}, India. Verified business profiles, client reviews, Google ratings, and direct contact availability."/>
   <link rel="canonical" href="{{ canonical_url }}"/>
-
-  <!-- Open Graph -->
   <meta property="og:type" content="website"/>
   <meta property="og:url" content="{{ canonical_url }}"/>
   <meta property="og:title" content="Top {{ tech_name }} Companies &amp; Specialists in {{ city_name }} [2026 Directory]"/>
   <meta property="og:description" content="Explore verified {{ tech_name }} companies, agencies, and specialists in {{ city_name }}, India."/>
   <meta property="og:site_name" content="OutreachPilot"/>
-
-  <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image"/>
   <meta name="twitter:title" content="Top {{ tech_name }} Companies in {{ city_name }}"/>
   <meta name="twitter:description" content="Verified {{ tech_name }} companies and specialists in {{ city_name }}."/>
-
-  <!-- Typography -->
-  <link rel="preload" href="/static/fonts/spacegrotesk-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="/static/fonts/dmsans-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="/static/css/fonts.css">
-  <link rel="stylesheet" href="/static/css/style.css?v=9.0">
-  <script src="https://cdn.tailwindcss.com/3.4.17?plugins=forms@0.5.10"></script>
-
-  <script>
-    (function() {
-      try {
-        const saved = localStorage.getItem('pilot_theme');
-        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const theme = saved ? saved : 'light'; /* default: light */
-        if (theme === 'light') {
-          document.documentElement.classList.remove('dark');
-          document.documentElement.classList.add('light');
-        } else {
-          document.documentElement.classList.add('dark');
-          document.documentElement.classList.remove('light');
-        }
-      } catch (e) {}
-    })();
-  </script>
-
-  <script>
-    tailwind.config = {
-      darkMode: "class",
-      theme: {
-        extend: {
-          colors: {
-            "background": "rgb(var(--color-background) / <alpha-value>)",
-            "on-background": "rgb(var(--color-on-background) / <alpha-value>)",
-            "surface": "rgb(var(--color-surface) / <alpha-value>)",
-            "surface-container-lowest": "rgb(var(--color-surface-container-lowest) / <alpha-value>)",
-            "surface-container-low": "rgb(var(--color-surface-container-low) / <alpha-value>)",
-            "surface-container": "rgb(var(--color-surface-container) / <alpha-value>)",
-            "surface-container-high": "rgb(var(--color-surface-container-high) / <alpha-value>)",
-            "outline": "rgb(var(--color-outline) / <alpha-value>)",
-            "outline-variant": "rgb(var(--color-outline-variant) / <alpha-value>)",
-            "primary": "rgb(var(--color-primary) / <alpha-value>)",
-            "secondary": "rgb(var(--color-secondary) / <alpha-value>)",
-            "tertiary": "rgb(var(--color-tertiary) / <alpha-value>)",
-            "on-surface": "rgb(var(--color-on-surface) / <alpha-value>)",
-            "on-surface-variant": "rgb(var(--color-on-surface-variant) / <alpha-value>)"
-          },
-          fontFamily: {
-            display: ["Space Grotesk", "-apple-system", "sans-serif"],
-            sans: ["DM Sans", "-apple-system", "sans-serif"],
-            mono: ["JetBrains Mono", "monospace"]
-          }
-        }
-      }
-    };
-  </script>
-
-  <style>
-    .tnum { font-variant-numeric: tabular-nums; }
-    .bento-cell {
-      background-color: rgb(var(--color-surface-container-low));
-      border: 1px solid rgb(var(--color-outline));
-      border-radius: 0.75rem;
-      transition: all 0.2s ease;
-    }
-    .bento-cell:hover {
-      border-color: rgb(var(--color-outline-variant));
-      transform: translateY(-2px);
-    }
-    .btn-tactile-ecru {
-      background-color: #EFECE6;
-      color: #111317;
-      border: 1px solid #EFECE6;
-      font-weight: 600;
-      transition: all 0.15s ease;
-    }
-    .btn-tactile-ecru:hover {
-      background-color: #DFDCD5;
-      transform: translateY(-1px);
-    }
-  </style>
-
-  <!-- AEO Schema.org JSON-LD Structured Data -->
   <script type="application/ld+json">
   {{ json_ld_schema | safe }}
   </script>
-</head>
-<body class="bg-background text-on-background min-h-screen flex flex-col font-sans antialiased selection:bg-secondary/20 selection:text-secondary">
+{% endblock %}
 
-  <!-- NAVBAR -->
-  <header class="w-full border-b border-outline bg-background/90 backdrop-blur sticky top-0 z-40">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
-      <div class="flex items-center gap-4 sm:gap-6 shrink-0">
-        <a href="/" class="flex items-center gap-2 group shrink-0 whitespace-nowrap">
-          <div class="w-7 h-7 rounded-lg bg-surface-container-high border border-outline-variant flex items-center justify-center text-primary shrink-0">
-            <span class="material-symbols-outlined text-[17px]">rocket_launch</span>
-          </div>
-          <span class="font-display font-bold text-base tracking-tight text-primary whitespace-nowrap">Outreach<span class="text-secondary">Pilot</span></span>
-        </a>
-        <nav class="hidden md:flex items-center gap-4 text-xs font-mono text-on-surface-variant whitespace-nowrap shrink-0">
-          <a href="/directory" class="text-primary font-semibold border-b-2 border-secondary pb-0.5 whitespace-nowrap">Directory</a>
-          <a href="/#workflow" class="hover:text-primary transition-colors whitespace-nowrap">How It Works</a>
-          <a href="/#capabilities" class="hover:text-primary transition-colors whitespace-nowrap">Features</a>
-        </nav>
-      </div>
+{% block body_class %}page-directory has-map{% endblock %}
+{% block page_bg %}<canvas id="page-canvas" class="page-canvas" aria-hidden="true"></canvas>{% endblock %}
 
-      <div class="flex items-center gap-2.5 sm:gap-3 shrink-0 whitespace-nowrap">
-        <button id="btn-theme-toggle" type="button" aria-label="Toggle Theme" class="w-8 h-8 rounded-lg flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container border border-outline-variant/40 transition cursor-pointer shrink-0">
-          <span id="theme-toggle-icon" class="material-symbols-outlined text-[18px]">light_mode</span>
-        </button>
-        <a href="/app?city={{ city_name | urlencode }}&tech={{ tech_name | urlencode }}" class="btn-tactile-ecru flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-bold whitespace-nowrap shrink-0">
-          <span>Pitch These Leads</span>
-          <span class="material-symbols-outlined text-[14px] shrink-0">arrow_forward</span>
-        </a>
-      </div>
-    </div>
-  </header>
+{% block content %}
+<div class="crumb-bar">
+  <div class="container">
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a>
+      <span class="sep">/</span>
+      <a href="/directory">Directory</a>
+      <span class="sep">/</span>
+      <a href="/directory/city/{{ city_slug }}">{{ city_name }}</a>
+      <span class="sep">/</span>
+      <span class="here">{{ tech_name }}</span>
+    </nav>
+  </div>
+</div>
 
-  <!-- BREADCRUMBS (AEO Structured) -->
-  <nav class="w-full border-b border-outline/60 bg-surface-container-lowest/40" aria-label="Breadcrumb">
-    <div class="max-w-6xl mx-auto px-6 py-2.5 text-xs font-mono text-on-surface-variant flex items-center gap-2">
-      <a href="/" class="hover:text-primary transition-colors">Home</a>
-      <span class="text-outline-variant">/</span>
-      <a href="/directory" class="hover:text-primary transition-colors">Directory</a>
-      <span class="text-outline-variant">/</span>
-      <a href="/directory/city/{{ city_slug }}" class="hover:text-primary transition-colors">{{ city_name }}</a>
-      <span class="text-outline-variant">/</span>
-      <span class="text-primary font-medium">{{ tech_name }}</span>
-    </div>
-  </nav>
-
-  <main class="flex-grow flex flex-col items-center w-full px-6 py-10">
-    <div class="w-full max-w-6xl space-y-10">
-
-      <!-- HERO SECTION -->
-      <section class="space-y-3">
-        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container-high border border-outline-variant text-xs font-mono text-secondary">
-          <span class="w-2 h-2 rounded-full bg-secondary"></span>
-          <span>{{ city_name }} company directory</span>
-        </div>
-        <h1 class="text-2xl sm:text-3xl md:text-4xl font-display font-bold text-primary tracking-tight">
+<section class="dir-hero">
+  <div class="container hub-top">
+    <div class="hub-copy">
+      <span class="hero-badge reveal"><span class="dot dot-live"></span><span>{{ city_name }} company directory</span></span>
+      <h1 class="h1 reveal" style="--d:.05s">
           Top {{ tech_name }} Companies &amp; Specialists in {{ city_name }}
         </h1>
-        <p class="text-sm text-on-surface-variant max-w-3xl leading-relaxed">
+      <p class="lead reveal" style="--d:.1s">
           A directory of verified {{ tech_name }} companies and specialized firms in {{ city_name }}. Features verified operational capabilities, direct contacts, customer reviews, and local Google ratings.
         </p>
-      </section>
-
-      <!-- AEO DIRECT-ANSWER KEY TAKEAWAYS BOX -->
-      <section class="bento-cell p-5 bg-surface-container-high/40 border-secondary/30 space-y-3" aria-label="Executive Summary">
-        <div class="flex items-center gap-2 text-xs font-mono text-secondary font-semibold">
-          <span class="material-symbols-outlined text-[16px]">verified</span>
-          <span>DIRECT ANSWER / MARKET INTELLIGENCE (AEO SUMMARY)</span>
-        </div>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
-          <div class="p-3 rounded-lg bg-surface-container-lowest border border-outline font-mono text-xs">
-            <span class="text-on-surface-variant block text-[11px]">Verified {{ tech_name }} Firms:</span>
-            <span class="text-lg font-bold text-primary tnum">{{ total_companies }} Companies</span>
-          </div>
-          <div class="p-3 rounded-lg bg-surface-container-lowest border border-outline font-mono text-xs">
-            <span class="text-on-surface-variant block text-[11px]">Average Google Rating:</span>
-            <span class="text-lg font-bold text-secondary tnum">{{ avg_rating }}★ / 5.0</span>
-          </div>
-          <div class="p-3 rounded-lg bg-surface-container-lowest border border-outline font-mono text-xs">
-            <span class="text-on-surface-variant block text-[11px]">Primary Location:</span>
-            <span class="text-lg font-bold text-tertiary">{{ city_name }}, India</span>
-          </div>
-        </div>
-      </section>
-
-      <!-- INTERNAL LINKING: RELATED TECH STACKS IN THIS CITY -->
-      {% if related_techs and related_techs|length > 0 %}
-      <section class="space-y-3">
-        <h2 class="text-xs font-mono uppercase tracking-wider text-on-surface-variant font-semibold">
-          Other Top Technologies in {{ city_name }}
-        </h2>
-        <div class="flex flex-wrap gap-2">
-          {% for r in related_techs %}
-          <a href="/directory/companies?city={{ city_slug }}&tech={{ r.slug }}" class="px-2.5 py-1 rounded-md text-xs font-mono bg-surface-container hover:bg-surface-container-high text-primary border border-outline hover:border-secondary transition-all flex items-center gap-1.5">
-            <span>{{ r.name }}</span>
-            <span class="text-on-surface-variant text-[10px] tnum">({{ r.count }})</span>
-          </a>
-          {% endfor %}
-        </div>
-      </section>
-      {% endif %}
-
-      <!-- COMPANY LISTINGS GRID -->
-      <section class="space-y-4">
-        <div class="flex items-center justify-between border-b border-outline pb-2.5">
-          <h2 class="text-lg font-display font-bold text-primary">
-            Top {{ tech_name }} companies in {{ city_name }} <span class="text-xs font-mono text-on-surface-variant font-normal">({{ companies|length }} shown)</span>
-          </h2>
-          <a href="/app" class="text-xs font-mono text-secondary hover:underline flex items-center gap-1">
-            <span>Prospect in Workspace</span>
-            <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
-          </a>
-        </div>
-
-        {% if companies and companies|length > 0 %}
-        <ul class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" role="list">
-          {% for c in companies %}
-          {% set name_parts = c.name.split() %}
-          {% set initials = (name_parts[0][0] ~ (name_parts[1][0] if name_parts|length > 1 else ''))|upper if name_parts else '?' %}
-          {% set extra_tags = (c.tech_stack or [])|reject('equalto', tech_name)|list %}
-          <li class="h-full">
-            <article class="h-full flex flex-col rounded-2xl border border-outline-variant/40 bg-surface-container-low p-5 transition-colors hover:border-outline">
-              <!-- Identity -->
-              <div class="flex items-start gap-3">
-                <span class="w-10 h-10 shrink-0 rounded-lg bg-surface-container-high border border-outline-variant/50 flex items-center justify-center font-mono text-xs font-bold text-on-surface" aria-hidden="true">{{ initials }}</span>
-                <div class="min-w-0 flex-1">
-                  <h3 class="font-display font-semibold text-[15px] leading-snug text-on-surface line-clamp-2">
-                    <a href="/company/{{ c.slug }}" class="hover:text-primary transition-colors" title="{{ c.name }}">{{ c.name }}</a>
-                  </h3>
-                  {% if c.domain %}
-                  <a href="{{ c.website_url or ('https://' ~ c.domain) }}" target="_blank" rel="nofollow noopener noreferrer" class="mt-0.5 inline-flex max-w-full items-center gap-1 text-xs font-mono text-on-surface-variant hover:text-primary transition-colors">
-                    <span class="truncate">{{ c.domain }}</span>
-                    <span class="material-symbols-outlined text-[12px] shrink-0" aria-hidden="true">open_in_new</span>
-                  </a>
-                  {% endif %}
-                </div>
-              </div>
-
-              <!-- Rating (Google) -->
-              {% if c.rating and c.rating > 0 %}
-              <p class="mt-3 flex items-center gap-1 text-xs text-on-surface-variant">
-                <span class="material-symbols-outlined text-[14px]" aria-hidden="true">star</span>
-                <span class="font-semibold text-on-surface tnum">{{ c.rating }}</span>
-                <span class="tnum">from {{ "{:,}".format(c.reviews_count or 0) }} Google {{ 'review' if c.reviews_count == 1 else 'reviews' }}</span>
-              </p>
-              {% endif %}
-
-              {% if c.profile and c.profile.summary %}
-              <p class="mt-3 text-sm text-on-surface-variant leading-relaxed line-clamp-3">{{ c.profile.summary }}</p>
-              {% endif %}
-
-              {% if extra_tags %}
-              <div class="mt-3 flex flex-wrap gap-1.5">
-                {% for tag in extra_tags[:4] %}
-                <span class="px-2 py-0.5 rounded-md text-[11px] font-mono bg-surface-container text-on-surface-variant border border-outline-variant/40">{{ tag }}</span>
-                {% endfor %}
-              </div>
-              {% endif %}
-
-              <!-- What we know so far (honest status, no placeholders) -->
-              <ul class="mt-4 space-y-1.5 text-xs" role="list">
-                <li class="flex items-center gap-1.5 {{ 'text-secondary' if c.has_emails else 'text-on-surface-variant' }}">
-                  <span class="material-symbols-outlined text-[15px]" aria-hidden="true">{{ 'mark_email_read' if c.has_emails else 'mail' }}</span>
-                  <span>{{ 'Contact email found' if c.has_emails else 'No contact email yet' }}</span>
-                </li>
-                <li class="flex items-center gap-1.5 {{ 'text-secondary' if c.is_enriched else 'text-on-surface-variant' }}">
-                  <span class="material-symbols-outlined text-[15px]" aria-hidden="true">{{ 'task_alt' if c.is_enriched else 'pending' }}</span>
-                  <span>{{ 'AI research ready' if c.is_enriched else 'Not researched yet' }}</span>
-                </li>
-              </ul>
-
-              <!-- Actions, pinned to the bottom so cards in a row line up -->
-              <div class="mt-auto pt-4">
-                <div class="flex items-center gap-2 border-t border-outline-variant/40 pt-4">
-                  <a href="/company/{{ c.slug }}" class="btn-tactile-ecru flex-1 inline-flex items-center justify-center gap-1 rounded-lg px-3 py-2 text-xs font-semibold">
-                    <span>View profile</span>
-                  </a>
-                  <a href="/app?action=pitch&company_id={{ c.id }}&company_name={{ c.name | urlencode }}" class="flex-1 inline-flex items-center justify-center gap-1 rounded-lg border border-outline-variant/60 px-3 py-2 text-xs font-semibold text-on-surface hover:border-primary hover:text-primary transition-colors">
-                    <span class="material-symbols-outlined text-[14px]" aria-hidden="true">send</span>
-                    <span>Write a pitch</span>
-                  </a>
-                </div>
-              </div>
-            </article>
-          </li>
-          {% endfor %}
-        </ul>
-        {% else %}
-        <div class="bento-cell p-8 text-center text-on-surface-variant font-mono text-xs">
-          No verified companies found for this intersection yet.
-        </div>
-        {% endif %}
-      </section>
-
-      <!-- INTERNAL LINKING: OTHER CITIES FOR THIS TECH -->
-      {% if related_cities and related_cities|length > 0 %}
-      <section class="space-y-3">
-        <h2 class="text-xs font-mono uppercase tracking-wider text-on-surface-variant font-semibold">
-          Explore {{ tech_name }} in Other Tech Hubs
-        </h2>
-        <div class="flex flex-wrap gap-2">
-          {% for r in related_cities %}
-          <a href="/directory/companies?city={{ r.slug }}&tech={{ tech_slug }}" class="px-2.5 py-1 rounded-md text-xs font-mono bg-surface-container hover:bg-surface-container-high text-primary border border-outline hover:border-secondary transition-all flex items-center gap-1.5">
-            <span>{{ r.name }}</span>
-            <span class="text-on-surface-variant text-[10px] tnum">({{ r.count }})</span>
-          </a>
-          {% endfor %}
-        </div>
-      </section>
-      {% endif %}
-
-      <!-- AEO FAQ SECTION -->
-      {% if faqs and faqs|length > 0 %}
-      <section class="bento-cell p-6 space-y-4">
-        <div class="flex items-center gap-2 text-xs font-mono text-secondary">
-          <span class="material-symbols-outlined text-sm">help_outline</span>
-          <span>FREQUENTLY ASKED QUESTIONS (AEO)</span>
-        </div>
-        <h2 class="text-xl font-display font-bold text-primary">Frequently Asked Questions</h2>
-
-        <div class="space-y-3 pt-2">
-          {% for f in faqs %}
-          <details class="group border border-outline rounded-lg p-3.5 bg-surface-container-high/40" {% if loop.first %}open{% endif %}>
-            <summary class="font-display font-semibold text-sm text-primary cursor-pointer flex items-center justify-between">
-              <span>{{ f.question }}</span>
-              <span class="material-symbols-outlined text-sm group-open:rotate-180 transition-transform">expand_more</span>
-            </summary>
-            <p class="text-xs text-on-surface-variant leading-relaxed mt-2.5 pt-2 border-t border-outline/50">
-              {{ f.answer }}
-            </p>
-          </details>
-          {% endfor %}
-        </div>
-      </section>
-      {% endif %}
-
-    </div>
-  </main>
-
-  <!-- FOOTER -->
-  <footer class="w-full border-t border-outline bg-background py-8 text-xs font-mono text-on-surface-variant">
-    <div class="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-      <div>&copy; 2026 OutreachPilot. Direct Recruiter Outreach & Career Discovery Engine. All rights reserved.</div>
-      <div class="flex items-center gap-4">
-        <a href="/directory" class="hover:text-primary transition-colors">Directory</a>
-        <a href="/directory/city/{{ city_slug }}" class="hover:text-primary transition-colors">{{ city_name }} Directory</a>
-        <a href="/directory/tech/{{ tech_slug }}" class="hover:text-primary transition-colors">{{ tech_name }} Index</a>
-        <a href="/sitemap.xml" class="hover:text-primary transition-colors">sitemap.xml</a>
+      <div class="hero-actions reveal" style="--d:.15s">
+        <a href="/app?city={{ city_name | urlencode }}&tech={{ tech_name | urlencode }}" class="btn btn-primary"><span class="material-symbols-outlined" aria-hidden="true">send</span><span>Pitch These Leads</span></a>
+        <a href="/directory/tech/{{ tech_slug }}" class="btn btn-secondary">All {{ tech_name }} companies</a>
       </div>
     </div>
-  </footer>
 
-  <script>
-    function toggleTheme() {
-      const isLight = document.documentElement.classList.contains("light");
-      const next = isLight ? "dark" : "light";
-      document.documentElement.classList.toggle("dark", next === "dark");
-      document.documentElement.classList.toggle("light", next === "light");
-      try { localStorage.setItem("pilot_theme", next); } catch (_) {}
-      const icon = document.getElementById("theme-toggle-icon");
-      if (icon) icon.textContent = next === "light" ? "dark_mode" : "light_mode";
-    }
-    document.getElementById("btn-theme-toggle")?.addEventListener("click", toggleTheme);
-  </script>
-</body>
-</html>
+    <section class="glance reveal" style="--d:.2s" aria-label="Executive Summary">
+      <span class="glance-title"><span class="material-symbols-outlined" aria-hidden="true">verified</span>At a glance</span>
+      <div class="stat-row cols-3">
+        <div class="stat-card"><div class="v tnum">{{ total_companies }}</div><div class="k">Verified {{ tech_name }} firms</div></div>
+        <div class="stat-card"><div class="v accent tnum">{{ avg_rating }}<span class="subtle" style="font-size:.5em">/5</span></div><div class="k">Average Google rating</div></div>
+        <div class="stat-card"><div class="v" style="font-size:1.25rem;line-height:1.3">{{ city_name }}</div><div class="k">Primary location, India</div></div>
+      </div>
+    </section>
+  </div>
+</section>
 
+{% if related_techs and related_techs|length > 0 %}
+<section class="section tight" style="padding-top:0">
+  <div class="container">
+    <div class="related-block reveal">
+      <div class="related-title"><span class="material-symbols-outlined" aria-hidden="true">category</span><h2>
+          Other Top Technologies in {{ city_name }}
+        </h2></div>
+      <ul class="chip-cloud" role="list">
+        {% for r in related_techs %}
+        <li><a href="/directory/companies?city={{ city_slug }}&tech={{ r.slug }}" class="link-chip"><span>{{ r.name }}</span><span class="n tnum">({{ r.count }})</span></a></li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<section class="section tight" style="padding-top:0">
+  <div class="container">
+    <div class="dir-head">
+      <h2>
+            Top {{ tech_name }} companies in {{ city_name }} <span class="subtle tnum" style="font-family:var(--font-mono);font-size:.5em;letter-spacing:0">({{ companies|length }} shown)</span>
+          </h2>
+      <a href="/app" class="btn btn-text"><span>Prospect in Workspace</span><svg class="ico ico-sm arrow" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+    </div>
+
+    {% if companies and companies|length > 0 %}
+    <ul class="co-grid reveal-stagger" role="list">
+      {% for c in companies %}
+      {% set name_parts = c.name.split() %}
+      {% set initials = (name_parts[0][0] ~ (name_parts[1][0] if name_parts|length > 1 else ''))|upper if name_parts else '?' %}
+      {% set extra_tags = (c.tech_stack or [])|reject('equalto', tech_name)|list %}
+      <li>
+        <article class="co-card">
+          <div class="co-id">
+            <span class="co-mono" aria-hidden="true">{{ initials }}</span>
+            <div class="grow">
+              <h3 class="co-name">
+                    <a href="/company/{{ c.slug }}" title="{{ c.name }}">{{ c.name }}</a>
+                  </h3>
+              {% if c.domain %}
+              <div class="co-meta">
+                <a href="{{ c.website_url or ('https://' ~ c.domain) }}" target="_blank" rel="nofollow noopener noreferrer" class="co-site"><span>{{ c.domain }}</span><span class="material-symbols-outlined" aria-hidden="true">open_in_new</span></a>
+              </div>
+              {% endif %}
+            </div>
+          </div>
+
+          {% if c.rating and c.rating > 0 %}
+          <p class="co-meta">
+            <span class="co-rating"><span class="material-symbols-outlined" aria-hidden="true">star</span><span>{{ c.rating }}</span></span>
+            <span>from {{ "{:,}".format(c.reviews_count or 0) }} Google {{ 'review' if c.reviews_count == 1 else 'reviews' }}</span>
+          </p>
+          {% endif %}
+
+          {% if c.profile and c.profile.summary %}
+          <p class="co-summary">{{ c.profile.summary }}</p>
+          {% endif %}
+
+          {% if extra_tags %}
+          <div class="co-tags">
+            {% for tag in extra_tags[:4] %}
+            <span>{{ tag }}</span>
+            {% endfor %}
+          </div>
+          {% endif %}
+
+          <ul class="co-status" role="list">
+            <li>
+              <span class="material-symbols-outlined {{ 'yes' if c.has_emails else 'no' }}" aria-hidden="true">{{ 'mark_email_read' if c.has_emails else 'mail' }}</span>
+              <span>{{ 'Contact email found' if c.has_emails else 'No contact email yet' }}</span>
+            </li>
+            <li>
+              <span class="material-symbols-outlined {{ 'yes' if c.is_enriched else 'no' }}" aria-hidden="true">{{ 'task_alt' if c.is_enriched else 'pending' }}</span>
+              <span>{{ 'AI research ready' if c.is_enriched else 'Not researched yet' }}</span>
+            </li>
+          </ul>
+
+          <div class="co-actions">
+            <a href="/company/{{ c.slug }}" class="btn btn-secondary btn-sm"><span>View profile</span></a>
+            <a href="/app?action=pitch&company_id={{ c.id }}&company_name={{ c.name | urlencode }}" class="btn btn-primary btn-sm"><span class="material-symbols-outlined" aria-hidden="true">send</span><span>Write a pitch</span></a>
+          </div>
+        </article>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <div class="dir-empty">No verified companies found for this intersection yet.</div>
+    {% endif %}
+  </div>
+</section>
+
+{% if related_cities and related_cities|length > 0 %}
+<section class="section tight" style="padding-top:0">
+  <div class="container">
+    <div class="related-block reveal">
+      <div class="related-title"><span class="material-symbols-outlined" aria-hidden="true">location_city</span><h2>
+          Explore {{ tech_name }} in Other Tech Hubs
+        </h2></div>
+      <ul class="chip-cloud" role="list">
+        {% for r in related_cities %}
+        <li><a href="/directory/companies?city={{ r.slug }}&tech={{ tech_slug }}" class="link-chip"><span>{{ r.name }}</span><span class="n tnum">({{ r.count }})</span></a></li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+{% if faqs and faqs|length > 0 %}
+<section class="section tight">
+  <div class="container dir-faq">
+    <div class="section-head">
+      {{ ui.eyebrow("Questions") }}
+      <h2 class="h2">Frequently Asked Questions</h2>
+    </div>
+    <div class="faq">
+      {% for f in faqs %}
+      <details {% if loop.first %}open{% endif %}>
+        <summary>{{ f.question }}<span class="plus" aria-hidden="true"></span></summary>
+        <div class="answer">{{ f.answer }}</div>
+      </details>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/site/page-canvas.js?v={{ asset_v }}" defer></script>
+{% endblock %}

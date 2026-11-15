@@ -1,6 +1,6 @@
 # OutreachPilot Full Redesign Plan
 
-Status: Phases 0 and 1 committed (3b723b7). Phase 2 (public pages) built, awaiting review (2026-11-15).
+Status: Phases 0 to 3 committed on redesign/v2 (2026-11-16). Next: Phase 4, the app (/app).
 
 ## Ground rules
 
