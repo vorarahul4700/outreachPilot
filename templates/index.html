@@ -884,5 +884,14 @@
   }
 </script>
 <script src="/static/js/scroll-lock.js?v=1.3"></script>
-<script src="/static/js/app.js?v=11.0"></script>
+{#- Feature files first (plain scripts, shared global scope), then the controller. -#}
+<script src="/static/js/app/utils.js?v={{ asset_v }}"></script>
+<script src="/static/js/app/feedback.js?v={{ asset_v }}"></script>
+<script src="/static/js/app/pagination.js?v={{ asset_v }}"></script>
+<script src="/static/js/app/dropdown.js?v={{ asset_v }}"></script>
+<script src="/static/js/app/activity.js?v={{ asset_v }}"></script>
+<script src="/static/js/app/subscription.js?v={{ asset_v }}"></script>
+<script src="/static/js/app/profile.js?v={{ asset_v }}"></script>
+<script src="/static/js/app/theme.js?v={{ asset_v }}"></script>
+<script src="/static/js/app.js?v=12.0"></script>
 {% endblock %}

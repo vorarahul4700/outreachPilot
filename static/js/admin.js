@@ -157,29 +157,6 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btn-quick-csv-upload")?.addEventListener("click", () => openModal("modal-bulk-csv"));
   document.getElementById("btn-quick-view-invalid")?.addEventListener("click", () => switchTab("companies"));
 
-  // --- Modal Helpers with Non-Scrollable Background Enforcement ---
-  // Shared lock in static/js/scroll-lock.js watches every overlay; this just
-  // asks it to re-check immediately after a modal opens or closes.
-  function updateBodyScrollLock() {
-    if (window.ScrollLock) window.ScrollLock.refresh();
-  }
-
-  function openModal(id) {
-    const modal = document.getElementById(id);
-    if (modal) {
-      modal.classList.remove("hidden");
-      updateBodyScrollLock();
-    }
-  }
-
-  function closeModal(id) {
-    const modal = document.getElementById(id);
-    if (modal) {
-      modal.classList.add("hidden");
-    }
-    updateBodyScrollLock();
-  }
-
   document.querySelectorAll(".modal-close").forEach(btn => {
     btn.addEventListener("click", (e) => {
       const modal = e.target.closest(".fixed");
@@ -272,52 +249,6 @@ document.addEventListener("DOMContentLoaded", () => {
     phoneQuery.addListener(() => setAdminSidebar(false));
   }
 
-  // --- Reusable Custom Dropdown Component Controller ---
-  function initStaticCustomDropdown(containerId, onSelectCallback) {
-    const container = document.getElementById(containerId);
-    if (!container) return;
-    const btn = container.querySelector(".custom-dropdown-btn");
-    const label = container.querySelector(".custom-dropdown-label");
-    const hiddenInput = container.querySelector("input[type='hidden']");
-    const items = container.querySelectorAll(".custom-dropdown-item");
-
-    if (btn) {
-      btn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        const isOpen = container.classList.contains("is-open");
-        document.querySelectorAll(".custom-dropdown.is-open").forEach(d => {
-          if (d !== container) d.classList.remove("is-open");
-        });
-        container.classList.toggle("is-open", !isOpen);
-        btn.setAttribute("aria-expanded", String(!isOpen));
-      });
-    }
-
-    items.forEach(item => {
-      item.addEventListener("click", (e) => {
-        e.stopPropagation();
-        const val = item.getAttribute("data-value") !== null ? item.getAttribute("data-value") : "";
-        const itemText = item.querySelector(".truncate")?.textContent?.trim() || item.textContent.trim();
-
-        if (hiddenInput) {
-          hiddenInput.value = val;
-          hiddenInput.dispatchEvent(new Event("change"));
-        }
-        if (label) {
-          label.textContent = itemText;
-        }
-
-        items.forEach(it => it.classList.remove("is-selected"));
-        item.classList.add("is-selected");
-
-        container.classList.remove("is-open");
-        if (btn) btn.setAttribute("aria-expanded", "false");
-
-        if (onSelectCallback) onSelectCallback(val);
-      });
-    });
-  }
-
   // Global close custom dropdown on click outside
   document.addEventListener("click", (e) => {
     if (!e.target.closest(".custom-dropdown")) {
@@ -339,27 +270,6 @@ document.addEventListener("DOMContentLoaded", () => {
   initStaticCustomDropdown("dropdown-filter-role", (val) => {
     loadUsers(1);
   });
-
-  // --- Header Sorting Helper ---
-  function updateHeaderSortIcons(selector, activeSort, activeOrder) {
-    document.querySelectorAll(selector).forEach(th => {
-      const sortKey = th.getAttribute("data-sort");
-      const icon = th.querySelector(".sort-icon");
-      if (!icon) return;
-
-      if (sortKey === activeSort) {
-        th.classList.add("text-primary");
-        th.classList.remove("text-on-surface-variant");
-        icon.textContent = activeOrder === "asc" ? "arrow_upward" : "arrow_downward";
-        icon.className = "material-symbols-outlined text-[15px] sort-icon text-primary font-bold";
-      } else {
-        th.classList.remove("text-primary");
-        th.classList.add("text-on-surface-variant");
-        icon.textContent = "unfold_more";
-        icon.className = "material-symbols-outlined text-[15px] sort-icon text-on-surface-variant/40 group-hover:text-on-surface-variant transition-colors";
-      }
-    });
-  }
 
   // --- API: Load Overview Metrics ---
   async function loadMetrics() {
@@ -1401,58 +1311,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // --- Master Kill Switch: Subscription & RBAC Bypass Controller ---
-  async function loadKillSwitchStatus() {
-    try {
-      const res = await fetch("/api/admin/system/kill-switch");
-      if (!res.ok) return;
-      const data = await res.json();
-      const isActive = !!data.active;
-
-      const toggle = document.getElementById("toggle-subscription-kill-switch");
-      if (toggle) toggle.checked = isActive;
-
-      const pill = document.getElementById("kill-switch-status-pill");
-      const iconBox = document.getElementById("kill-switch-icon-box");
-      const bannerCard = document.getElementById("card-kill-switch-banner");
-      const overviewPill = document.getElementById("overview-kill-switch-pill");
-
-      if (isActive) {
-        if (pill) {
-          pill.className = "px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold tracking-wider bg-amber-500/20 text-amber-500 border border-amber-500/40 flex items-center gap-1.5";
-          pill.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span><span>ACTIVE (OPEN ACCESS &amp; INFINITE PITCHES)</span>`;
-        }
-        if (iconBox) {
-          iconBox.className = "w-11 h-11 rounded-xl bg-amber-500/15 border border-amber-500/40 text-amber-500 flex items-center justify-center shrink-0 mt-0.5";
-        }
-        if (bannerCard) {
-          bannerCard.classList.add("border-amber-500/40", "bg-amber-500/5");
-        }
-        if (overviewPill) {
-          overviewPill.className = "px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-amber-500/20 text-amber-500 border border-amber-500/40";
-          overviewPill.textContent = "OPEN ACCESS (INFINITE)";
-        }
-      } else {
-        if (pill) {
-          pill.className = "px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold tracking-wider bg-emerald-500/15 text-emerald-500 border border-emerald-500/30 flex items-center gap-1.5";
-          pill.innerHTML = `<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span><span>DISABLED (STANDARD RBAC ACTIVE)</span>`;
-        }
-        if (iconBox) {
-          iconBox.className = "w-11 h-11 rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-400 flex items-center justify-center shrink-0 mt-0.5";
-        }
-        if (bannerCard) {
-          bannerCard.classList.remove("border-amber-500/40", "bg-amber-500/5");
-        }
-        if (overviewPill) {
-          overviewPill.className = "px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-emerald-500/15 text-emerald-500 border border-emerald-500/30";
-          overviewPill.textContent = "STANDARD RBAC";
-        }
-      }
-    } catch (err) {
-      console.warn("Could not load kill switch status:", err);
-    }
-  }
-
   document.getElementById("toggle-subscription-kill-switch")?.addEventListener("change", async function () {
     const desiredState = this.checked;
     try {
@@ -1817,8 +1675,6 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       renderWorkflowCards();
 
-
-
       // Render Runs for selected workflow
       if (!runsTableBody) return;
 
@@ -1877,88 +1733,6 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- Modal: Run GitHub Actions Workflow Directly with Dynamic Parameters ---
   const btnTriggerWorkflow = document.getElementById("btn-trigger-selected-workflow");
   const formRunWorkflow = document.getElementById("form-run-workflow");
-
-  function renderDynamicWorkflowInputs(wf) {
-    const wrapper = document.getElementById("wf-dynamic-fields-wrapper");
-    const countBadge = document.getElementById("wf-dynamic-inputs-count");
-    if (!wrapper) return;
-
-    const inputs = (wf && Array.isArray(wf.inputs)) ? wf.inputs : [];
-
-    if (countBadge) {
-      countBadge.textContent = inputs.length > 0 
-        ? `${inputs.length} Parameter${inputs.length > 1 ? 's' : ''}`
-        : "No Parameters";
-    }
-
-    if (inputs.length === 0) {
-      wrapper.innerHTML = `
-        <div class="p-3 rounded-lg bg-surface-container-lowest border border-outline-variant/30 flex items-start gap-2.5">
-          <span class="material-symbols-outlined text-primary text-[18px] mt-0.5">info</span>
-          <div class="flex flex-col gap-0.5">
-            <span class="font-semibold text-on-surface text-xs">No Custom Parameters Required</span>
-            <span class="text-[11px] text-on-surface-variant leading-relaxed">This workflow does not require any input parameters. Click <strong>Trigger Execution</strong> to dispatch directly on the specified branch.</span>
-          </div>
-        </div>
-      `;
-      return;
-    }
-
-    wrapper.innerHTML = inputs.map(param => {
-      const pName = param.name || "";
-      const pDesc = param.description || "";
-      const pDefault = param.default !== undefined ? String(param.default) : "";
-      const pReq = !!param.required;
-      const pType = (param.type || "string").toLowerCase();
-      const options = Array.isArray(param.options) ? param.options : [];
-
-      let inputControl = "";
-
-      if (pType === "choice" || options.length > 0) {
-        const optsHtml = options.map(opt => {
-          const optStr = String(opt);
-          const isSel = (optStr === pDefault) ? "selected" : "";
-          return `<option value="${optStr}" ${isSel}>${optStr}</option>`;
-        }).join("");
-
-        inputControl = `
-          <select data-wf-param="${pName}" class="w-full px-3 py-2 bg-surface-container-lowest border border-outline-variant/40 rounded-lg text-on-surface text-xs focus:outline-none focus:border-primary">
-            ${optsHtml}
-          </select>
-        `;
-      } else if (pType === "boolean") {
-        const isChecked = (pDefault.toLowerCase() === "true");
-        inputControl = `
-          <label class="flex items-center gap-2 cursor-pointer pt-1">
-            <input type="checkbox" data-wf-param="${pName}" ${isChecked ? "checked" : ""} class="rounded border-outline-variant/50 text-primary focus:ring-primary w-4 h-4">
-            <span class="text-xs text-on-surface font-mono">${pName} (Enable / True)</span>
-          </label>
-        `;
-      } else if (pType === "number") {
-        inputControl = `
-          <input type="number" data-wf-param="${pName}" value="${pDefault}" class="w-full px-3 py-2 bg-surface-container-lowest border border-outline-variant/40 rounded-lg text-on-surface text-xs font-mono focus:outline-none focus:border-primary">
-        `;
-      } else {
-        inputControl = `
-          <input type="text" data-wf-param="${pName}" value="${pDefault}" placeholder="${pDesc ? pDesc.replace(/"/g, '&quot;') : pName}" class="w-full px-3 py-2 bg-surface-container-lowest border border-outline-variant/40 rounded-lg text-on-surface text-xs focus:outline-none focus:border-primary">
-        `;
-      }
-
-      return `
-        <div class="flex flex-col gap-1 p-2.5 rounded-lg bg-surface-container-lowest/80 border border-outline-variant/20 hover:border-outline-variant/40 transition-colors">
-          <div class="flex items-center justify-between">
-            <label class="text-on-surface font-semibold text-xs flex items-center gap-1 font-mono">
-              <span>${pName}</span>
-              ${pReq ? '<span class="text-rose-500 font-bold" title="Required">*</span>' : ''}
-            </label>
-            <span class="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-surface-container text-on-surface-variant font-medium">${pType}</span>
-          </div>
-          ${inputControl}
-          ${pDesc ? `<span class="text-[11px] text-on-surface-variant leading-snug">${pDesc}</span>` : ''}
-        </div>
-      `;
-    }).join("");
-  }
 
   btnTriggerWorkflow?.addEventListener("click", () => {
     const selectedTitle = getWorkflowDisplayName(currentSelectedWorkflow);

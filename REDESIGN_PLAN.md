@@ -1,6 +1,6 @@
 # OutreachPilot Full Redesign Plan
 
-Status: Phases 0 to 5 committed on redesign/v2 (2026-11-16). Next: Phase 6, split app.js and admin.js.
+Status: Phases 0 to 6 committed on redesign/v2 (2026-11-16). Next: Phase 7, final review.
 
 ## Ground rules
 
@@ -92,6 +92,11 @@ Each phase ends with your review. I commit to the branch only after you approve 
 ### Phase 6: Code split
 - `app.js` and `admin.js` split by feature into plain scripts loaded in order (no build step, same global scope, so behavior is identical). Example layout: `static/js/app/core.js` (state, fetch helpers), `ui.js` (dropdown, modal, toast), `companies.js`, `profile.js`, `outreach.js`, `boot.js`. Exact cut lines decided from the code at that point.
 - Pure move: no renamed functions, no changed logic. `node --check` on every file and a full click-through after each split.
+
+### Phase 6 result (2026-11-16)
+- app.js and admin.js are each one DOMContentLoaded closure whose functions share local state, so a plain-script split can only move functions that touch no shared state. A parser check (acorn) proved 24 such functions in app.js and 7 in admin.js.
+- Moved unchanged into static/js/app/ (utils, feedback, pagination, dropdown, activity, subscription, profile, theme) and static/js/admin/ (modals, controls, kill-switch, workflows), loaded before the controller. app.js 4962 to 4016 lines, admin.js 2044 to 1818.
+- Splitting the stateful controllers further needs a shared state module, which rewrites logic. Left for a separate, explicitly approved change.
 
 ### Phase 7: Final QA and handoff
 - Contract script: zero missing items across all pages.
