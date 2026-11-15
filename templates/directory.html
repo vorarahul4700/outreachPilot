@@ -155,32 +155,32 @@
       <section class="text-center space-y-4 pt-4">
         <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container-high border border-outline-variant text-xs font-mono text-secondary">
           <span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
-          <span id="dir-badge-text">Verified Indian Software &amp; IT Ecosystem</span>
+          <span id="dir-badge-text">Verified companies across {{ domains|length }} industries</span>
         </div>
         <h1 class="text-3xl sm:text-4xl md:text-5xl font-display font-bold text-primary max-w-3xl mx-auto tracking-tight leading-tight">
-          Browse <span id="dir-hero-count">{{ stats.total_companies|default(33600) }}</span> Verified <span id="dir-hero-domain">Technology</span> Companies Across India
+          Browse <span id="dir-hero-count" class="tnum">{{ "{:,}".format(stats.total_companies) }}</span> Verified <span id="dir-hero-domain"></span>Companies Across India
         </h1>
         <p id="dir-hero-subtitle" class="text-sm sm:text-base text-on-surface-variant max-w-2xl mx-auto leading-relaxed">
-          Verified company websites, direct contact emails, services offered, and real Google reviews across {{ stats.total_cities }} cities and {{ stats.total_techs }} business categories.
+          Company websites, direct contact emails and the services each company offers, across {{ stats.total_cities }} cities and {{ technologies|length }} categories.
         </p>
 
-        <!-- LIVE METRICS BAR (AEO Optimized) -->
+        <!-- Key numbers: every value comes from the live database -->
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-3xl mx-auto pt-4">
-          <div class="bento-cell p-3.5 text-center">
-            <div id="dir-stat-total" class="text-xl sm:text-2xl font-mono font-bold text-primary tnum">{{ stats.total_companies }}</div>
-            <div class="text-[11px] font-mono text-on-surface-variant uppercase tracking-wider mt-0.5">Verified Companies</div>
+          <div class="bento-cell p-4 text-center">
+            <div id="dir-stat-total" class="text-xl sm:text-2xl font-mono font-bold text-primary tnum">{{ "{:,}".format(stats.total_companies) }}</div>
+            <div class="text-[11px] font-mono text-on-surface-variant uppercase tracking-wider mt-1">Companies</div>
           </div>
-          <div class="bento-cell p-3.5 text-center">
-            <div id="dir-stat-cities" class="text-xl sm:text-2xl font-mono font-bold text-secondary tnum">{{ stats.total_cities }}</div>
-            <div class="text-[11px] font-mono text-on-surface-variant uppercase tracking-wider mt-0.5">Cities Covered</div>
+          <div class="bento-cell p-4 text-center">
+            <div id="dir-stat-emails" class="text-xl sm:text-2xl font-mono font-bold text-secondary tnum">{{ "{:,}".format(stats.email_companies) }}</div>
+            <div class="text-[11px] font-mono text-on-surface-variant uppercase tracking-wider mt-1">With a contact email</div>
           </div>
-          <div class="bento-cell p-3.5 text-center">
-            <div id="dir-stat-techs" class="text-xl sm:text-2xl font-mono font-bold text-tertiary tnum">{{ stats.total_techs }}</div>
-            <div class="text-[11px] font-mono text-on-surface-variant uppercase tracking-wider mt-0.5">Industries &amp; Tech</div>
+          <div class="bento-cell p-4 text-center">
+            <div id="dir-stat-cities" class="text-xl sm:text-2xl font-mono font-bold text-primary tnum">{{ stats.total_cities }}</div>
+            <div class="text-[11px] font-mono text-on-surface-variant uppercase tracking-wider mt-1">Cities</div>
           </div>
-          <div class="bento-cell p-3.5 text-center">
-            <div id="dir-stat-rating" class="text-xl sm:text-2xl font-mono font-bold text-primary tnum">{{ stats.avg_rating }}★</div>
-            <div class="text-[11px] font-mono text-on-surface-variant uppercase tracking-wider mt-0.5">Avg Google Rating</div>
+          <div class="bento-cell p-4 text-center">
+            <div id="dir-stat-techs" class="text-xl sm:text-2xl font-mono font-bold text-primary tnum">{{ technologies|length }}</div>
+            <div class="text-[11px] font-mono text-on-surface-variant uppercase tracking-wider mt-1">Categories</div>
           </div>
         </div>
 
@@ -263,9 +263,8 @@
               <span class="font-display font-semibold text-sm text-primary group-hover:text-secondary transition-colors">{{ t.name }}</span>
               <span class="material-symbols-outlined text-[14px] text-on-surface-variant group-hover:text-secondary group-hover:translate-x-0.5 transition-all">arrow_forward</span>
             </div>
-            <div class="flex items-center justify-between text-[11px] font-mono text-on-surface-variant mt-2 pt-2 border-t border-outline/50">
-              <span class="tnum">{{ t.count }} firms</span>
-              <span class="text-secondary">{{ t.avg_rating }}★</span>
+            <div class="text-[11px] font-mono text-on-surface-variant mt-2 pt-2 border-t border-outline/50">
+              <span class="tnum">{{ "{:,}".format(t.count) }} {{ 'company' if t.count == 1 else 'companies' }}</span>
             </div>
           </a>
           {% endfor %}
@@ -277,7 +276,7 @@
             </div>
             <h3 class="font-display font-bold text-base text-primary" id="empty-state-title">Onboarding Companies in <span id="empty-state-domain-name">Sales &amp; BPO</span></h3>
             <p id="empty-state-domain-desc" class="text-xs text-on-surface-variant max-w-md mx-auto leading-relaxed">
-              Our autonomous crawlers are currently indexing and verifying companies in this industry domain. Switch back to <strong>All Domains</strong> or <strong>IT &amp; Software</strong> to explore 33,603+ active profiles.
+              We have not added companies in this industry yet. Switch back to <strong>All Domains</strong> to browse {{ "{:,}".format(stats.total_companies) }} companies.
             </p>
             <div class="pt-2">
               <button type="button" id="btn-empty-state-reset" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-secondary bg-secondary/15 text-primary text-xs font-mono hover:bg-secondary/25 transition cursor-pointer">
@@ -293,8 +292,8 @@
       <section id="city-section" class="space-y-4">
         <div class="flex items-center justify-between border-b border-outline pb-3">
           <div>
-            <h2 class="text-xl font-display font-bold text-primary">Browse by Indian Commercial &amp; Business Hub</h2>
-            <p class="text-xs text-on-surface-variant">Verified business clusters and commercial districts across Tier 1, 2, and 3 metropolitan cities.</p>
+            <h2 class="text-xl font-display font-bold text-primary">Browse by City</h2>
+            <p class="text-xs text-on-surface-variant">Companies grouped by city, from the big metros to Tier 2 and Tier 3 cities.</p>
           </div>
           <span class="text-xs font-mono text-secondary px-2 py-0.5 rounded bg-secondary/10 border border-secondary/25" id="city-section-badge">{{ cities|length }} Cities</span>
         </div>
@@ -306,9 +305,8 @@
               <span class="font-display font-semibold text-sm text-primary group-hover:text-secondary transition-colors">{{ c.name }}</span>
               <span class="material-symbols-outlined text-[14px] text-on-surface-variant group-hover:text-secondary group-hover:translate-x-0.5 transition-all">arrow_forward</span>
             </div>
-            <div class="flex items-center justify-between text-[11px] font-mono text-on-surface-variant mt-2 pt-2 border-t border-outline/50">
-              <span class="tnum city-firm-count">{{ c.count }} firms</span>
-              <span class="text-secondary">{{ c.avg_rating }}★</span>
+            <div class="text-[11px] font-mono text-on-surface-variant mt-2 pt-2 border-t border-outline/50">
+              <span class="tnum city-firm-count">{{ "{:,}".format(c.count) }} {{ 'company' if c.count == 1 else 'companies' }}</span>
             </div>
           </a>
           {% endfor %}
@@ -395,34 +393,22 @@
     const DOMAIN_METRICS = {
       all: {
         name: "All Domains",
-        titleDomain: "Multi-Industry",
-        badge: "Verified Indian Multi-Industry Ecosystem",
-        total: {{ stats.total_companies|default(33603) }},
-        cities: {{ stats.total_cities|default(73) }},
-        specializations: {{ stats.total_techs|default(36) }},
-        rating: "{{ stats.avg_rating|default(4.3) }}★",
-        subtitle: "Deep-crawled engineering stacks, verified recruiter contacts, services breakdown, and authentic Google review sentiments across {{ stats.total_cities }} cities and {{ stats.total_techs }} specializations."
+        titleDomain: "",
+        badge: "Verified companies across {{ domains|length }} industries",
+        total: {{ stats.total_companies }},
+        emails: {{ stats.email_companies }},
+        cities: {{ stats.total_cities }},
+        subtitle: "Company websites, direct contact emails and the services each company offers, across {{ stats.total_cities }} cities and {{ technologies|length }} categories."
       },
-      it: {
-        name: "IT & Software",
-        titleDomain: "Technology",
-        badge: "Verified Indian Software & IT Ecosystem",
-        total: {{ stats.total_companies|default(33603) }},
-        cities: {{ stats.total_cities|default(73) }},
-        specializations: {{ stats.total_techs|default(36) }},
-        rating: "{{ stats.avg_rating|default(4.3) }}★",
-        subtitle: "Deep-crawled engineering stacks, verified developer & recruiter contacts, services breakdown, and authentic Google review sentiments across {{ stats.total_cities }} tech hubs."
-      },
-      {% for d in domains if d.code != 'it' %}
-      "{{ d.code }}": {
-        name: "{{ d.name }}",
-        titleDomain: "{{ d.name }}",
-        badge: "Verified Indian {{ d.name }} Ecosystem",
+      {% for d in domains %}
+      {{ d.code|tojson }}: {
+        name: {{ d.name|tojson }},
+        titleDomain: {{ d.name|tojson }},
+        badge: {{ ("Verified " ~ d.name ~ " companies in India")|tojson }},
         total: {{ d.count }},
+        emails: {{ d.emails_count }},
         cities: {% if d.count > 0 %}{{ stats.total_cities }}{% else %}0{% endif %},
-        specializations: 0,
-        rating: {% if d.count > 0 %}"{{ stats.avg_rating }}★"{% else %}"N/A"{% endif %},
-        subtitle: "{{ d.description }}"
+        subtitle: {{ d.description|tojson }}
       },
       {% endfor %}
     };
@@ -442,7 +428,7 @@
     const elDirStatTotal = document.getElementById("dir-stat-total");
     const elDirStatCities = document.getElementById("dir-stat-cities");
     const elDirStatTechs = document.getElementById("dir-stat-techs");
-    const elDirStatRating = document.getElementById("dir-stat-rating");
+    const elDirStatEmails = document.getElementById("dir-stat-emails");
 
     // Hero Elements
     const elDirHeroCount = document.getElementById("dir-hero-count");
@@ -578,8 +564,8 @@
             if (emptyStateTitle) emptyStateTitle.innerHTML = `No Specializations Found for "${q}"`;
             if (emptyStateDesc) emptyStateDesc.innerHTML = `No categories match your search term in <strong>${meta.name}</strong>. Try clearing your search query or switching to All Domains.`;
           } else {
-            if (emptyStateTitle) emptyStateTitle.innerHTML = `Onboarding Companies in <span id="empty-state-domain-name">${meta.name}</span>`;
-            if (emptyStateDesc) emptyStateDesc.innerHTML = `Our autonomous crawlers are currently indexing and verifying companies in this industry domain. Switch back to <strong>All Domains</strong> or <strong>IT & Software</strong> to explore 33,603+ active profiles.`;
+            if (emptyStateTitle) emptyStateTitle.innerHTML = `No companies in <span id="empty-state-domain-name">${meta.name}</span> yet`;
+            if (emptyStateDesc) emptyStateDesc.innerHTML = `We have not added companies in this industry yet. Switch back to <strong>All Domains</strong> to browse ${Number(DOMAIN_METRICS.all.total).toLocaleString()} companies.`;
           }
         } else {
           techEmptyState.classList.add("hidden");
@@ -599,11 +585,11 @@
       if (elDirStatTotal) elDirStatTotal.textContent = Number(meta.total || 0).toLocaleString();
       if (elDirStatCities) elDirStatCities.textContent = activeDomain === "all" ? meta.cities : activeCitiesInDomain;
       if (elDirStatTechs) elDirStatTechs.textContent = visibleTechCards;
-      if (elDirStatRating) elDirStatRating.textContent = meta.rating;
+      if (elDirStatEmails) elDirStatEmails.textContent = Number(meta.emails || 0).toLocaleString();
 
       // 6. Dynamically Synchronize Hero Headlines
       if (elDirHeroCount) elDirHeroCount.textContent = Number(meta.total || 0).toLocaleString();
-      if (elDirHeroDomain) elDirHeroDomain.textContent = meta.titleDomain || meta.name;
+      if (elDirHeroDomain) elDirHeroDomain.textContent = meta.titleDomain ? meta.titleDomain + " " : "";
       if (elDirHeroSubtitle) elDirHeroSubtitle.textContent = meta.subtitle;
       if (elDirBadgeText) elDirBadgeText.textContent = meta.badge;
     }

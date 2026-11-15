@@ -2356,31 +2356,29 @@ document.addEventListener("DOMContentLoaded", () => {
           card.className = `company-card group bg-surface-container-low border ${isSelected ? 'border-primary ring-1 ring-primary' : 'border-outline-variant/40 hover:border-outline-variant/80 hover:shadow-lg'} rounded-xl p-5 flex flex-col justify-between transition-all duration-150 relative cursor-pointer min-w-0`;
           card.innerHTML = `
             <div>
-              <!-- Part 1: Header (Checkbox + Monogram + Name/Domain + Badge) -->
-              <div class="flex items-start justify-between gap-3 mb-3">
-                <div class="flex items-start gap-2.5 min-w-0 flex-1">
-                  ${checkboxHtml}
-                  <div class="w-9 h-9 rounded-md flex items-center justify-center font-bold text-label-sm ${monoTheme.bg} border shrink-0 font-mono shadow-sm">
-                    ${monogram}
-                  </div>
-                  <div class="min-w-0 flex-1">
-                    <div class="flex items-start justify-between gap-1.5">
-                      <h3 class="text-headline-sm font-headline-sm text-on-surface font-semibold break-words line-clamp-2 leading-snug" title="${escapeHTML(c.name)}">${escapeHTML(c.name)}</h3>
-                      <a class="text-on-surface-variant hover:text-primary transition-colors shrink-0 mt-0.5" href="${c.website_url || 'https://' + c.domain}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();" title="Visit website">
-                        <span class="material-symbols-outlined text-[14px]">open_in_new</span>
-                      </a>
-                    </div>
-                    <div class="flex items-center gap-2 mt-1 flex-wrap">
-                      <span class="text-caption font-mono text-on-surface-variant truncate block">${escapeHTML(c.domain || '')}</span>
-                      ${c.industry_domain ? `<span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-surface-container border border-outline-variant/40 text-on-surface-variant shrink-0">${escapeHTML(c.industry_domain)}</span>` : ''}
-                      ${ratingDisplay}
-                    </div>
-                  </div>
+              <!-- Part 1: Identity (Checkbox + Monogram + Name/Domain). Only the exclude
+                   control sits top-right so the name gets the full column width. -->
+              <div class="flex items-start gap-2.5 mb-2.5">
+                ${checkboxHtml}
+                <div class="w-9 h-9 rounded-md flex items-center justify-center font-bold text-label-sm ${monoTheme.bg} border shrink-0 font-mono shadow-sm">
+                  ${monogram}
                 </div>
-                <div class="flex items-center gap-1.5 shrink-0 pt-0.5">
-                  ${statusBadge}
-                  ${excludeBtn}
+                <div class="min-w-0 flex-1">
+                  <h3 class="text-headline-sm font-headline-sm text-on-surface font-semibold break-words line-clamp-2 leading-snug" title="${escapeHTML(c.name)}">${escapeHTML(c.name)}</h3>
+                  ${c.domain ? `
+                  <a class="inline-flex items-center gap-1 max-w-full mt-0.5 text-caption font-mono text-on-surface-variant hover:text-primary transition-colors" href="${c.website_url || 'https://' + c.domain}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();" title="Visit ${escapeHTML(c.domain)}">
+                    <span class="truncate">${escapeHTML(c.domain)}</span>
+                    <span class="material-symbols-outlined text-[13px] shrink-0">open_in_new</span>
+                  </a>` : ''}
                 </div>
+                ${excludeBtn ? `<div class="shrink-0 -mt-0.5 -mr-1">${excludeBtn}</div>` : ''}
+              </div>
+
+              <!-- Part 1b: Meta line (status, industry, rating) on its own full-width row -->
+              <div class="flex items-center gap-x-2 gap-y-1.5 flex-wrap mb-3">
+                ${statusBadge}
+                ${c.industry_domain ? `<span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-surface-container border border-outline-variant/40 text-on-surface-variant max-w-full truncate" title="${escapeHTML(c.industry_domain)}">${escapeHTML(c.industry_domain)}</span>` : ''}
+                ${ratingDisplay}
               </div>
 
               <!-- Part 2: Description (Rendered only if actual description or AI summary exists) -->
@@ -2412,13 +2410,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
             <!-- Part 4: Tactile Action Buttons (Milled Hardware Look with rest-state subtle pitch button) -->
             <div class="grid grid-cols-2 gap-2 mt-auto pt-3.5 border-t border-outline-variant/30">
-              <button type="button" class="btn-single-details btn-tactile-slate px-3 py-2 rounded text-label-sm font-label-sm font-semibold transition-all text-center cursor-pointer flex items-center justify-center gap-1.5 text-on-surface">
-                <span class="material-symbols-outlined text-[16px]">visibility</span>
-                <span class="text-on-surface">View Intel</span>
+              <button type="button" class="btn-single-details btn-tactile-slate px-2 py-2 rounded text-label-sm font-label-sm font-semibold transition-all text-center cursor-pointer flex items-center justify-center gap-1 whitespace-nowrap min-w-0 text-on-surface">
+                <span class="material-symbols-outlined text-[16px] shrink-0">visibility</span>
+                <span class="text-on-surface truncate">View Intel</span>
               </button>
-              <button type="button" class="btn-single-pitch btn-card-pitch px-3 py-2 rounded text-label-sm font-label-sm font-semibold transition-all text-center cursor-pointer flex items-center justify-center gap-1.5">
-                <span class="material-symbols-outlined text-[16px]">send</span>
-                <span>Draft Pitch</span>
+              <button type="button" class="btn-single-pitch btn-card-pitch px-2 py-2 rounded text-label-sm font-label-sm font-semibold transition-all text-center cursor-pointer flex items-center justify-center gap-1 whitespace-nowrap min-w-0">
+                <span class="material-symbols-outlined text-[16px] shrink-0">send</span>
+                <span class="truncate">Draft Pitch</span>
               </button>
             </div>
           `;

@@ -20,7 +20,7 @@ from collections import defaultdict
 from typing import Any, Optional
 from urllib.parse import quote, urlparse
 from fastapi import Request
-from sqlalchemy import func, or_, text
+from sqlalchemy import String, func, or_, text
 from sqlalchemy.orm import Session, joinedload
 
 import config
@@ -716,22 +716,22 @@ def get_directory_stats(db: Session) -> dict[str, Any]:
             COUNT(*) FILTER (WHERE is_invalid = FALSE AND is_enriched = TRUE) AS enriched_companies,
             COUNT(DISTINCT NULLIF(trim(lower(city)), '')) FILTER (WHERE is_invalid = FALSE) AS total_cities,
             COUNT(DISTINCT NULLIF(trim(lower(search_keyword)), '')) FILTER (WHERE is_invalid = FALSE) AS total_techs,
-            ROUND((AVG(rating) FILTER (WHERE is_invalid = FALSE AND rating > 0))::numeric, 1) AS avg_rating
+            ROUND((AVG(rating) FILTER (WHERE is_invalid = FALSE AND rating > 0))::numeric, 1) AS avg_rating,
+            COUNT(*) FILTER (
+                WHERE is_invalid = FALSE
+                  AND EXISTS (SELECT 1 FROM company_emails ce WHERE ce.company_id = companies.id)
+            ) AS email_companies
         FROM companies;
     """)).fetchone()
 
-    total_comps = row[0] if row else 33603
-    enriched = row[1] if row else 2110
-    total_cities = row[2] if row else 73
-    total_techs = row[3] if row else 36
-    avg_rating = float(row[4] or 4.3)
-
+    # Real values only: no invented fallbacks if the query returns nothing.
     stats = {
-        "total_companies": total_comps,
-        "enriched_companies": enriched,
-        "total_cities": total_cities,
-        "total_techs": total_techs,
-        "avg_rating": avg_rating
+        "total_companies": int(row[0] or 0) if row else 0,
+        "enriched_companies": int(row[1] or 0) if row else 0,
+        "total_cities": int(row[2] or 0) if row else 0,
+        "total_techs": int(row[3] or 0) if row else 0,
+        "avg_rating": float(row[4]) if row and row[4] is not None else None,
+        "email_companies": int(row[5] or 0) if row else 0,
     }
     set_cached("stats", stats)
     return stats
@@ -802,7 +802,7 @@ def get_all_cities(db: Session) -> list[dict[str, Any]]:
             "name": name,
             "slug": city_to_slug(name),
             "count": total_cnt,
-            "avg_rating": float(r[2] or 4.2),
+            "avg_rating": float(r[2]) if r[2] is not None else None,
             "domain_counts": domain_dict
         })
 
@@ -827,10 +827,14 @@ def get_all_categories(db: Session) -> list[dict[str, Any]]:
         return cached
 
     rows = db.execute(text("""
-        SELECT 
+        SELECT
             COALESCE(NULLIF(trim(normalized_keyword), ''), trim(search_keyword)) AS raw_kw,
             COUNT(*) AS count,
-            ROUND((AVG(rating) FILTER (WHERE is_invalid = FALSE AND rating > 0))::numeric, 1) AS avg_rating
+            ROUND((AVG(rating) FILTER (WHERE is_invalid = FALSE AND rating > 0))::numeric, 1) AS avg_rating,
+            COUNT(*) FILTER (WHERE is_enriched = TRUE) AS enriched_count,
+            COUNT(*) FILTER (
+                WHERE EXISTS (SELECT 1 FROM company_emails ce WHERE ce.company_id = companies.id)
+            ) AS emails_count
         FROM companies
         WHERE is_invalid = FALSE 
           AND (
@@ -860,6 +864,8 @@ def get_all_categories(db: Session) -> list[dict[str, Any]]:
             for existing in results:
                 if existing["slug"] == slug:
                     existing["count"] += r[1]
+                    existing["enriched_count"] += int(r[3] or 0)
+                    existing["emails_count"] += int(r[4] or 0)
                     break
             continue
 
@@ -871,7 +877,9 @@ def get_all_categories(db: Session) -> list[dict[str, Any]]:
             "domain": get_category_domain(display_name),
             "domain_code": get_category_domain_code(display_name),
             "count": r[1],
-            "avg_rating": float(r[2] or 4.3)
+            "avg_rating": float(r[2]) if r[2] is not None else None,
+            "enriched_count": int(r[3] or 0),
+            "emails_count": int(r[4] or 0),
         })
         slug_category_map[slug] = display_name
         category_slug_map[display_name.lower()] = slug
@@ -895,28 +903,38 @@ def get_all_domains(db: Session = None) -> list[dict[str, Any]]:
     """
     categories = get_all_categories(db) if db else []
     domain_counts = defaultdict(int)
+    domain_enriched = defaultdict(int)
+    domain_emails = defaultdict(int)
     for cat in categories:
         d_code = cat.get("domain_code", "it")
         if d_code != "it" and d_code != "all":
             domain_counts[d_code] += cat.get("count", 0)
+            domain_enriched[d_code] += cat.get("enriched_count", 0)
+            domain_emails[d_code] += cat.get("emails_count", 0)
 
     stats = get_directory_stats(db) if db else {}
     total_companies = stats.get("total_companies", 0) if stats else 0
-    non_it_total = sum(domain_counts.values())
-    domain_counts["it"] = max(0, total_companies - non_it_total) if total_companies > 0 else 0
+    total_enriched = stats.get("enriched_companies", 0) if stats else 0
+    total_emails = stats.get("email_companies", 0) if stats else 0
+
+    # IT is everything not classified into another domain, so all three counts
+    # (companies, AI-researched, with email) stay consistent with the totals.
+    domain_counts["it"] = max(0, total_companies - sum(domain_counts.values()))
+    domain_enriched["it"] = max(0, total_enriched - sum(domain_enriched.values()))
+    domain_emails["it"] = max(0, total_emails - sum(domain_emails.values()))
 
     domain_list = []
     for d in INDUSTRY_DOMAINS:
-        d_cnt = domain_counts.get(d["code"], 0)
+        code = d["code"]
         domain_list.append({
             "name": d["name"],
             "slug": d["slug"],
-            "code": d["code"],
+            "code": code,
             "icon": d["icon"],
             "description": d["description"],
-            "count": d_cnt,
-            "enriched_count": 2110 if d["code"] == "it" else 0,
-            "emails_count": 1663 if d["code"] == "it" else 0
+            "count": domain_counts.get(code, 0),
+            "enriched_count": domain_enriched.get(code, 0),
+            "emails_count": domain_emails.get(code, 0),
         })
     return domain_list
 
@@ -966,7 +984,7 @@ def get_all_combinations(db: Session) -> list[dict[str, Any]]:
             "tech_name": disp_cat,
             "tech_slug": t_slug,
             "count": r[2],
-            "avg_rating": float(r[3] or 4.2)
+            "avg_rating": float(r[3]) if r[3] is not None else None
         }
         seen[combo_key] = entry
         combos.append(entry)
@@ -1392,8 +1410,11 @@ def generate_llms_full_txt(base_url: str, db: Session) -> str:
     cities = get_all_cities(db)
     techs = get_all_technologies(db)
 
-    cities_bullets = "\n".join([f"- {c['name']} (`{base_url}/directory/city/{c['slug']}`): {c['count']} companies, {c['avg_rating']}★ average" for c in cities])
-    techs_bullets = "\n".join([f"- {t['name']} (`{base_url}/directory/category/{t['slug']}`): {t['count']} companies, {t['avg_rating']}★ average — {t.get('domain', 'Business Specialization')}" for t in techs])
+    def _rating_part(item):
+        return f", {item['avg_rating']}★ average" if item.get("avg_rating") is not None else ""
+
+    cities_bullets = "\n".join([f"- {c['name']} (`{base_url}/directory/city/{c['slug']}`): {c['count']} companies{_rating_part(c)}" for c in cities])
+    techs_bullets = "\n".join([f"- {t['name']} (`{base_url}/directory/category/{t['slug']}`): {t['count']} companies{_rating_part(t)} — {t.get('domain', 'Business Specialization')}" for t in techs])
 
     return f"""# OutreachPilot — Comprehensive LLM Intelligence Knowledge Base
 

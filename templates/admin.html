@@ -807,7 +807,8 @@
         <div class="flex items-center gap-3 shrink-0 self-end md:self-center">
           <label class="relative inline-flex items-center cursor-pointer select-none" title="Toggle Subscription &amp; RBAC Kill Switch">
             <input type="checkbox" id="toggle-subscription-kill-switch" class="sr-only peer">
-            <div class="w-12 h-6.5 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500 shadow-inner"></div>
+            <!-- Track: explicit 48x26 size (h-6.5 is not a Tailwind class, so the track used to render at 0 height and only the knob showed). -->
+            <div class="relative w-12 h-[26px] rounded-full border border-outline bg-outline-variant transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-primary/50 peer-checked:bg-amber-500 peer-checked:border-amber-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:border after:border-outline-variant after:shadow after:transition-transform peer-checked:after:translate-x-[22px] peer-checked:after:border-white"></div>
           </label>
         </div>
       </div>
