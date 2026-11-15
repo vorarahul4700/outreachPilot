@@ -1,0 +1,47 @@
+{#- Shared layout for the privacy policy and terms of service.
+    Pages fill: legal_title_text, legal_lead, legal_updated, legal_status,
+    legal_highlights and legal_sections. Each section is an
+    <article class="legal-section" id="..."> with an <h2>; the
+    table of contents is built from those. -#}
+{% extends "base.html" %}
+{% set page_css = ["legal.css"] %}
+
+{% block body_class %}page-legal{% endblock %}
+
+{% block content %}
+<section class="legal-hero">
+  <div class="legal-hero-bg bg-dots bg-dots-fade" aria-hidden="true"></div>
+  <div class="container">
+    <div class="legal-switch segmented" role="navigation" aria-label="Legal pages">
+      <a href="/terms"{% if legal_active == "terms" %} class="is-active" aria-current="page"{% endif %}>Terms</a>
+      <a href="/privacy"{% if legal_active == "privacy" %} class="is-active" aria-current="page"{% endif %}>Privacy</a>
+    </div>
+    <span class="eyebrow reveal">Legal</span>
+    <h1 class="h1 reveal" style="--d:.05s">{% block legal_title_text %}{% endblock %}</h1>
+    <p class="lead reveal" style="--d:.1s">{% block legal_lead %}{% endblock %}</p>
+    <div class="legal-meta reveal" style="--d:.15s">
+      <span class="badge badge-outline"><span class="material-symbols-outlined" aria-hidden="true">event</span>{% block legal_updated %}{% endblock %}</span>
+      <span class="badge badge-accent"><span class="material-symbols-outlined" aria-hidden="true">verified</span>{% block legal_status %}{% endblock %}</span>
+    </div>
+    <div class="legal-highlights reveal-stagger">
+      {% block legal_highlights %}{% endblock %}
+    </div>
+  </div>
+</section>
+
+<section class="section tight">
+  <div class="container legal-layout">
+    <aside class="legal-toc" aria-label="On this page">
+      <span class="legal-toc-title">On this page</span>
+      <nav id="legal-toc-links"></nav>
+    </aside>
+    <div class="legal-body">
+      {% block legal_sections %}{% endblock %}
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/site/legal-toc.js?v={{ asset_v }}" defer></script>
+{% endblock %}

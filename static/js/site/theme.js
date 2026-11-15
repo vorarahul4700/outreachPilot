@@ -48,3 +48,8 @@ function toggleTheme() {
     });
   }
 })();
+
+/* Older name used by the maintenance page; kept so nothing that calls it breaks. */
+function updateIcon() {
+  updateThemeIcon(document.documentElement.classList.contains("light") ? "light" : "dark");
+}

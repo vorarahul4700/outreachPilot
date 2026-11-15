@@ -1,0 +1,59 @@
+{#- Layout for 404, error and maintenance pages: a slim header, a centered
+    card on a map texture, and a small footer. Pages fill: system_mark
+    (big display text), system_title (h2), system_message, system_extra,
+    system_actions. Set system_home before extending to change where the
+    header link goes (default "/app"). -#}
+{% extends "base.html" %}
+{% set page_css = ["system.css"] %}
+
+{% block body_class %}page-system{% endblock %}
+
+{% block nav %}
+<header class="site-nav sys-nav">
+  <div class="container nav-inner">
+    <a href="{{ system_logo_href if system_logo_href is defined else '/app' }}" class="logo" aria-label="OutreachPilot">
+      <span class="logo-mark"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#logo-plane"/></svg></span>
+      <span class="logo-word">{{ project_name | default("OutreachPilot") }}</span>
+    </a>
+    <div class="nav-actions">
+      <button id="btn-theme-toggle" type="button" class="icon-btn theme-toggle" aria-label="Switch to dark mode" title="Switch to dark mode">
+        <span id="theme-toggle-icon" class="material-symbols-outlined" aria-hidden="true">dark_mode</span>
+      </button>
+      {% block system_nav_link %}<a href="/app" class="btn btn-secondary btn-sm"><span class="material-symbols-outlined" aria-hidden="true">domain</span><span class="hide-xs">Workspace</span></a>{% endblock %}
+    </div>
+  </div>
+</header>
+{% endblock %}
+
+{% block content %}
+<section class="sys">
+  <div class="sys-bg bg-dots bg-dots-fade" aria-hidden="true"></div>
+  <svg class="sys-route" viewBox="0 0 600 300" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M20 260 C 160 240, 180 80, 320 110 S 520 60, 580 30" />
+  </svg>
+  <div class="container narrow">
+    <div class="sys-card reveal">
+      {% block system_mark %}{% endblock %}
+      {% block system_title %}{% endblock %}
+      <p class="sys-msg">{% block system_message %}{% endblock %}</p>
+      {% block system_extra %}{% endblock %}
+      <div class="sys-actions">{% block system_actions %}{% endblock %}</div>
+    </div>
+  </div>
+</section>
+{% endblock %}
+
+{% block footer %}
+<footer class="sys-foot">
+  <div class="container spread">
+    <span>{% block system_footer_text %}OutreachPilot{% endblock %}</span>
+    {% block system_footer_links %}
+    <nav class="cluster" style="--cluster:18px" aria-label="Footer">
+      <a href="/terms">Terms</a>
+      <a href="/privacy">Privacy</a>
+      <a href="mailto:support@outreachpilot.in">Support</a>
+    </nav>
+    {% endblock %}
+  </div>
+</footer>
+{% endblock %}

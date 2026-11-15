@@ -1,6 +1,6 @@
 # OutreachPilot Full Redesign Plan
 
-Status: Phase 0 and Phase 1 done, awaiting review (2026-11-15). Nothing committed yet.
+Status: Phases 0 and 1 committed (3b723b7). Phase 2 (public pages) built, awaiting review (2026-11-15).
 
 ## Ground rules
 

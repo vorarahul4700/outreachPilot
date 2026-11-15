@@ -1,29 +1,11 @@
-<!DOCTYPE html>
-<html class="dark" lang="en">
-<head>
-  <meta charset="utf-8"/>
-  <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg">
-  <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
-  <link rel="shortcut icon" href="/static/favicon.ico">
-  <link rel="apple-touch-icon" sizes="180x180" href="/static/favicon.ico">
-  <script>
-    (function() {
-      try {
-        const saved = localStorage.getItem('pilot_theme');
-        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const theme = saved ? saved : 'light'; /* default: light */
-        if (theme === 'light') {
-          document.documentElement.classList.remove('dark');
-          document.documentElement.classList.add('light');
-        } else {
-          document.documentElement.classList.add('dark');
-          document.documentElement.classList.remove('light');
-        }
-      } catch (e) {}
-    })();
-  </script>
-  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-  <title>OutreachPilot - Find Verified Companies, Decision-Maker Emails &amp; Send Cold Outreach</title>
+{% extends "base.html" %}
+{% import "macros/ui.html" as ui %}
+{% set nav_prefix = "" %}
+{% set page_css = ["landing.css"] %}
+
+{% block title %}OutreachPilot - Find Verified Companies, Decision-Maker Emails &amp; Send Cold Outreach{% endblock %}
+
+{% block meta %}
   <meta name="description" content="Find verified local businesses on Google Maps, discover real contact emails and tech stacks, and send personalized cold emails directly from your Gmail with one click."/>
   <link rel="canonical" href="https://outreachpilot.in/"/>
   <meta name="robots" content="index, follow, max-image-preview:large"/>
@@ -64,1129 +46,495 @@
     ]
   }
   </script>
+{% endblock %}
 
-  <!-- High-Performance Self-Hosted Typography & SEO Font Preloading (Fast LCP & Zero CLS) -->
-  <link rel="preload" href="/static/fonts/spacegrotesk-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="/static/fonts/dmsans-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="/static/css/fonts.css">
+{% block body_class %}page-landing{% endblock %}
 
-  <!-- Core Design System CSS -->
-  <link rel="stylesheet" href="/static/css/style.css?v=9.0">
+{% block content %}
+{% set free_plan = tiers|selectattr('price_inr', 'equalto', 0)|first %}
 
-  <!-- Tailwind CSS -->
-  <script src="https://cdn.tailwindcss.com/3.4.17?plugins=forms@0.5.10"></script>
-  <script>
-    tailwind.config = {
-      darkMode: "class",
-      theme: {
-        extend: {
-          colors: {
-            "background": "rgb(var(--color-background) / <alpha-value>)",
-            "on-background": "rgb(var(--color-on-background) / <alpha-value>)",
-            "surface": "rgb(var(--color-surface) / <alpha-value>)",
-            "surface-dim": "rgb(var(--color-surface-dim) / <alpha-value>)",
-            "surface-bright": "rgb(var(--color-surface-bright) / <alpha-value>)",
-            "surface-container-lowest": "rgb(var(--color-surface-container-lowest) / <alpha-value>)",
-            "surface-container-low": "rgb(var(--color-surface-container-low) / <alpha-value>)",
-            "surface-container": "rgb(var(--color-surface-container) / <alpha-value>)",
-            "surface-container-high": "rgb(var(--color-surface-container-high) / <alpha-value>)",
-            "surface-container-highest": "rgb(var(--color-surface-container-highest) / <alpha-value>)",
-            "surface-variant": "rgb(var(--color-surface-variant) / <alpha-value>)",
-            "outline": "rgb(var(--color-outline) / <alpha-value>)",
-            "outline-variant": "rgb(var(--color-outline-variant) / <alpha-value>)",
-            "primary": "rgb(var(--color-primary) / <alpha-value>)",
-            "primary-container": "rgb(var(--color-primary-container) / <alpha-value>)",
-            "primary-muted": "rgb(var(--color-primary) / 0.8)",
-            "on-primary": "rgb(var(--color-on-primary) / <alpha-value>)",
-            "on-surface": "rgb(var(--color-on-surface) / <alpha-value>)",
-            "on-surface-variant": "rgb(var(--color-on-surface-variant) / <alpha-value>)",
-            "secondary": "rgb(var(--color-secondary) / <alpha-value>)",
-            "secondary-container": "rgb(var(--color-secondary-container) / <alpha-value>)",
-            "tertiary": "rgb(var(--color-tertiary) / <alpha-value>)",
-            "error": "rgb(var(--color-error) / <alpha-value>)"
-          },
-          fontFamily: {
-            display: ["Space Grotesk", "-apple-system", "sans-serif"],
-            sans: ["DM Sans", "-apple-system", "sans-serif"],
-            mono: ["JetBrains Mono", "monospace"]
-          }
-        }
-      }
-    };
-  </script>
-  <style>
-    html {
-      scroll-behavior: smooth;
-    }
-    .material-symbols-outlined {
-      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-      display: inline-block;
-      vertical-align: middle;
-      line-height: 1;
-    }
-    .tnum {
-      font-variant-numeric: tabular-nums;
-    }
+<!-- ===================== Hero ===================== -->
+<section class="hero" id="top">
+  <div class="hero-bg" aria-hidden="true"><canvas id="hero-canvas" class="hero-canvas"></canvas></div>
 
-    /* Milled Tactile Hardware Buttons */
-    .btn-tactile-ecru {
-      background-color: #EFECE6;
-      color: #111317;
-      border: 1px solid #EFECE6;
-      font-weight: 600;
-      transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    .btn-tactile-ecru:hover {
-      background-color: #DFDCD5;
-      border-color: #DFDCD5;
-      transform: translateY(-1px);
-      box-shadow: 0 4px 16px rgba(239, 236, 230, 0.15);
-    }
-    .btn-tactile-ecru:active {
-      transform: translateY(0);
-    }
+  <div class="container hero-inner">
+    <a class="announce reveal" href="/directory">
+      <span class="announce-tag"><span class="dot dot-live"></span>Directory</span>
+      <span>Real companies across Indian cities, ready to browse<span class="hide-sm"> before you sign in</span></span>
+      <svg class="ico ico-sm" aria-hidden="true"><use href="#i-arrow"/></svg>
+    </a>
 
-    .btn-tactile-slate {
-      background-color: rgb(var(--color-surface-container-high));
-      color: rgb(var(--color-on-surface));
-      border: 1px solid rgb(var(--color-outline));
-      font-weight: 500;
-      transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
-    }
-    .btn-tactile-slate:hover {
-      background-color: rgb(var(--color-surface-container-highest));
-      border-color: rgb(var(--color-outline-variant));
-      color: rgb(var(--color-primary));
-      transform: translateY(-1px);
-    }
-    .btn-tactile-slate:hover * {
-      color: rgb(var(--color-primary)) !important;
-    }
-    .btn-tactile-slate:active {
-      transform: translateY(0);
-    }
+    <h1 class="display hero-title reveal" style="--d:.06s">
+      <span class="line">Your next <span class="rotator" aria-hidden="true"><span class="is-current">job offer</span><span>client</span><span>project</span><span>reply</span></span></span>
+      <span class="line">is already <span class="map-word">on the map<svg class="map-pin" viewBox="0 0 24 30" aria-hidden="true"><path d="M12 29S2 19.7 2 12a10 10 0 0 1 20 0c0 7.7-10 17-10 17z" fill="currentColor"/><circle cx="12" cy="12" r="4" fill="var(--surface)"/></svg></span>.</span>
+      <span class="sr-only">Find real businesses. Get direct emails. Start conversations that actually get replies.</span>
+    </h1>
 
-    /* Bento Card Elevations */
-    .bento-cell {
-      background-color: rgb(var(--color-surface-container-low));
-      border: 1px solid rgb(var(--color-outline));
-      border-radius: 0.75rem;
-      transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
-    }
-    .bento-cell:hover {
-      border-color: rgb(var(--color-outline-variant));
-      box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.25);
-    }
+    <p class="lead hero-lead reveal" style="--d:.12s">Search any city and industry to find verified companies on Google Maps. OutreachPilot uncovers real decision-maker emails, learns what each company does, and drafts a personal email you send straight from <strong>your own Gmail</strong>.</p>
 
-    /* Syntax highlight token */
-    .syntax-token {
-      background: rgba(134, 178, 155, 0.15);
-      border: 1px solid rgba(134, 178, 155, 0.35);
-      color: rgb(var(--color-secondary));
-      border-radius: 4px;
-      padding: 1px 6px;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 11px;
-      display: inline-block;
-    }
+    <div class="hero-cta reveal" style="--d:.18s">
+      <a href="/app" class="btn btn-primary btn-lg">{{ ui.icon("travel_explore") }}<span>Start finding leads free</span></a>
+      <a href="#specimen-lab" class="btn btn-secondary btn-lg"><span>See how it works</span><svg class="ico ico-sm arrow" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+    </div>
 
-    /* Scrollbars */
-    ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
-    ::-webkit-scrollbar-track {
-      background: rgb(var(--color-surface));
-    }
-    ::-webkit-scrollbar-thumb {
-      background: rgb(var(--color-outline));
-      border-radius: 3px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: rgb(var(--color-outline-variant));
-    }
-  </style>
-</head>
-<body class="bg-surface text-on-surface font-sans antialiased selection:bg-[#EFECE6] selection:text-[#111317] min-h-screen flex flex-col justify-between">
+    <ul class="trust reveal" style="--d:.24s" role="list">
+      <li><svg class="g-logo" aria-hidden="true"><use href="#i-google"/></svg>Official Google Sign-In</li>
+      <li>{{ ui.icon("mark_email_read") }}Sends from your real Gmail</li>
+      <li>{{ ui.icon("check_circle") }}Free to search</li>
+    </ul>
+  </div>
 
-  <!-- TOP APP NAVIGATION BAR -->
-  <header class="bg-surface/90 backdrop-blur-md sticky top-0 z-50 border-b border-outline">
-    <div class="flex justify-between items-center w-full px-4 sm:px-6 max-w-7xl mx-auto h-16 gap-3">
-      
-      <!-- Brand -->
-      <div class="flex items-center gap-3 shrink-0">
-        <a class="flex items-center gap-2.5 group shrink-0" href="/">
-          <div class="w-8 h-8 rounded-lg bg-surface-container-high border border-outline-variant flex items-center justify-center text-primary group-hover:border-primary transition-colors shrink-0">
-            <span class="material-symbols-outlined text-[19px]">rocket_launch</span>
-          </div>
-          <span class="text-base font-bold font-display tracking-tight text-primary whitespace-nowrap">OutreachPilot</span>
-        </a>
+  <!-- Animated product preview (sample data, decorative) -->
+  <div class="container wide">
+    <div class="console reveal" style="--d:.3s" id="hero-console" aria-label="Sample preview of OutreachPilot finding companies and drafting an email" role="img">
+      <div class="window-bar">
+        <span class="window-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span class="window-url">{{ ui.icon("lock", "xs-ic") }}<b>outreachpilot.in</b>/app</span>
+        <span class="badge badge-outline">Sample preview</span>
       </div>
 
-      <!-- Navigation Anchors -->
-      <nav class="hidden lg:flex items-center gap-4 xl:gap-6 text-xs font-mono text-on-surface-variant whitespace-nowrap shrink-0">
-        <a class="text-primary font-medium hover:text-secondary transition-colors flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-surface-container/60 border border-outline-variant/30 hover:border-secondary/40 whitespace-nowrap" href="/directory">
-          <span class="material-symbols-outlined text-[15px] text-secondary">apartment</span>
-          <span>B2B Directory</span>
-        </a>
-        <a class="hover:text-primary transition-colors whitespace-nowrap" href="#specimen-lab">
-          <span class="hidden xl:inline text-secondary/70">01 / </span>Demo
-        </a>
-        <a class="hover:text-primary transition-colors whitespace-nowrap" href="#capabilities">
-          <span class="hidden xl:inline text-secondary/70">02 / </span>Features
-        </a>
-        <a class="hover:text-primary transition-colors whitespace-nowrap" href="#workflow">
-          <span class="hidden xl:inline text-secondary/70">03 / </span>How It Works
-        </a>
-        <a class="hover:text-primary transition-colors whitespace-nowrap" href="#security">
-          <span class="hidden xl:inline text-secondary/70">04 / </span>Safe Gmail
-        </a>
-        {% if not subscription_kill_switch %}
-        <a class="hover:text-primary transition-colors whitespace-nowrap" href="#pricing">
-          <span class="hidden xl:inline text-secondary/70">05 / </span>Pricing
-        </a>
-        {% endif %}
-      </nav>
-
-      <!-- Right Action Cluster -->
-      <div class="flex items-center gap-2 sm:gap-3 shrink-0 whitespace-nowrap">
-        <!-- Tablet/Mobile Directory Quick Link (when full nav is hidden) -->
-        <a href="/directory" class="lg:hidden flex items-center gap-1 px-2.5 py-1.5 rounded-lg border border-outline text-on-surface-variant hover:text-primary text-xs font-mono font-medium transition-colors whitespace-nowrap shrink-0">
-          <span class="material-symbols-outlined text-[15px] text-secondary">apartment</span>
-          <span class="hidden sm:inline">Directory</span>
-        </a>
-
-        <!-- Dark / Light Theme Toggle Button (Sun / Moon icon only) -->
-        <button id="btn-theme-toggle" type="button" aria-label="Toggle Light / Dark Mode" class="w-8 h-8 rounded-lg flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container border border-outline-variant/40 transition cursor-pointer shrink-0" title="Toggle Light / Dark Mode">
-          <span id="theme-toggle-icon" class="material-symbols-outlined text-[19px]">light_mode</span>
-        </button>
-
-        {% if is_logged_in %}
-        <!-- Logged in: one action. "Find Leads Free" also pointed at /app, so it was a duplicate. -->
-        <a href="/app" class="btn-tactile-ecru flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold cursor-pointer whitespace-nowrap shrink-0">
-          <span class="material-symbols-outlined text-[15px] shrink-0">dashboard</span>
-          <span>Open Workspace</span>
-        </a>
-        {% else %}
-        <a href="/auth/google/login" class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg border border-outline text-on-surface-variant hover:text-primary hover:border-outline-variant text-xs font-mono font-medium transition-colors whitespace-nowrap shrink-0">
-          <svg class="w-3.5 h-3.5 shrink-0" viewBox="0 0 24 24">
-            <path d="M12 5c1.6 0 3 .6 4.1 1.6l3.1-3.1C17.3 1.7 14.8 1 12 1 7.5 1 3.7 3.6 1.9 7.3l3.7 2.9C6.5 7.4 9 5 12 5z" fill="#EA4335"></path>
-            <path d="M23.5 12.3c0-.8-.1-1.6-.2-2.3H12v4.5h6.5c-.3 1.5-1.1 2.8-2.4 3.7l3.7 2.9c2.2-2 3.7-5.1 3.7-8.8z" fill="#4285F4"></path>
-            <path d="M5.6 14.8c-.2-.7-.4-1.5-.4-2.3s.2-1.6.4-2.3L1.9 7.3C.7 9.7 0 12.3 0 15.2s.7 5.5 1.9 7.9l3.7-2.9z" fill="#FBBC05"></path>
-            <path d="M12 23.5c3.2 0 6-1.1 8-3l-3.7-2.9c-1.1.7-2.5 1.2-4.3 1.2-3 0-5.5-2.4-6.4-5.2L1.9 16.5C3.7 20.2 7.5 23.5 12 23.5z" fill="#34A853"></path>
+      <div class="console-body">
+        <div class="c-map" aria-hidden="true">
+          <svg class="roads" viewBox="0 0 320 400" preserveAspectRatio="xMidYMid slice">
+            <path class="water" d="M-20 260c40-22 78-6 112 6s70 18 104-6 62-34 140-20v50c-46-10-74 6-108 28s-80 22-118 6-66-24-130-6z"/>
+            <rect class="park" x="26" y="48" width="78" height="60" rx="14"/>
+            <rect class="park" x="206" y="330" width="90" height="56" rx="14"/>
+            <rect class="park" x="214" y="120" width="56" height="44" rx="12"/>
+            <g class="r-minor"><path d="M0 34h320M0 120h320M0 196h320M0 330h320M40 0v400M120 0v400M196 0v400M276 0v400M0 230l130-70M150 400l170-120M70 0l40 130"/></g>
+            <g class="r-major"><path d="M-10 160c100-25 190 30 340-15"/><path d="M168-10c-12 110 22 210-6 300s-10 80 4 120"/></g>
           </svg>
-          <span class="whitespace-nowrap">Sign In</span>
-        </a>
-        <a href="/app" class="btn-tactile-ecru flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold cursor-pointer whitespace-nowrap shrink-0">
-          <span>Find Leads Free</span>
-          <span class="material-symbols-outlined text-[15px] shrink-0">arrow_forward</span>
-        </a>
-        {% endif %}
-      </div>
-    </div>
-  </header>
-
-  <!-- MAIN BODY -->
-  <main class="flex-grow flex flex-col items-center w-full">
-
-    <!-- HERO SECTION (Wide Editorial Anti-Slop Headline) -->
-    <section class="w-full max-w-5xl px-6 pt-16 md:pt-24 pb-14 flex flex-col items-center text-center">
-      
-      <!-- Kicker Chip -->
-      <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container-high border border-outline-variant mb-6">
-        <span class="w-2 h-2 rounded-full bg-secondary"></span>
-        <span class="text-xs font-mono text-on-surface tracking-wider font-semibold uppercase">AI Lead Generation &amp; Cold Emailing Made Simple</span>
-      </div>
-
-      <!-- 2-Line High Contrast Editorial Title -->
-      <h1 class="text-4xl sm:text-5xl lg:text-6xl font-display font-bold tracking-tight text-primary max-w-4xl mx-auto mb-6 leading-[1.12]">
-        Find real businesses. Get direct emails. <span class="text-on-surface-variant font-normal">Start conversations that actually get replies.</span>
-      </h1>
-
-      <!-- Honest Value Proposition -->
-      <p class="text-base sm:text-lg text-on-surface-variant max-w-2xl mx-auto mb-8 leading-relaxed font-sans">
-        Search any city and industry to find verified companies on Google Maps. OutreachPilot uncovers real decision-maker emails, learns what each company does, and drafts personalized emails you can send straight from your own Gmail.
-      </p>
-
-      <!-- Dual Action Row -->
-      <div class="flex flex-col sm:flex-row items-center justify-center gap-3.5 w-full max-w-md mx-auto mb-10">
-        <a href="/app" class="btn-tactile-ecru w-full sm:w-auto px-6 py-3 rounded-lg text-sm font-semibold flex items-center justify-center gap-2 shadow-lg cursor-pointer">
-          <span class="material-symbols-outlined text-[18px]">travel_explore</span>
-          <span>Start Finding Leads Free</span>
-        </a>
-        <a href="#specimen-lab" class="btn-tactile-slate w-full sm:w-auto px-5 py-3 rounded-lg text-sm font-medium flex items-center justify-center gap-2 cursor-pointer">
-          <span class="material-symbols-outlined text-[18px] text-secondary">tune</span>
-          <span>See How It Works</span>
-        </a>
-      </div>
-
-      <!-- Verified Guarantees Strip -->
-      <div class="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs font-mono text-on-surface-variant pt-2 border-t border-outline/60 w-full max-w-2xl">
-        <span class="flex items-center gap-1.5">
-          <span class="material-symbols-outlined text-[15px] text-secondary">verified_user</span>
-          Official Google Sign-In
-        </span>
-        <span class="text-outline-variant">/</span>
-        <span class="flex items-center gap-1.5">
-          <span class="material-symbols-outlined text-[15px] text-secondary">mark_email_read</span>
-          Sends From Your Real Gmail
-        </span>
-        <span class="text-outline-variant">/</span>
-        <span class="flex items-center gap-1.5">
-          <span class="material-symbols-outlined text-[15px] text-secondary">check_circle</span>
-          100% Free to Search
-        </span>
-      </div>
-    </section>
-
-    <!-- SECTION 01: "THE ONE LIVE THING" - INTERACTIVE EMAIL & LEAD PREVIEW -->
-    <section class="w-full max-w-6xl px-6 py-12" id="specimen-lab">
-      <div class="mb-6 flex flex-col md:flex-row md:items-end justify-between gap-3 border-b border-outline pb-4">
-        <div>
-          <div class="inline-flex items-center gap-1.5 text-xs font-mono text-secondary mb-1">
-            <span class="material-symbols-outlined text-sm">science</span>
-            <span>01 / Interactive Demo</span>
-          </div>
-          <h2 class="text-2xl font-display font-bold text-primary">See How a Personalized Email Gets Written</h2>
-          <p class="text-xs text-on-surface-variant mt-0.5">Click any example company below to see how OutreachPilot finds their details and drafts a customized email ready to send.</p>
-        </div>
-        <div class="flex items-center gap-2 font-mono text-[11px] text-on-surface-variant bg-surface-container px-3 py-1.5 rounded border border-outline">
-          <span class="w-2 h-2 rounded-full bg-secondary"></span>
-          <span>Powered by Google Maps + Live Website Research + AI</span>
-        </div>
-      </div>
-
-      <!-- Specimen Sandbox Card -->
-      <div class="bento-cell p-5 sm:p-7">
-        
-        <!-- Specimen Selector Tabs -->
-        <div class="mb-6">
-          <div class="text-[11px] font-mono text-on-surface-variant mb-2">SELECT AN EXAMPLE COMPANY:</div>
-          <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <button type="button" class="specimen-tab active p-3 rounded-lg border border-primary bg-surface-container text-left transition-all cursor-pointer" onclick="selectSpecimen(0)">
-              <div class="flex items-center justify-between mb-1">
-                <span class="font-display font-bold text-xs text-primary">ApexForge Systems</span>
-                <span class="text-[10px] font-mono text-secondary">Bengaluru, IN</span>
-              </div>
-              <p class="text-[11px] text-on-surface-variant truncate">Web &amp; Mobile App Agency</p>
-            </button>
-            <button type="button" class="specimen-tab p-3 rounded-lg border border-outline bg-surface-container-lowest hover:border-outline-variant text-left transition-all cursor-pointer" onclick="selectSpecimen(1)">
-              <div class="flex items-center justify-between mb-1">
-                <span class="font-display font-bold text-xs text-on-surface-variant">VortexLogic Labs</span>
-                <span class="text-[10px] font-mono text-secondary">Pune, IN</span>
-              </div>
-              <p class="text-[11px] text-on-surface-variant truncate">Custom Software &amp; Backend Development</p>
-            </button>
-            <button type="button" class="specimen-tab p-3 rounded-lg border border-outline bg-surface-container-lowest hover:border-outline-variant text-left transition-all cursor-pointer" onclick="selectSpecimen(2)">
-              <div class="flex items-center justify-between mb-1">
-                <span class="font-display font-bold text-xs text-on-surface-variant">NovaCrest AI</span>
-                <span class="text-[10px] font-mono text-secondary">Hyderabad, IN</span>
-              </div>
-              <p class="text-[11px] text-on-surface-variant truncate">AI SaaS &amp; Cloud Products</p>
-            </button>
-          </div>
+          <span class="radar"></span><span class="radar r2"></span>
+          <span class="map-chip">{{ ui.icon("search") }}<span>Software companies <em>in</em> Bengaluru</span></span>
+          <span class="m-pin" style="--x:22%;--y:30%;--i:0"></span>
+          <span class="m-pin" style="--x:58%;--y:22%;--i:1"></span>
+          <span class="m-pin" style="--x:70%;--y:52%;--i:2"></span>
+          <span class="m-pin" style="--x:36%;--y:58%;--i:3"></span>
+          <span class="m-pin" style="--x:48%;--y:40%;--i:4"></span>
+          <span class="m-pin" style="--x:80%;--y:30%;--i:5"></span>
+          <span class="map-foot"><b class="num" data-demo-count>0</b> companies found</span>
         </div>
 
-        <!-- 2-Column Split: Intel Specimen vs. Bespoke Pitch Preview -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-          
-          <!-- Left: Specimen Lead Intel & Controls (5 cols) -->
-          <div class="lg:col-span-5 space-y-4">
-            
-            <!-- Lead Intel Card -->
-            <div class="p-4 rounded-lg bg-surface-container-lowest border border-outline space-y-3 font-mono text-xs">
-              <div class="flex items-center justify-between border-b border-outline pb-2.5">
-                <div class="flex items-center gap-2">
-                  <span class="w-7 h-7 rounded bg-surface-container-high border border-outline-variant flex items-center justify-center font-bold text-primary font-mono text-xs" id="specimen-mono">AF</span>
-                  <div>
-                    <div class="font-display font-semibold text-primary text-xs" id="specimen-name">ApexForge Systems</div>
-                    <div class="text-[10px] text-on-surface-variant" id="specimen-domain">apexforge.io</div>
-                  </div>
-                </div>
-                <span class="px-2 py-0.5 rounded bg-secondary/15 text-secondary border border-secondary/30 text-[10px] font-semibold flex items-center gap-1">
-                  <span class="material-symbols-outlined text-[12px]">auto_awesome</span> Researched
-                </span>
-              </div>
-
-              <!-- Contact & Location -->
-              <div class="space-y-1.5 text-[11px]">
-                <div class="flex items-center justify-between">
-                  <span class="text-on-surface-variant">Verified Email:</span>
-                  <span class="text-secondary font-medium" id="specimen-email">contact@apexforge.io</span>
-                </div>
-                <div class="flex items-center justify-between">
-                  <span class="text-on-surface-variant">Location:</span>
-                  <span class="text-primary-muted" id="specimen-location">Bengaluru, Karnataka, IN</span>
-                </div>
-                <div class="flex items-center justify-between">
-                  <span class="text-on-surface-variant">Google Rating:</span>
-                  <span class="text-tertiary font-semibold flex items-center gap-1">
-                    <span class="material-symbols-outlined text-[13px]">star</span>
-                    <span id="specimen-rating">4.9 (184 reviews)</span>
-                  </span>
-                </div>
-              </div>
-
-              <!-- Detected Tech Stack -->
-              <div>
-                <span class="text-[10px] text-on-surface-variant uppercase tracking-wider block mb-1.5">What They Do &amp; Tools They Use:</span>
-                <div class="flex flex-wrap gap-1.5" id="specimen-tech-pills">
-                  <span class="px-2 py-0.5 rounded text-[11px] font-mono bg-surface-container text-on-surface-variant border border-outline">Web Development</span>
-                  <span class="px-2 py-0.5 rounded text-[11px] font-mono bg-surface-container text-on-surface-variant border border-outline">Mobile App Development</span>
-                  <span class="px-2 py-0.5 rounded text-[11px] font-mono bg-surface-container text-on-surface-variant border border-outline">UI/UX Design</span>
-                </div>
-              </div>
-            </div>
-
-            <!-- Pitch Tone Tuner -->
-            <div class="p-4 rounded-lg bg-surface-container-lowest border border-outline space-y-3">
-              <label class="text-xs font-mono text-primary font-semibold flex items-center justify-between">
-                <span>CHOOSE EMAIL STYLE:</span>
-                <span class="text-secondary text-[11px]" id="tone-badge">Skills &amp; Experience</span>
-              </label>
-              <div class="grid grid-cols-3 gap-2">
-                <button type="button" class="tone-btn active px-2.5 py-2 rounded text-[11px] font-mono font-semibold border border-primary bg-surface-container text-primary transition-all cursor-pointer" onclick="setPitchTone('architecture')">
-                  Skills &amp; Work
-                </button>
-                <button type="button" class="tone-btn px-2.5 py-2 rounded text-[11px] font-mono text-on-surface-variant border border-outline hover:border-outline-variant bg-surface-container-lowest transition-all cursor-pointer" onclick="setPitchTone('executive')">
-                  Business Value
-                </button>
-                <button type="button" class="tone-btn px-2.5 py-2 rounded text-[11px] font-mono text-on-surface-variant border border-outline hover:border-outline-variant bg-surface-container-lowest transition-all cursor-pointer" onclick="setPitchTone('peer')">
-                  Quick Hello
-                </button>
-              </div>
-            </div>
-
-            <!-- Deliverability Score & RFC Metrics -->
-            <div class="p-3.5 rounded-lg bg-surface-container-lowest border border-outline font-mono text-xs space-y-2">
-              <div class="flex items-center justify-between">
-                <span class="text-on-surface-variant">Estimated Inbox Placement:</span>
-                <span class="text-secondary font-bold tnum">99.4% (Primary Inbox)</span>
-              </div>
-              <div class="w-full bg-surface-container-high h-1.5 rounded-full overflow-hidden">
-                <div class="bg-secondary h-full w-[99.4%]"></div>
-              </div>
-              <div class="flex items-center justify-between text-[10px] text-on-surface-variant pt-1">
-                <span>Spam Risk: <strong class="text-secondary">Zero (Clean wording)</strong></span>
-                <span>Sent Via: <strong class="text-primary-muted">Your Real Gmail</strong></span>
-              </div>
-            </div>
-          </div>
-
-          <!-- Right: Bespoke Synthesized Pitch Terminal (7 cols) -->
-          <div class="lg:col-span-7 rounded-lg bg-surface-container-lowest border border-outline overflow-hidden flex flex-col">
-            
-            <!-- Terminal Header -->
-            <div class="p-3 bg-surface-container border-b border-outline flex items-center justify-between text-xs font-mono">
-              <div class="flex items-center gap-2 truncate">
-                <span class="text-on-surface-variant">TO:</span>
-                <span class="text-secondary font-medium truncate" id="pitch-to">contact@apexforge.io</span>
-              </div>
-              <span class="text-[10px] text-secondary px-2 py-0.5 rounded bg-secondary/15 border border-secondary/30 flex items-center gap-1 shrink-0 font-semibold">
-                <span class="material-symbols-outlined text-[12px]">verified</span> Verified Company Contact
-              </span>
-            </div>
-
-            <!-- Subject Line -->
-            <div class="px-4 py-2.5 bg-surface-container-low border-b border-outline flex items-center gap-3 text-xs font-mono">
-              <span class="text-on-surface-variant font-semibold shrink-0">SUBJECT:</span>
-              <span class="text-primary font-medium truncate" id="pitch-subject">Frontend development &amp; web app architecture at ApexForge Systems</span>
-            </div>
-
-            <!-- Body Message -->
-            <div class="p-5 text-xs sm:text-sm text-primary-muted space-y-3.5 leading-relaxed font-sans min-h-[240px]" id="pitch-body">
-              <p>Hi ApexForge Team,</p>
-              <p>
-                I came across ApexForge Systems while researching top software development agencies specializing in <span class="syntax-token">Custom Web &amp; Mobile Applications</span>. Your 4.9 rating across 184 client reviews really caught my attention.
-              </p>
-              <p>
-                I build high-performance web and mobile apps using React, TypeScript, and Tailwind CSS. I noticed you build custom client solutions where smooth user experience and fast loading times are essential.
-              </p>
-              <p>
-                I'm currently looking for new projects and full-time opportunities with great development teams. Are you taking on new developers right now?
-              </p>
-              <p class="text-on-surface-variant text-xs pt-1 font-mono">
-                Best regards,<br/>
-                <strong class="text-primary">Rahul Vora</strong> / <span class="text-secondary">Portfolio &amp; GitHub Profile Attached</span>
-              </p>
-            </div>
-
-            <!-- Terminal Action Bar -->
-            <div class="p-3.5 bg-surface-container border-t border-outline flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
-              <div class="flex items-center gap-1.5 text-on-surface-variant text-[11px]">
-                <span class="material-symbols-outlined text-[14px] text-secondary">bolt</span>
-                <span>Tailored to ApexForge Systems</span>
-              </div>
-              <div class="flex items-center gap-2">
-                <button type="button" class="btn-tactile-slate px-3 py-1.5 rounded text-xs flex items-center gap-1.5 cursor-pointer" onclick="copyPitch()">
-                  <span class="material-symbols-outlined text-[15px]" id="copy-icon">content_copy</span>
-                  <span id="copy-text">Copy Email</span>
-                </button>
-              </div>
-            </div>
-
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- SECTION 02: KEY FEATURES BENTO GRID -->
-    <section class="w-full max-w-6xl px-6 py-12" id="capabilities">
-      <div class="mb-8">
-        <div class="inline-flex items-center gap-1.5 text-xs font-mono text-secondary mb-1">
-          <span class="material-symbols-outlined text-sm">grid_view</span>
-          <span>02 / Key Features</span>
-        </div>
-        <h2 class="text-2xl sm:text-3xl font-display font-bold text-primary">Everything You Need to Find Clients and Get Hired</h2>
-        <p class="text-xs sm:text-sm text-on-surface-variant mt-1 max-w-2xl">Stop wasting hours manually searching Google Maps, copying emails into spreadsheets, and writing cold emails from scratch.</p>
-      </div>
-
-      <!-- Bento 4-Cell Grid -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        
-        <!-- Cell 1: Google Maps Lead Search (2 Cols) -->
-        <div class="bento-cell md:col-span-2 p-6 flex flex-col justify-between">
-          <div>
-            <div class="flex items-center justify-between mb-4">
-              <span class="w-9 h-9 rounded-lg bg-surface-container-high border border-outline-variant flex items-center justify-center text-primary">
-                <span class="material-symbols-outlined text-[20px]">explore</span>
-              </span>
-              <span class="text-[11px] font-mono text-secondary px-2.5 py-0.5 rounded bg-secondary/10 border border-secondary/25">Google Maps Search</span>
-            </div>
-            <h3 class="text-lg font-display font-bold text-primary mb-2">Find Local Companies in Any City</h3>
-            <p class="text-xs text-on-surface-variant leading-relaxed mb-4">
-              Type any business type and city, like "Digital Marketing Agencies in Mumbai" or "Software Companies in Austin". OutreachPilot pulls real companies straight from Google Maps, complete with their verified website, address, phone number, and star ratings.
-            </p>
-          </div>
-          <div class="p-3.5 rounded-lg bg-surface-container-lowest border border-outline font-mono text-xs space-y-1.5">
-            <div class="flex items-center justify-between text-[11px]">
-              <span class="text-on-surface-variant">Example Search:</span>
-              <span class="text-primary font-medium">Software Companies in Bangalore</span>
-            </div>
-            <div class="flex items-center justify-between text-[11px]">
-              <span class="text-on-surface-variant">Typical Result:</span>
-              <span class="text-secondary font-semibold">20+ Verified Companies per search</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Cell 2: Company Research & Stack (1 Col) -->
-        <div class="bento-cell p-6 flex flex-col justify-between">
-          <div>
-            <div class="flex items-center justify-between mb-4">
-              <span class="w-9 h-9 rounded-lg bg-surface-container-high border border-outline-variant flex items-center justify-center text-primary">
-                <span class="material-symbols-outlined text-[20px]">memory</span>
-              </span>
-              <span class="text-[11px] font-mono text-tertiary px-2 py-0.5 rounded bg-tertiary/10 border border-tertiary/25">Automatic Research</span>
-            </div>
-            <h3 class="text-base font-display font-bold text-primary mb-2">See What Each Company Does</h3>
-            <p class="text-xs text-on-surface-variant leading-relaxed mb-3">
-              OutreachPilot automatically visits the company's website to find what services they offer, what technologies they build with, and their direct contact emails.
-            </p>
-          </div>
-          <div class="flex flex-wrap gap-1.5 pt-2 border-t border-outline">
-            <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-surface-container text-primary-muted border border-outline">Web Apps</span>
-            <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-surface-container text-primary-muted border border-outline">Mobile Apps</span>
-            <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-surface-container text-primary-muted border border-outline">Cloud &amp; DevOps</span>
-            <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-surface-container text-primary-muted border border-outline">Verified Emails</span>
-          </div>
-        </div>
-
-        <!-- Cell 3: Resume & Background Matching (1 Col) -->
-        <div class="bento-cell p-6 flex flex-col justify-between">
-          <div>
-            <div class="flex items-center justify-between mb-4">
-              <span class="w-9 h-9 rounded-lg bg-surface-container-high border border-outline-variant flex items-center justify-center text-primary">
-                <span class="material-symbols-outlined text-[20px]">badge</span>
-              </span>
-              <span class="text-[11px] font-mono text-primary px-2 py-0.5 rounded bg-surface-container border border-outline">Personalized</span>
-            </div>
-            <h3 class="text-base font-display font-bold text-primary mb-2">Tailored to Your Skills</h3>
-            <p class="text-xs text-on-surface-variant leading-relaxed">
-              Upload your resume or paste a summary of what you offer. Our AI connects your actual skills to what the company needs, so every email sounds natural and human.
-            </p>
-          </div>
-          <div class="mt-4 p-2.5 rounded bg-surface-container-lowest border border-outline text-[11px] font-mono text-secondary">
-            Matches: Your skills &rarr; Company needs
-          </div>
-        </div>
-
-        <!-- Cell 4: Safe Gmail Sending (2 Cols) -->
-        <div class="bento-cell md:col-span-2 p-6 flex flex-col justify-between">
-          <div>
-            <div class="flex items-center justify-between mb-4">
-              <span class="w-9 h-9 rounded-lg bg-surface-container-high border border-outline-variant flex items-center justify-center text-primary">
-                <span class="material-symbols-outlined text-[20px]">send</span>
-              </span>
-              <span class="text-[11px] font-mono text-secondary px-2.5 py-0.5 rounded bg-secondary/10 border border-secondary/25">Safe &amp; Verified</span>
-            </div>
-            <h3 class="text-lg font-display font-bold text-primary mb-2">Send Directly From Your Own Gmail</h3>
-            <p class="text-xs text-on-surface-variant leading-relaxed mb-4">
-              Forget shady bulk mailer tools that get blocked by spam filters. OutreachPilot connects securely to your Google account with official sign-in. Your emails are sent one-by-one from your real Gmail address, landing right in the primary inbox.
-            </p>
-          </div>
-          <div class="flex flex-wrap items-center gap-3 text-xs font-mono text-on-surface-variant pt-3 border-t border-outline">
-            <span class="flex items-center gap-1 text-secondary">
-              <span class="material-symbols-outlined text-[15px]">check</span> Lands in Primary Inbox (Not Spam)
-            </span>
-            <span class="text-outline-variant">/</span>
-            <span class="flex items-center gap-1 text-secondary">
-              <span class="material-symbols-outlined text-[15px]">check</span> Sent from your real @gmail.com address
-            </span>
-            <span class="text-outline-variant">/</span>
-            <span class="flex items-center gap-1 text-secondary">
-              <span class="material-symbols-outlined text-[15px]">check</span> Track all replies in your regular Gmail
-            </span>
-          </div>
-        </div>
-
-      </div>
-    </section>
-
-    <!-- SECTION 03: 3-STEP PROCESS -->
-    <section class="w-full max-w-6xl px-6 py-12" id="workflow">
-      <div class="mb-8">
-        <div class="inline-flex items-center gap-1.5 text-xs font-mono text-secondary mb-1">
-          <span class="material-symbols-outlined text-sm">conversion_path</span>
-          <span>03 / SIMPLE PROCESS</span>
-        </div>
-        <h2 class="text-2xl sm:text-3xl font-display font-bold text-primary">From Search to Reply in 3 Simple Steps</h2>
-      </div>
-
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <!-- Step 1 -->
-        <div class="bento-cell p-6">
-          <div class="text-xs font-mono text-secondary font-bold mb-3">01 / SEARCH</div>
-          <h3 class="text-base font-display font-bold text-primary mb-2">Find Target Companies</h3>
-          <p class="text-xs text-on-surface-variant leading-relaxed">
-            Type any business type and city. Within seconds, get a list of active companies complete with official websites, phone numbers, and ratings.
-          </p>
-        </div>
-
-        <!-- Step 2 -->
-        <div class="bento-cell p-6">
-          <div class="text-xs font-mono text-secondary font-bold mb-3">02 / RESEARCH</div>
-          <h3 class="text-base font-display font-bold text-primary mb-2">Find Emails &amp; Info</h3>
-          <p class="text-xs text-on-surface-variant leading-relaxed">
-            Our tool checks each company website to find verified emails for owners and hiring managers, along with the services and technologies they work with.
-          </p>
-        </div>
-
-        <!-- Step 3 -->
-        <div class="bento-cell p-6">
-          <div class="text-xs font-mono text-secondary font-bold mb-3">03 / SEND</div>
-          <h3 class="text-base font-display font-bold text-primary mb-2">Review &amp; Send via Gmail</h3>
-          <p class="text-xs text-on-surface-variant leading-relaxed">
-            Our AI writes a personal, friendly email tailored to that company. Review it, make any quick edits you want, and send it directly from your Gmail with one click.
-          </p>
-        </div>
-      </div>
-    </section>
-
-    <!-- SECTION 04: SECURITY & SAFETY -->
-    <section class="w-full max-w-6xl px-6 py-12" id="security">
-      <div class="bento-cell p-6 sm:p-8 border border-outline">
-        <div class="flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div class="space-y-2 max-w-2xl">
-            <div class="inline-flex items-center gap-1.5 text-xs font-mono text-secondary">
-              <span class="material-symbols-outlined text-sm">shield</span>
-              <span>04 / PRIVACY &amp; SAFETY</span>
-            </div>
-            <h3 class="text-xl font-display font-bold text-primary">Your Google Account is 100% Safe and Secure</h3>
-            <p class="text-xs text-on-surface-variant leading-relaxed">
-              We use official Google Sign-In. We never see your password, we never sell your data, and we only send an email when you specifically review and click Send.
-            </p>
-            <div class="flex items-center gap-4 pt-2 text-xs font-mono">
-              <a href="/privacy" class="text-secondary hover:underline flex items-center gap-1">
-                <span class="material-symbols-outlined text-[14px]">description</span> Privacy Policy
-              </a>
-              <span class="text-outline-variant">/</span>
-              <a href="/terms" class="text-secondary hover:underline flex items-center gap-1">
-                <span class="material-symbols-outlined text-[14px]">gavel</span> Terms of Service
-              </a>
-            </div>
-          </div>
-          <div class="shrink-0 flex items-center justify-center p-5 rounded-xl bg-surface-container-high border border-outline-variant font-mono text-xs text-center">
-            <div>
-              <span class="material-symbols-outlined text-3xl text-secondary mb-1">lock</span>
-              <div class="font-bold text-primary text-xs">Official Google Sign-In</div>
-              <div class="text-[10px] text-on-surface-variant mt-0.5">Private &amp; Encrypted</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    {% if not subscription_kill_switch and tiers %}
-    <!-- SECTION 05: SUBSCRIPTION PLANS & DAILY QUOTAS -->
-    <section class="w-full max-w-6xl px-6 py-12" id="pricing">
-      <div class="mb-8 flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-outline pb-4">
-        <div>
-          <div class="inline-flex items-center gap-1.5 text-xs font-mono text-secondary mb-1">
-            <span class="material-symbols-outlined text-sm">loyalty</span>
-            <span>05 / TRANSPARENT PRICING &amp; DAILY QUOTAS</span>
-          </div>
-          <h2 class="text-2xl sm:text-3xl font-display font-bold text-primary">
-            Predictable Outreach Limits. Zero Spam Tax.
-          </h2>
-          <p class="text-xs sm:text-sm text-on-surface-variant mt-1 max-w-2xl">
-            {% set free_plan = tiers|selectattr('price_inr', 'equalto', 0)|first %}
-            {% if free_plan %}Start free with {{ free_plan.daily_pitch_limit }} pitches every day. {% endif %}Move to a bigger plan whenever you need a higher daily limit.
-          </p>
-        </div>
-        {% if is_logged_in and sub_info %}
-        <div class="shrink-0 p-3 rounded-xl bg-surface-container border border-secondary/30 flex items-center gap-3">
-          <div class="w-2.5 h-2.5 rounded-full bg-secondary animate-pulse"></div>
-          <div class="flex flex-col text-xs font-mono">
-            <span class="text-on-surface font-semibold">Active: <span class="text-secondary">{{ sub_info.tier_name }}</span></span>
-            <span class="text-[11px] text-on-surface-variant">{{ sub_info.pitches_remaining }} / {{ sub_info.daily_pitch_limit }} pitches left today</span>
-          </div>
-          <a href="/app" class="btn-tactile-ecru px-2.5 py-1 rounded text-xs font-bold font-mono">Open App</a>
-        </div>
-        {% endif %}
-      </div>
-
-      <!-- Plan cards: built from the plans in the admin panel (Tiers & Plans),
-           so whatever is set there is exactly what visitors see. -->
-      {% set plan_count = tiers|length %}
-      <div class="grid grid-cols-1 {% if plan_count >= 4 %}md:grid-cols-2 xl:grid-cols-4{% elif plan_count == 3 %}md:grid-cols-3{% elif plan_count == 2 %}md:grid-cols-2 max-w-4xl mx-auto w-full{% else %}max-w-md mx-auto w-full{% endif %} gap-6">
-        {% for t in tiers %}
-        {% set featured = t.code == 'pro' %}
-        {% set is_current = is_logged_in and sub_info and sub_info.tier_code == t.code %}
-        <div class="bento-cell p-6 sm:p-7 flex flex-col justify-between relative {% if featured %}border-2 border-primary bg-primary/5 shadow-lg ring-1 ring-primary/30{% else %}border border-outline{% endif %}">
-          {% if t.badge %}
-          <div class="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full {% if featured %}bg-primary text-on-primary{% else %}bg-surface-container-high text-on-surface border border-outline{% endif %} text-[10px] font-mono font-bold uppercase tracking-wider shadow whitespace-nowrap">
-            {{ t.badge }}
-          </div>
-          {% endif %}
-          <div>
-            {% if t.subtitle %}
-            <div class="text-xs font-mono uppercase tracking-wider font-bold mb-3 {% if t.badge %}pt-1{% endif %} {% if featured %}text-primary{% else %}text-on-surface-variant{% endif %}">{{ t.subtitle }}</div>
-            {% endif %}
-            <h3 class="text-xl font-display font-bold text-primary">{{ t.name }}</h3>
-
-            <div class="flex items-baseline gap-1 my-4 pb-4 border-b {% if featured %}border-primary/20{% else %}border-outline/50{% endif %}">
-              <span class="text-3xl font-display font-bold text-primary">₹{{ "{:,}".format(t.price_inr) }}</span>
-              <span class="text-xs font-mono text-on-surface-variant">/ month</span>
-            </div>
-
-            <!-- Daily Quota Callout -->
-            <div class="p-3 rounded-lg mb-4 flex items-center justify-between gap-3 {% if featured %}bg-primary/10 border border-primary/30{% else %}bg-surface-container/70 border border-outline-variant/40{% endif %}">
-              <span class="text-xs font-mono font-semibold text-primary">Daily outreach quota</span>
-              <span class="text-xs font-mono font-bold whitespace-nowrap shrink-0 {% if featured %}text-primary{% else %}text-secondary{% endif %}">{{ "{:,}".format(t.daily_pitch_limit) }} pitches / day</span>
-            </div>
-
-            {% if t.features %}
-            <ul class="space-y-2.5 text-xs text-on-surface mb-6">
-              {% for f in t.features %}
-              <li class="flex items-start gap-2">
-                <span class="material-symbols-outlined text-sm shrink-0 mt-0.5 {% if featured %}text-primary{% else %}text-secondary{% endif %}" aria-hidden="true">check_circle</span>
-                <span>{{ f }}</span>
-              </li>
-              {% endfor %}
-            </ul>
-            {% endif %}
-          </div>
-
-          <div class="pt-4 border-t {% if featured %}border-primary/20{% else %}border-outline/40{% endif %}">
-            {% if is_current %}
-            <span aria-current="true" class="w-full py-2.5 px-4 rounded-lg bg-surface-container border border-outline text-on-surface-variant text-xs font-mono font-bold text-center block cursor-default">
-              Current Active Plan
-            </span>
-            {% elif t.price_inr == 0 %}
-            <a href="{% if is_logged_in %}/app{% else %}/auth/google/login{% endif %}" class="w-full py-2.5 px-4 rounded-lg bg-surface-container hover:bg-surface-container-high border border-outline text-on-surface text-xs font-mono font-bold text-center block transition">
-              {% if is_logged_in %}Switch to {{ t.name }}{% else %}Get Started Free{% endif %}
-            </a>
-            {% else %}
-            <a href="/app" class="w-full py-2.5 px-4 rounded-lg text-xs font-mono font-bold text-center block transition {% if featured %}btn-tactile-ecru shadow{% else %}bg-surface-container hover:bg-surface-container-high border border-outline text-on-surface{% endif %}">
-              Upgrade to {{ t.name }}
-            </a>
-            {% endif %}
-          </div>
-        </div>
-        {% endfor %}
-      </div>
-    </section>
-    {% endif %}
-
-    <!-- FINAL CTA BANNER -->
-    <section class="w-full max-w-5xl px-6 py-16 text-center">
-      <div class="bento-cell p-8 md:p-12 border border-outline-variant/60 shadow-2xl relative overflow-hidden">
-        <h2 class="text-3xl sm:text-4xl font-display font-bold text-primary mb-3">
-          Ready to start reaching real companies today?
-        </h2>
-        <p class="text-xs sm:text-sm text-on-surface-variant max-w-xl mx-auto mb-6">
-          Find verified businesses in your target city, get direct contact info, and start conversations that lead to jobs and new clients. Free to start, no credit card needed.
-        </p>
-        <div class="flex items-center justify-center gap-3">
-          <a href="/app" class="btn-tactile-ecru px-6 py-3 rounded-lg text-sm font-semibold flex items-center gap-2 cursor-pointer">
-            <span>Search Leads for Free</span>
-            <span class="material-symbols-outlined text-[18px]">rocket_launch</span>
-          </a>
-        </div>
-      </div>
-    </section>
-
-  </main>
-
-  <!-- FOOTER -->
-  <!-- Crawlable links into the directory: a direct path for search engines (and people) to the largest city and category hubs. Lists come live from the database. -->
-  {% if browse_cities or browse_categories %}
-  <section aria-labelledby="browse-directory-heading" class="w-full border-t border-outline bg-surface py-14">
-    <div class="max-w-7xl mx-auto px-6">
-      <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
-        <div>
-          <h2 id="browse-directory-heading" class="text-2xl font-display font-bold text-on-surface">Browse the directory</h2>
-          <p class="mt-1 text-sm text-on-surface-variant">The cities and categories with the most companies, biggest first.</p>
-        </div>
-        <a href="/directory" class="inline-flex items-center gap-1 text-sm font-medium text-primary hover:text-secondary transition-colors shrink-0">
-          <span>See every city and category</span>
-          <span class="material-symbols-outlined text-[16px]" aria-hidden="true">arrow_forward</span>
-        </a>
-      </div>
-
-      <div class="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {% if browse_cities %}
-        <nav aria-label="Companies by city" class="rounded-2xl border border-outline-variant/40 bg-surface-container-low p-5">
-          <h3 class="flex items-center gap-2 text-xs font-mono font-semibold uppercase tracking-wider text-on-surface-variant">
-            <span class="material-symbols-outlined text-[16px]" aria-hidden="true">location_city</span>
-            <span>By city</span>
-          </h3>
-          <ul class="mt-4 flex flex-wrap gap-2" role="list">
-            {% for c in browse_cities %}
-            <li>
-              <a href="/directory/city/{{ c.slug }}" class="inline-flex items-center rounded-full border border-outline-variant/50 bg-surface px-3.5 py-1.5 text-sm text-on-surface hover:border-primary hover:text-primary transition-colors">{{ c.name }}</a>
-            </li>
-            {% endfor %}
+        <div class="c-side">
+          <div class="c-head"><span class="c-title">{{ ui.icon("list") }}Results</span><span class="badge badge-accent" data-demo-status>Searching</span></div>
+          <ul class="c-results" role="list">
+            <li class="c-row" style="--i:0"><span class="avatar avatar-sm">AF</span><span class="grow"><b>ApexForge Systems</b><span>Web and mobile apps</span></span><span class="badge badge-ok c-ok">{{ ui.icon("check") }}Email</span></li>
+            <li class="c-row" style="--i:1"><span class="avatar avatar-sm">VL</span><span class="grow"><b>VortexLogic Labs</b><span>Backend development</span></span><span class="badge badge-ok c-ok">{{ ui.icon("check") }}Email</span></li>
+            <li class="c-row" style="--i:2"><span class="avatar avatar-sm">NC</span><span class="grow"><b>NovaCrest AI</b><span>AI SaaS products</span></span><span class="badge badge-ok c-ok">{{ ui.icon("check") }}Email</span></li>
           </ul>
-        </nav>
-        {% endif %}
-
-        {% if browse_categories %}
-        <nav aria-label="Companies by category" class="rounded-2xl border border-outline-variant/40 bg-surface-container-low p-5">
-          <h3 class="flex items-center gap-2 text-xs font-mono font-semibold uppercase tracking-wider text-on-surface-variant">
-            <span class="material-symbols-outlined text-[16px]" aria-hidden="true">category</span>
-            <span>By category</span>
-          </h3>
-          <ul class="mt-4 flex flex-wrap gap-2" role="list">
-            {% for t in browse_categories %}
-            <li>
-              <a href="/directory/category/{{ t.slug }}" class="inline-flex items-center rounded-full border border-outline-variant/50 bg-surface px-3.5 py-1.5 text-sm text-on-surface hover:border-primary hover:text-primary transition-colors">{{ t.name }}</a>
-            </li>
-            {% endfor %}
-          </ul>
-        </nav>
-        {% endif %}
+          <div class="c-draft">
+            <div class="c-draft-head"><span>{{ ui.icon("edit_note") }}Draft for ApexForge Systems</span></div>
+            <div class="c-subject"><span class="subtle">Subject</span> <span class="typed" data-text="Frontend developer interested in your client web projects"></span></div>
+            <div class="c-lines"><i></i><i></i><i style="width:72%"></i></div>
+            <div class="c-send"><span class="small subtle">{{ ui.icon("shield") }}From your Gmail</span><span class="btn btn-primary btn-xs c-send-btn">Send</span></div>
+          </div>
+        </div>
       </div>
+
+      <ol class="pipeline" role="list" aria-hidden="true">
+        <li data-step="0"><i><b>1</b>{{ ui.icon("check") }}</i><span>Search Maps</span></li>
+        <li data-step="1"><i><b>2</b>{{ ui.icon("check") }}</i><span>Find emails</span></li>
+        <li data-step="2"><i><b>3</b>{{ ui.icon("check") }}</i><span>Research</span></li>
+        <li data-step="3"><i><b>4</b>{{ ui.icon("check") }}</i><span>Write email</span></li>
+        <li data-step="4"><i><b>5</b>{{ ui.icon("check") }}</i><span>Send via Gmail</span></li>
+      </ol>
     </div>
-  </section>
+  </div>
+</section>
+
+<!-- ===================== Directory band ===================== -->
+{% if browse_cities or browse_categories %}
+<section class="band" aria-label="The directory at a glance">
+  <div class="container band-head reveal">
+    <div>
+      {{ ui.eyebrow("Live directory") }}
+      <p>Real companies with websites, contact emails and the services each one offers, ready to browse before you even sign in.</p>
+    </div>
+    <a class="btn btn-text" href="/directory">Browse every city and category <svg class="ico ico-sm arrow" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+  </div>
+  {% if browse_categories %}
+  <div class="marquee" style="--dur:70s" aria-label="Companies by category">
+    <div class="marquee-track">
+      {% for t in browse_categories %}
+      <a class="m-item" href="/directory/category/{{ t.slug }}"><i class="sq" aria-hidden="true"></i>{{ t.name }}{% if t.count %} <b>{{ "{:,}".format(t.count|int) }}</b>{% endif %}</a>
+      {% endfor %}
+    </div>
+  </div>
   {% endif %}
+  {% if browse_cities %}
+  <div class="marquee reverse" style="--dur:85s" aria-label="Companies by city">
+    <div class="marquee-track">
+      {% for c in browse_cities %}
+      <a class="m-item" href="/directory/city/{{ c.slug }}"><svg class="ico ico-sm" aria-hidden="true"><use href="#i-pin"/></svg>{{ c.name }}{% if c.count %} <b>{{ "{:,}".format(c.count|int) }}</b>{% endif %}</a>
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+</section>
+{% endif %}
 
-  <footer class="w-full border-t border-outline bg-surface-dim">
-    <div class="max-w-7xl mx-auto px-6 pt-12 pb-8">
-      <div class="grid grid-cols-2 md:grid-cols-[1.618fr_1fr_1fr_1fr] gap-x-8 gap-y-10">
-        <div class="col-span-2 md:col-span-1 max-w-sm">
-          <a href="/" class="inline-flex items-center gap-2.5">
-            <span class="w-8 h-8 rounded-lg bg-surface-container-high border border-outline-variant flex items-center justify-center text-primary shrink-0">
-              <span class="material-symbols-outlined text-[19px]" aria-hidden="true">rocket_launch</span>
-            </span>
-            <span class="text-base font-bold font-display tracking-tight text-primary">OutreachPilot</span>
-          </a>
-          <p class="mt-3 text-sm leading-relaxed text-on-surface-variant">Find real companies, get direct emails and send personal outreach from your own Gmail.</p>
-        </div>
+<!-- ===================== Why ===================== -->
+<section class="section" id="why">
+  <div class="container">
+    {{ ui.eyebrow("Why OutreachPilot") }}
+    <p class="manifesto reveal">Most cold outreach fails before it is even sent. Hours copying companies from Maps into spreadsheets. Guessing <span class="strike">info@</span> addresses that bounce. One template sent to two hundred strangers. <span class="em">So we rebuilt every step.</span></p>
 
-        <nav aria-label="Product">
-          <h2 class="text-sm font-semibold text-on-surface">Product</h2>
-          <ul class="mt-3 space-y-2.5 text-sm text-on-surface-variant" role="list">
-            <li><a href="/app" class="hover:text-primary transition-colors">Workspace</a></li>
-            <li><a href="/#capabilities" class="hover:text-primary transition-colors">Features</a></li>
-            <li><a href="/#workflow" class="hover:text-primary transition-colors">How it works</a></li>
-            <li><a href="/#pricing" class="hover:text-primary transition-colors">Pricing</a></li>
-          </ul>
-        </nav>
+    <div class="compare reveal-stagger">
+      <div class="cmp cmp-old">
+        <div class="cmp-head"><h3 class="h4">The old way</h3>{{ ui.badge("Hours of busywork", "outline") }}</div>
+        <ul role="list">
+          <li>{{ ui.icon("close") }}<div><b>Copy companies from Maps by hand</b><span>One business at a time, into a spreadsheet.</span></div></li>
+          <li>{{ ui.icon("close") }}<div><b>Guess emails like info@</b><span>Generic inboxes nobody reads, and bounces.</span></div></li>
+          <li>{{ ui.icon("close") }}<div><b>Skim thirty websites</b><span>Trying to work out what each company does.</span></div></li>
+          <li>{{ ui.icon("close") }}<div><b>One template for everyone</b><span>Emails that read like spam.</span></div></li>
+        </ul>
+      </div>
+      <div class="cmp cmp-new">
+        <div class="cmp-head"><h3 class="h4"><span class="logo-mark sm"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#logo-plane"/></svg></span>With OutreachPilot</h3>{{ ui.badge("Seconds to search", "accent") }}</div>
+        <ul role="list">
+          <li>{{ ui.icon("check") }}<div><b>Real companies from Google Maps</b><span>With website, phone, address and rating.</span></div></li>
+          <li>{{ ui.icon("check") }}<div><b>Verified contact emails</b><span>Owners and hiring managers, found on their own websites.</span></div></li>
+          <li>{{ ui.icon("check") }}<div><b>Automatic website research</b><span>Services and technologies, read for you.</span></div></li>
+          <li>{{ ui.icon("check") }}<div><b>A personal email for every company</b><span>Your real skills, matched to what they need.</span></div></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
 
-        <nav aria-label="Directory">
-          <h2 class="text-sm font-semibold text-on-surface">Directory</h2>
-          <ul class="mt-3 space-y-2.5 text-sm text-on-surface-variant" role="list">
-            <li><a href="/directory" class="hover:text-primary transition-colors">All cities and categories</a></li>
-            {% for c in (browse_cities or [])[:3] %}
-            <li><a href="/directory/city/{{ c.slug }}" class="hover:text-primary transition-colors">{{ c.name }}</a></li>
-            {% endfor %}
-          </ul>
-        </nav>
+<!-- ===================== Interactive demo (existing behavior) ===================== -->
+<section class="section alt" id="specimen-lab">
+  <div class="container">
+    <div class="section-head">
+      {{ ui.eyebrow("Try it here") }}
+      <h2 class="h2 reveal">See how a <span class="em">personal email</span> gets written</h2>
+      <p class="lead reveal" style="--d:.08s">Click any example company below to see how OutreachPilot finds their details and drafts a customized email ready to send.</p>
+    </div>
 
-        <nav aria-label="Legal">
-          <h2 class="text-sm font-semibold text-on-surface">Legal</h2>
-          <ul class="mt-3 space-y-2.5 text-sm text-on-surface-variant" role="list">
-            <li><a href="/privacy" class="hover:text-primary transition-colors">Privacy policy</a></li>
-            <li><a href="/terms" class="hover:text-primary transition-colors">Terms of service</a></li>
-          </ul>
-        </nav>
+    <div class="lab reveal">
+      <div class="lab-tabs" role="group" aria-label="Example companies">
+        <button type="button" class="specimen-tab active" onclick="selectSpecimen(0)">
+          <span class="lab-tab-top"><span class="font-display">ApexForge Systems</span><span class="lab-city">Bengaluru</span></span>
+          <span class="lab-tab-sub">Web and mobile app agency</span>
+        </button>
+        <button type="button" class="specimen-tab" onclick="selectSpecimen(1)">
+          <span class="lab-tab-top"><span class="font-display">VortexLogic Labs</span><span class="lab-city">Pune</span></span>
+          <span class="lab-tab-sub">Custom software and backend</span>
+        </button>
+        <button type="button" class="specimen-tab" onclick="selectSpecimen(2)">
+          <span class="lab-tab-top"><span class="font-display">NovaCrest AI</span><span class="lab-city">Hyderabad</span></span>
+          <span class="lab-tab-sub">AI SaaS and cloud products</span>
+        </button>
       </div>
 
-      <div class="mt-10 pt-6 border-t border-outline flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-on-surface-variant">
-        <p>&copy; 2026 OutreachPilot. All rights reserved.</p>
-        <div class="flex items-center gap-5">
-          <a href="/sitemap.xml" class="hover:text-primary transition-colors">Sitemap</a>
-          <a href="/llms.txt" class="hover:text-primary transition-colors">llms.txt</a>
+      <div class="lab-grid">
+        <div class="lab-left">
+          <div class="lab-card">
+            <div class="lab-co">
+              <span class="avatar" id="specimen-mono">AF</span>
+              <div class="grow">
+                <div class="lab-co-name" id="specimen-name">ApexForge Systems</div>
+                <div class="small subtle" id="specimen-domain">apexforge.io</div>
+              </div>
+              {{ ui.badge("Researched", "accent", "auto_awesome") }}
+            </div>
+            <dl class="lab-facts">
+              <div><dt>Verified email</dt><dd class="accent-text" id="specimen-email">contact@apexforge.io</dd></div>
+              <div><dt>Location</dt><dd id="specimen-location">Bengaluru, Karnataka, IN</dd></div>
+              <div><dt>Google rating</dt><dd>{{ ui.icon("star", "icon-fill star") }}<span id="specimen-rating">4.9 (184 reviews)</span></dd></div>
+            </dl>
+            <div>
+              <span class="lab-label">What they do and tools they use</span>
+              <div class="lab-pills" id="specimen-tech-pills">
+                <span>Web Development</span><span>Mobile App Development</span><span>UI/UX Design</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="lab-card">
+            <div class="spread"><span class="lab-label">Choose email style</span><span class="badge badge-accent" id="tone-badge">Skills &amp; Experience</span></div>
+            <div class="lab-tones">
+              <button type="button" class="tone-btn active" onclick="setPitchTone('architecture')">Skills &amp; Work</button>
+              <button type="button" class="tone-btn" onclick="setPitchTone('executive')">Business Value</button>
+              <button type="button" class="tone-btn" onclick="setPitchTone('peer')">Quick Hello</button>
+            </div>
+          </div>
+
+          <div class="lab-card lab-inbox">
+            <div class="spread"><span class="small muted">Sent through</span><span class="small strong">Your real Gmail</span></div>
+            <div class="spread"><span class="small muted">Each email</span><span class="small strong">Reviewed by you first</span></div>
+          </div>
+        </div>
+
+        <div class="mail">
+          <div class="mail-row"><span class="mail-k">To</span><span class="mail-v accent-text" id="pitch-to">contact@apexforge.io</span>{{ ui.badge("Verified contact", "ok", "verified") }}</div>
+          <div class="mail-row"><span class="mail-k">Subject</span><span class="mail-v strong" id="pitch-subject">Frontend development &amp; web app architecture at ApexForge Systems</span></div>
+          <div class="mail-body" id="pitch-body">
+            <p>Hi ApexForge Team,</p>
+            <p>I came across ApexForge Systems while researching top software development agencies specializing in custom web and mobile apps. Your 4.9 rating across 184 client reviews really caught my attention.</p>
+            <p>I build fast, responsive web applications using React, TypeScript, and Tailwind CSS. I noticed you build custom client solutions where smooth user experience and fast loading times are essential.</p>
+            <p>I'm currently looking for new projects and full-time opportunities with great development teams. Are you taking on new developers right now?</p>
+          </div>
+          <div class="mail-foot">
+            <span class="small subtle">{{ ui.icon("bolt") }}Tailored to this company</span>
+            <button type="button" class="btn btn-secondary btn-sm" onclick="copyPitch()">
+              <span class="material-symbols-outlined" id="copy-icon">content_copy</span>
+              <span id="copy-text">Copy Email</span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
-  </footer>
+  </div>
+</section>
 
-  <!-- INTERACTIVE SPECIMEN ENGINE SCRIPT -->
-  <script>
-    // Specimen Database (Curated realistic mock specimens)
-    const specimens = [
-      {
-        id: "af",
-        name: "ApexForge Systems",
-        monogram: "AF",
-        domain: "apexforge.io",
-        email: "contact@apexforge.io",
-        location: "Bengaluru, Karnataka, IN",
-        rating: "4.9 (184 reviews)",
-        tech: ["React.js", "TypeScript", "Tailwind CSS", "Next.js"],
-        pitches: {
-          architecture: {
-            subject: "Frontend development & web app architecture at ApexForge Systems",
-            p1: "I came across ApexForge Systems while researching top software development agencies specializing in custom web and mobile apps. Your 4.9 rating across 184 client reviews really caught my attention.",
-            p2: "I build fast, responsive web applications using React, TypeScript, and Tailwind CSS. I noticed you build custom client solutions where smooth user experience and fast loading times are essential.",
-            p3: "I'm currently looking for new projects and full-time opportunities with great development teams. Are you taking on new developers right now?",
-          },
-          executive: {
-            subject: "Helping ApexForge Systems deliver client web projects faster",
-            p1: "ApexForge Systems has a stellar reputation for delivering end-to-end cloud and web products for clients.",
-            p2: "I help agencies speed up client delivery by building clean, reusable front-end design systems and keeping codebases organized and bug-free.",
-            p3: "If your team is looking for a dependable front-end developer to help with upcoming client projects, I'd welcome a brief 5-minute conversation.",
-          },
-          peer: {
-            subject: "Quick hello from a front-end developer in Bengaluru",
-            p1: "Hey ApexForge team: I really admire the quality of web platforms your team has shipped over recent years.",
-            p2: "I'm a front-end developer working with React and TypeScript, and I love building clean, responsive interfaces. I'd love to connect with your team for upcoming project opportunities.",
-            p3: "Would you have 5 minutes this week for a quick chat?",
-          }
-        }
-      },
-      {
-        id: "vl",
-        name: "VortexLogic Labs",
-        monogram: "VL",
-        domain: "vortexlogic.dev",
-        email: "contact@vortexlogic.dev",
-        location: "Pune, Maharashtra, IN",
-        rating: "5.0 (142 reviews)",
-        tech: ["Node.js", "Python", "FastAPI", "PostgreSQL"],
-        pitches: {
-          architecture: {
-            subject: "Backend API development & Python engineering at VortexLogic Labs",
-            p1: "I've been following VortexLogic Labs' work building custom software and scalable backend platforms in Pune.",
-            p2: "I specialize in backend engineering using Python, FastAPI, and Node.js with PostgreSQL. I build fast, reliable APIs and clean database architectures that handle heavy traffic smoothly.",
-            p3: "I'm looking for new software engineering roles where I can help build rock-solid systems. Do you have any openings on your core development team?",
-          },
-          executive: {
-            subject: "Reliable senior backend engineering capacity for VortexLogic Labs",
-            p1: "VortexLogic Labs' consistent 5.0 delivery track record across 140+ client engagements demonstrates top-tier execution.",
-            p2: "I help software firms ship client deliverables on time by building clean API architectures and automated tests that catch issues before release.",
-            p3: "If you're looking for extra engineering support on upcoming client deliverables, I'd welcome a quick 5-minute introductory chat.",
-          },
-          peer: {
-            subject: "Connecting with the VortexLogic engineering team",
-            p1: "Hi VortexLogic team: love the solid software foundation you've established across Python and Node.js backend systems.",
-            p2: "I'm a full-stack engineer passionate about clean code, reliable databases, and intuitive user experiences. Would love to introduce myself for upcoming opportunities.",
-            p3: "Happy to share my recent code projects and portfolio if you have 5 minutes.",
-          }
-        }
-      },
-      {
-        id: "nc",
-        name: "NovaCrest AI",
-        monogram: "NC",
-        domain: "novacrest.ai",
-        email: "contact@novacrest.ai",
-        location: "Hyderabad, Telangana, IN",
-        rating: "4.9 (96 reviews)",
-        tech: ["Next.js", "PyTorch", "AWS", "PostgreSQL"],
-        pitches: {
-          architecture: {
-            subject: "Next.js & AI application development at NovaCrest AI",
-            p1: "I noticed NovaCrest AI is actively building smart SaaS products and modern cloud solutions in Hyderabad. Your portfolio looks fantastic.",
-            p2: "I work with Next.js, Python, and modern AI integrations. In my recent builds, I focused on building fast web interfaces that stream AI responses smoothly without delays.",
-            p3: "I'm eager to bring hands-on full-stack and AI development skills to NovaCrest AI. Would your technical team be open to a 10-minute introductory call?",
-          },
-          executive: {
-            subject: "Full-stack product engineering support for NovaCrest AI",
-            p1: "NovaCrest AI's focus on practical, AI-powered software products is exactly where modern technology is heading.",
-            p2: "I help SaaS companies turn AI prototypes into polished, reliable web applications that customers love using.",
-            p3: "If NovaCrest AI is looking for extra developer firepower to build new product features this quarter, I'd welcome a chance to share my work.",
-          },
-          peer: {
-            subject: "Fellow developer saying hello to the NovaCrest AI team",
-            p1: "Hey NovaCrest team: big fan of the AI-driven software products you've been launching.",
-            p2: "I'm a developer working with Next.js and Python, and I'm exploring new teams to build with. Would love to connect with fellow builders at NovaCrest.",
-            p3: "Are you open to an informal conversation about what you're working on?",
-          }
-        }
-      }
-    ];
+<!-- ===================== Features ===================== -->
+<section class="section" id="capabilities">
+  <div class="container">
+    {{ ui.section_head("Features", 'Everything you need to find clients <span class="em">and get hired</span>', "Stop spending hours searching Google Maps, copying emails into spreadsheets and writing cold emails from scratch.") }}
 
-    let currentSpecimenIdx = 0;
-    let currentTone = "architecture";
+    <div class="bento reveal-stagger">
+      <article class="tile b-4 tile-search">
+        <span class="icon-tile">{{ ui.icon("explore") }}</span>
+        <h3>Find local companies in any city</h3>
+        <p>Type any business type and city, like digital marketing agencies in Mumbai. OutreachPilot pulls real companies from Google Maps with their website, address, phone number and rating.</p>
+        <div class="tile-visual mini-search">
+          <div class="mini-bar">{{ ui.icon("search") }}<span>Software companies in Bengaluru</span><span class="btn btn-primary btn-xs">Search</span></div>
+          <div class="cluster" style="--cluster:8px">{{ ui.chip("20+ companies per search", "accent", cls="chip-sm") }}{{ ui.chip("Website", cls="chip-sm") }}{{ ui.chip("Phone", cls="chip-sm") }}{{ ui.chip("Rating", cls="chip-sm") }}</div>
+        </div>
+      </article>
 
-    function updateSpecimenUI() {
-      const sp = specimens[currentSpecimenIdx];
-      const pitchData = sp.pitches[currentTone];
+      <article class="tile b-2">
+        <span class="icon-tile">{{ ui.icon("memory") }}</span>
+        <h3>See what each company does</h3>
+        <p>OutreachPilot visits each website to find their services, the technologies they use and direct contact emails.</p>
+        <div class="tile-visual cluster" style="--cluster:6px">{{ ui.chip("Web apps", cls="chip-sm") }}{{ ui.chip("Mobile apps", cls="chip-sm") }}{{ ui.chip("Cloud", cls="chip-sm") }}{{ ui.chip("Verified emails", "accent", cls="chip-sm") }}</div>
+      </article>
 
-      // Specimen metadata
-      document.getElementById("specimen-mono").textContent = sp.monogram;
-      document.getElementById("specimen-name").textContent = sp.name;
-      document.getElementById("specimen-domain").textContent = sp.domain;
-      document.getElementById("specimen-email").textContent = sp.email;
-      document.getElementById("specimen-location").textContent = sp.location;
-      document.getElementById("specimen-rating").textContent = sp.rating;
+      <article class="tile b-2">
+        <span class="icon-tile">{{ ui.icon("badge") }}</span>
+        <h3>Tailored to your skills</h3>
+        <p>Upload your resume or paste a summary. Your real skills are matched to what the company needs, so every email sounds natural.</p>
+        <div class="tile-visual match"><span class="chip chip-sm">Your skills</span><span class="match-line" aria-hidden="true"></span><span class="chip chip-sm chip-accent">Company needs</span></div>
+      </article>
 
-      // Tech pills
-      const techContainer = document.getElementById("specimen-tech-pills");
-      techContainer.innerHTML = sp.tech.map(t => `<span class="px-2 py-0.5 rounded text-[11px] font-mono bg-surface-container text-on-surface-variant border border-outline">${t}</span>`).join("");
+      <article class="tile b-4 tile-gmail">
+        <span class="icon-tile">{{ ui.icon("send") }}</span>
+        <h3>Send directly from your own Gmail</h3>
+        <p>No bulk mailers that get blocked. OutreachPilot connects to your Google account with official sign-in, and each email goes out one by one from your real Gmail address.</p>
+        <ul class="tile-visual ticks" role="list">
+          <li>{{ ui.icon("check") }}Sent from your real Gmail address</li>
+          <li>{{ ui.icon("check") }}One by one, never in bulk</li>
+          <li>{{ ui.icon("check") }}Replies arrive in your normal inbox</li>
+        </ul>
+      </article>
+    </div>
+  </div>
+</section>
 
-      // Pitch terminal
-      document.getElementById("pitch-to").textContent = sp.email;
-      document.getElementById("pitch-subject").textContent = pitchData.subject;
-      
-      const bodyContainer = document.getElementById("pitch-body");
-      bodyContainer.innerHTML = `
-        <p>Hi ${escapeHTML(sp.name.split(' ')[0])} Team,</p>
-        <p>${escapeHTML(pitchData.p1)}</p>
-        <p>${escapeHTML(pitchData.p2)}</p>
-        <p>${escapeHTML(pitchData.p3)}</p>
-        <p class="text-on-surface-variant text-xs pt-1 font-mono">
-          Best regards,<br/>
-          <strong class="text-primary">Rahul Vora</strong> / <span class="text-secondary">Portfolio &amp; GitHub Profile Attached</span>
-        </p>
-      `;
+<!-- ===================== How it works ===================== -->
+<section class="section alt" id="workflow">
+  <div class="container">
+    {{ ui.section_head("How it works", 'From search to reply in <span class="em">three simple steps</span>', None, center=True) }}
 
-      // Update tone badge
-      const toneLabels = {
-        architecture: "Skills & Experience",
-        executive: "Business & Results",
-        peer: "Casual & Friendly"
-      };
-      document.getElementById("tone-badge").textContent = toneLabels[currentTone];
-    }
+    <ol class="flow reveal-stagger" role="list">
+      <li class="flow-step">
+        <span class="flow-num">01</span>
+        <span class="icon-tile">{{ ui.icon("travel_explore") }}</span>
+        <h3 class="h4">Find Target Companies</h3>
+        <p>Type any business type and city. Within seconds you get active companies with websites, phone numbers and ratings.</p>
+      </li>
+      <li class="flow-step">
+        <span class="flow-num">02</span>
+        <span class="icon-tile">{{ ui.icon("contact_mail") }}</span>
+        <h3 class="h4">Find Emails &amp; Info</h3>
+        <p>Each company website is checked for verified emails of owners and hiring managers, plus the services and technologies they work with.</p>
+      </li>
+      <li class="flow-step">
+        <span class="flow-num">03</span>
+        <span class="icon-tile">{{ ui.icon("send") }}</span>
+        <h3 class="h4">Review &amp; Send via Gmail</h3>
+        <p>A personal, friendly email is written for that company. Review it, make quick edits, and send it from your Gmail with one click.</p>
+      </li>
+    </ol>
+  </div>
+</section>
 
-    function selectSpecimen(idx) {
-      currentSpecimenIdx = idx;
-      const tabs = document.querySelectorAll(".specimen-tab");
-      tabs.forEach((tab, i) => {
-        if (i === idx) {
-          tab.classList.add("active", "border-primary", "bg-surface-container");
-          tab.classList.remove("border-outline", "bg-surface-container-lowest");
-          const title = tab.querySelector(".font-display");
-          if (title) title.classList.replace("text-on-surface-variant", "text-primary");
-        } else {
-          tab.classList.remove("active", "border-primary", "bg-surface-container");
-          tab.classList.add("border-outline", "bg-surface-container-lowest");
-          const title = tab.querySelector(".font-display");
-          if (title) title.classList.replace("text-primary", "text-on-surface-variant");
-        }
-      });
-      updateSpecimenUI();
-    }
+<!-- ===================== Who it is for ===================== -->
+<section class="section" id="who">
+  <div class="container">
+    {{ ui.section_head("Who it is for", 'Built for anyone who needs <span class="em">a reply</span>') }}
+    <div class="grid grid-3 reveal-stagger">
+      {{ ui.feature("work", "Job seekers", "Write to the companies you want to work for, with your resume attached and your real skills in every line.") }}
+      {{ ui.feature("design_services", "Freelancers", "Find local businesses that need what you do, and introduce yourself with an email that shows you know their work.") }}
+      {{ ui.feature("groups", "Agencies", "Build a list of real companies in any city and reach the people who decide, one personal email at a time.") }}
+    </div>
+  </div>
+</section>
 
-    function setPitchTone(tone) {
-      currentTone = tone;
-      const buttons = document.querySelectorAll(".tone-btn");
-      buttons.forEach(btn => {
-        const isMatch = btn.getAttribute("onclick").includes(`'${tone}'`);
-        if (isMatch) {
-          btn.classList.add("active", "border-primary", "bg-surface-container", "text-primary");
-          btn.classList.remove("border-outline", "bg-surface-container-lowest", "text-on-surface-variant");
-        } else {
-          btn.classList.remove("active", "border-primary", "bg-surface-container", "text-primary");
-          btn.classList.add("border-outline", "bg-surface-container-lowest", "text-on-surface-variant");
-        }
-      });
-      updateSpecimenUI();
-    }
+<!-- ===================== Security ===================== -->
+<section class="section tight" id="security">
+  <div class="container">
+    <div class="secure reveal">
+      <div class="secure-copy">
+        {{ ui.eyebrow("Privacy and safety") }}
+        <h3 class="h2">Your Google account is <span class="em">safe and secure</span></h3>
+        <p class="lead">We use official Google Sign-In. We never see your password, we never sell your data, and we only send an email when you review it and click Send.</p>
+        <div class="cluster">
+          <a href="/privacy" class="btn btn-secondary btn-sm">{{ ui.icon("description") }}<span>Privacy Policy</span></a>
+          <a href="/terms" class="btn btn-ghost btn-sm">{{ ui.icon("gavel") }}<span>Terms of Service</span></a>
+        </div>
+      </div>
+      <div class="secure-visual" aria-hidden="true">
+        <div class="lock-ring"><span class="lock-ring-inner">{{ ui.icon("lock", "icon-fill") }}</span></div>
+        <div class="secure-chips">
+          <span class="pin"><i>{{ ui.icon("check") }}</i>Official Google Sign-In</span>
+          <span class="pin"><i>{{ ui.icon("check") }}</i>Private and encrypted</span>
+          <span class="pin"><i>{{ ui.icon("check") }}</i>You press send</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
 
-    function copyPitch() {
-      const sp = specimens[currentSpecimenIdx];
-      const pitch = sp.pitches[currentTone];
-      const text = `To: ${sp.email}\nSubject: ${pitch.subject}\n\nHi ${sp.name.split(' ')[0]} Team,\n\n${pitch.p1}\n\n${pitch.p2}\n\n${pitch.p3}\n\nBest regards,\nRahul Vora`;
-      
-      navigator.clipboard.writeText(text).then(() => {
-        const icon = document.getElementById("copy-icon");
-        const label = document.getElementById("copy-text");
-        icon.textContent = "done";
-        label.textContent = "Copied!";
-        setTimeout(() => {
-          icon.textContent = "content_copy";
-          label.textContent = "Copy Pitch";
-        }, 2000);
-      });
-    }
+{% if not subscription_kill_switch and tiers %}
+<!-- ===================== Pricing ===================== -->
+<section class="section" id="pricing">
+  <div class="container">
+    <div class="pricing-head">
+      <div class="section-head">
+        {{ ui.eyebrow("Pricing") }}
+        <h2 class="h2 reveal">Predictable outreach limits. <span class="em">Zero spam tax.</span></h2>
+        <p class="lead reveal" style="--d:.08s">{% if free_plan %}Start free with {{ free_plan.daily_pitch_limit }} pitches every day. {% endif %}Move to a bigger plan whenever you need a higher daily limit.</p>
+      </div>
+      {% if is_logged_in and sub_info %}
+      <div class="current-plan reveal">
+        <span class="dot dot-live"></span>
+        <div>
+          <div class="small strong">Active: <span class="accent-text">{{ sub_info.tier_name }}</span></div>
+          <div class="xsmall subtle">{{ sub_info.pitches_remaining }} / {{ sub_info.daily_pitch_limit }} pitches left today</div>
+        </div>
+        <a href="/app" class="btn btn-primary btn-xs">Open App</a>
+      </div>
+      {% endif %}
+    </div>
 
-    function escapeHTML(str) {
-      if (!str) return "";
-      return String(str)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#39;");
-    }
+    {% set plan_count = tiers|length %}
+    <div class="plans {% if plan_count >= 4 %}plans-4{% elif plan_count == 3 %}plans-3{% elif plan_count == 2 %}plans-2{% else %}plans-1{% endif %} reveal-stagger">
+      {% for t in tiers %}
+      {% set featured = t.code == 'pro' %}
+      {% set is_current = is_logged_in and sub_info and sub_info.tier_code == t.code %}
+      <div class="plan{% if featured %} is-featured{% endif %}">
+        {% if t.badge %}<span class="plan-badge">{{ t.badge }}</span>{% endif %}
+        <div class="plan-top">
+          {% if t.subtitle %}<div class="plan-sub">{{ t.subtitle }}</div>{% endif %}
+          <h3 class="plan-name">{{ t.name }}</h3>
+          <div class="plan-price"><span class="amount">₹{{ "{:,}".format(t.price_inr) }}</span><span class="per">/ month</span></div>
+          <div class="plan-quota"><span>Daily outreach quota</span><b>{{ "{:,}".format(t.daily_pitch_limit) }} pitches / day</b></div>
+          {% if t.features %}
+          <ul class="plan-features" role="list">
+            {% for f in t.features %}
+            <li>{{ ui.icon("check_circle") }}<span>{{ f }}</span></li>
+            {% endfor %}
+          </ul>
+          {% endif %}
+        </div>
+        <div class="plan-cta">
+          {% if is_current %}
+          <span aria-current="true" class="btn btn-quiet btn-block">Current Active Plan</span>
+          {% elif t.price_inr == 0 %}
+          <a href="{% if is_logged_in %}/app{% else %}/auth/google/login{% endif %}" class="btn btn-secondary btn-block">
+            {% if is_logged_in %}Switch to {{ t.name }}{% else %}Get Started Free{% endif %}
+          </a>
+          {% else %}
+          <a href="/app" class="btn {% if featured %}btn-primary{% else %}btn-secondary{% endif %} btn-block">
+            Upgrade to {{ t.name }}
+          </a>
+          {% endif %}
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
 
-    // Dark / Light Mode Toggle Handler (Pure Icon Toggle)
-    function updateThemeIcon(theme) {
-      const isLight = theme === "light";
-      const icon = document.getElementById("theme-toggle-icon");
-      if (icon) {
-        icon.textContent = isLight ? "dark_mode" : "light_mode";
-      }
-      const btn = document.getElementById("btn-theme-toggle");
-      if (btn) {
-        btn.setAttribute("title", isLight ? "Switch to Dark Mode" : "Switch to Light Mode");
-      }
-    }
+<!-- ===================== FAQ ===================== -->
+<section class="section alt" id="faq">
+  <div class="container faq-wrap">
+    <div class="section-head">
+      {{ ui.eyebrow("Questions") }}
+      <h2 class="h2 reveal">Questions, <span class="em">answered</span></h2>
+      <p class="lead reveal" style="--d:.08s">Still unsure? Read the <a class="link" href="/privacy">privacy policy</a> and <a class="link" href="/terms">terms</a>.</p>
+    </div>
+    <div class="faq reveal">
+      {{ ui.faq_item("Is it free to search for companies?", "Yes. Searching the directory is free, and you can browse companies before you even sign in.", open=True) }}
+      {{ ui.faq_item("Do the emails go out from my own Gmail?", "Yes. You sign in with official Google Sign-In, and each email is sent one by one from your real Gmail address. Replies arrive in your normal inbox.") }}
+      {{ ui.faq_item("Can OutreachPilot see my Google password?", "No. Sign-in happens on Google itself. We never see your password and we never sell your data.") }}
+      {{ ui.faq_item("Will anything be sent without me?", "No. An email is only sent after you review it and click Send.") }}
+      {% if free_plan %}
+      {{ ui.faq_item("How many emails can I send each day?", "The free plan includes " ~ free_plan.daily_pitch_limit ~ " pitches every day. Bigger plans raise the daily limit.") }}
+      {% endif %}
+      {{ ui.faq_item("Where do the companies come from?", "Companies come from Google Maps. OutreachPilot then checks each company website for contact emails, services and technologies.") }}
+    </div>
+  </div>
+</section>
 
-    function toggleTheme() {
-      const isCurrentlyLight = document.documentElement.classList.contains("light");
-      const newTheme = isCurrentlyLight ? "dark" : "light";
-      if (newTheme === "light") {
-        document.documentElement.classList.remove("dark");
-        document.documentElement.classList.add("light");
-      } else {
-        document.documentElement.classList.remove("light");
-        document.documentElement.classList.add("dark");
-      }
-      try {
-        localStorage.setItem("pilot_theme", newTheme);
-      } catch (_) {}
-      updateThemeIcon(newTheme);
-    }
+<!-- ===================== Final call to action ===================== -->
+<section class="section tight">
+  <div class="container">
+    <div class="final reveal">
+      <div class="final-bg bg-dots" aria-hidden="true"></div>
+      <span class="logo-mark lg" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#logo-plane"/></svg></span>
+      <h2 class="h1">Ready to start reaching <span class="em">real companies</span> today?</h2>
+      <p class="lead">Find verified businesses in your target city, get direct contact info, and start conversations that lead to jobs and new clients. Free to start, no credit card needed.</p>
+      <div class="cluster" style="justify-content:center">
+        <a href="/app" class="btn btn-primary btn-lg"><span>Search leads for free</span><svg class="ico ico-sm arrow" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+        <a href="/directory" class="btn btn-secondary btn-lg">Browse the directory</a>
+      </div>
+    </div>
+  </div>
+</section>
 
-    document.getElementById("btn-theme-toggle")?.addEventListener("click", toggleTheme);
-    updateThemeIcon(document.documentElement.classList.contains("light") ? "light" : "dark");
+<!-- ===================== Browse the directory (crawlable links, live data) ===================== -->
+{% if browse_cities or browse_categories %}
+<section aria-labelledby="browse-directory-heading" class="section tight browse">
+  <div class="container">
+    <div class="spread browse-head">
+      <div>
+        <h2 id="browse-directory-heading" class="h3">Browse the directory</h2>
+        <p class="small muted">The cities and categories with the most companies, biggest first.</p>
+      </div>
+      <a href="/directory" class="btn btn-text"><span>See every city and category</span><svg class="ico ico-sm arrow" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+    </div>
+    <div class="grid grid-2">
+      {% if browse_cities %}
+      <nav aria-label="Companies by city" class="browse-card">
+        <h3 class="browse-title">{{ ui.icon("location_city") }}<span>By city</span></h3>
+        <ul class="cluster" style="--cluster:8px" role="list">
+          {% for c in browse_cities %}
+          <li><a href="/directory/city/{{ c.slug }}" class="chip">{{ c.name }}</a></li>
+          {% endfor %}
+        </ul>
+      </nav>
+      {% endif %}
+      {% if browse_categories %}
+      <nav aria-label="Companies by category" class="browse-card">
+        <h3 class="browse-title">{{ ui.icon("category") }}<span>By category</span></h3>
+        <ul class="cluster" style="--cluster:8px" role="list">
+          {% for t in browse_categories %}
+          <li><a href="/directory/category/{{ t.slug }}" class="chip">{{ t.name }}</a></li>
+          {% endfor %}
+        </ul>
+      </nav>
+      {% endif %}
+    </div>
+  </div>
+</section>
+{% endif %}
+{% endblock %}
 
-    // Smooth-scroll anchor navigation
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-      anchor.addEventListener('click', function (e) {
-        const targetId = this.getAttribute('href');
-        if (targetId && targetId !== '#') {
-          const targetEl = document.querySelector(targetId);
-          if (targetEl) {
-            e.preventDefault();
-            targetEl.scrollIntoView({ behavior: 'smooth' });
-            history.pushState(null, '', targetId);
-          }
-        }
-      });
-    });
-
-    // Initialize UI on load
-    document.addEventListener("DOMContentLoaded", () => {
-      updateSpecimenUI();
-    });
-  </script>
-</body>
-</html>
+{% block scripts %}
+<script src="/static/js/pages/landing.js?v={{ asset_v }}"></script>
+<script src="/static/js/site/landing-demo.js?v={{ asset_v }}" defer></script>
+<script src="/static/js/site/hero-canvas.js?v={{ asset_v }}" defer></script>
+{% endblock %}

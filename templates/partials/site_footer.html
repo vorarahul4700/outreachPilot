@@ -21,7 +21,7 @@
         <nav class="f-col" aria-label="Directory">
           <h2 class="f-head">Directory</h2>
           <a href="/directory">All cities and categories</a>
-          {% for c in ((browse_cities if browse_cities is defined else []) or [])[:3] %}
+          {% for c in (browse_cities or [])[:3] %}
           <a href="/directory/city/{{ c.slug }}">{{ c.name }}</a>
           {% endfor %}
         </nav>

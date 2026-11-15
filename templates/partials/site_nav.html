@@ -13,7 +13,9 @@
       <a href="{{ _p }}#workflow">How it works</a>
       <a href="{{ _p }}#capabilities">Features</a>
       <a href="{{ _p }}#security">Security</a>
+      {% if not subscription_kill_switch %}
       <a href="{{ _p }}#pricing">Pricing</a>
+      {% endif %}
       <a href="/directory">Directory</a>
     </nav>
 
@@ -39,7 +41,9 @@
   <a class="m-link" style="--i:0" href="{{ _p }}#workflow">How it works <span>01</span></a>
   <a class="m-link" style="--i:1" href="{{ _p }}#capabilities">Features <span>02</span></a>
   <a class="m-link" style="--i:2" href="{{ _p }}#security">Security <span>03</span></a>
+  {% if not subscription_kill_switch %}
   <a class="m-link" style="--i:3" href="{{ _p }}#pricing">Pricing <span>04</span></a>
+  {% endif %}
   <a class="m-link" style="--i:4" href="/directory">Directory <span>05</span></a>
   <div class="m-cta">
     {% if _logged_in %}
