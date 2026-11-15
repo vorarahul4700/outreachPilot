@@ -129,7 +129,7 @@
         <button id="btn-theme-toggle" type="button" aria-label="Toggle Theme" class="w-8 h-8 rounded-lg flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container border border-outline-variant/40 transition cursor-pointer shrink-0">
           <span id="theme-toggle-icon" class="material-symbols-outlined text-[18px]">light_mode</span>
         </button>
-        <a href="/app?{% if hub_badge and 'Tech Hub' in hub_badge %}city={{ hub_name | urlencode }}{% else %}tech={{ hub_name | urlencode }}{% endif %}" class="btn-tactile-ecru flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-bold whitespace-nowrap shrink-0">
+        <a href="{{ workspace_url or '/app' }}" class="btn-tactile-ecru flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-bold whitespace-nowrap shrink-0">
           <span>Scout Workspace</span>
           <span class="material-symbols-outlined text-[14px] shrink-0">arrow_forward</span>
         </a>
@@ -169,12 +169,12 @@
       <section class="bento-cell p-5 bg-surface-container-high/40 border-secondary/30 space-y-3" aria-label="Executive Summary">
         <div class="flex items-center gap-2 text-xs font-mono text-secondary font-semibold">
           <span class="material-symbols-outlined text-[16px]">verified</span>
-          <span>KEY DIRECTORY TAKEAWAYS (AEO SUMMARY)</span>
+          <span>AT A GLANCE</span>
         </div>
         <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
           <div class="p-3 rounded-lg bg-surface-container-lowest border border-outline font-mono text-xs">
             <span class="text-on-surface-variant block text-[11px]">Total Verified Companies:</span>
-            <span class="text-lg font-bold text-primary tnum">{{ total_companies }} Firms</span>
+            <span class="text-lg font-bold text-primary tnum">{{ "{:,}".format(total_companies) }} {{ 'company' if total_companies == 1 else 'companies' }}</span>
           </div>
           <div class="p-3 rounded-lg bg-surface-container-lowest border border-outline font-mono text-xs">
             <span class="text-on-surface-variant block text-[11px]">Average Client Sentiment:</span>
@@ -210,7 +210,7 @@
           <h2 class="text-lg font-display font-bold text-primary">
             Verified Company Profiles <span class="text-xs font-mono text-on-surface-variant font-normal">({{ companies|length }} showing)</span>
           </h2>
-          <a href="/app" class="text-xs font-mono text-secondary hover:underline flex items-center gap-1">
+          <a href="{{ workspace_url or '/app' }}" class="text-xs font-mono text-secondary hover:underline flex items-center gap-1">
             <span>Prospect all in Workspace</span>
             <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
           </a>
@@ -297,7 +297,7 @@
       <section class="bento-cell p-6 space-y-4">
         <div class="flex items-center gap-2 text-xs font-mono text-secondary">
           <span class="material-symbols-outlined text-sm">help_outline</span>
-          <span>FREQUENTLY ASKED QUESTIONS (AEO)</span>
+          <span>FREQUENTLY ASKED QUESTIONS</span>
         </div>
         <h2 class="text-xl font-display font-bold text-primary">Frequently Asked Questions</h2>
 

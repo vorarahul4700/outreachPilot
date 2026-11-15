@@ -1167,9 +1167,14 @@ def directory_city_hub(city_slug: str, request: Request, db: Session = Depends(g
     """City-Level Technology & Business Directory Hub (73 Indian Cities)"""
     city_name = seo_engine.slug_to_city_name(city_slug)
     domain_param = request.query_params.get("domain")
-    domain_clean = (domain_param or "").strip().lower()
-    if domain_clean == "all":
-        domain_clean = None
+    domain_clean = (domain_param or "").strip().lower() or None
+    # Accept an industry's code or slug (e.g. "it" or "it-software"); anything
+    # else (including "all") means no industry filter: every company in the city.
+    dom_info = next(
+        (d for d in seo_engine.INDUSTRY_DOMAINS if domain_clean in (d["code"], d.get("slug"))),
+        None,
+    ) if domain_clean else None
+    domain_clean = dom_info["code"] if dom_info else None
 
     all_cities = seo_engine.get_all_cities(db)
     city_match = next((c for c in all_cities if c["slug"] == city_slug), None)
@@ -1181,8 +1186,22 @@ def directory_city_hub(city_slug: str, request: Request, db: Session = Depends(g
     base_url = seo_engine.get_canonical_base_url(request)
     canonical_url = f"{base_url}/directory/city/{city_slug}" + (f"?domain={domain_clean}" if domain_clean else "")
 
-    dom_info = next((d for d in seo_engine.INDUSTRY_DOMAINS if d["code"] == domain_clean), None) if domain_clean else None
-    dom_display = dom_info["name"] if dom_info else "Software & IT"
+    # Without an industry the page lists every company in the city, so the wording
+    # stays general (it used to fall back to "Software & IT").
+    if dom_info:
+        dom_display = dom_info["name"]
+        page_heading = f"Top {dom_display} Companies in {city_name}"
+        hub_badge = f"Verified companies in {city_name} ({dom_display})"
+        companies_noun = f"{dom_display} companies"
+    else:
+        page_heading = f"Top Companies in {city_name}"
+        hub_badge = f"Verified companies in {city_name}"
+        companies_noun = "companies"
+
+    workspace_params = {"city": city_name}
+    if domain_clean:
+        workspace_params["domain"] = domain_clean
+    workspace_url = "/app?" + urllib.parse.urlencode(workspace_params)
 
     all_combos = seo_engine.get_all_combinations(db)
     city_combos = [c for c in all_combos if c["city_slug"] == city_slug]
@@ -1207,14 +1226,13 @@ def directory_city_hub(city_slug: str, request: Request, db: Session = Depends(g
         (city_name, canonical_url)
     ]
     bc_schema = seo_engine.build_breadcrumb_schema(breadcrumbs)
-    bc_schema = seo_engine.build_breadcrumb_schema(breadcrumbs)
-    itemlist_schema = seo_engine.build_itemlist_schema(companies, base_url, f"Top {dom_display} Companies in {city_name}")
+    itemlist_schema = seo_engine.build_itemlist_schema(companies, base_url, page_heading)
     faq_schema = seo_engine.build_faq_schema(faqs)
     combined_schema = json.dumps([bc_schema, itemlist_schema, faq_schema], ensure_ascii=False)
 
-    page_title = f"Top {dom_display} Companies in {city_name} (2026 Directory)"
-    page_subtitle = f"Verified service capabilities, client ratings, and direct contact intelligence across {total_count}+ active {dom_display.lower()} agencies in {city_name}, India."
-    meta_description = f"Browse {total_count}+ verified {dom_display.lower()} agencies and firms in {city_name}, India. Crawled websites, Google ratings, client reviews, and verified contacts."
+    page_title = f"{page_heading} (2026 Directory)"
+    page_subtitle = f"Websites, Google ratings and contact details for {total_count:,} {companies_noun} in {city_name}, India."
+    meta_description = f"Browse {total_count:,} {companies_noun} in {city_name}, India, with their websites, Google ratings and contact details."
 
     response = templates.TemplateResponse(
         request=request,
@@ -1223,11 +1241,12 @@ def directory_city_hub(city_slug: str, request: Request, db: Session = Depends(g
             "project_name": config.PROJECT_NAME,
             "canonical_url": canonical_url,
             "page_title": page_title,
-            "page_heading": f"Top {dom_display} Companies in {city_name}",
+            "page_heading": page_heading,
             "page_subtitle": page_subtitle,
             "meta_description": meta_description,
             "hub_name": city_name,
-            "hub_badge": f"Verified companies in {city_name} ({dom_display})",
+            "hub_badge": hub_badge,
+            "workspace_url": workspace_url,
             "total_companies": total_count,
             "avg_rating": avg_rating,
             "related_title": f"Top Specializations in {city_name}",
@@ -1291,6 +1310,7 @@ def directory_tech_hub(tech_slug: str, request: Request, db: Session = Depends(g
             "meta_description": meta_description,
             "hub_name": tech_name,
             "hub_badge": f"Verified {tech_name} companies",
+            "workspace_url": "/app?" + urllib.parse.urlencode({"tech": tech_name}),
             "total_companies": total_count,
             "avg_rating": avg_rating,
             "related_title": f"Top Indian Cities for {tech_name}",
