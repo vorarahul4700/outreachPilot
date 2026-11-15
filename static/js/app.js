@@ -339,231 +339,11 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnQuickRefresh = document.getElementById("btn-quick-refresh");
   if (btnQuickRefresh) btnQuickRefresh.addEventListener("click", () => fetchCompanies());
 
-  // Multi-Selection State for Bulk Lead Actions
+  // Multi-Selection and Bulk Lead Management removed from /app (Shifted strictly to Master Admin Panel /admin)
   const selectedCompanyIds = new Set();
-  const checkboxSelectAll = document.getElementById("checkbox-select-all");
-  const labelSelectAll = document.getElementById("label-select-all");
-  const bulkActionBar = document.getElementById("bulk-action-bar");
-  const bulkSelectedCount = document.getElementById("bulk-selected-count");
-  const btnBulkExclude = document.getElementById("btn-bulk-exclude");
-  const btnBulkRestore = document.getElementById("btn-bulk-restore");
-  const btnBulkClear = document.getElementById("btn-bulk-clear");
   const companiesContainer = document.getElementById("companies-container");
-
-  function updateBulkActionBar() {
-    const canManageLeads = Boolean((isMasterAdmin && currentUser && currentUser.is_logged_in) || isDevMode);
-    if (!canManageLeads) {
-      if (bulkActionBar) {
-        bulkActionBar.classList.add("hidden");
-        bulkActionBar.classList.remove("flex");
-      }
-      return;
-    }
-    const count = selectedCompanyIds.size;
-    if (!bulkActionBar) return;
-
-    if (count === 0) {
-      bulkActionBar.classList.add("hidden");
-      bulkActionBar.classList.remove("flex");
-      if (checkboxSelectAll) {
-        checkboxSelectAll.checked = false;
-        checkboxSelectAll.indeterminate = false;
-        if (labelSelectAll) labelSelectAll.textContent = "Select All";
-      }
-      return;
-    }
-
-    bulkActionBar.classList.remove("hidden");
-    bulkActionBar.classList.add("flex");
-
-    if (bulkSelectedCount) bulkSelectedCount.textContent = count;
-    document.querySelectorAll(".bulk-count-num").forEach(el => {
-      el.textContent = count;
-    });
-
-    if (activeMetricFilter === "invalid") {
-      btnBulkRestore?.classList.remove("hidden");
-      btnBulkExclude?.classList.add("hidden");
-    } else {
-      btnBulkExclude?.classList.remove("hidden");
-      btnBulkRestore?.classList.add("hidden");
-    }
-    refreshIcons();
-  }
-
-  function updateSelectAllCheckboxState(pageItems) {
-    if (!checkboxSelectAll || !pageItems || pageItems.length === 0) {
-      if (checkboxSelectAll) {
-        checkboxSelectAll.checked = false;
-        checkboxSelectAll.indeterminate = false;
-        if (labelSelectAll) labelSelectAll.textContent = "Select All";
-      }
-      return;
-    }
-    const pageIds = pageItems.map(c => c.id);
-    const selectedOnPage = pageIds.filter(id => selectedCompanyIds.has(id)).length;
-
-    if (selectedOnPage === 0) {
-      checkboxSelectAll.checked = false;
-      checkboxSelectAll.indeterminate = false;
-      if (labelSelectAll) labelSelectAll.textContent = "Select All";
-    } else if (selectedOnPage === pageIds.length) {
-      checkboxSelectAll.checked = true;
-      checkboxSelectAll.indeterminate = false;
-      if (labelSelectAll) labelSelectAll.textContent = `All (${pageIds.length}) Selected`;
-    } else {
-      checkboxSelectAll.checked = false;
-      checkboxSelectAll.indeterminate = true;
-      if (labelSelectAll) labelSelectAll.textContent = `${selectedOnPage}/${pageIds.length} Selected`;
-    }
-  }
-
-  if (checkboxSelectAll) {
-    checkboxSelectAll.addEventListener("change", () => {
-      const pageCards = companiesContainer ? Array.from(companiesContainer.querySelectorAll(".company-checkbox")) : [];
-      if (checkboxSelectAll.checked) {
-        pageCards.forEach(chk => {
-          const id = parseInt(chk.dataset.id, 10);
-          if (id) {
-            selectedCompanyIds.add(id);
-            chk.checked = true;
-            const parentCard = chk.closest(".company-card") || chk.closest(".company-card-invalid") || chk.closest("div[data-id]");
-            if (parentCard) {
-              parentCard.classList.add("border-primary", "ring-1", "ring-primary");
-              parentCard.classList.remove("border-outline-variant/30");
-            }
-          }
-        });
-      } else {
-        pageCards.forEach(chk => {
-          const id = parseInt(chk.dataset.id, 10);
-          if (id) {
-            selectedCompanyIds.delete(id);
-            chk.checked = false;
-            const parentCard = chk.closest(".company-card") || chk.closest(".company-card-invalid") || chk.closest("div[data-id]");
-            if (parentCard) {
-              parentCard.classList.remove("border-primary", "ring-1", "ring-primary", "ring-2", "ring-primary/60", "border-primary", "bg-slate-800/80", "bg-slate-800/90", "border-primary-container", "ring-primary-container");
-              parentCard.classList.add("border-outline-variant/30");
-            }
-          }
-        });
-      }
-      updateBulkActionBar();
-      if (labelSelectAll) {
-        labelSelectAll.textContent = checkboxSelectAll.checked ? `All (${pageCards.length}) Selected` : "Select All";
-      }
-    });
-  }
-
-  if (btnBulkClear) {
-    btnBulkClear.addEventListener("click", () => {
-      selectedCompanyIds.clear();
-      document.querySelectorAll(".company-checkbox").forEach(chk => {
-        chk.checked = false;
-      });
-      document.querySelectorAll(".company-card, .company-card-invalid").forEach(card => {
-        card.classList.remove(
-          "border-primary", "ring-1", "ring-primary", "ring-2", 
-          "ring-primary/60", "border-primary", "bg-slate-800/80", 
-          "bg-slate-800/90", "border-primary-container", "ring-primary-container", 
-          "ring-rose-500/80", "border-rose-500", "bg-rose-500/10"
-        );
-        card.classList.add("border-outline-variant/30");
-      });
-      if (checkboxSelectAll) {
-        checkboxSelectAll.checked = false;
-        checkboxSelectAll.indeterminate = false;
-      }
-      if (labelSelectAll) labelSelectAll.textContent = "Select All";
-      updateBulkActionBar();
-    });
-  }
-
-  if (btnBulkExclude) {
-    btnBulkExclude.addEventListener("click", async () => {
-      const ids = Array.from(selectedCompanyIds);
-      if (ids.length === 0) return;
-
-      const oldHtml = btnBulkExclude.innerHTML;
-      btnBulkExclude.disabled = true;
-      btnBulkExclude.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i><span>Excluding ${ids.length} Leads...</span>`;
-      refreshIcons();
-
-      try {
-        const res = await fetch("/api/companies/bulk-invalidate", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ company_ids: ids, reason: "Excluded by Master Admin" })
-        });
-        const data = await res.json();
-        if (res.ok && data.success) {
-          // Optimistically update in-memory
-          ids.forEach(id => {
-            const found = companies.find(c => c.id === id);
-            if (found) {
-              found.is_invalid = true;
-              found.invalid_reason = "Excluded by Master Admin";
-            }
-          });
-          selectedCompanyIds.clear();
-          updateBulkActionBar();
-          await fetchCompanies(true);
-          showToast(`Successfully marked ${ids.length} leads as excluded.`, "error");
-        } else {
-          showToast("Bulk exclude failed: " + (data.detail || data.message || "Unauthorized"), "error");
-        }
-      } catch (err) {
-        showToast("Bulk exclude error: " + err.message, "error");
-      } finally {
-        btnBulkExclude.disabled = false;
-        btnBulkExclude.innerHTML = oldHtml;
-        refreshIcons();
-      }
-    });
-  }
-
-  if (btnBulkRestore) {
-    btnBulkRestore.addEventListener("click", async () => {
-      const ids = Array.from(selectedCompanyIds);
-      if (ids.length === 0) return;
-
-      const oldHtml = btnBulkRestore.innerHTML;
-      btnBulkRestore.disabled = true;
-      btnBulkRestore.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i><span>Restoring ${ids.length} Leads...</span>`;
-      refreshIcons();
-
-      try {
-        const res = await fetch("/api/companies/bulk-restore", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ company_ids: ids })
-        });
-        const data = await res.json();
-        if (res.ok && data.success) {
-          // Optimistically update in-memory
-          ids.forEach(id => {
-            const found = companies.find(c => c.id === id);
-            if (found) {
-              found.is_invalid = false;
-              found.invalid_reason = null;
-            }
-          });
-          selectedCompanyIds.clear();
-          updateBulkActionBar();
-          await fetchCompanies(true);
-          showToast(`Successfully restored ${ids.length} leads to active directory.`, "success");
-        } else {
-          showToast("Bulk restore failed: " + (data.detail || data.message || "Unauthorized"), "error");
-        }
-      } catch (err) {
-        showToast("Bulk restore error: " + err.message, "error");
-      } finally {
-        btnBulkRestore.disabled = false;
-        btnBulkRestore.innerHTML = oldHtml;
-        refreshIcons();
-      }
-    });
-  }
+  function updateBulkActionBar() {}
+  function updateSelectAllCheckboxState() {}
 
   // ==========================================
   // STAGE 1: LEAD SCOUT CONTROLS & REAL-TIME RESULTS
@@ -2230,30 +2010,25 @@ document.addEventListener("DOMContentLoaded", () => {
         const canManageLeads = Boolean((isMasterAdmin && currentUser && currentUser.is_logged_in) || isDevMode);
 
         if (c.is_invalid) {
-          // If viewing general leads, invalid companies should never be selected
-          if (activeMetricFilter !== "invalid") {
-            selectedCompanyIds.delete(c.id);
-          }
-          // Invalid Lead Grid Card Styling
-          card.className = `company-card-invalid bg-surface-container-low border ${isSelected && activeMetricFilter === "invalid" ? 'border-rose-500 ring-2 ring-rose-500/80 bg-rose-500/10' : 'border-rose-500/30 hover:border-rose-500/50'} rounded-2xl p-4 sm:p-5 flex flex-col justify-between transition-all duration-200 group shadow-sm cursor-pointer relative min-w-0`;
+          // Invalid Lead Grid Card (Read-only notice, curation is strictly in /admin)
+          card.className = "company-card-invalid bg-surface-container-low border border-rose-500/30 rounded-2xl p-4 sm:p-5 flex flex-col justify-between transition-all duration-200 group shadow-sm min-w-0";
           card.innerHTML = `
             <div class="space-y-2 pointer-events-none">
               <div class="flex items-start justify-between gap-1.5 pointer-events-auto">
                 <div class="flex items-center space-x-2 flex-1 min-w-0">
-                  ${(canManageLeads && activeMetricFilter === "invalid") ? `<input type="checkbox" class="company-checkbox w-4 h-4 rounded bg-surface-container-lowest border-rose-600 text-rose-600 focus:ring-rose-500 cursor-pointer shrink-0 transition" data-id="${c.id}" ${isSelected ? 'checked' : ''} title="Select lead">` : ''}
-                  <h4 class="font-bold text-xs sm:text-sm text-on-surface group-hover:text-rose-500 transition flex items-center space-x-1.5 break-words flex-1">
+                  <h4 class="font-bold text-xs sm:text-sm text-on-surface flex items-center space-x-1.5 break-words flex-1">
                     <span>${escapeHTML(c.name)}</span>
                   </h4>
                 </div>
                 <span class="px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/30 text-[9px] sm:text-[10px] font-bold flex items-center space-x-1 shrink-0">
                   <i data-lucide="shield-alert" class="w-2.5 h-2.5 sm:w-3 sm:h-3 text-rose-500"></i>
-                  <span>INVALID</span>
+                  <span>EXCLUDED</span>
                 </span>
               </div>
               <div class="text-[10px] sm:text-[11px] text-rose-800 dark:text-rose-200 bg-rose-500/10 p-2.5 rounded-xl border border-rose-500/25 space-y-0.5">
                 <div class="flex items-center space-x-1 font-semibold text-rose-700 dark:text-rose-400 text-[9px] sm:text-[10px] uppercase tracking-wider">
                   <i data-lucide="alert-circle" class="w-3 h-3"></i>
-                  <span>Excluded</span>
+                  <span>Excluded by Admin</span>
                 </div>
                 <p class="break-words leading-tight">${escapeHTML(c.invalid_reason || 'Excluded by Admin')}</p>
                 ${c.invalid_at ? `<p class="text-[9px] sm:text-[10px] text-on-surface-variant font-mono">Date: ${escapeHTML(c.invalid_at)}</p>` : ''}
@@ -2263,25 +2038,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 <span>${escapeHTML(c.domain)}</span>
               </div>
             </div>
-
-            ${canManageLeads ? `
-            <div class="pt-2.5 sm:pt-3 mt-2.5 sm:mt-3 border-t border-rose-500/20 flex items-center justify-end">
-              <button class="btn-single-restore w-full text-center justify-center text-[11px] sm:text-xs px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold transition flex items-center space-x-1 shadow-sm cursor-pointer" data-id="${c.id}" title="Restore company to active directory">
-                <i data-lucide="rotate-ccw" class="w-3 h-3"></i>
-                <span>Restore Lead</span>
-              </button>
-            </div>
-            ` : ''}
           `;
-
-          const btnRestore = card.querySelector(".btn-single-restore");
-          if (btnRestore) {
-            btnRestore.addEventListener("click", (e) => {
-              e.stopPropagation();
-              handleRestoreCompany(c.id, c.name);
-            });
-          }
-
         } else {
           // Genuine Active Company Grid Card
           const monogram = getCompanyMonogram(c.name);
@@ -2346,76 +2103,76 @@ document.addEventListener("DOMContentLoaded", () => {
             techPillsHtml = `<span class="px-2 py-0.5 rounded text-[11px] font-mono tracking-wide text-on-surface-variant/60 bg-surface-container/40 border border-outline-variant/20 italic flex items-center gap-1.5"><span class="material-symbols-outlined text-[13px] text-amber-500/70">hourglass_top</span><span>Stack pending AI enrichment</span></span>`;
           }
 
-          const excludeBtn = canManageLeads
-            ? `<button class="btn-single-invalidate text-on-surface-variant hover:text-error p-1 rounded transition cursor-pointer" data-id="${c.id}" title="Exclude lead from outreach"><span class="material-symbols-outlined text-[16px]">block</span></button>`
-            : '';
-          const checkboxHtml = canManageLeads
-            ? `<input type="checkbox" class="company-checkbox w-4 h-4 rounded border-outline-variant/60 bg-surface-container-lowest text-primary focus:ring-0 cursor-pointer shrink-0 mt-1" data-id="${c.id}" ${isSelected ? 'checked' : ''}/>`
-            : '';
-
-          card.className = `company-card group bg-surface-container-low border ${isSelected ? 'border-primary ring-1 ring-primary' : 'border-outline-variant/40 hover:border-outline-variant/80 hover:shadow-lg'} rounded-xl p-5 flex flex-col justify-between transition-all duration-150 relative cursor-pointer min-w-0`;
+          card.className = "company-card group bg-surface-container-low border border-outline-variant/40 hover:border-outline-variant/80 hover:shadow-lg rounded-xl p-4 sm:p-5 flex flex-col justify-between transition-all duration-150 relative cursor-pointer min-w-0";
           card.innerHTML = `
             <div>
-              <!-- Part 1: Identity (Checkbox + Monogram + Name/Domain). Only the exclude
-                   control sits top-right so the name gets the full column width. -->
-              <div class="flex items-start gap-2.5 mb-2.5">
-                ${checkboxHtml}
-                <div class="w-9 h-9 rounded-md flex items-center justify-center font-bold text-label-sm ${monoTheme.bg} border shrink-0 font-mono shadow-sm">
-                  ${monogram}
-                </div>
-                <div class="min-w-0 flex-1">
-                  <h3 class="text-headline-sm font-headline-sm text-on-surface font-semibold break-words line-clamp-2 leading-snug" title="${escapeHTML(c.name)}">${escapeHTML(c.name)}</h3>
-                  ${c.domain ? `
-                  <a class="inline-flex items-center gap-1 max-w-full mt-0.5 text-caption font-mono text-on-surface-variant hover:text-primary transition-colors" href="${c.website_url || 'https://' + c.domain}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();" title="Visit ${escapeHTML(c.domain)}">
-                    <span class="truncate">${escapeHTML(c.domain)}</span>
-                    <span class="material-symbols-outlined text-[13px] shrink-0">open_in_new</span>
-                  </a>` : ''}
-                </div>
-                ${excludeBtn ? `<div class="shrink-0 -mt-0.5 -mr-1">${excludeBtn}</div>` : ''}
-              </div>
-
-              <!-- Part 1b: Meta line (status, industry, rating) on its own full-width row -->
-              <div class="flex items-center gap-x-2 gap-y-1.5 flex-wrap mb-3">
-                ${statusBadge}
-                ${c.industry_domain ? `<span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-surface-container border border-outline-variant/40 text-on-surface-variant max-w-full truncate" title="${escapeHTML(c.industry_domain)}">${escapeHTML(c.industry_domain)}</span>` : ''}
-                ${ratingDisplay}
-              </div>
-
-              <!-- Part 2: Description (Rendered only if actual description or AI summary exists) -->
-              ${descText ? `
-                <p class="text-body-sm font-body-sm text-on-surface-variant mb-3.5 line-clamp-2 leading-relaxed">
-                  ${escapeHTML(descText)}
-                </p>
-              ` : `
-                <div class="mb-3.5"></div>
-              `}
-
-              <!-- Part 3: Contact, Location & Tech (Clean vertical flow without cage border-y) -->
-              <div class="flex flex-col gap-2.5 mb-4">
-                <div class="flex items-center justify-between text-caption font-caption gap-2">
-                  <div class="flex items-center gap-1.5 ${emailTextClass} truncate min-w-0 font-mono text-caption">
-                    <span class="material-symbols-outlined text-[15px] ${emailColor} shrink-0">${emailIcon}</span>
-                    <span class="truncate">${hasEmail ? escapeHTML(primaryEmail) : '<span class="text-amber-500 font-medium not-italic">Email not found</span>'}</span>
+              <!-- Header Row: Monogram + Title & Domain (left) | Status Badge (right) -->
+              <div class="flex items-start justify-between gap-2.5 mb-2.5">
+                <div class="flex items-start gap-2.5 min-w-0 flex-1">
+                  <div class="w-9 h-9 rounded-lg flex items-center justify-center font-bold text-xs ${monoTheme.bg} border shrink-0 font-mono shadow-sm">
+                    ${monogram}
                   </div>
-                  <div class="flex items-center gap-1 text-on-surface-variant shrink-0 font-mono text-[11px]">
-                    <span class="material-symbols-outlined text-[14px]">location_on</span>
-                    <span>${escapeHTML(locationText)}</span>
+                  <div class="min-w-0 flex-1">
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                      <h3 class="text-sm font-bold text-on-surface leading-tight truncate" title="${escapeHTML(c.name)}">${escapeHTML(c.name)}</h3>
+                      ${c.domain ? `
+                      <a class="inline-flex items-center text-on-surface-variant hover:text-primary transition-colors shrink-0" href="${c.website_url || 'https://' + c.domain}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();" title="Visit ${escapeHTML(c.domain)}">
+                        <span class="material-symbols-outlined text-[13px]">open_in_new</span>
+                      </a>` : ''}
+                    </div>
+                    ${c.domain ? `<span class="text-[11px] font-mono text-on-surface-variant/80 truncate block mt-0.5">${escapeHTML(c.domain)}</span>` : ''}
                   </div>
                 </div>
-                <div class="flex flex-wrap gap-1.5">
-                  ${techPillsHtml}
+                <div class="flex items-center gap-1.5 shrink-0 -mt-0.5">
+                  ${statusBadge}
                 </div>
+              </div>
+
+              <!-- Meta Row: Industry Pill (left) + Google Rating (right) in unified row -->
+              <div class="flex items-center justify-between gap-2 text-[11px] mb-3 pb-2.5 border-b border-outline-variant/20">
+                <div class="flex items-center gap-1.5 min-w-0">
+                  ${c.industry_domain ? `<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-surface-container-high border border-outline-variant/40 text-on-surface-variant truncate max-w-[170px]" title="${escapeHTML(c.industry_domain)}">${escapeHTML(c.industry_domain)}</span>` : '<span class="text-[10px] font-mono text-on-surface-variant/50">Technology</span>'}
+                </div>
+                ${ratingDisplay ? `<div class="shrink-0 text-right">${ratingDisplay}</div>` : ''}
+              </div>
+
+              <!-- Description: Uniform 2-line clamp -->
+              <div class="min-h-[36px] mb-3">
+                ${descText ? `
+                  <p class="text-xs text-on-surface-variant line-clamp-2 leading-relaxed">
+                    ${escapeHTML(descText)}
+                  </p>
+                ` : `
+                  <p class="text-xs text-on-surface-variant/40 italic">Capabilities profile pending extraction</p>
+                `}
+              </div>
+
+              <!-- Contact & Location Box -->
+              <div class="flex items-center justify-between text-caption font-caption gap-2 mb-3 px-2.5 py-1.5 rounded-lg bg-surface-container/60 border border-outline-variant/20">
+                <div class="flex items-center gap-1.5 ${emailTextClass} truncate min-w-0 font-mono text-[11px]">
+                  <span class="material-symbols-outlined text-[14px] ${emailColor} shrink-0">${emailIcon}</span>
+                  <span class="truncate">${hasEmail ? escapeHTML(primaryEmail) : '<span class="text-amber-500 font-medium not-italic">Email not found</span>'}</span>
+                </div>
+                <div class="flex items-center gap-1 text-on-surface-variant shrink-0 font-mono text-[11px]">
+                  <span class="material-symbols-outlined text-[13px] text-on-surface-variant/70">location_on</span>
+                  <span class="truncate max-w-[120px]">${escapeHTML(locationText)}</span>
+                </div>
+              </div>
+
+              <!-- Tech Stack Pills: Fixed height container -->
+              <div class="min-h-[26px] flex flex-wrap items-center gap-1 mb-3.5">
+                ${techPillsHtml}
               </div>
             </div>
 
-            <!-- Part 4: Tactile Action Buttons (Milled Hardware Look with rest-state subtle pitch button) -->
-            <div class="grid grid-cols-2 gap-2 mt-auto pt-3.5 border-t border-outline-variant/30">
-              <button type="button" class="btn-single-details btn-tactile-slate px-2 py-2 rounded text-label-sm font-label-sm font-semibold transition-all text-center cursor-pointer flex items-center justify-center gap-1 whitespace-nowrap min-w-0 text-on-surface">
-                <span class="material-symbols-outlined text-[16px] shrink-0">visibility</span>
-                <span class="text-on-surface truncate">View Intel</span>
+            <!-- Action Buttons: Tactile Milled Secondary + Amber Primary CTA -->
+            <div class="grid grid-cols-2 gap-2 mt-auto pt-3 border-t border-outline-variant/30">
+              <button type="button" class="btn-single-details h-9 px-2.5 rounded-lg border border-outline-variant/60 bg-surface-container hover:bg-surface-container-high text-on-surface text-xs font-semibold font-body-md transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs active:scale-[0.98]">
+                <span class="material-symbols-outlined text-[15px]">visibility</span>
+                <span class="truncate">View Intel</span>
               </button>
-              <button type="button" class="btn-single-pitch btn-card-pitch px-2 py-2 rounded text-label-sm font-label-sm font-semibold transition-all text-center cursor-pointer flex items-center justify-center gap-1 whitespace-nowrap min-w-0">
-                <span class="material-symbols-outlined text-[16px] shrink-0">send</span>
+              <button type="button" class="btn-single-pitch h-9 px-2.5 rounded-lg bg-primary hover:bg-primary/90 text-on-primary text-xs font-semibold font-body-md transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs active:scale-[0.98]">
+                <span class="material-symbols-outlined text-[15px]">send</span>
                 <span class="truncate">Draft Pitch</span>
               </button>
             </div>
@@ -2423,7 +2180,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
           const btnDetails = card.querySelector(".btn-single-details");
           const btnPitch = card.querySelector(".btn-single-pitch");
-          const btnInvalidate = card.querySelector(".btn-single-invalidate");
           if (btnDetails) {
             btnDetails.addEventListener("click", (e) => {
               e.stopPropagation();
@@ -2436,32 +2192,6 @@ document.addEventListener("DOMContentLoaded", () => {
               handleGeneratePitch(c.id);
             });
           }
-          if (btnInvalidate) {
-            btnInvalidate.addEventListener("click", (e) => {
-              e.stopPropagation();
-              handleInvalidateCompany(c.id, c.name);
-            });
-          }
-        }
-
-        // Checkbox change listener
-        const chk = card.querySelector(".company-checkbox");
-        if (chk) {
-          chk.addEventListener("click", (e) => e.stopPropagation());
-          chk.addEventListener("change", (e) => {
-            e.stopPropagation();
-            if (chk.checked) {
-              selectedCompanyIds.add(c.id);
-              card.classList.add("border-primary", "ring-1", "ring-primary");
-              card.classList.remove("border-outline-variant/30");
-            } else {
-              selectedCompanyIds.delete(c.id);
-              card.classList.remove("border-primary", "ring-1", "ring-primary");
-              card.classList.add("border-outline-variant/30");
-            }
-            updateBulkActionBar();
-            updateSelectAllCheckboxState(pagedList);
-          });
         }
 
         card.addEventListener("click", (e) => {
@@ -2927,43 +2657,6 @@ document.addEventListener("DOMContentLoaded", () => {
     btnQuickRefreshBtn.addEventListener("click", () => {
       fetchCompanies();
       showToast("Directory refreshed", "info");
-    });
-  }
-
-  const btnBulkEnrich = document.getElementById("btn-bulk-enrich");
-  const btnBulkPitch = document.getElementById("btn-bulk-pitch");
-  const btnBulkExport = document.getElementById("btn-bulk-export");
-
-  if (btnBulkEnrich) {
-    btnBulkEnrich.addEventListener("click", () => {
-      const selected = Array.from(selectedCompanyIds);
-      if (selected.length === 0) {
-        showToast("Please select at least 1 company to research", "warning");
-        return;
-      }
-      handleBulkEnrich(btnBulkEnrich);
-    });
-  }
-
-  if (btnBulkPitch) {
-    btnBulkPitch.addEventListener("click", () => {
-      const selected = Array.from(selectedCompanyIds);
-      if (selected.length === 0) {
-        showToast("Please select at least 1 company to draft pitches", "warning");
-        return;
-      }
-      handleGeneratePitch(selected[0]);
-    });
-  }
-
-  if (btnBulkExport) {
-    btnBulkExport.addEventListener("click", () => {
-      const btnExport = document.getElementById("btn-export-csv");
-      if (btnExport) {
-        btnExport.click();
-      } else {
-        exportCompaniesToCSV(companies.filter(c => selectedCompanyIds.has(c.id)));
-      }
     });
   }
 
@@ -5383,7 +5076,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         companiesCurrentPage = 1;
         fetchCompanies(false);
-        showToast(`Filtered directory for ${filterTerms.join(" • ")}`, "info");
+        showToast(`Filtered directory for ${filterTerms.join(", ")}`, "info");
       }
 
       // 4. Filter Directory by Domain (?domain=it or ?domain=pharma)

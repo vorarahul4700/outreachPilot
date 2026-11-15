@@ -964,7 +964,7 @@ def llms_txt(request: Request, db: Session = Depends(get_db)):
 
 @app.api_route("/llms-full.txt", methods=["GET", "HEAD"], include_in_schema=False)
 def llms_full_txt(request: Request, db: Session = Depends(get_db)):
-    """Comprehensive Machine-Readable LLM Knowledge Base for Agentic Crawlers"""
+    """Machine-readable LLM knowledge base for AI crawlers"""
     base_url = seo_engine.get_canonical_base_url(request)
     content = seo_engine.generate_llms_full_txt(base_url, db)
     return Response(
@@ -1160,7 +1160,7 @@ def directory_city_hub(city_slug: str, request: Request, db: Session = Depends(g
             "page_subtitle": page_subtitle,
             "meta_description": meta_description,
             "hub_name": city_name,
-            "hub_badge": f"Verified Indian Hub • {city_name} ({dom_display})",
+            "hub_badge": f"Verified companies in {city_name} ({dom_display})",
             "total_companies": total_count,
             "avg_rating": avg_rating,
             "related_title": f"Top Specializations in {city_name}",
@@ -1222,7 +1222,7 @@ def directory_tech_hub(tech_slug: str, request: Request, db: Session = Depends(g
             "page_subtitle": page_subtitle,
             "meta_description": meta_description,
             "hub_name": tech_name,
-            "hub_badge": f"Verified Specialization • {tech_name}",
+            "hub_badge": f"Verified {tech_name} companies",
             "total_companies": total_count,
             "avg_rating": avg_rating,
             "related_title": f"Top Indian Cities for {tech_name}",
@@ -1325,15 +1325,6 @@ def directory_companies(
 
     # Case 4: General query or empty params -> Redirect to /directory
     return RedirectResponse(url="/directory", status_code=301)
-
-
-@app.get("/directory/companies/{city_slug}/{tech_slug}", response_class=HTMLResponse)
-async def directory_combo_legacy_redirect(city_slug: str, tech_slug: str):
-    """301 Redirect legacy path format to scalable parameterized format"""
-    return RedirectResponse(
-        url=f"/directory/companies?city={city_slug}&tech={tech_slug}",
-        status_code=301
-    )
 
 
 @app.api_route("/company/{slug}", methods=["GET", "HEAD"], response_class=HTMLResponse)
@@ -2565,7 +2556,7 @@ def auth_status(request: Request, db: Session = Depends(get_db)):
         tier_code = getattr(user, "subscription_tier", "free") or "free"
         tier_name = "Master Admin"
     elif kill_switch:
-        # Kill switch ON + logged in → infinite, but real tier preserved in DB (not mutated)
+        # Kill switch ON + logged in: infinite, but real tier preserved in DB (not mutated)
         daily_limit = 999999
         sent_today = getattr(user, "pitches_sent_today", 0) or 0
         remaining = 999999
@@ -2604,10 +2595,10 @@ def auth_status(request: Request, db: Session = Depends(get_db)):
         "picture": user.picture if is_logged_in else None,
         "is_master_admin": is_master,
         "subscription_kill_switch": kill_switch,
-        # Effective (displayed) tier — overridden when kill switch is on
+        # Effective (displayed) tier: overridden when kill switch is on
         "subscription_tier": tier_code,
         "subscription_tier_name": tier_name,
-        # Real (persisted) tier — always reflects what user actually purchased/has assigned
+        # Real (persisted) tier: always reflects what user actually purchased/has assigned
         "real_subscription_tier": real_tier_code,
         "real_subscription_tier_name": real_tier_name,
         "subscription_status": getattr(user, "subscription_status", "active") if is_logged_in else "active",
@@ -3249,7 +3240,7 @@ async def generate_single_pitch(
         for p in raw_proofs[:4]:
             p_clean = p.strip().lstrip("-*•").strip()
             if p_clean:
-                proof_bullets.append(f"• {p_clean}")
+                proof_bullets.append(f"- {p_clean}")
 
         achievements_block = "\n".join(proof_bullets)
         resume_ref = f" (Portfolio / Code: {cand_profile.get('resume_link')})" if cand_profile.get("resume_link") else ""
@@ -3433,7 +3424,7 @@ async def generate_bulk_pitches(
             body = (
                 f"Hi {task['company_name']} team,\n\n"
                 f"I am writing to inquire about open or upcoming {t_role} opportunities on your engineering team at {task['company_name']}.\n\n"
-                f"As a {t_role} specializing in {skills_str}, I focus on building robust, high-performance web systems and data-driven infrastructure.\n\n"
+                f"As a {t_role} specializing in {skills_str}, I focus on building reliable, high-performance web systems and data-driven infrastructure.\n\n"
                 f"{proof_text}"
                 f"Given {task['company_name']}'s engineering focus, I would love to bring my technical experience to your team. "
                 f"I have shared my resume for your consideration{resume_ref}. Are you currently hiring for {t_role} roles, or open to considering my profile for upcoming engineering needs?\n\n"
@@ -4024,7 +4015,7 @@ def get_admin_metrics(
     # 3. Single count for verified emails
     verified_emails = db.query(func.count(CompanyEmail.id)).scalar() or 0
 
-    # 4. Pitches actually sent today — count OutreachLog rows (same source as the
+    # 4. Pitches actually sent today: count OutreachLog rows (same source as the
     #    Sent Pitches tab), not sum(User.pitches_sent_today): the per-user quota
     #    counter is not incremented for master-admin sends, so it under-reports.
     _now = datetime.utcnow()
@@ -5423,9 +5414,9 @@ async def toggle_kill_switch_status(
     Design contract (state preservation):
     - The kill switch is a GLOBAL OVERLAY flag only. It never touches individual
       User.subscription_tier or User.daily_pitch_limit columns.
-    - When OFF → each user's real purchased/assigned tier is automatically restored
+    - When OFF: each user's real purchased/assigned tier is automatically restored
       because auth_status and get_user_subscription_info always read from the DB row.
-    - When ON  → all logged-in users are presented as Temp Users (infinite pitches)
+    - When ON: all logged-in users are presented as Temp Users (infinite pitches)
       without any DB mutation. Their real tier is preserved in real_subscription_tier.
     """
     try:
@@ -5440,11 +5431,11 @@ async def toggle_kill_switch_status(
         "previous_state": previous_state,
         "state_preserved": True,  # User DB rows are never mutated; real tiers always persist
         "message": (
-            "Kill Switch ENABLED — Open-access mode active. All logged-in users "
+            "Kill Switch ENABLED. Open-access mode active. All logged-in users "
             "get infinite pitch generation. Subscription UI suppressed. "
             "Individual user tiers are preserved in DB and will be fully restored on disable."
             if new_state else
-            "Kill Switch DISABLED — Standard subscription tiers, RBAC, and daily quota limits "
+            "Kill Switch DISABLED. Standard subscription tiers, RBAC, and daily quota limits "
             "restored. Each user's previously purchased/assigned plan is automatically in effect."
         )
     }

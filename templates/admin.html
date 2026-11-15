@@ -248,7 +248,7 @@
           </div>
           <div class="text-xs text-on-surface-variant mt-2 font-normal flex items-center justify-between">
             <span><strong id="kpi-master-admins" class="text-amber-500 font-semibold">--</strong> Master Admins</span>
-            <span class="text-[11px] text-primary opacity-0 group-hover:opacity-100 transition-opacity font-medium">Manage →</span>
+            <span class="text-[11px] text-primary opacity-0 group-hover:opacity-100 transition-opacity font-medium inline-flex items-center gap-0.5">Manage <span class="material-symbols-outlined text-[12px] align-middle" aria-hidden="true">arrow_forward</span></span>
           </div>
         </div>
 
@@ -266,7 +266,7 @@
           </div>
           <div class="text-xs text-on-surface-variant mt-2 font-normal flex items-center justify-between">
             <span><strong id="kpi-verified-emails" class="text-emerald-500 font-semibold">--</strong> verified contact emails</span>
-            <span class="text-[11px] text-primary opacity-0 group-hover:opacity-100 transition-opacity font-medium">View →</span>
+            <span class="text-[11px] text-primary opacity-0 group-hover:opacity-100 transition-opacity font-medium inline-flex items-center gap-0.5">View <span class="material-symbols-outlined text-[12px] align-middle" aria-hidden="true">arrow_forward</span></span>
           </div>
         </div>
 
@@ -285,7 +285,7 @@
           </div>
           <div class="text-xs text-on-surface-variant mt-2 font-normal flex items-center justify-between">
             <span>Resets daily at midnight UTC</span>
-            <span class="text-[11px] text-primary opacity-0 group-hover:opacity-100 transition-opacity font-medium">Pitches →</span>
+            <span class="text-[11px] text-primary opacity-0 group-hover:opacity-100 transition-opacity font-medium inline-flex items-center gap-0.5">Pitches <span class="material-symbols-outlined text-[12px] align-middle" aria-hidden="true">arrow_forward</span></span>
           </div>
         </div>
 
@@ -304,7 +304,7 @@
           </div>
           <div class="text-xs text-on-surface-variant mt-2 font-normal flex items-center justify-between">
             <span><strong id="kpi-free-users" class="text-on-surface font-semibold">--</strong> Free tier accounts</span>
-            <span class="text-[11px] text-primary opacity-0 group-hover:opacity-100 transition-opacity font-medium">Plans →</span>
+            <span class="text-[11px] text-primary opacity-0 group-hover:opacity-100 transition-opacity font-medium inline-flex items-center gap-0.5">Plans <span class="material-symbols-outlined text-[12px] align-middle" aria-hidden="true">arrow_forward</span></span>
           </div>
         </div>
       </div>
@@ -383,7 +383,7 @@
                 <span class="material-symbols-outlined text-primary text-[20px]">spellcheck</span>
               </div>
               <h3 class="text-sm font-semibold text-on-surface">Auto-Clean Taglines & SEO Clutter</h3>
-              <p class="text-xs text-on-surface-variant">Scans company names across Neon PostgreSQL and strips SEO marketing slogans (e.g. <em>"iRoid Solutions - Best IT Company in India"</em> → <em>"iRoid Solutions"</em>).</p>
+              <p class="text-xs text-on-surface-variant">Scans company names across Neon PostgreSQL and strips SEO marketing slogans (e.g. <em>"iRoid Solutions - Best IT Company in India"</em> becomes <em>"iRoid Solutions"</em>).</p>
             </div>
 
             <div class="flex flex-wrap items-center gap-2 pt-2 border-t border-outline-variant/20">
@@ -805,10 +805,10 @@
           </div>
         </div>
         <div class="flex items-center gap-3 shrink-0 self-end md:self-center">
-          <label class="relative inline-flex items-center cursor-pointer select-none" title="Toggle Subscription &amp; RBAC Kill Switch">
+          <label for="toggle-subscription-kill-switch" class="relative inline-flex items-center cursor-pointer select-none" title="Toggle Subscription &amp; RBAC Kill Switch">
             <input type="checkbox" id="toggle-subscription-kill-switch" class="sr-only peer">
-            <!-- Track: explicit 48x26 size (h-6.5 is not a Tailwind class, so the track used to render at 0 height and only the knob showed). -->
-            <div class="relative w-12 h-[26px] rounded-full border border-outline bg-outline-variant transition-colors peer-focus-visible:ring-2 peer-focus-visible:ring-primary/50 peer-checked:bg-amber-500 peer-checked:border-amber-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:h-5 after:w-5 after:rounded-full after:bg-white after:border after:border-outline-variant after:shadow after:transition-transform peer-checked:after:translate-x-[22px] peer-checked:after:border-white"></div>
+            <!-- High-Contrast Tactile Toggle Track -->
+            <div class="relative w-12 h-6 bg-slate-300 dark:bg-slate-700 border-2 border-slate-400 dark:border-slate-500 rounded-full transition-colors duration-200 ease-in-out peer-checked:bg-amber-500 peer-checked:border-amber-600 shadow-inner after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:shadow-md after:transition-transform after:duration-200 peer-checked:after:translate-x-6"></div>
           </label>
         </div>
       </div>
@@ -1047,7 +1047,7 @@
         <div class="p-3 bg-surface-container rounded-lg border border-outline-variant/30 flex flex-col gap-1 text-[11px] font-mono text-on-surface-variant">
           <span class="text-on-surface font-semibold">Accepted CSV Column Headers:</span>
           <span><code>name, domain, city, category, email, phone, tech_stack</code></span>
-          <span class="text-emerald-500 mt-1">✓ Automated name cleaning & domain deduplication applied instantly.</span>
+          <span class="text-emerald-500 mt-1 inline-flex items-center gap-1"><span class="material-symbols-outlined text-[14px]" aria-hidden="true">check</span>Automated name cleaning & domain deduplication applied instantly.</span>
         </div>
 
         <!-- Dropzone -->
@@ -1398,6 +1398,6 @@
   <div id="admin-toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
   <!-- Admin Application Client Controller Script -->
-  <script src="/static/js/admin.js?v=2.1"></script>
+  <script src="/static/js/admin.js?v=2.2"></script>
 </body>
 </html>

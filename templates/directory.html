@@ -258,20 +258,21 @@
 
         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2.5" id="tech-grid">
           {% for t in technologies %}
-          <a href="/directory/tech/{{ t.slug }}" class="tech-card bento-cell p-3 flex flex-col justify-between hover:border-secondary group" data-name="{{ t.name|lower }}" data-domain="{{ t.domain_code or 'it' }}">
-            <div class="flex items-center justify-between">
-              <span class="font-display font-semibold text-sm text-primary group-hover:text-secondary transition-colors">{{ t.name }}</span>
-              <span class="material-symbols-outlined text-[14px] text-on-surface-variant group-hover:text-secondary group-hover:translate-x-0.5 transition-all">arrow_forward</span>
+          <a href="/directory/tech/{{ t.slug }}" class="tech-card rounded-xl p-3.5 flex flex-col justify-between bg-surface-container-low border border-outline-variant/40 hover:border-primary/50 hover:bg-surface-container hover:shadow-sm hover:-translate-y-0.5 transition-all group" data-name="{{ t.name|lower }}" data-domain="{{ t.domain_code or 'it' }}">
+            <div class="flex items-center justify-between gap-1.5">
+              <span class="font-display font-semibold text-xs sm:text-sm text-on-surface group-hover:text-primary transition-colors leading-snug line-clamp-1" title="{{ t.name }}">{{ t.name }}</span>
+              <span class="material-symbols-outlined text-[13px] text-on-surface-variant group-hover:text-primary group-hover:translate-x-0.5 transition-all shrink-0">arrow_forward</span>
             </div>
-            <div class="text-[11px] font-mono text-on-surface-variant mt-2 pt-2 border-t border-outline/50">
-              <span class="tnum">{{ "{:,}".format(t.count) }} {{ 'company' if t.count == 1 else 'companies' }}</span>
+            <div class="text-[11px] font-mono text-on-surface-variant/80 mt-2.5 pt-2 border-t border-outline-variant/20 flex items-center justify-between">
+              <span class="tnum">{{ "{:,}".format(t.count) }} {{ 'firm' if t.count == 1 else 'firms' }}</span>
+              <span class="text-[9px] uppercase tracking-wider px-1 py-0.2 rounded bg-surface-container border border-outline-variant/30 text-on-surface-variant/70">{{ t.domain_code or 'IT' }}</span>
             </div>
           </a>
           {% endfor %}
 
           <!-- High-Tactile Empty State for Domains without active specializations yet -->
-          <div id="tech-empty-state" class="col-span-full bento-cell p-8 text-center space-y-3 hidden">
-            <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-surface-container-high border border-outline text-secondary mb-1">
+          <div id="tech-empty-state" class="col-span-full rounded-xl bg-surface-container-low border border-outline-variant/40 p-8 text-center space-y-3 hidden">
+            <div class="inline-flex items-center justify-center w-12 h-12 rounded-full bg-surface-container-high border border-outline-variant/50 text-secondary mb-1">
               <span class="material-symbols-outlined text-2xl">radar</span>
             </div>
             <h3 class="font-display font-bold text-base text-primary" id="empty-state-title">Onboarding Companies in <span id="empty-state-domain-name">Sales &amp; BPO</span></h3>
@@ -300,17 +301,18 @@
 
         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2.5" id="city-grid">
           {% for c in cities %}
-          <a href="/directory/city/{{ c.slug }}" class="city-card bento-cell p-3 flex flex-col justify-between hover:border-secondary group transition-all" data-name="{{ c.name|lower }}" data-slug="{{ c.slug }}" data-default-order="{{ loop.index }}" data-counts='{{ c.domain_counts|tojson }}'>
-            <div class="flex items-center justify-between">
-              <span class="font-display font-semibold text-sm text-primary group-hover:text-secondary transition-colors">{{ c.name }}</span>
-              <span class="material-symbols-outlined text-[14px] text-on-surface-variant group-hover:text-secondary group-hover:translate-x-0.5 transition-all">arrow_forward</span>
+          <a href="/directory/city/{{ c.slug }}" class="city-card rounded-xl p-3.5 flex flex-col justify-between bg-surface-container-low border border-outline-variant/40 hover:border-primary/50 hover:bg-surface-container hover:shadow-sm hover:-translate-y-0.5 transition-all group" data-name="{{ c.name|lower }}" data-slug="{{ c.slug }}" data-default-order="{{ loop.index }}" data-counts='{{ c.domain_counts|tojson }}'>
+            <div class="flex items-center justify-between gap-1.5">
+              <span class="font-display font-semibold text-xs sm:text-sm text-on-surface group-hover:text-primary transition-colors leading-snug line-clamp-1" title="{{ c.name }}">{{ c.name }}</span>
+              <span class="material-symbols-outlined text-[13px] text-on-surface-variant group-hover:text-primary group-hover:translate-x-0.5 transition-all shrink-0">arrow_forward</span>
             </div>
-            <div class="text-[11px] font-mono text-on-surface-variant mt-2 pt-2 border-t border-outline/50">
+            <div class="text-[11px] font-mono text-on-surface-variant/80 mt-2.5 pt-2 border-t border-outline-variant/20 flex items-center justify-between">
               <span class="tnum city-firm-count">{{ "{:,}".format(c.count) }} {{ 'company' if c.count == 1 else 'companies' }}</span>
+              <span class="text-[10px] text-on-surface-variant/60 font-mono">India</span>
             </div>
           </a>
           {% endfor %}
-          <div id="city-empty-state" class="col-span-full bento-cell p-6 text-center text-xs font-mono text-on-surface-variant hidden">
+          <div id="city-empty-state" class="col-span-full rounded-xl bg-surface-container-low border border-outline-variant/40 p-6 text-center text-xs font-mono text-on-surface-variant hidden">
             No commercial hubs match your search term.
           </div>
         </div>
