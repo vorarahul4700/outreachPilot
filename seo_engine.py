@@ -1826,17 +1826,21 @@ def generate_combo_faqs(city_name: str, tech_name: str, count: int, avg_rating: 
     else:
         firm_label = f"{tech_name} companies and service providers"
 
-    return [
+    # Ratings are only mentioned when the database has a real average.
+    rating_text = f", with an average client satisfaction rating of {avg_rating}★." if avg_rating is not None else "."
+    faqs = [
         {
             "question": f"Which companies in {city_name} specialize in {tech_name}?",
-            "answer": f"OutreachPilot lists {count} verified {firm_label} in {city_name} specializing in {tech_name}, with an average client satisfaction rating of {avg_rating}★."
+            "answer": f"OutreachPilot lists {count} verified {firm_label} in {city_name} specializing in {tech_name}{rating_text}"
         },
-        {
+    ]
+    if avg_rating is not None:
+        faqs.append({
             "question": f"What is the average Google rating for {tech_name} providers in {city_name}?",
             "answer": f"Verified {firm_label} in {city_name} maintain an average customer review score of {avg_rating} out of 5 stars based on verified Google Local reviews."
-        },
-        {
-            "question": f"Can I contact verified decision makers at {tech_name} companies in {city_name}?",
-            "answer": f"Yes, OutreachPilot features verified corporate email contacts, verified phone numbers, and physical headquarters for {tech_name} businesses in {city_name}, enabling direct 1-to-1 outreach via authorized Google OAuth."
-        }
-    ]
+        })
+    faqs.append({
+        "question": f"Can I contact verified decision makers at {tech_name} companies in {city_name}?",
+        "answer": f"Yes, OutreachPilot features verified corporate email contacts, verified phone numbers, and physical headquarters for {tech_name} businesses in {city_name}, enabling direct 1-to-1 outreach via authorized Google OAuth."
+    })
+    return faqs

@@ -1704,7 +1704,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (globalStats) {
         updateCompanyMetrics(globalStats);
       }
-      updateHeaderSubtitle("all", globalStats ? globalStats.total : 55119);
+      if (globalStats) updateHeaderSubtitle("all", globalStats.total);
     } else {
       const domItem = domainsData.find(d => d.code === activeDomainFilter);
       const domCount = domItem ? (domItem.count || 0) : 0;
@@ -1965,7 +1965,7 @@ document.addEventListener("DOMContentLoaded", () => {
         };
         const domName = domainNames[activeDomainFilter] || activeDomainFilter.toUpperCase();
         emptyTitle = `No ${domName} Leads Saved Yet`;
-        emptyMsg = `All 33,603 current database leads are under IT & Software. You can scout and enrich verified ${domName} leads in Step 1.`;
+        emptyMsg = `There are no ${domName} companies in the directory yet. Switch back to All Domains to see every company.`;
       } else if (activeMetricFilter === "invalid") {
         emptyTitle = "No Invalid Leads Found";
         emptyMsg = "No invalid / excluded leads recorded. Active companies can be marked invalid by Master Admin.";

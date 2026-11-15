@@ -51,7 +51,6 @@
   function finalState() {
     STATES.forEach(function (s) { if (s !== "is-searching") el.classList.add(s); });
     setStep(5);
-    if (countEl) countEl.textContent = "24";
     if (typed) typed.textContent = subject;
     setStatus("Ready");
   }
@@ -59,9 +58,9 @@
   function play() {
     clear(); reset();
     el.classList.add("is-searching"); setStep(0);
-    later(function () { el.classList.add("is-pinned"); count(24, 1100); }, 600);
+    later(function () { el.classList.add("is-pinned"); }, 600);
     later(function () { el.classList.remove("is-searching"); el.classList.add("is-listed"); setStep(1); setStatus("Finding emails"); }, 1900);
-    later(function () { el.classList.add("is-verified"); setStatus("3 verified"); }, 2700);
+    later(function () { el.classList.add("is-verified"); setStatus("Emails verified"); }, 2700);
     later(function () { setStep(2); setStatus("Researching"); el.classList.add("is-drafting"); }, 3700);
     later(function () { setStep(3); setStatus("Writing"); type(subject, 1500); }, 4500);
     later(function () { el.classList.add("is-written"); }, 5600);

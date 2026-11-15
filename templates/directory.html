@@ -7,16 +7,16 @@
 {% block title %}B2B Technology &amp; Software Company Directory (India) | OutreachPilot{% endblock %}
 
 {% block meta %}
-  <meta name="description" content="Explore verified software agencies, web development companies, and tech firms across 73 Indian cities and 36 technology stacks. Verified ratings, tech stacks, and recruiter contacts."/>
+  <meta name="description" content="Explore verified software agencies, web development companies, and tech firms across {{ stats.total_cities }} Indian cities and {{ technologies|length }} technology stacks. Verified ratings, tech stacks, and recruiter contacts."/>
   <link rel="canonical" href="{{ canonical_url }}"/>
   <meta property="og:type" content="website"/>
   <meta property="og:url" content="{{ canonical_url }}"/>
   <meta property="og:title" content="B2B Technology &amp; Software Company Directory (India) | OutreachPilot"/>
-  <meta property="og:description" content="Explore verified software agencies across 73 Indian cities and 36 technology stacks."/>
+  <meta property="og:description" content="Explore verified software agencies across {{ stats.total_cities }} Indian cities and {{ technologies|length }} technology stacks."/>
   <meta property="og:site_name" content="OutreachPilot"/>
   <meta name="twitter:card" content="summary_large_image"/>
   <meta name="twitter:title" content="B2B Technology &amp; Software Company Directory (India)"/>
-  <meta name="twitter:description" content="Explore verified software agencies across 73 Indian cities and 36 tech stacks."/>
+  <meta name="twitter:description" content="Explore verified software agencies across {{ stats.total_cities }} Indian cities and {{ technologies|length }} tech stacks."/>
   <script type="application/ld+json">
   {{ json_ld_schema | safe }}
   </script>
@@ -82,7 +82,7 @@
       <button type="button" class="domain-pill" data-domain="it">
         <span class="material-symbols-outlined" aria-hidden="true">computer</span>
         <span>IT &amp; Software</span>
-        <span class="n tnum" id="dir-domain-count-it">({% for d in domains if d.code == 'it' %}{{ d.count }}{% else %}{{ stats.total_companies }}{% endfor %})</span>
+        <span class="n tnum" id="dir-domain-count-it">({% for d in domains if d.code == 'it' %}{{ d.count }}{% else %}0{% endfor %})</span>
       </button>
       <button type="button" class="domain-pill" data-domain="sales">
         <span class="material-symbols-outlined" aria-hidden="true">support_agent</span>
