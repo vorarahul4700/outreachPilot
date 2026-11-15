@@ -95,7 +95,7 @@
   #main-content-wrap { margin-left: var(--sidebar-w); padding-top: 28px; }
   #main-content-wrap.sidebar-collapsed { margin-left: var(--sidebar-w-mini); }
 }
-.app-inner { max-width: 1440px; margin: 0 auto; }
+.app-inner { max-width: 1440px; margin: 0 auto; min-width: 0; }
 .mobile-bar {
   position: sticky; top: 0; z-index: 30;
   display: flex; align-items: center; justify-content: space-between; gap: 10px;
@@ -184,7 +184,11 @@
 .toolbar-right { display: flex; flex-direction: column; gap: 8px; width: 100%; }
 @media (min-width: 640px) { .toolbar-right { flex-direction: row; align-items: center; width: auto; } }
 .toolbar-filters { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; }
-@media (min-width: 640px) { .toolbar-filters { display: flex; width: auto; } .toolbar-filters .custom-dropdown { width: 180px; } }
+@media (min-width: 640px) {
+  .toolbar-right { flex-wrap: wrap; min-width: 0; }
+  .toolbar-filters { display: flex; flex: 1 1 320px; width: auto; min-width: 0; }
+  .toolbar-filters .custom-dropdown { flex: 1 1 150px; width: auto; max-width: 200px; min-width: 0; }
+}
 .toolbar-btns { display: flex; align-items: center; gap: 8px; justify-content: flex-end; }
 .toolbar-btns .btn { height: 44px; }
 .toolbar-btns .icon-btn { width: 44px; height: 44px; border-radius: var(--r-md); }
@@ -271,9 +275,8 @@
 .pg-info { padding: 0 8px; font-family: var(--font-mono); font-size: .8rem; color: var(--text); font-weight: 600; }
 
 /* ---------- Card grids ---------- */
-.card-grid { display: grid; gap: 16px; grid-template-columns: 1fr; }
-@media (min-width: 768px) { .card-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-@media (min-width: 1280px) { .card-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+/* Columns follow the space beside the sidebar, not the window: cards stay at least 300px wide. */
+.card-grid { display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr)); }
 .row-list { display: grid; gap: 10px; }
 
 /* ---------- Company card ---------- */

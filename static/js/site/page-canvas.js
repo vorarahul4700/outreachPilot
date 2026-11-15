@@ -29,9 +29,9 @@
   /* ---------- helpers ---------- */
   function readColors() {
     var cs = getComputedStyle(document.documentElement);
-    colors.dot = cs.getPropertyValue("--line-3").trim() || "#B2AC96";
+    colors.dot = cs.getPropertyValue("--line-3").trim() || "#908B7A";
     colors.faint = cs.getPropertyValue("--line-2").trim() || "#CFCAB8";
-    colors.accent = cs.getPropertyValue("--accent").trim() || "#56672A";
+    colors.accent = cs.getPropertyValue("--accent").trim() || "#607037";
     colors.accentText = cs.getPropertyValue("--accent-text").trim() || "#4B5A24";
     colors.surface = cs.getPropertyValue("--surface").trim() || "#FBF9F3";
   }

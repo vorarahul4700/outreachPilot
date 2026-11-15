@@ -7,9 +7,9 @@
 
 :root {
   /* ---- Brand accent: identical in both themes ---- */
-  --accent: #56672A;
-  --accent-hover: #4B5A24;
-  --accent-press: #404D1E;
+  --accent: #607037;
+  --accent-hover: #556431;
+  --accent-press: #4A572A;
   --on-accent: #FFFFFF;
 
   /* ---- Type ---- */
@@ -83,11 +83,11 @@
 
   --line: #DFDBCD;
   --line-2: #CFCAB8;
-  --line-3: #B2AC96;
+  --line-3: #908B7A;
 
   --text: #1F2018;
   --text-2: #4E4F43;
-  --text-3: #75766A;
+  --text-3: #66675C;
   --text-inverse: #FBF9F3;
 
   --accent-soft: #E2E8D0;
@@ -113,7 +113,7 @@
   --shadow-lg: 0 30px 60px -30px rgba(31, 32, 24, .35), 0 6px 16px -8px rgba(31, 32, 24, .1);
   --shadow-xl: 0 60px 120px -50px rgba(31, 32, 24, .45);
   --shadow-btn: 0 6px 16px -8px rgba(64, 77, 30, .55), inset 0 1px 0 rgba(255, 255, 255, .14);
-  --focus-ring: 0 0 0 3px rgba(86, 103, 42, .26);
+  --focus-ring: 0 0 0 3px rgba(96, 112, 55, .28);
 }
 
 html.dark {
@@ -128,7 +128,7 @@ html.dark {
 
   --line: #2F3027;
   --line-2: #3C3D33;
-  --line-3: #57584B;
+  --line-3: #6F6F64;
 
   --text: #ECEADF;
   --text-2: #BDBBAE;
@@ -158,5 +158,5 @@ html.dark {
   --shadow-lg: 0 30px 60px -30px rgba(0, 0, 0, .8), 0 6px 16px -8px rgba(0, 0, 0, .4);
   --shadow-xl: 0 60px 120px -50px rgba(0, 0, 0, .9);
   --shadow-btn: 0 6px 16px -8px rgba(0, 0, 0, .7), inset 0 1px 0 rgba(255, 255, 255, .1);
-  --focus-ring: 0 0 0 3px rgba(86, 103, 42, .5);
+  --focus-ring: 0 0 0 3px rgba(96, 112, 55, .55);
 }
