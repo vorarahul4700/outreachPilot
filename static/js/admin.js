@@ -412,8 +412,8 @@ document.addEventListener("DOMContentLoaded", () => {
           : `<span class="px-2 py-0.5 rounded text-[11px] font-mono font-semibold bg-surface-container-highest text-on-surface-variant">Free (10)</span>`;
 
         const roleBadge = isAdmin
-          ? `<span class="px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-amber-500/20 text-amber-500 border border-amber-500/40">★ Master Admin</span>`
-          : `<span class="px-2 py-0.5 rounded text-[11px] font-mono text-on-surface-variant">User</span>`;
+          ? `<span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-amber-500/20 text-amber-500 border border-amber-500/40">★ Master Admin</span>`
+          : `<span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded text-[11px] font-mono text-on-surface-variant">User</span>`;
 
         const quotaDisplay = isAdmin
           ? `<span class="text-amber-500 font-mono font-semibold">∞ Infinite</span>`

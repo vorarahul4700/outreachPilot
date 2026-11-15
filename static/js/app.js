@@ -3372,7 +3372,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const isMaster = !!data.is_master_admin;
     const isKillSwitch = !!data.subscription_kill_switch;
     const tierCode = isKillSwitch && !isMaster ? "temp_user" : (data.subscription_tier || "free");
-    const tierName = data.subscription_tier_name || (isMaster ? "Master Admin" : (isKillSwitch ? "Temp User (Infinite Pitches)" : (tierCode === "pro" ? "Pro Outreach" : tierCode === "premium_plus" ? "Premium+ Unlimited" : "Free Job Seeker")));
+    const tierName = data.subscription_tier_name || (isMaster ? "Master Admin" : (isKillSwitch ? "Temp User (Infinite Pitches)" : (tierCode === "pro" ? "Pro Outreach" : tierCode === "premium_plus" ? "Premium+" : "Free Job Seeker")));
     const totalLimit = (isMaster || isKillSwitch) ? 999999 : (typeof data.daily_pitch_limit === "number" ? data.daily_pitch_limit : 10);
     const sentToday = typeof data.pitches_sent_today === "number" ? data.pitches_sent_today : 0;
     const remaining = (isMaster || isKillSwitch) ? 999999 : (typeof data.pitches_remaining === "number" ? data.pitches_remaining : Math.max(0, totalLimit - sentToday));

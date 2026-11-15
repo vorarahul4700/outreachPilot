@@ -328,7 +328,7 @@ def init_db():
                         ),
                         SubscriptionTier(
                             code="premium_plus",
-                            name="Premium+ Unlimited",
+                            name="Premium+",
                             subtitle="Maximum Velocity",
                             price_inr=999,
                             daily_pitch_limit=100,

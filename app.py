@@ -753,7 +753,7 @@ def get_user_subscription_info(user: User | None, db: Session) -> dict:
     tier_name_map = {
         "free": "Free Job Seeker",
         "pro": "Pro Outreach",
-        "premium_plus": "Premium+ Unlimited",
+        "premium_plus": "Premium+",
         "master_admin": "Master Admin Persona"
     }
     if not user or not user.oauth_tokens:
@@ -2576,7 +2576,7 @@ def auth_status(request: Request, db: Session = Depends(get_db)):
         tier_name_map = {
             "free": "Free Job Seeker",
             "pro": "Pro Outreach",
-            "premium_plus": "Premium+ Unlimited",
+            "premium_plus": "Premium+",
             "master_admin": "Master Admin"
         }
         tier_name = tier_name_map.get(tier_code, tier_code.replace("_", " ").title())
@@ -2591,7 +2591,7 @@ def auth_status(request: Request, db: Session = Depends(get_db)):
     real_tier_name_map = {
         "free": "Free Job Seeker",
         "pro": "Pro Outreach",
-        "premium_plus": "Premium+ Unlimited",
+        "premium_plus": "Premium+",
         "master_admin": "Master Admin"
     }
     real_tier_name = "Master Admin" if is_master else real_tier_name_map.get(real_tier_code, real_tier_code.replace("_", " ").title())
@@ -2653,7 +2653,7 @@ def get_public_tiers(db: Session = Depends(get_db)):
                 },
                 {
                     "code": "premium_plus",
-                    "name": "Premium+ Unlimited",
+                    "name": "Premium+",
                     "subtitle": "Maximum Velocity",
                     "price_inr": 999,
                     "daily_pitch_limit": 100,
@@ -4023,6 +4023,13 @@ def get_admin_metrics(
     # 3. Single count for verified emails
     verified_emails = db.query(func.count(CompanyEmail.id)).scalar() or 0
 
+    # 4. Pitches actually sent today — count OutreachLog rows (same source as the
+    #    Sent Pitches tab), not sum(User.pitches_sent_today): the per-user quota
+    #    counter is not incremented for master-admin sends, so it under-reports.
+    _now = datetime.utcnow()
+    _today_start = datetime(_now.year, _now.month, _now.day)
+    pitches_today = db.query(func.count(OutreachLog.id)).filter(OutreachLog.sent_at >= _today_start).scalar() or 0
+
     data = {
         "users_total": user_row.total if user_row else 0,
         "users_with_oauth": user_row.oauth if user_row else 0,
@@ -4030,7 +4037,7 @@ def get_admin_metrics(
         "subscribers_free": user_row.free if user_row else 0,
         "subscribers_pro": user_row.pro if user_row else 0,
         "subscribers_premium_plus": user_row.premium_plus if user_row else 0,
-        "pitches_sent_today": user_row.pitches if user_row else 0,
+        "pitches_sent_today": pitches_today,
         "companies_valid": comp_row.valid if comp_row else 0,
         "companies_invalid": comp_row.invalid if comp_row else 0,
         "verified_emails": verified_emails,
