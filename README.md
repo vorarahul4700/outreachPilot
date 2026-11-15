@@ -1,217 +1,320 @@
-<div align="center">
-
 # OutreachPilot
-### **Autonomous B2B Lead Scraping, AI Intelligence & 1-Click Outreach Engine**
 
-[![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-blue.svg?logo=python&logoColor=white)](https://www.python.org/)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.110%2B-009688.svg?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15%2B-336791.svg?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
-[![Groq AI](https://img.shields.io/badge/AI%20Engine-Groq%20Llama%20%2F%20Qwen-F55036.svg)](https://groq.com/)
-[![Tailwind CSS](https://img.shields.io/badge/Frontend-TailwindCSS-38B2AC.svg?logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
+**Find real companies. Get direct emails. Send personal outreach from your own Gmail.**
 
-**Find verified local businesses. Profile company tech stacks with AI. Match with candidate resumes. Reach out in 1 click.**
+OutreachPilot is a web app for job seekers and freelancers in India. It finds companies on Google Maps, reads their websites to learn what they do and who to contact, and helps you write and send a personal email to each one. It also publishes a free, public directory of those companies, grouped by city and category.
 
-[Features](#key-features) | [Architecture](#system-architecture) | [Quick Start](#quick-start) | [Security](#security--privacy-safeguards) | [API Reference](#api-endpoints)
-
-</div>
+Live site: [outreachpilot.in](https://outreachpilot.in)
 
 ---
 
-## Executive Overview
+## Contents
 
-**OutreachPilot** is an autonomous, privacy-first technical job outreach and B2B lead generation platform. It automates what normally takes 10+ hours of tedious daily prospecting into a structured, 3-tab workflow:
-
-1. **Precision Scouting:** Discovers live, verified business leads from Google Local / Google Maps across any query and location, filtering out aggregator directories (Yelp, Justdial, YellowPages) and dummy local domains.
-2. **Deep Subpage Crawling:** Crawls company websites across `/contact`, `/about`, `/careers`, and `/jobs` in parallel, discovering verified contact emails.
-3. **Exclusive HR / Recruitment Email Prioritization:** When talent acquisition emails (`hr@`, `careers@`, `jobs@`, `recruit@`) are detected, OutreachPilot automatically excludes all generic departmental addresses (`info@`, `sales@`, `support@`) and locks in the recruiter as the primary contact.
-4. **AI Company Profiling:** Analyzes crawled website copy using **Groq AI** to extract active tech stacks, primary services, and strategic company challenges.
-5. **Resume Parsing & Cold Pitch Engine:** Parses uploaded candidate resumes in-memory (zero disk storage) and drafts tailored cold outreach emails and custom cover letters matching candidate achievements to company tech stacks.
-6. **Multi-Channel Anti-Spam Dispatch:** Sends emails via **1-Click Gmail Web**, native `mailto:`, or official **Google OAuth 2.0 (Gmail API)** with strict database deduplication to ensure no business is ever emailed twice.
+- [What it does](#what-it-does)
+- [How it works](#how-it-works)
+- [Tech stack](#tech-stack)
+- [Getting started](#getting-started)
+- [Configuration](#configuration)
+- [Plans and daily limits](#plans-and-daily-limits)
+- [Public directory and SEO](#public-directory-and-seo)
+- [Background workers](#background-workers)
+- [Admin panel](#admin-panel)
+- [Pages and API](#pages-and-api)
+- [Project layout](#project-layout)
+- [Deployment](#deployment)
+- [Security](#security)
 
 ---
 
-## System Architecture
+## What it does
+
+1. **Find companies.** Search any keyword and city (for example "Python development companies" in Pune). OutreachPilot collects the matching Google Maps listings: name, website, phone, address, rating and review count. Directories and aggregator sites are filtered out.
+2. **Research each company.** It crawls the company website (home, about, contact, careers pages), finds contact emails and sends the text to an AI model. The result is a short summary, the services they offer, the technology they use, and any hiring signals.
+3. **Prefer hiring contacts.** When an HR or careers address (`hr@`, `careers@`, `jobs@`, `talent@` and similar) is found, it becomes the main contact instead of `info@` or `sales@`.
+4. **Write the email.** Upload your resume (PDF, TXT or Markdown). It is read in memory and never saved to disk. OutreachPilot matches your experience to what the company does and drafts a personal email you can edit.
+5. **Send it.** Send through your own Gmail with Google sign-in, open it in Gmail web, or use your mail app. Every send is logged so the same company is never emailed twice.
+
+---
+
+## How it works
 
 ```mermaid
 graph TD
-    A[Target Keyword & City] --> B[Google Local Lead Scout]
-    B -->|SeleniumBase Engine| C[Google Maps udm=local]
-    C -->|Genuine Domain Filter| D[(PostgreSQL Leads DB)]
-    
-    D --> E[Subpage Email Crawler]
-    E --> F{HR / Recruiter Email Found?}
-    F -->|Yes| G[Lock Priority HR Contact & Drop Generic Info/Sales]
-    F -->|No| H[Retain Best Verified Department Address]
-    
-    G & H --> I[Groq AI Tech Intelligence Engine]
-    I --> J[Technical Stack & Services Dossier]
-    
-    K[Candidate Resume PDF] --> L[In-Memory Text Extractor]
-    L --> M[AI Resume Intelligence Engine]
-    M --> N[Candidate Strengths & Superpowers]
-    
-    J & N --> P[Contextual Cold Pitch Engine]
-    P --> Q[Tailored Direct Job Proposal]
-    
-    Q --> R[1-Click Personal Gmail Web]
-    Q --> S[Gmail OAuth 2.0 API Dispatch]
-    
-    R & Q --> T[(Outreach Audit Log & Deduplication)]
+    A[Keyword + city] --> B[Google Maps scout]
+    B --> C[(PostgreSQL: companies)]
+    C --> D[Website crawler + email finder]
+    D --> E[AI research: summary, services, tech, hiring]
+    E --> C
+    F[Your resume] --> G[Resume reader, in memory]
+    C --> H[Pitch writer]
+    G --> H
+    H --> I[Send via Gmail API or Gmail web]
+    I --> J[(Outreach log: no duplicate emails)]
+    C --> K[Public directory pages]
 ```
 
 ---
 
-## Key Features
+## Tech stack
 
-### 1. Real-Time Google Local Lead Scout
-* **Live Discovery:** Scrapes real-time Google Maps listings with anti-bot bypass.
-* **Stream Monitor:** Live terminal log activity console showing crawl progress, status messages, and discovered businesses in real time.
-* **Genuine Domain Protection:** Automatically rejects unverified `.local` or dummy placeholder domains.
-* **Clean Address Parser:** Cleans rating numbers, business hours ("Open 24 hours"), and creates direct Google Maps navigation links.
-
-### 2. Dual-View Directory & Multi-Dimensional Filters
-* **Flexible Views:** Instantly toggle between **Responsive Cards Grid** (2-column on mobile, 3-column on laptop/desktop) and a compact **Table View**.
-* **Real-Time Filtering:** Filter instantly by keyword, city, domain, rating, and email availability.
-* **Pagination Controls:** Full numbered pagination with configurable page sizes (12, 24, 48, 96, All).
-* **CSV Export:** 1-click export of your verified leads to spreadsheet-compatible CSV files.
-
-### 3. HR & Recruitment Email Prioritization Engine
-* **Recruitment Keyword Matching:** Scans email prefixes for `hr@`, `recruit@`, `recruiting@`, `recruiter@`, `job@`, `jobs@`, `career@`, `careers@`, `talent@`, `hiring@`, `work@`, `join@`, and `people@`.
-* **Exclusive Exclusion Rule:** If any recruitment email is detected, the crawler excludes all generic departmental emails (`info@`, `contact@`, `sales@`, `support@`) to keep your outreach laser-focused on hiring managers.
-* **Smart Primary Assignment:** Automatically sets the HR email as `is_primary = True` for single-click outreach.
-
-### 4. Groq-Powered Deep AI Company Profiling
-* Analyzes crawled website content using ultra-fast Groq AI.
-* Generates an executive overview, categorized tech stack inventory, services breakdown, and strategic technical pain points candidates can solve.
-* Calibrated strictly to stay within Groq free-tier rate limits (OTPM token budget).
-
-### 5. Privacy-First In-Memory Resume Ingestion
-* Supports **PDF**, **TXT**, and **Markdown** resumes.
-* **Zero Disk Persistence:** Resumes are parsed in volatile memory and purged immediately after analysis.
-* Extracts core technical competencies, candidate superpowers, years of experience, and quantified achievements.
-
-### 6. 1-on-1 Personalized Cold Pitch & Outreach Hub
-* **Authentic Talent Inquiry:** Generates personalized cold job opportunity emails and tailored cover letters matching candidate achievements to company tech stacks (zero corporate sales fluff).
-* **Multi-Channel Dispatch:**
-  * **1-Click Gmail Web:** Opens Gmail with pre-filled recipient, subject, and body (requires zero passwords).
-  * **Google OAuth 2.0:** Direct dispatch through official Gmail API with user authorization.
-  * **Native Mailto:** Opens your operating system's default email client.
-* **Strict Deduplication:** Tracks contact history in PostgreSQL to guarantee no company is ever messaged twice.
+| Layer | What is used |
+| :--- | :--- |
+| Backend | Python 3.11, FastAPI, Uvicorn |
+| Database | PostgreSQL (Neon in production), SQLAlchemy 2 |
+| Google Maps scouting | SeleniumBase (undetected Chrome) |
+| Website crawling | HTTPX, Requests, BeautifulSoup |
+| AI | Groq (rotating key pool) with Google Gemini as fallback |
+| Sign-in and sending | Google OAuth 2.0, Gmail API |
+| Resume reading | pypdf, in memory only |
+| Frontend | Jinja2 templates, Tailwind CSS (CDN), vanilla JavaScript, light and dark themes |
+| Hosting | Render (web app), GitHub Actions (background workers) |
 
 ---
 
-## Technology Stack
+## Getting started
 
-| Layer | Component | Description |
-| :--- | :--- | :--- |
-| **Backend** | Python 3.11+, FastAPI, Uvicorn | High-performance asynchronous API server |
-| **Database** | PostgreSQL 15+, SQLAlchemy 2.0 | Relational database with automated migrations |
-| **Browser Engine** | SeleniumBase (Undetected Chrome) | Google Maps discovery with CAPTCHA bypass |
-| **Crawler** | HTTPX, BeautifulSoup4 | Asynchronous parallel website subpage extraction |
-| **AI Intelligence** | Groq Cloud API (`qwen/qwen3.8-27b`) | High-speed LLM inference for profiles & pitches |
-| **Auth & Mail** | Google OAuth 2.0, Gmail API | Secure token-based sending & session handling |
-| **PDF Processing** | PyPDF (`PdfReader`) | In-memory text extraction from candidate resumes |
-| **Frontend** | Vanilla HTML5, Tailwind CSS, Lucide Icons | Responsive matte-slate dark dashboard |
+### Requirements
 
----
+- Python 3.11 or newer
+- Google Chrome (only needed for Google Maps scouting)
+- A PostgreSQL database, local or hosted (for example Neon)
+- At least one AI key: [Groq](https://console.groq.com/) or [Google Gemini](https://aistudio.google.com/)
+- Optional: a Google Cloud OAuth client, to send email through Gmail
 
-## Quick Start
+### Install
 
-### 1. Prerequisites
-* **Python 3.11+** installed.
-* **Google Chrome** installed (for browser automation).
-* **PostgreSQL** running locally or via cloud (e.g. Neon, Supabase).
-* A free **[Groq API Key](https://console.groq.com/)**.
-
-### 2. Clone the Repository
 ```bash
-git clone https://github.com/<your-username>/outreachPilot.git
+git clone https://github.com/vorarahul4700/outreachPilot.git
+```
+
+```bash
 cd outreachPilot
 ```
 
-### 3. Create a Virtual Environment & Install Dependencies
 ```bash
 python -m venv venv
-# Windows:
-venv\Scripts\activate
-# macOS/Linux:
-source venv/bin/activate
+```
 
+Activate the virtual environment (`venv\Scripts\activate` on Windows, `source venv/bin/activate` on macOS and Linux), then install dependencies:
+
+```bash
 pip install -r requirements.txt
 ```
 
-### 4. Configure Environment Variables
-Copy `.env.example` to `.env`:
+### Configure
+
 ```bash
 cp .env.example .env
 ```
-Populate your `.env` with your PostgreSQL database URL, Groq API key, and optional Google OAuth credentials.
 
-### 5. Launch the Application
+Fill in `.env` (see [Configuration](#configuration)). At minimum you need `DATABASE_URL`, `SECRET_KEY` and one AI key. Generate a secret key with:
+
+```bash
+python -c "import secrets; print(secrets.token_urlsafe(64))"
+```
+
+### Run
+
 ```bash
 uvicorn app:app --host 127.0.0.1 --port 8000 --reload
 ```
 
-Open your browser to: **[http://127.0.0.1:8000](http://127.0.0.1:8000)**
+Open [http://127.0.0.1:8000](http://127.0.0.1:8000). Tables, columns and indexes are created automatically on first start.
 
 ---
 
-## Security & Privacy Safeguards
+## Configuration
 
-OutreachPilot includes built-in security features:
+All settings are environment variables, read from `.env` locally.
 
-- **Server-Side Request Forgery (SSRF) Protection:** The website crawler validates all URLs against private IP blocks (RFC 1918), loopback (`127.0.0.0/8`), link-local (`169.254.0.0/16`), and internal cloud metadata endpoints before issuing requests.
-- **Encrypted Session Management:** Authentication cookies are cryptographically signed with `HMAC-SHA256` and set with `HttpOnly`, `SameSite=Lax`, and secure session handling.
-- **Rate Limiting:** Sliding-window rate limiters protect AI endpoints, resume parsing, and email dispatches against automated abuse.
-- **Safety Sandbox Mode (`DEV_MODE`):** When active, all outreach emails are redirected to `DEV_OVERRIDE_EMAIL` to prevent unintended emails during testing.
-- **In-Memory Privacy:** Resumes are never stored on disk. Files are processed in memory and purged immediately after parsing.
-
----
-
-## API Endpoints
-
-| Method | Endpoint | Description |
+| Variable | Required | Purpose |
 | :--- | :--- | :--- |
-| `POST` | `/api/scrape` | Trigger real-time Google Maps lead scout job |
-| `GET` | `/api/progress` | Poll real-time scraping progress and terminal logs |
-| `GET` | `/api/companies` | Fetch all verified leads with filtering & pagination |
-| `POST` | `/api/enrich` | Crawl company subpages & generate AI intelligence profile |
-| `POST` | `/api/resume/upload` | In-memory upload & AI candidate profile parsing |
-| `POST` | `/api/pitch/generate` | Generate hyper-personalized cold outreach pitch |
-| `POST` | `/api/outreach/send` | Dispatch verified email via Gmail OAuth |
-| `GET` | `/auth/google/login` | Initiate Google OAuth 2.0 authentication flow |
-| `GET` | `/auth/google/callback`| Handle OAuth 2.0 authorization code exchange |
+| `DATABASE_URL` | Yes | PostgreSQL connection string |
+| `SECRET_KEY` | Yes | Signs session cookies and encrypts stored Google tokens. The app will not start without it in production |
+| `TOKEN_ENC_KEY` | No | Separate key for encrypting Google tokens, so `SECRET_KEY` can be rotated without signing everyone out of Gmail |
+| `GROQ_API_KEY` / `GROQ_API_KEYS` | One AI key | Single Groq key, or a comma-separated list that is rotated when one hits its rate limit |
+| `GROQ_MODEL` | No | Groq model name |
+| `GEMINI_API_KEY` / `GEMINI_API_KEYS` | One AI key | Google Gemini key(s), used as fallback or primary |
+| `GEMINI_MODEL` | No | Gemini model name |
+| `GOOGLE_CLIENT_ID` | For Gmail | Google OAuth client ID |
+| `GOOGLE_CLIENT_SECRET` | For Gmail | Google OAuth client secret |
+| `GOOGLE_REDIRECT_URI` | For Gmail | OAuth callback, for example `http://localhost:8000/auth/google/callback` |
+| `MASTER_ADMIN_EMAILS` | No | Comma-separated emails that get admin access and no daily limit |
+| `APP_BASE_URL` | No | Public base URL used in canonical links and sitemaps |
+| `DEV_MODE` | No | `true` only for local development. Enables demo login and sends every email to `DEV_OVERRIDE_EMAIL` |
+| `DEV_OVERRIDE_EMAIL` | No | Where all outgoing emails go while `DEV_MODE` is on |
+| `MAINTENANCE_MODE` | No | Shows the maintenance page to visitors |
+| `SUBSCRIPTION_KILL_SWITCH` | No | Turns off plan limits for everyone (can also be toggled from the admin panel) |
+| `PROJECT_NAME`, `TAGLINE`, `APP_DESCRIPTOR` | No | Branding text |
+
+Never commit `.env`. It is already in `.gitignore`.
 
 ---
 
-## Repository Structure
+## Plans and daily limits
+
+Each plan has a daily number of pitches a user can send:
+
+| Plan | Pitches per day |
+| :--- | :--- |
+| Free | 10 |
+| Pro | 50 |
+| Premium+ | 100 |
+| Admin | No limit |
+
+Plans and their limits can be edited from the admin panel.
+
+**Daily reset:** the counter resets automatically at **midnight IST**. Two things make sure this happens:
+
+- Every request checks whether the user's counter is from a previous IST day and resets it if so. A user is never left blocked, even if the server was asleep at midnight.
+- A background job also resets everyone just after each midnight IST, so admin numbers stay correct.
+
+**Kill switch:** when switched on (admin panel or `SUBSCRIPTION_KILL_SWITCH`), all limits are lifted for every signed-in user. Their real plan is kept and comes back when it is switched off.
+
+---
+
+## Public directory and SEO
+
+Every company in the database gets a public page, and companies are grouped into crawlable listing pages:
+
+| Page | Example |
+| :--- | :--- |
+| Directory home | `/directory` |
+| City | `/directory/city/bengaluru` |
+| Category | `/directory/category/custom-software` |
+| City + category | `/directory/companies?city=pune&tech=python` |
+| Company profile | `/company/<name>-<id>` |
+
+What the pages include:
+
+- **Structured data** (schema.org JSON-LD): Organization, WebSite, LocalBusiness and breadcrumbs. A rating is only included when the company has real Google reviews.
+- **Search engine files:** `robots.txt`, a sitemap index with split sitemaps (core, cities, categories, directory, companies), and `llms.txt` / `llms-full.txt` for AI crawlers.
+- **Real data only:** pages show what was actually collected. A company that has not been researched yet says so instead of showing filler text.
+- **Caching:** directory data and company details are cached in memory, and pages send long-lived `Cache-Control` headers.
+
+---
+
+## Background workers
+
+Heavy work runs on GitHub Actions, so nothing has to stay running on your computer. All three live in `.github/workflows/`:
+
+| Workflow | Script | When |
+| :--- | :--- | :--- |
+| Cloud Scout (`cloud_scout.yml`) | `cloud_worker.py` | Every 3 hours, or on demand. Picks queued scouting jobs from the database (`FOR UPDATE SKIP LOCKED`, so parallel runners never collide) and scrapes Google Maps |
+| Cloud Enrichment (`cloud_enrich.yml`) | `cloud_enrich.py` | On demand. Crawls and researches pending companies in batches, retrying failures up to 3 times |
+| Keep-alive (`keep_alive.yml`) | `curl` | Every 10 minutes. Pings `/healthz` and `robots.txt` so the free Render instance stays awake |
+
+The workers need `DATABASE_URL` and the AI keys set as repository secrets. Enrichment can also be started from your machine:
+
+```bash
+python run_cloud_enrichment.py --total 500 --monitor
+```
+
+---
+
+## Admin panel
+
+`/admin` is available to admin accounts only. From there you can:
+
+- See users, sign-ups, plans and pitches sent today
+- Change a user's plan or daily limit, make someone an admin, or ban an account
+- Create and edit plans
+- Add companies one at a time or by bulk upload, edit them, and quarantine or restore entries that are not real companies
+- Clean up company names and remove non-company listings
+- View sent pitches
+- Watch and start the GitHub Actions workers
+- Toggle the plan kill switch
+
+---
+
+## Pages and API
+
+**Pages**
+
+| Path | What it is |
+| :--- | :--- |
+| `/` | Landing page |
+| `/app` | Workspace: search, filter, research, write and send |
+| `/admin` | Admin panel |
+| `/directory`, `/directory/...`, `/company/...` | Public directory |
+| `/privacy`, `/terms` | Legal pages |
+| `/healthz` | Health check |
+
+**Main API endpoints**
+
+| Method | Path | What it does |
+| :--- | :--- | :--- |
+| `POST` | `/api/scrape` | Start a Google Maps scouting job |
+| `GET` | `/api/progress` | Scouting progress and log |
+| `POST` | `/api/stop` | Stop the running scouting job |
+| `GET` | `/api/companies` | List companies with filters and pagination |
+| `GET` | `/api/companies/filters` | Available cities, categories and counts |
+| `GET` | `/api/companies/{id}` | One company with its research and emails |
+| `POST` | `/api/companies/{id}/enrich` | Research one company now |
+| `POST` | `/api/resume/upload` | Read a resume in memory |
+| `POST` | `/api/pitch/generate` | Write a pitch for one company |
+| `POST` | `/api/pitch/bulk-generate` | Write pitches for several companies |
+| `POST` | `/api/pitch/{id}/send-direct` | Send a pitch through Gmail |
+| `POST` | `/api/pitch/bulk-send` | Send several pitches, spaced out |
+| `GET` | `/api/outreach/logs` | Your sent history |
+| `GET` | `/api/auth/status` | Sign-in state, plan and remaining pitches today |
+| `GET` | `/auth/google/login` | Start Google sign-in |
+| `GET` | `/auth/google/callback` | Google sign-in callback |
+| `GET`, `POST` | `/auth/logout` | Sign out |
+
+Admin endpoints live under `/api/admin/` and require an admin account.
+
+---
+
+## Project layout
 
 ```
 outreachPilot/
-├── app.py                  # Main FastAPI application & route controllers
-├── config.py               # Environment configuration & SSRF security validator
-├── db.py                   # SQLAlchemy models & PostgreSQL connection pool
-├── ai_agent.py             # Groq AI integration (Profiles, Pitches, Resumes)
-├── enricher.py             # Subpage crawler & HR email prioritization engine
-├── outreach.py             # Gmail OAuth 2.0 & multi-channel dispatch engine
-├── scraper_engine.py       # Google Local scraping engine (Undetected Chrome)
-├── static/
-│   ├── css/
-│   │   └── style.css       # Matte-slate dark mode design system & responsive rules
-│   └── js/
-│       └── app.js          # Reactive frontend controller & state machine
-├── templates/
-│   └── index.html          # Semantic HTML5 UI dashboard
-├── .env.example            # Environment variables configuration template
-├── .gitignore              # Git ignore rules (protects .env and caches)
-├── requirements.txt        # Python dependency manifest
-├── ruff.toml               # Linter configuration
-└── README.md               # Project documentation
+├── app.py                   # FastAPI app: pages, API, auth, admin, quota reset
+├── db.py                    # SQLAlchemy models, connection, startup migrations
+├── config.py                # Settings from environment variables
+├── seo_engine.py            # Directory data, slugs, caching, sitemaps, JSON-LD
+├── ai_agent.py              # AI calls: company research, resume reading, pitch writing
+├── enricher.py              # Website crawler and email finder
+├── scraper_engine.py        # Google Maps scraper
+├── outreach.py              # Gmail sending
+├── cloud_worker.py          # GitHub Actions scouting worker
+├── cloud_enrich.py          # GitHub Actions research worker
+├── run_cloud_enrichment.py  # Start and watch research runs from your machine
+├── templates/               # Jinja2 pages (landing, workspace, admin, directory, company)
+├── static/                  # CSS, JavaScript, fonts, images
+├── .github/workflows/       # Scout, enrichment and keep-alive workflows
+├── render.yaml              # Render service definition
+├── render-build.sh          # Render build: Chrome, dependencies, ChromeDriver
+├── requirements.txt
+└── .env.example             # Template for your .env
 ```
 
 ---
 
-## License
+## Deployment
 
-This project is licensed under the **MIT License**: feel free to use, modify, and distribute it for personal or commercial projects.
+The app runs on [Render](https://render.com) using `render.yaml`:
+
+- **Build:** `render-build.sh` downloads Chrome, installs the Python packages and a matching ChromeDriver.
+- **Start:** `uvicorn app:app --host 0.0.0.0 --port $PORT`
+- **Health check:** `/healthz`
+- **Auto-deploy:** every push to `main` deploys.
+
+Set `DATABASE_URL`, `SECRET_KEY`, your AI keys, the Google OAuth values and `MASTER_ADMIN_EMAILS` in the Render dashboard. Keep `DEV_MODE=false` in production.
+
+---
+
+## Security
+
+- Session cookies are signed, and stored Google tokens are encrypted with `SECRET_KEY` (or `TOKEN_ENC_KEY`).
+- Resumes are processed in memory and never written to disk.
+- Rate limits protect AI, resume and sending endpoints.
+- `DEV_MODE` sends every email to a test address, so nothing reaches real companies during development.
+- Database migrations run one step at a time with a lock timeout, so an interrupted start cannot lock the companies table.
+
+Security review notes are in [SECURITY_PENTEST_REPORT_2026-11-14.md](SECURITY_PENTEST_REPORT_2026-11-14.md). To report a security problem, please open a private security advisory on GitHub instead of a public issue.
+
+---
+
+&copy; 2026 OutreachPilot. All rights reserved.
