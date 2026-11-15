@@ -177,7 +177,7 @@
       <div id="stat-card-emails" class="app-stat">
         <div class="top"><span>Verified Emails</span><span class="material-symbols-outlined">verified</span></div>
         <div class="num"><span id="stat-emails-count" class="tabular-nums">0</span><span class="of">/ <span id="stat-emails-total">0</span></span></div>
-        <p id="stat-yield-text" class="sub">0% have email</p>
+        <p id="stat-yield-text" class="sub">0% have an email</p>
       </div>
       <div id="stat-card-enriched" class="app-stat">
         <div class="top"><span>Researched by AI</span><span class="material-symbols-outlined">auto_awesome</span></div>
@@ -207,6 +207,7 @@
       <div class="app-search">
         <span class="material-symbols-outlined" aria-hidden="true">search</span>
         <input id="filter-search" placeholder="Search by name, tech stack, domain, or location..." type="text" aria-label="Search companies"/>
+        <kbd class="kbd app-search-kbd" aria-hidden="true">/</kbd>
       </div>
       <div class="toolbar-right">
         <div class="toolbar-filters">
@@ -445,6 +446,7 @@
       <div class="app-search">
         <span class="material-symbols-outlined" aria-hidden="true">search</span>
         <input type="text" id="outreach-search-input" placeholder="Search by company name, email, tech stack, or domain..." aria-label="Search outreach">
+        <kbd class="kbd app-search-kbd" aria-hidden="true">/</kbd>
       </div>
       <div class="toolbar-right">
         <div class="toolbar-filters">
@@ -893,5 +895,6 @@
 <script src="/static/js/app/subscription.js?v={{ asset_v }}"></script>
 <script src="/static/js/app/profile.js?v={{ asset_v }}"></script>
 <script src="/static/js/app/theme.js?v={{ asset_v }}"></script>
-<script src="/static/js/app.js?v=12.0"></script>
+<script src="/static/js/app/shortcuts.js?v={{ asset_v }}"></script>
+<script src="/static/js/app.js?v={{ asset_v }}"></script>
 {% endblock %}

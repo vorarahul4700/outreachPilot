@@ -663,24 +663,24 @@ document.addEventListener("DOMContentLoaded", () => {
       const invalid = statsOrList.invalid || 0;
 
       const totalCountEl = document.getElementById("companies-total-count");
-      if (totalCountEl) totalCountEl.textContent = total;
+      if (totalCountEl) totalCountEl.textContent = fmtNum(total);
 
       const navBadgeEl = document.getElementById("nav-companies-badge");
-      if (navBadgeEl) navBadgeEl.textContent = total;
+      if (navBadgeEl) navBadgeEl.textContent = fmtNum(total);
 
       const headerCounter = document.getElementById("header-leads-counter");
-      if (headerCounter) headerCounter.textContent = total;
+      if (headerCounter) headerCounter.textContent = fmtNum(total);
 
-      document.querySelectorAll(".badge-total-count").forEach(el => el.textContent = total);
+      document.querySelectorAll(".badge-total-count").forEach(el => el.textContent = fmtNum(total));
 
       const statEnriched = document.getElementById("stat-enriched-count");
-      if (statEnriched) statEnriched.textContent = enriched;
+      if (statEnriched) statEnriched.textContent = fmtNum(enriched);
 
       const statEmails = document.getElementById("stat-emails-count");
-      if (statEmails) statEmails.textContent = withEmails;
+      if (statEmails) statEmails.textContent = fmtNum(withEmails);
 
       const badgeEmails = document.getElementById("badge-emails-count");
-      if (badgeEmails) badgeEmails.textContent = withEmails;
+      if (badgeEmails) badgeEmails.textContent = fmtNum(withEmails);
 
       // Contacted / Pitched Stat Card (STRICT: only visible if user is logged in and only for this user)
       const statContacted = document.getElementById("stat-contacted-count");
@@ -692,44 +692,44 @@ document.addEventListener("DOMContentLoaded", () => {
           statContacted.textContent = "0";
           statContactedBadge.textContent = "Sign in";
           statContactedBadge.className = "mini-badge";
-          statContactedText.textContent = "Sign in to track your pitches";
+          statContactedText.textContent = "Sign in to track sent emails";
         } else {
           const userContacted = contacted !== null ? contacted : 0;
-          statContacted.textContent = userContacted;
+          statContacted.textContent = fmtNum(userContacted);
           if (userContacted === 0) {
-            statContactedBadge.textContent = "0% outreach";
+            statContactedBadge.textContent = "0% reached";
             statContactedBadge.className = "mini-badge";
-            statContactedText.textContent = "No campaigns sent yet";
+            statContactedText.textContent = "No emails sent yet";
           } else {
             const responseRatePct = total > 0 ? Math.round((userContacted / total) * 100) : 0;
-            statContactedBadge.textContent = `${responseRatePct}% outreach`;
+            statContactedBadge.textContent = `${responseRatePct}% reached`;
             statContactedBadge.className = "mini-badge accent";
-            statContactedText.textContent = `${userContacted} of ${total} contacted`;
+            statContactedText.textContent = `${fmtNum(userContacted)} of ${fmtNum(total)} contacted`;
           }
         }
       }
 
       const statEmailsTotal = document.getElementById("stat-emails-total");
-      if (statEmailsTotal) statEmailsTotal.textContent = total;
+      if (statEmailsTotal) statEmailsTotal.textContent = fmtNum(total);
 
       const statYield = document.getElementById("stat-yield-text");
       if (statYield) {
         const yieldPct = total > 0 ? Math.round((withEmails / total) * 100) : 0;
-        statYield.textContent = `${yieldPct}% contact yield`;
+        statYield.textContent = `${yieldPct}% have an email`;
       }
 
       const pillAll = document.getElementById("pill-count-all");
-      if (pillAll) pillAll.textContent = total;
+      if (pillAll) pillAll.textContent = fmtNum(total);
       const pillResearched = document.getElementById("pill-count-researched");
-      if (pillResearched) pillResearched.textContent = enriched;
+      if (pillResearched) pillResearched.textContent = fmtNum(enriched);
       const pillPitched = document.getElementById("pill-count-pitched");
       if (pillPitched) {
-        pillPitched.textContent = (isLoggedIn && contacted !== null) ? contacted : "0";
+        pillPitched.textContent = (isLoggedIn && contacted !== null) ? fmtNum(contacted) : "0";
       }
       const pillExcluded = document.getElementById("pill-count-excluded");
-      if (pillExcluded) pillExcluded.textContent = invalid;
+      if (pillExcluded) pillExcluded.textContent = fmtNum(invalid);
 
-      if (statInvalidCount) statInvalidCount.textContent = invalid;
+      if (statInvalidCount) statInvalidCount.textContent = fmtNum(invalid);
 
       // Outreach Hub Quick Metric Strip & Badges (Globally synchronized from server stats)
       const outreachTotalEl = document.getElementById("outreach-count-total");
@@ -745,11 +745,11 @@ document.addEventListener("DOMContentLoaded", () => {
       const outreachSentEl = document.getElementById("outreach-count-sent");
       if (outreachSentEl) outreachSentEl.textContent = isLoggedIn ? userContactedCount.toLocaleString() : "0";
 
-      document.querySelectorAll(".outreach-badge-all").forEach(el => el.textContent = total);
-      document.querySelectorAll(".outreach-badge-emails").forEach(el => el.textContent = withEmails);
-      document.querySelectorAll(".outreach-badge-ready").forEach(el => el.textContent = Math.max(0, withEmails - userContactedCount));
+      document.querySelectorAll(".outreach-badge-all").forEach(el => el.textContent = fmtNum(total));
+      document.querySelectorAll(".outreach-badge-emails").forEach(el => el.textContent = fmtNum(withEmails));
+      document.querySelectorAll(".outreach-badge-ready").forEach(el => el.textContent = fmtNum(Math.max(0, withEmails - userContactedCount)));
       document.querySelectorAll(".outreach-badge-sent").forEach(el => {
-        el.textContent = isLoggedIn ? userContactedCount : "-";
+        el.textContent = isLoggedIn ? fmtNum(userContactedCount) : "-";
       });
     } else if (Array.isArray(statsOrList)) {
       const validList = statsOrList.filter(c => !c.is_invalid);
@@ -759,14 +759,14 @@ document.addEventListener("DOMContentLoaded", () => {
       const contacted = isLoggedIn ? validList.filter(c => c.already_contacted).length : null;
 
       const totalCountEl = document.getElementById("companies-total-count");
-      if (totalCountEl) totalCountEl.textContent = total;
+      if (totalCountEl) totalCountEl.textContent = fmtNum(total);
       const statEnriched = document.getElementById("stat-enriched-count");
-      if (statEnriched) statEnriched.textContent = enriched;
+      if (statEnriched) statEnriched.textContent = fmtNum(enriched);
       const statEmails = document.getElementById("stat-emails-count");
-      if (statEmails) statEmails.textContent = withEmails;
+      if (statEmails) statEmails.textContent = fmtNum(withEmails);
       const statContacted = document.getElementById("stat-contacted-count");
       if (statContacted) {
-        statContacted.textContent = isLoggedIn ? (contacted ?? 0) : "0";
+        statContacted.textContent = isLoggedIn ? fmtNum(contacted ?? 0) : "0";
       }
     }
 

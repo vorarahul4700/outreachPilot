@@ -82,3 +82,9 @@ function buildMapsUrl(name, address, city) {
   const query = [name, clean, city].filter(Boolean).join(", ");
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query || name || 'Google Maps')}`;
 }
+
+// Display formatting for counters (redesign): 55119 -> "55,119". Display only; nothing reads these back.
+function fmtNum(n) {
+  const v = Number(n);
+  return Number.isFinite(v) ? v.toLocaleString() : String(n ?? "");
+}

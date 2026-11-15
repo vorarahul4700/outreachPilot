@@ -111,3 +111,9 @@ Each phase ends with your review. I commit to the branch only after you approve 
 - `main` keeps moving while this branch is open. I'll merge `main` into the branch at the end of each phase so it does not drift.
 - JS-generated markup is the biggest regression risk. The contract script and click-throughs cover it.
 - Removing Tailwind means any class I miss shows unstyled. The contract script lists every class each page uses, before and after.
+
+## Phase 7 result and review loop
+
+- Phase 7 QA (commit d656741): contrast tokens fixed to WCAG AA, directory card overflow at 375px, /app toolbar and card grid at 768px, cache version bump. 11 pages checked at 375, 768 and 1440 in light and dark.
+- Review pass 1: workspace counters show thousands separators (display only); stat card wording made plain; "/" focuses the search box on /app; app.js and admin.js now use the shared cache version so restyled code always reaches the browser.
+- Functional ideas from the review are in REDESIGN_PROPOSALS.md and are not built.
