@@ -2590,8 +2590,8 @@ def get_company_detail(company_id: int, request: Request, db: Session = Depends(
         if latest_pitch:
             pitch_data = {
                 "id": latest_pitch.id,
-                "subject": latest_pitch.subject,
-                "body": latest_pitch.pitch_body,
+                "subject": latest_pitch.subject_line,
+                "body": latest_pitch.email_body,
                 "created_at": latest_pitch.created_at.strftime("%b %d, %Y %I:%M %p") if latest_pitch.created_at else None
             }
 

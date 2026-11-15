@@ -1549,3 +1549,24 @@ body.dark #toggle-subscription-kill-switch + div,
 
 
 
+
+/* ============================================================
+   MODAL SCROLL LOCK (static/js/scroll-lock.js)
+   While any full-screen overlay is open the page behind it cannot
+   scroll, and scroll areas inside a modal stop at their ends instead
+   of passing the scroll on to the page.
+   ============================================================ */
+html.scroll-locked,
+html.scroll-locked body {
+  overflow: hidden !important;
+  overscroll-behavior: none;
+}
+html.scroll-locked body {
+  padding-right: var(--scroll-lock-gap, 0px);
+}
+.fixed.inset-0,
+.fixed.inset-0 .overflow-y-auto,
+.fixed.inset-0 .overflow-auto,
+.fixed.inset-0 .overflow-scroll {
+  overscroll-behavior: contain;
+}

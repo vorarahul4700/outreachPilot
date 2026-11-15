@@ -132,15 +132,10 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btn-quick-view-invalid")?.addEventListener("click", () => switchTab("companies"));
 
   // --- Modal Helpers with Non-Scrollable Background Enforcement ---
+  // Shared lock in static/js/scroll-lock.js watches every overlay; this just
+  // asks it to re-check immediately after a modal opens or closes.
   function updateBodyScrollLock() {
-    const activeModals = document.querySelectorAll(".fixed[id^='modal-']:not(.hidden)");
-    if (activeModals.length > 0) {
-      document.body.classList.add("overflow-hidden");
-      document.documentElement.classList.add("overflow-hidden");
-    } else {
-      document.body.classList.remove("overflow-hidden");
-      document.documentElement.classList.remove("overflow-hidden");
-    }
+    if (window.ScrollLock) window.ScrollLock.refresh();
   }
 
   function openModal(id) {

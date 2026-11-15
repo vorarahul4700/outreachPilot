@@ -313,11 +313,9 @@ document.addEventListener("DOMContentLoaded", () => {
     if (shouldOpen) {
       appSidebar?.classList.add("mobile-open");
       mobileSidebarOverlay?.classList.add("active");
-      document.body.style.overflow = "hidden";
     } else {
       appSidebar?.classList.remove("mobile-open");
       mobileSidebarOverlay?.classList.remove("active");
-      document.body.style.overflow = "";
     }
     refreshIcons();
   }
@@ -3150,7 +3148,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function openSubscriptionModal() {
     if (subModal) {
       subModal.classList.remove("hidden");
-      updateAppModalScrollLock();
+      window.ScrollLock?.refresh();
       if (currentUser) updateUserSubscriptionUI(currentUser);
     }
   }
@@ -3158,7 +3156,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function closeSubscriptionModal() {
     if (subModal) {
       subModal.classList.add("hidden");
-      updateAppModalScrollLock();
+      window.ScrollLock?.refresh();
     }
   }
 
@@ -3180,25 +3178,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // --- Modal Scroll Lock: Ensure background is never scrollable when any modal is open ---
-  function updateAppModalScrollLock() {
-    const isAnyModalOpen = Boolean(document.querySelector("#modal-user-subscription:not(.hidden), #login-modal:not(.hidden), #resume-confirm-modal:not(.hidden), #sent-email-modal:not(.hidden), #mobile-sidebar-overlay:not(.hidden)"));
-    if (isAnyModalOpen) {
-      document.body.classList.add("overflow-hidden");
-      document.documentElement.classList.add("overflow-hidden");
-    } else {
-      document.body.classList.remove("overflow-hidden");
-      document.documentElement.classList.remove("overflow-hidden");
-    }
-  }
-
-  try {
-    const appModalObserver = new MutationObserver(() => updateAppModalScrollLock());
-    ["modal-user-subscription", "login-modal", "resume-confirm-modal", "sent-email-modal", "mobile-sidebar-overlay"].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) appModalObserver.observe(el, { attributes: true, attributeFilter: ["class"] });
-    });
-  } catch (e) {}
+  // Background scroll lock for every modal lives in static/js/scroll-lock.js.
 
   async function performDemoLogin(opts = {}) {
     try {
