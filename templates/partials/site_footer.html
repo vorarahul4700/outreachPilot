@@ -1,0 +1,46 @@
+{#- Public footer. Uses browse_cities when the page provides it. -#}
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <a href="/" class="logo" aria-label="OutreachPilot home">
+          <span class="logo-mark"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#logo-plane"/></svg></span>
+          <span class="logo-word">OutreachPilot</span>
+        </a>
+        <p>Find real companies across India, learn what they do, and send a personal email from your own Gmail.</p>
+      </div>
+
+      <div class="footer-cols">
+        <nav class="f-col" aria-label="Product">
+          <h2 class="f-head">Product</h2>
+          <a href="/app">Workspace</a>
+          <a href="/#capabilities">Features</a>
+          <a href="/#workflow">How it works</a>
+          <a href="/#pricing">Pricing</a>
+        </nav>
+        <nav class="f-col" aria-label="Directory">
+          <h2 class="f-head">Directory</h2>
+          <a href="/directory">All cities and categories</a>
+          {% for c in ((browse_cities if browse_cities is defined else []) or [])[:3] %}
+          <a href="/directory/city/{{ c.slug }}">{{ c.name }}</a>
+          {% endfor %}
+        </nav>
+        <nav class="f-col" aria-label="Legal">
+          <h2 class="f-head">Legal</h2>
+          <a href="/privacy">Privacy policy</a>
+          <a href="/terms">Terms of service</a>
+        </nav>
+      </div>
+    </div>
+
+    <div class="footer-word" aria-hidden="true">OutreachPilot</div>
+
+    <div class="footer-bottom">
+      <p>&copy; 2026 OutreachPilot. All rights reserved.</p>
+      <nav aria-label="Site files">
+        <a href="/sitemap.xml">Sitemap</a>
+        <a href="/llms.txt">llms.txt</a>
+      </nav>
+    </div>
+  </div>
+</footer>

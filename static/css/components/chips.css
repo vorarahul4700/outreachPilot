@@ -1,0 +1,99 @@
+/* =========================================================
+   Chips, badges, tags, status dots, avatars
+   ========================================================= */
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 12px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+  font-size: .82rem;
+  font-weight: 600;
+  line-height: 1;
+  white-space: nowrap;
+  transition: background-color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease), transform var(--t-fast) var(--ease);
+}
+.chip .material-symbols-outlined { font-size: 16px; }
+.chip em { font-style: normal; color: var(--text-3); font-weight: 500; }
+button.chip:hover, a.chip:hover { border-color: var(--line-3); background: var(--surface-2); }
+button.chip:active, a.chip:active { transform: scale(.97); }
+.chip.is-active, .chip[aria-pressed="true"] {
+  background: var(--text); color: var(--text-inverse); border-color: var(--text);
+}
+.chip.is-active em, .chip[aria-pressed="true"] em { color: inherit; opacity: .7; }
+.chip-sm { height: 24px; padding: 0 9px; font-size: .74rem; gap: 5px; }
+.chip-soft { background: var(--surface-3); border-color: transparent; }
+.chip-accent { background: var(--accent-soft); border-color: transparent; color: var(--accent-ink); }
+
+/* Badge: compact status label */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 22px;
+  padding: 0 8px;
+  border-radius: var(--r-pill);
+  background: var(--surface-3);
+  color: var(--text-2);
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .01em;
+  line-height: 1;
+  white-space: nowrap;
+}
+.badge .material-symbols-outlined { font-size: 14px; }
+.badge-accent { background: var(--accent-soft); color: var(--accent-ink); }
+.badge-ok { background: var(--ok-soft); color: var(--ok-text); }
+.badge-warn { background: var(--warn-soft); color: var(--warn-text); }
+.badge-danger { background: var(--danger-soft); color: var(--danger-text); }
+.badge-info { background: var(--info-soft); color: var(--info-text); }
+.badge-solid { background: var(--accent); color: var(--on-accent); }
+.badge-outline { background: transparent; border: 1px solid var(--line-2); color: var(--text-2); }
+
+/* Status dot */
+.dot {
+  display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--text-3); flex: none;
+}
+.dot-ok { background: var(--ok); }
+.dot-warn { background: var(--warn); }
+.dot-danger { background: var(--danger); }
+.dot-accent { background: var(--accent); }
+.dot-live { background: var(--ok); animation: pulse-dot 1.8s var(--ease-in-out) infinite; }
+
+/* City pin label (Field Guide motif) */
+.pin {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 5px 12px 5px 5px;
+  border-radius: var(--r-pill);
+  border: 1px solid var(--line);
+  background: var(--surface);
+  box-shadow: var(--shadow-sm);
+  font-size: .84rem; font-weight: 600; color: var(--text);
+  transition: transform var(--t-base) var(--ease-out), box-shadow var(--t-base) var(--ease), border-color var(--t-fast) var(--ease);
+}
+.pin > i {
+  width: 22px; height: 22px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: var(--accent); color: var(--on-accent);
+  font-style: normal; font-size: .68rem; font-weight: 800;
+}
+.pin b { font-family: var(--font-mono); font-weight: 500; font-size: .76rem; color: var(--text-3); }
+a.pin:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); border-color: var(--line-2); }
+
+/* Avatar / monogram */
+.avatar {
+  display: inline-grid; place-items: center; flex: none;
+  width: 40px; height: 40px; border-radius: var(--r-md);
+  background: var(--surface-3); border: 1px solid var(--line);
+  color: var(--text); font-family: var(--font-display); font-size: 1.05rem;
+  overflow: hidden;
+}
+.avatar img { width: 100%; height: 100%; object-fit: cover; }
+.avatar-sm { width: 30px; height: 30px; font-size: .85rem; border-radius: var(--r-sm); }
+.avatar-lg { width: 56px; height: 56px; font-size: 1.4rem; border-radius: var(--r-lg); }
+.avatar-round { border-radius: 50%; }

@@ -1,0 +1,162 @@
+/* =========================================================
+   Field Guide design tokens
+   Light is the default (matches the existing pilot_theme default).
+   html.dark swaps ONLY background, surface, line and text values.
+   Accent, radius, spacing, type and motion never change by theme.
+   ========================================================= */
+
+:root {
+  /* ---- Brand accent: identical in both themes ---- */
+  --accent: #56672A;
+  --accent-hover: #4B5A24;
+  --accent-press: #404D1E;
+  --on-accent: #FFFFFF;
+
+  /* ---- Type ---- */
+  --font-display: "Young Serif", ui-serif, Georgia, "Times New Roman", serif;
+  --font-body: "Figtree", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+
+  --fs-hero: clamp(2.6rem, 1.4rem + 5vw, 5.4rem);
+  --fs-h1: clamp(2.2rem, 1.4rem + 3.4vw, 3.9rem);
+  --fs-h2: clamp(1.85rem, 1.25rem + 2.4vw, 3rem);
+  --fs-h3: clamp(1.3rem, 1.1rem + .8vw, 1.6rem);
+  --fs-h4: 1.15rem;
+  --fs-lead: clamp(1.05rem, .98rem + .35vw, 1.25rem);
+  --fs-body: 1rem;
+  --fs-sm: .9rem;
+  --fs-xs: .8rem;
+  --fs-2xs: .72rem;
+
+  --lh-tight: 1.04;
+  --lh-snug: 1.2;
+  --lh-body: 1.6;
+  --track-display: -0.018em;
+  --track-mono: .06em;
+
+  /* ---- Space (4px base) ---- */
+  --s-1: 4px;  --s-2: 8px;  --s-3: 12px; --s-4: 16px; --s-5: 20px;
+  --s-6: 24px; --s-7: 32px; --s-8: 40px; --s-9: 56px; --s-10: 72px; --s-11: 96px; --s-12: 128px;
+  --section-y: clamp(72px, 9vw, 136px);
+  --container: 1200px;
+  --container-wide: 1360px;
+  --container-narrow: 760px;
+  --gutter: clamp(16px, 4vw, 32px);
+
+  /* ---- Shape ---- */
+  --r-xs: 6px;
+  --r-sm: 10px;
+  --r-md: 12px;
+  --r-lg: 18px;
+  --r-xl: 26px;
+  --r-2xl: 34px;
+  --r-pill: 999px;
+
+  /* ---- Motion ---- */
+  --ease: cubic-bezier(.2, .8, .2, 1);
+  --ease-out: cubic-bezier(.16, 1, .3, 1);
+  --ease-in-out: cubic-bezier(.65, 0, .35, 1);
+  --spring: cubic-bezier(.34, 1.56, .64, 1);
+  --t-fast: 160ms;
+  --t-base: 240ms;
+  --t-slow: 420ms;
+  --t-reveal: 760ms;
+
+  /* ---- Layers ---- */
+  --z-base: 1;
+  --z-sticky: 40;
+  --z-nav: 60;
+  --z-menu: 70;
+  --z-dropdown: 80;
+  --z-modal: 100;
+  --z-toast: 120;
+
+  /* ---- Light surfaces and text ---- */
+  color-scheme: light;
+  --bg: #F0EDE3;
+  --bg-2: #E8E4D7;
+  --surface: #FBF9F3;
+  --surface-2: #F5F2E9;
+  --surface-3: #EDE9DD;
+  --overlay: rgba(31, 32, 24, .42);
+  --glass: rgba(251, 249, 243, .82);
+
+  --line: #DFDBCD;
+  --line-2: #CFCAB8;
+  --line-3: #B2AC96;
+
+  --text: #1F2018;
+  --text-2: #4E4F43;
+  --text-3: #75766A;
+  --text-inverse: #FBF9F3;
+
+  --accent-soft: #E2E8D0;
+  --accent-line: #BCC79A;
+  --accent-text: #4B5A24;
+  --accent-ink: #3D4A1C;
+
+  --ok: #3F7A3A;       --ok-soft: #DFEBD6;      --ok-text: #2F5E2B;
+  --warn: #8C6A14;     --warn-soft: #F1E6C8;    --warn-text: #6B500C;
+  --danger: #A23B34;   --danger-soft: #F3DDD8;  --danger-text: #842E28;
+  --info: #5B5E52;     --info-soft: #E6E4DA;    --info-text: #44463C;
+
+  --dot: rgba(31, 32, 24, .13);
+  --map-bg: #E9E5D7;
+  --map-road: rgba(31, 32, 24, .08);
+  --map-road-2: #FBF9F3;
+  --map-water: #D8DECB;
+  --map-park: #DCE3C6;
+
+  --shadow-xs: 0 1px 2px rgba(31, 32, 24, .06);
+  --shadow-sm: 0 2px 6px rgba(31, 32, 24, .06), 0 1px 2px rgba(31, 32, 24, .04);
+  --shadow-md: 0 12px 28px -16px rgba(31, 32, 24, .28), 0 2px 6px rgba(31, 32, 24, .05);
+  --shadow-lg: 0 30px 60px -30px rgba(31, 32, 24, .35), 0 6px 16px -8px rgba(31, 32, 24, .1);
+  --shadow-xl: 0 60px 120px -50px rgba(31, 32, 24, .45);
+  --shadow-btn: 0 6px 16px -8px rgba(64, 77, 30, .55), inset 0 1px 0 rgba(255, 255, 255, .14);
+  --focus-ring: 0 0 0 3px rgba(86, 103, 42, .26);
+}
+
+html.dark {
+  color-scheme: dark;
+  --bg: #161711;
+  --bg-2: #1B1C15;
+  --surface: #1F2019;
+  --surface-2: #25261E;
+  --surface-3: #2C2D24;
+  --overlay: rgba(8, 8, 6, .66);
+  --glass: rgba(26, 27, 21, .82);
+
+  --line: #2F3027;
+  --line-2: #3C3D33;
+  --line-3: #57584B;
+
+  --text: #ECEADF;
+  --text-2: #BDBBAE;
+  --text-3: #8F8E81;
+  --text-inverse: #161711;
+
+  --accent-soft: #2C3419;
+  --accent-line: #4A5629;
+  --accent-text: #A9BC72;
+  --accent-ink: #CFDBAA;
+
+  --ok-soft: #233220;      --ok-text: #A6CB97;
+  --warn-soft: #362C14;    --warn-text: #E0C682;
+  --danger-soft: #3A1F1C;  --danger-text: #E8A69E;
+  --info-soft: #2A2B24;    --info-text: #C9C8BB;
+
+  --dot: rgba(236, 234, 223, .09);
+  --map-bg: #1C1D16;
+  --map-road: rgba(236, 234, 223, .06);
+  --map-road-2: rgba(236, 234, 223, .11);
+  --map-water: #222A1E;
+  --map-park: #232A18;
+
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, .3);
+  --shadow-sm: 0 2px 6px rgba(0, 0, 0, .3), 0 1px 2px rgba(0, 0, 0, .2);
+  --shadow-md: 0 12px 28px -16px rgba(0, 0, 0, .7), 0 2px 6px rgba(0, 0, 0, .25);
+  --shadow-lg: 0 30px 60px -30px rgba(0, 0, 0, .8), 0 6px 16px -8px rgba(0, 0, 0, .4);
+  --shadow-xl: 0 60px 120px -50px rgba(0, 0, 0, .9);
+  --shadow-btn: 0 6px 16px -8px rgba(0, 0, 0, .7), inset 0 1px 0 rgba(255, 255, 255, .1);
+  --focus-ring: 0 0 0 3px rgba(86, 103, 42, .5);
+}

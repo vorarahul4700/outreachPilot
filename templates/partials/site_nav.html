@@ -1,0 +1,52 @@
+{#- Public header. nav_prefix is "" on the homepage (in-page anchors) and "/" elsewhere. -#}
+{%- set _p = nav_prefix if nav_prefix is defined else "/" -%}
+{%- set _logged_in = is_logged_in is defined and is_logged_in -%}
+<header class="site-nav" id="site-nav">
+  <div class="container nav-inner">
+    <a href="/" class="logo" aria-label="OutreachPilot home">
+      <span class="logo-mark"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#logo-plane"/></svg></span>
+      <span class="logo-word">OutreachPilot</span>
+    </a>
+
+    <nav class="nav-links" aria-label="Primary">
+      <span class="nav-pill" aria-hidden="true"></span>
+      <a href="{{ _p }}#workflow">How it works</a>
+      <a href="{{ _p }}#capabilities">Features</a>
+      <a href="{{ _p }}#security">Security</a>
+      <a href="{{ _p }}#pricing">Pricing</a>
+      <a href="/directory">Directory</a>
+    </nav>
+
+    <div class="nav-actions">
+      <button id="btn-theme-toggle" type="button" class="icon-btn theme-toggle" aria-label="Switch to dark mode" title="Switch to dark mode">
+        <span id="theme-toggle-icon" class="material-symbols-outlined" aria-hidden="true">dark_mode</span>
+      </button>
+      {% if _logged_in %}
+      <a href="/app" class="btn btn-primary btn-sm hide-xs">Open workspace <svg class="ico ico-sm arrow" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+      {% else %}
+      <a href="/auth/google/login" class="btn btn-ghost btn-sm hide-sm">Sign in</a>
+      <a href="/app" class="btn btn-primary btn-sm hide-xs">Start free <svg class="ico ico-sm arrow" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+      {% endif %}
+      <button class="icon-btn menu-btn" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-menu">
+        <span class="bars" aria-hidden="true"><i></i><i></i></span>
+      </button>
+    </div>
+  </div>
+  <span class="nav-progress" aria-hidden="true"></span>
+</header>
+
+<div class="mobile-menu" id="mobile-menu" inert>
+  <a class="m-link" style="--i:0" href="{{ _p }}#workflow">How it works <span>01</span></a>
+  <a class="m-link" style="--i:1" href="{{ _p }}#capabilities">Features <span>02</span></a>
+  <a class="m-link" style="--i:2" href="{{ _p }}#security">Security <span>03</span></a>
+  <a class="m-link" style="--i:3" href="{{ _p }}#pricing">Pricing <span>04</span></a>
+  <a class="m-link" style="--i:4" href="/directory">Directory <span>05</span></a>
+  <div class="m-cta">
+    {% if _logged_in %}
+    <a class="btn btn-primary btn-lg btn-block" href="/app">Open workspace</a>
+    {% else %}
+    <a class="btn btn-primary btn-lg btn-block" href="/app">Start free</a>
+    <a class="btn btn-google btn-lg btn-block" href="/auth/google/login"><svg class="g-logo" aria-hidden="true"><use href="#i-google"/></svg>Sign in with Google</a>
+    {% endif %}
+  </div>
+</div>

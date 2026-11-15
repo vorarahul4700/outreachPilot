@@ -1,0 +1,144 @@
+/* =========================================================
+   Form controls
+   ========================================================= */
+
+.field { display: grid; gap: 7px; min-width: 0; }
+.field-label { font-size: var(--fs-sm); font-weight: 650; color: var(--text); }
+.field-hint { font-size: var(--fs-xs); color: var(--text-3); }
+.field-error { font-size: var(--fs-xs); color: var(--danger-text); font-weight: 600; }
+
+.input, .textarea, .select-native {
+  width: 100%;
+  min-height: 46px;
+  padding: 11px 15px;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-md);
+  font-size: .95rem;
+  line-height: 1.4;
+  box-shadow: var(--shadow-xs);
+  transition: border-color var(--t-fast) var(--ease), box-shadow var(--t-base) var(--ease), background-color var(--t-fast) var(--ease);
+  -webkit-appearance: none;
+  appearance: none;
+}
+.input::placeholder, .textarea::placeholder { color: var(--text-3); opacity: 1; }
+.input:hover, .textarea:hover, .select-native:hover { border-color: var(--line-3); }
+.input:focus, .textarea:focus, .select-native:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: var(--focus-ring);
+}
+.input:disabled, .textarea:disabled { opacity: .6; cursor: not-allowed; }
+.input.is-invalid, .textarea.is-invalid { border-color: var(--danger); }
+.textarea { min-height: 120px; resize: vertical; line-height: 1.6; }
+.input-sm { min-height: 38px; padding: 7px 12px; font-size: .875rem; border-radius: var(--r-sm); }
+
+.select-native {
+  padding-right: 42px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5 11 1.5' fill='none' stroke='%2375766A' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 16px center;
+  cursor: pointer;
+}
+
+/* Input with leading icon and optional trailing element */
+.input-group { position: relative; display: flex; align-items: center; }
+.input-group > .lead-icon {
+  position: absolute; left: 14px; color: var(--text-3); pointer-events: none;
+}
+.input-group > .input { padding-left: 44px; }
+.input-group > .trail {
+  position: absolute; right: 8px; display: flex; align-items: center; gap: 6px;
+}
+.kbd {
+  display: inline-grid; place-items: center;
+  min-width: 22px; height: 22px; padding: 0 6px;
+  font-family: var(--font-mono); font-size: .72rem; color: var(--text-3);
+  border: 1px solid var(--line-2); border-bottom-width: 2px; border-radius: 6px;
+  background: var(--surface-2);
+}
+
+/* Search bar: large pill used on hero and directory */
+.searchbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 6px 6px 8px;
+  background: var(--surface);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-pill);
+  box-shadow: var(--shadow-md);
+  transition: border-color var(--t-fast) var(--ease), box-shadow var(--t-base) var(--ease);
+}
+.searchbar:focus-within { border-color: var(--accent); box-shadow: var(--shadow-md), var(--focus-ring); }
+.searchbar .seg-field { flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; padding: 6px 12px; }
+.searchbar .seg-field input {
+  width: 100%; min-width: 0; border: 0; outline: 0; background: transparent; font-size: 1rem; color: var(--text);
+}
+.searchbar .seg-field input::placeholder { color: var(--text-3); }
+.searchbar .seg-sep { width: 1px; align-self: stretch; margin: 8px 0; background: var(--line); }
+@media (max-width: 639px) {
+  .searchbar { flex-direction: column; align-items: stretch; border-radius: var(--r-xl); padding: 8px; }
+  .searchbar .seg-sep { width: auto; height: 1px; margin: 0 12px; }
+  .searchbar .btn { width: 100%; }
+}
+
+/* Checkbox and radio */
+.check { display: inline-flex; align-items: flex-start; gap: 10px; cursor: pointer; font-size: var(--fs-sm); color: var(--text); }
+.check input {
+  -webkit-appearance: none; appearance: none; flex: none;
+  width: 18px; height: 18px; margin-top: 2px;
+  border: 1.5px solid var(--line-3); border-radius: 5px; background: var(--surface);
+  display: grid; place-items: center;
+  transition: background-color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease);
+}
+.check input[type="radio"] { border-radius: 50%; }
+.check input::after {
+  content: ""; width: 9px; height: 5px; border: 2px solid var(--on-accent); border-top: 0; border-right: 0;
+  transform: rotate(-45deg) scale(0); margin-top: -2px; transition: transform var(--t-fast) var(--spring);
+}
+.check input[type="radio"]::after { width: 8px; height: 8px; border: 0; border-radius: 50%; background: var(--on-accent); margin: 0; transform: scale(0); }
+.check input:checked { background: var(--accent); border-color: var(--accent); }
+.check input:checked::after { transform: rotate(-45deg) scale(1); }
+.check input[type="radio"]:checked::after { transform: scale(1); }
+.check input:focus-visible { box-shadow: var(--focus-ring); }
+
+/* Switch */
+.switch { position: relative; display: inline-flex; align-items: center; gap: 10px; cursor: pointer; }
+.switch input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.switch .track {
+  width: 42px; height: 24px; border-radius: 99px; background: var(--line-2); position: relative;
+  transition: background-color var(--t-base) var(--ease);
+}
+.switch .track::after {
+  content: ""; position: absolute; top: 3px; left: 3px; width: 18px; height: 18px; border-radius: 50%;
+  background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.25); transition: transform var(--t-base) var(--spring);
+}
+.switch input:checked + .track { background: var(--accent); }
+.switch input:checked + .track::after { transform: translateX(18px); }
+.switch input:focus-visible + .track { box-shadow: var(--focus-ring); }
+
+/* Segmented control */
+.segmented {
+  position: relative; display: inline-flex; padding: 4px; gap: 2px;
+  background: var(--surface-3); border: 1px solid var(--line); border-radius: var(--r-pill);
+}
+.segmented > button, .segmented > a {
+  position: relative; z-index: 1; height: 34px; padding: 0 14px; border-radius: var(--r-pill);
+  font-size: .875rem; font-weight: 600; color: var(--text-2);
+  transition: color var(--t-fast) var(--ease), background-color var(--t-base) var(--ease), box-shadow var(--t-base) var(--ease);
+}
+.segmented > button:hover, .segmented > a:hover { color: var(--text); }
+.segmented > [aria-pressed="true"], .segmented > [aria-selected="true"], .segmented > .is-active {
+  background: var(--surface); color: var(--text); box-shadow: var(--shadow-sm);
+}
+
+/* File drop zone */
+.dropzone {
+  display: grid; place-items: center; gap: 10px; text-align: center;
+  padding: 36px 20px; border: 1.5px dashed var(--line-3); border-radius: var(--r-lg);
+  background: var(--surface-2); color: var(--text-2);
+  transition: border-color var(--t-fast) var(--ease), background-color var(--t-fast) var(--ease);
+}
+.dropzone:hover, .dropzone.is-over { border-color: var(--accent); background: var(--accent-soft); color: var(--text); }

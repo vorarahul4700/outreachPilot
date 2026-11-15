@@ -1,0 +1,43 @@
+{#- =========================================================
+    OutreachPilot base layout (Field Guide design system)
+
+    Blocks a page can fill:
+      title, meta (description, canonical, og, ld+json), head_extra,
+      html_class, body_class, nav, content, footer, scripts
+    Variables a page can set before extending:
+      nav_prefix   "" on the homepage so nav links are in-page anchors,
+                   "/" everywhere else (default)
+      page_css     list of page stylesheets under /static/css/pages/
+========================================================= -#}
+{%- set asset_v = "2.0.0" -%}
+<!DOCTYPE html>
+<html lang="en" class="light {% block html_class %}{% endblock %}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  {% include "partials/theme_boot.html" %}
+  <title>{% block title %}OutreachPilot{% endblock %}</title>
+  {% block meta %}{% endblock %}
+  {% include "partials/head_assets.html" %}
+  {% block head_extra %}{% endblock %}
+</head>
+<body class="{% block body_class %}{% endblock %}">
+  <a class="skip-link" href="#main">Skip to content</a>
+  {% include "partials/icons.html" %}
+
+  {% block nav %}{% include "partials/site_nav.html" %}{% endblock %}
+
+  <main id="main">
+    {% block content %}{% endblock %}
+  </main>
+
+  {% block footer %}{% include "partials/site_footer.html" %}{% endblock %}
+
+  <div class="toast-stack" id="toast-stack" aria-live="polite" aria-atomic="false"></div>
+
+  <script src="/static/js/site/theme.js?v={{ asset_v }}"></script>
+  <script src="/static/js/site/nav.js?v={{ asset_v }}" defer></script>
+  <script src="/static/js/site/motion.js?v={{ asset_v }}" defer></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,97 @@
+{#- =========================================================
+    UI macros for the Field Guide design system.
+    Import with: {% import "macros/ui.html" as ui %}
+    Every macro accepts `attrs` (a raw attribute string) and `cls`
+    (extra classes) so pages can keep their existing ids, data-*
+    and aria attributes exactly as before.
+========================================================= -#}
+
+{% macro icon(name, cls="", label="") -%}
+<span class="material-symbols-outlined {{ cls }}"{% if label %} role="img" aria-label="{{ label }}"{% else %} aria-hidden="true"{% endif %}>{{ name }}</span>
+{%- endmacro %}
+
+{% macro svg(id, cls="") -%}
+<svg class="ico {{ cls }}" aria-hidden="true"><use href="#{{ id }}"/></svg>
+{%- endmacro %}
+
+{#- Button or link styled as a button.
+    variant: primary | secondary | ghost | quiet | danger | text
+    size: "" | sm | xs | lg -#}
+{% macro button(label, href=None, variant="primary", size="", icon_name=None, arrow=False, type="button", cls="", attrs="") -%}
+{%- set classes = "btn btn-" ~ variant ~ (" btn-" ~ size if size else "") ~ (" " ~ cls if cls else "") -%}
+{%- if href %}<a href="{{ href }}" class="{{ classes }}" {{ attrs|safe }}>{% else %}<button type="{{ type }}" class="{{ classes }}" {{ attrs|safe }}>{% endif -%}
+{%- if icon_name %}{{ icon(icon_name) }}{% endif %}<span>{{ label }}</span>{% if arrow %}<svg class="ico ico-sm arrow" aria-hidden="true"><use href="#i-arrow"/></svg>{% endif -%}
+{%- if href %}</a>{% else %}</button>{% endif %}
+{%- endmacro %}
+
+{% macro chip(label, tone="", icon_name=None, href=None, cls="", attrs="") -%}
+{%- set classes = "chip" ~ (" chip-" ~ tone if tone else "") ~ (" " ~ cls if cls else "") -%}
+{%- if href %}<a href="{{ href }}" class="{{ classes }}" {{ attrs|safe }}>{% else %}<span class="{{ classes }}" {{ attrs|safe }}>{% endif -%}
+{%- if icon_name %}{{ icon(icon_name) }}{% endif %}{{ label }}
+{%- if href %}</a>{% else %}</span>{% endif %}
+{%- endmacro %}
+
+{#- tone: "" | accent | ok | warn | danger | info | solid | outline -#}
+{% macro badge(label, tone="", icon_name=None, cls="", attrs="") -%}
+<span class="badge{% if tone %} badge-{{ tone }}{% endif %}{% if cls %} {{ cls }}{% endif %}" {{ attrs|safe }}>{% if icon_name %}{{ icon(icon_name) }}{% endif %}{{ label }}</span>
+{%- endmacro %}
+
+{% macro eyebrow(text, rule=True) -%}
+<span class="eyebrow{% if not rule %} no-rule{% endif %}">{{ text }}</span>
+{%- endmacro %}
+
+{#- Section heading block. `title` may contain a <span class="em"> for the accent word. -#}
+{% macro section_head(kicker, title, lead=None, center=False, level=2, id=None) -%}
+<div class="section-head{% if center %} center{% endif %}">
+  {% if kicker %}<span class="eyebrow reveal">{{ kicker }}</span>{% endif %}
+  <h{{ level }} class="h2 reveal" style="--d:.05s"{% if id %} id="{{ id }}"{% endif %}>{{ title|safe }}</h{{ level }}>
+  {% if lead %}<p class="lead reveal" style="--d:.1s">{{ lead }}</p>{% endif %}
+</div>
+{%- endmacro %}
+
+{% macro field(label, name, id=None, type="text", placeholder="", value="", hint=None, required=False, attrs="") -%}
+{%- set fid = id or name -%}
+<div class="field">
+  <label class="field-label" for="{{ fid }}">{{ label }}</label>
+  <input class="input" type="{{ type }}" id="{{ fid }}" name="{{ name }}" placeholder="{{ placeholder }}" value="{{ value }}"{% if required %} required{% endif %} {{ attrs|safe }}>
+  {% if hint %}<span class="field-hint">{{ hint }}</span>{% endif %}
+</div>
+{%- endmacro %}
+
+{% macro stat(value, label, key=None, count=None, suffix=None) -%}
+<div class="stat">
+  {% if key %}<span class="stat-k">{{ key }}</span>{% endif %}
+  <div class="stat-num"><span{% if count is not none %} data-count="{{ count }}"{% endif %}>{{ value }}</span>{% if suffix %}<sup>{{ suffix }}</sup>{% endif %}</div>
+  <div class="stat-label">{{ label }}</div>
+</div>
+{%- endmacro %}
+
+{% macro feature(icon_name, title, text) -%}
+<div class="card card-hover">
+  <span class="icon-tile">{{ icon(icon_name) }}</span>
+  <h3 class="card-title">{{ title }}</h3>
+  <p class="card-text">{{ text }}</p>
+</div>
+{%- endmacro %}
+
+{% macro empty_state(icon_name, title, text, action=None) -%}
+<div class="empty">
+  <span class="icon-tile">{{ icon(icon_name) }}</span>
+  <h3>{{ title }}</h3>
+  <p>{{ text }}</p>
+  {% if action %}{{ action|safe }}{% endif %}
+</div>
+{%- endmacro %}
+
+{% macro faq_item(question, answer, open=False) -%}
+<details{% if open %} open{% endif %}>
+  <summary>{{ question }}<span class="plus" aria-hidden="true"></span></summary>
+  <div class="answer">{{ answer|safe }}</div>
+</details>
+{%- endmacro %}
+
+{% macro city_pin(name, href=None, count=None) -%}
+{%- if href %}<a class="pin" href="{{ href }}">{% else %}<span class="pin">{% endif -%}
+<i aria-hidden="true">{{ name[:1] }}</i>{{ name }}{% if count is not none %} <b>{{ "{:,}".format(count|int) }}</b>{% endif %}
+{%- if href %}</a>{% else %}</span>{% endif %}
+{%- endmacro %}
