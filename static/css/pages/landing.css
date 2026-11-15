@@ -6,12 +6,13 @@
 
 /* ---------- Hero ---------- */
 .hero { position: relative; padding: clamp(40px, 6vw, 84px) 0 clamp(56px, 7vw, 96px); overflow: hidden; }
-.hero-bg {
-  position: absolute; inset: 0; pointer-events: none;
-  -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 55%, transparent 92%);
-  mask-image: linear-gradient(180deg, #000 0%, #000 55%, transparent 92%);
-}
-.hero-canvas { display: block; width: 100%; height: 100%; opacity: .9; }
+/* Full-page map canvas (static/js/site/page-canvas.js) sits behind everything */
+.page-canvas { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; display: block; }
+.page-landing main, .page-landing .site-footer { position: relative; z-index: 1; }
+/* Let the map show through the tinted bands */
+.page-landing .section.alt,
+.page-landing .band,
+.page-landing .site-footer { background: color-mix(in srgb, var(--bg-2) 62%, transparent); }
 /* Soft clearing behind the headline so text always reads cleanly */
 .hero-inner::before {
   content: ""; position: absolute; z-index: -1; left: 50%; top: 46%;
@@ -220,11 +221,11 @@
 
 /* ---------- Why: manifesto + compare ---------- */
 .manifesto {
-  margin-top: 22px;
+  margin-top: 18px;
   font-family: var(--font-display);
-  font-size: clamp(1.6rem, 1.1rem + 2.2vw, 2.8rem);
-  line-height: 1.25; letter-spacing: -.015em; color: var(--text);
-  max-width: 30ch; text-wrap: balance;
+  font-size: clamp(1.7rem, 1.05rem + 2.6vw, 3.3rem);
+  line-height: 1.18; letter-spacing: -.02em; color: var(--text);
+  max-width: none; text-wrap: balance;
 }
 .manifesto .strike { text-decoration: line-through; text-decoration-color: var(--danger); text-decoration-thickness: 3px; color: var(--text-3); }
 .compare { display: grid; gap: 16px; margin-top: clamp(40px, 5vw, 64px); }
@@ -452,3 +453,7 @@
 
 /* Keep tile contents inside the tile on narrow screens */
 .tile > *, .mini-search, .mini-bar { min-width: 0; max-width: 100%; }
+
+/* Wide feature tiles use their width */
+.tile.b-4 p { max-width: 64ch; }
+.compare { margin-top: clamp(28px, 3.5vw, 44px); }

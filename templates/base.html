@@ -24,6 +24,7 @@
 <body class="{% block body_class %}{% endblock %}">
   <a class="skip-link" href="#main">Skip to content</a>
   {% include "partials/icons.html" %}
+  {% block page_bg %}{% endblock %}
 
   {% block nav %}{% include "partials/site_nav.html" %}{% endblock %}
 

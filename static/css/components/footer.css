@@ -4,7 +4,7 @@
 
 .site-footer {
   position: relative;
-  margin-top: var(--s-10);
+  margin-top: 0;
   padding: clamp(56px, 7vw, 96px) 0 calc(28px + env(safe-area-inset-bottom));
   background: var(--bg-2);
   border-top: 1px solid var(--line);
