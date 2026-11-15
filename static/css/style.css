@@ -323,6 +323,30 @@ body.light .btn-primary:hover *,
   color: #FFFFFF !important;
 }
 
+/* Dark mode parity for primary actions:
+   In dark mode .bg-primary resolves to the near-white ecru token, so every
+   "Draft Pitch" button and the active pager number rendered as a glaring white
+   block on dark cards. Use the same tactile amber as .btn-tactile-ecru. */
+html.dark button.bg-primary,
+html.dark a.bg-primary,
+html.dark .bg-primary.text-on-primary {
+  background-color: #F59E0B !important;
+  color: #090A0D !important;
+  border-color: rgba(245, 158, 11, 0.45) !important;
+}
+html.dark button.bg-primary *,
+html.dark a.bg-primary *,
+html.dark .bg-primary.text-on-primary * {
+  color: #090A0D !important;
+}
+html.dark button.bg-primary:hover,
+html.dark a.bg-primary:hover,
+html.dark .bg-primary.text-on-primary:hover {
+  background-color: #FBBF24 !important;
+  color: #090A0D !important;
+  border-color: #FBBF24 !important;
+}
+
 /* Fix Light Mode Black Button Contrast:
    Ensure buttons and action CTAs using .bg-primary in light mode render with
    warm tactile amber gold (#F59E0B) and deep slate text (#090A0D) instead of harsh pitch-black blocks. */

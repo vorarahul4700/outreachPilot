@@ -42,6 +42,20 @@ def set_cached(key: str, val: Any):
     _SEO_CACHE[key] = {"val": val, "ts": time.time()}
 
 
+def ensure_category_maps(db: Session) -> None:
+    """Make sure the category taxonomy maps are cached before resolving slugs.
+
+    slug_to_tech_name() and get_companies_list() read "slug_category_map" and
+    "category_raw_keywords_map", which are only filled by get_all_categories().
+    On a cold start, or after the 1-hour TTL expires, those maps are missing:
+    "architecture-and-planning" then resolves to "Architecture And Planning",
+    matches no companies, and city/category pages return 404. Rebuild them here.
+    """
+    if get_cached("slug_category_map") is None or get_cached("category_raw_keywords_map") is None:
+        _SEO_CACHE.pop("all_techs", None)  # force get_all_categories() to recompute and re-cache the maps
+        get_all_categories(db)
+
+
 def clear_seo_cache():
     global _SEO_CACHE
     _SEO_CACHE = {}
@@ -1023,10 +1037,13 @@ def get_companies_list(
                 if get_category_domain_code(cat) != "it"
             ]
             if non_it_keywords:
+                # NULL-safe: normalized_keyword is NULL on almost every row, and
+                # NOT (x IN (...) OR NULL) evaluates to NULL in SQL, which silently
+                # dropped every company and made ?domain=it return 0 everywhere.
                 query = query.filter(
                     ~or_(
-                        Company.search_keyword.in_(non_it_keywords),
-                        Company.normalized_keyword.in_(non_it_keywords)
+                        func.coalesce(Company.search_keyword, "").in_(non_it_keywords),
+                        func.coalesce(Company.normalized_keyword, "").in_(non_it_keywords)
                     )
                 )
         else:
@@ -1045,6 +1062,7 @@ def get_companies_list(
                 query = query.filter(Company.id == -1)
 
     if tech:
+        ensure_category_maps(db)
         clean_tech = tech.strip()
         tech_slug = tech_to_slug(clean_tech)
         canonical_name = slug_to_tech_name(tech_slug)

@@ -38,9 +38,9 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!toastContainer) return;
     const toast = document.createElement("div");
     const bgClass = type === "error" 
-      ? "bg-rose-500 text-white" 
+      ? "bg-rose-600 text-white" 
       : type === "warning"
-      ? "bg-amber-500 text-white"
+      ? "bg-amber-500 text-[#090A0D]"
       : "bg-surface-container-highest text-on-surface border border-outline-variant/50";
 
     toast.className = `px-4 py-3 rounded-xl shadow-xl flex items-center gap-3 text-xs font-semibold tracking-wide transition-all transform duration-300 pointer-events-auto ${bgClass}`;

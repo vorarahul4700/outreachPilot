@@ -809,7 +809,15 @@ def landing_page(request: Request, db: Session = Depends(get_db)):
     # Query active subscription tiers for landing pricing table (empty if kill switch is active)
     tiers = db.query(SubscriptionTier).filter(SubscriptionTier.is_active == True).order_by(SubscriptionTier.id.asc()).all()
     public_tiers = [] if kill_switch else [t for t in tiers if t.code != "master_admin"]
-    
+
+    # Largest city and category hubs for the crawlable "Browse the directory" section.
+    # Both lists come from cached aggregates; on any failure the section simply hides.
+    try:
+        browse_cities = sorted(seo_engine.get_all_cities(db), key=lambda c: -int(c.get("count") or 0))[:12]
+        browse_categories = sorted(seo_engine.get_all_categories(db), key=lambda c: -int(c.get("count") or 0))[:12]
+    except Exception:
+        browse_cities, browse_categories = [], []
+
     return templates.TemplateResponse(
         request=request,
         name="landing.html",
@@ -824,6 +832,8 @@ def landing_page(request: Request, db: Session = Depends(get_db)):
             "google_client_id": config.GOOGLE_CLIENT_ID,
             "dev_mode": config.DEV_MODE,
             "subscription_kill_switch": kill_switch,
+            "browse_cities": browse_cities,
+            "browse_categories": browse_categories,
         }
     )
 
@@ -1178,6 +1188,7 @@ def directory_city_hub(city_slug: str, request: Request, db: Session = Depends(g
 @app.api_route("/directory/category/{tech_slug}", methods=["GET", "HEAD"], response_class=HTMLResponse)
 def directory_tech_hub(tech_slug: str, request: Request, db: Session = Depends(get_db)):
     """Category & Technology Specialization Hub (Dynamic Across All Industries)"""
+    seo_engine.ensure_category_maps(db)
     tech_name = seo_engine.slug_to_tech_name(tech_slug)
     companies, total_count = seo_engine.get_companies_list(db, tech=tech_name, limit=30)
     if total_count == 0:
@@ -1253,6 +1264,8 @@ def directory_companies(
     """
     base_url = seo_engine.get_canonical_base_url(request)
     selected_category = (category or tech or "").strip()
+    if selected_category:
+        seo_engine.ensure_category_maps(db)
 
     # Case 1: Both city and category/tech provided -> Render Programmatic Intersection Page
     if city and selected_category:
@@ -1701,6 +1714,7 @@ def get_companies_filters(
                 return None
             profile_conds = []
             company_tech_conds = []
+            seo_engine.ensure_category_maps(db)
             for t_term in t_terms:
                 t_slug = seo_engine.tech_to_slug(t_term)
                 canon_name = seo_engine.slug_to_tech_name(t_slug)
@@ -2063,7 +2077,7 @@ def get_companies_filters(
 def get_companies(
     request: Request,
     page: int = 1,
-    page_size: int = 20,
+    page_size: int = 24,
     search: str = "",
     tech: str = "",
     city: str = "",
@@ -2186,6 +2200,7 @@ def get_companies(
         if tech_terms:
             profile_conds = []
             company_tech_conds = []
+            seo_engine.ensure_category_maps(db)
             for t_term in tech_terms:
                 t_slug = seo_engine.tech_to_slug(t_term)
                 canon_name = seo_engine.slug_to_tech_name(t_slug)
@@ -2310,9 +2325,11 @@ def get_companies(
             cur_page = 1
             page_size = total_count
         else:
-            ALLOWED_PAGE_SIZES = {10, 20, 50, 100, 200, 500, 1000}
+            # Multiples of 6 (12/24/48/96/192) fill 2- and 3-column card grids evenly;
+            # the older sizes stay accepted so existing links keep working.
+            ALLOWED_PAGE_SIZES = {12, 24, 48, 96, 192, 10, 20, 50, 100, 200, 500, 1000}
             if page_size not in ALLOWED_PAGE_SIZES:
-                page_size = 20
+                page_size = 24
 
             total_pages = max(1, (total_count + page_size - 1) // page_size) if total_count > 0 else 1
             cur_page = max(1, min(page, total_pages)) if total_count > 0 else 1

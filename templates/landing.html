@@ -71,7 +71,7 @@
   <link rel="stylesheet" href="/static/css/fonts.css">
 
   <!-- Core Design System CSS -->
-  <link rel="stylesheet" href="/static/css/style.css?v=8.1">
+  <link rel="stylesheet" href="/static/css/style.css?v=8.9">
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com/3.4.17?plugins=forms@0.5.10"></script>
@@ -740,7 +740,7 @@
             <span class="text-on-surface font-semibold">Active: <span class="text-secondary">{{ sub_info.tier_name }}</span></span>
             <span class="text-[11px] text-on-surface-variant">{{ sub_info.pitches_remaining }} / {{ sub_info.daily_pitch_limit }} pitches left today</span>
           </div>
-          <a href="/app" class="px-2.5 py-1 rounded bg-secondary text-on-secondary text-xs font-bold font-mono hover:opacity-90 transition">Open App</a>
+          <a href="/app" class="btn-tactile-ecru px-2.5 py-1 rounded text-xs font-bold font-mono">Open App</a>
         </div>
         {% endif %}
       </div>
@@ -950,50 +950,57 @@
   </main>
 
   <!-- FOOTER -->
-  <!-- Crawlable links into the directory: gives search engines (and people) a direct path to the biggest city and category hubs -->
-  <section aria-labelledby="browse-directory-heading" class="w-full border-t border-outline bg-surface py-12">
+  <!-- Crawlable links into the directory: a direct path for search engines (and people) to the largest city and category hubs. Lists come live from the database. -->
+  {% if browse_cities or browse_categories %}
+  <section aria-labelledby="browse-directory-heading" class="w-full border-t border-outline bg-surface py-14">
     <div class="max-w-7xl mx-auto px-6">
-      <h2 id="browse-directory-heading" class="text-xl font-display font-bold text-on-surface">Browse the directory</h2>
-      <p class="mt-1 text-sm text-on-surface-variant">Verified companies across India, grouped by city and by what they do.</p>
-      <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-8">
-        <nav aria-label="Companies by city">
-          <h3 class="text-xs font-mono font-semibold uppercase tracking-wider text-on-surface-variant">By city</h3>
-          <ul class="mt-3 grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-2 text-sm">
-            <li><a href="/directory/city/bengaluru" class="text-on-surface hover:text-primary transition-colors">Companies in Bengaluru</a></li>
-            <li><a href="/directory/city/new-delhi" class="text-on-surface hover:text-primary transition-colors">Companies in New Delhi</a></li>
-            <li><a href="/directory/city/ahmedabad" class="text-on-surface hover:text-primary transition-colors">Companies in Ahmedabad</a></li>
-            <li><a href="/directory/city/hyderabad" class="text-on-surface hover:text-primary transition-colors">Companies in Hyderabad</a></li>
-            <li><a href="/directory/city/mumbai" class="text-on-surface hover:text-primary transition-colors">Companies in Mumbai</a></li>
-            <li><a href="/directory/city/noida" class="text-on-surface hover:text-primary transition-colors">Companies in Noida</a></li>
-            <li><a href="/directory/city/pune" class="text-on-surface hover:text-primary transition-colors">Companies in Pune</a></li>
-            <li><a href="/directory/city/chennai" class="text-on-surface hover:text-primary transition-colors">Companies in Chennai</a></li>
-            <li><a href="/directory/city/gurgaon" class="text-on-surface hover:text-primary transition-colors">Companies in Gurgaon</a></li>
-            <li><a href="/directory/city/kolkata" class="text-on-surface hover:text-primary transition-colors">Companies in Kolkata</a></li>
-            <li><a href="/directory/city/navi-mumbai" class="text-on-surface hover:text-primary transition-colors">Companies in Navi Mumbai</a></li>
-            <li><a href="/directory/city/jaipur" class="text-on-surface hover:text-primary transition-colors">Companies in Jaipur</a></li>
-          </ul>
-        </nav>
-        <nav aria-label="Companies by category">
-          <h3 class="text-xs font-mono font-semibold uppercase tracking-wider text-on-surface-variant">By category</h3>
-          <ul class="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-2 text-sm">
-            <li><a href="/directory/category/custom-software" class="text-on-surface hover:text-primary transition-colors">Custom software companies</a></li>
-            <li><a href="/directory/category/digital-marketing" class="text-on-surface hover:text-primary transition-colors">Digital marketing agencies</a></li>
-            <li><a href="/directory/category/management-consulting" class="text-on-surface hover:text-primary transition-colors">Management consulting firms</a></li>
-            <li><a href="/directory/category/appointment-setting" class="text-on-surface hover:text-primary transition-colors">Appointment setting companies</a></li>
-            <li><a href="/directory/category/pharmaceuticals" class="text-on-surface hover:text-primary transition-colors">Pharmaceutical companies</a></li>
-            <li><a href="/directory/category/logistics-and-freight" class="text-on-surface hover:text-primary transition-colors">Logistics and freight companies</a></li>
-            <li><a href="/directory/category/commercial-real-estate" class="text-on-surface hover:text-primary transition-colors">Commercial real estate firms</a></li>
-            <li><a href="/directory/category/solar-and-renewable-energy" class="text-on-surface hover:text-primary transition-colors">Solar and renewable energy companies</a></li>
-            <li><a href="/directory/category/corporate-law" class="text-on-surface hover:text-primary transition-colors">Corporate law firms</a></li>
-            <li><a href="/directory/category/chartered-accountants-ca" class="text-on-surface hover:text-primary transition-colors">Chartered accountants</a></li>
-            <li><a href="/directory/category/civil-construction-and-epc" class="text-on-surface hover:text-primary transition-colors">Civil construction and EPC firms</a></li>
-            <li><a href="/directory/category/dental-care" class="text-on-surface hover:text-primary transition-colors">Dental clinics</a></li>
-          </ul>
-        </nav>
+      <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+        <div>
+          <h2 id="browse-directory-heading" class="text-2xl font-display font-bold text-on-surface">Browse the directory</h2>
+          <p class="mt-1 text-sm text-on-surface-variant">Verified companies across India, grouped by city and by what they do.</p>
+        </div>
+        <a href="/directory" class="inline-flex items-center gap-1 text-sm font-medium text-primary hover:text-secondary transition-colors shrink-0">
+          <span>See every city and category</span>
+          <span class="material-symbols-outlined text-[16px]" aria-hidden="true">arrow_forward</span>
+        </a>
       </div>
-      <a href="/directory" class="mt-6 inline-flex items-center gap-1 text-sm font-medium text-primary hover:text-secondary transition-colors">See every city and category <span class="material-symbols-outlined text-[16px]" aria-hidden="true">arrow_forward</span></a>
+
+      <div class="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {% if browse_cities %}
+        <nav aria-label="Companies by city" class="rounded-2xl border border-outline-variant/40 bg-surface-container-low p-5">
+          <h3 class="flex items-center gap-2 text-xs font-mono font-semibold uppercase tracking-wider text-on-surface-variant">
+            <span class="material-symbols-outlined text-[16px]" aria-hidden="true">location_city</span>
+            <span>By city</span>
+          </h3>
+          <ul class="mt-4 flex flex-wrap gap-2" role="list">
+            {% for c in browse_cities %}
+            <li>
+              <a href="/directory/city/{{ c.slug }}" class="inline-flex items-center rounded-full border border-outline-variant/50 bg-surface px-3.5 py-1.5 text-sm text-on-surface hover:border-primary hover:text-primary transition-colors">{{ c.name }}</a>
+            </li>
+            {% endfor %}
+          </ul>
+        </nav>
+        {% endif %}
+
+        {% if browse_categories %}
+        <nav aria-label="Companies by category" class="rounded-2xl border border-outline-variant/40 bg-surface-container-low p-5">
+          <h3 class="flex items-center gap-2 text-xs font-mono font-semibold uppercase tracking-wider text-on-surface-variant">
+            <span class="material-symbols-outlined text-[16px]" aria-hidden="true">category</span>
+            <span>By category</span>
+          </h3>
+          <ul class="mt-4 flex flex-wrap gap-2" role="list">
+            {% for t in browse_categories %}
+            <li>
+              <a href="/directory/category/{{ t.slug }}" class="inline-flex items-center rounded-full border border-outline-variant/50 bg-surface px-3.5 py-1.5 text-sm text-on-surface hover:border-primary hover:text-primary transition-colors">{{ t.name }}</a>
+            </li>
+            {% endfor %}
+          </ul>
+        </nav>
+        {% endif %}
+      </div>
     </div>
   </section>
+  {% endif %}
 
   <footer class="w-full border-t border-outline bg-surface-dim py-8">
     <div class="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono text-on-surface-variant">
