@@ -265,31 +265,63 @@ def init_db():
 
         # Safe schema alteration & indexing for high-concurrency performance (PostgreSQL only)
         if engine.name == "postgresql":
-            with engine.connect() as conn:
-                conn.execute(text("ALTER TABLE companies ADD COLUMN IF NOT EXISTS is_invalid BOOLEAN DEFAULT FALSE;"))
-                conn.execute(text("ALTER TABLE companies ADD COLUMN IF NOT EXISTS invalid_reason VARCHAR(255);"))
-                conn.execute(text("ALTER TABLE companies ADD COLUMN IF NOT EXISTS invalid_at TIMESTAMP;"))
-                conn.execute(text("ALTER TABLE companies ADD COLUMN IF NOT EXISTS location_url TEXT;"))
-                conn.execute(text("ALTER TABLE companies ADD COLUMN IF NOT EXISTS enrichment_status VARCHAR(50) DEFAULT 'PENDING';"))
-                conn.execute(text("ALTER TABLE companies ADD COLUMN IF NOT EXISTS enrichment_attempts INTEGER DEFAULT 0;"))
-                conn.execute(text("ALTER TABLE companies ADD COLUMN IF NOT EXISTS last_enriched_at TIMESTAMP;"))
-                # Backfill already enriched companies
-                conn.execute(text("UPDATE companies SET enrichment_status = 'COMPLETED' WHERE is_enriched = TRUE AND (enrichment_status IS NULL OR enrichment_status = 'PENDING');"))
-                # Backfill un-enriched companies
-                conn.execute(text("UPDATE companies SET enrichment_status = 'PENDING' WHERE is_enriched = FALSE AND (enrichment_status IS NULL);"))
-                conn.execute(text("ALTER TABLE outreach_logs ADD COLUMN IF NOT EXISTS email_body TEXT;"))
-                conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS resume_link VARCHAR(500);"))
-                conn.execute(text("ALTER TABLE scout_jobs ALTER COLUMN status_message TYPE TEXT;"))
-
-                # Performance indexes for fast querying across tens of thousands of rows
-                conn.execute(text("CREATE INDEX IF NOT EXISTS ix_companies_is_enriched ON companies(is_enriched);"))
-                conn.execute(text("CREATE INDEX IF NOT EXISTS ix_companies_created_at ON companies(created_at DESC);"))
-                conn.execute(text("CREATE INDEX IF NOT EXISTS ix_companies_rating ON companies(rating DESC NULLS LAST);"))
-                conn.execute(text("CREATE INDEX IF NOT EXISTS ix_companies_reviews_count ON companies(reviews_count DESC);"))
-                conn.execute(text("CREATE INDEX IF NOT EXISTS ix_company_emails_company_id ON company_emails(company_id);"))
-                conn.execute(text("CREATE INDEX IF NOT EXISTS ix_company_profiles_company_id ON company_profiles(company_id);"))
-                conn.execute(text("CREATE INDEX IF NOT EXISTS ix_outreach_logs_user_company ON outreach_logs(user_id, company_id);"))
-                conn.commit()
+            # Each statement commits on its own (AUTOCOMMIT) and gives up quickly if it
+            # cannot get a lock. Previously the whole list ran in one transaction, so a
+            # server killed mid-startup (e.g. a reload) left an exclusive lock on
+            # `companies` and every company query hung behind it. ALTERs are skipped
+            # entirely when the column already exists, so normal starts take no
+            # exclusive lock at all.
+            with engine.connect().execution_options(isolation_level="AUTOCOMMIT") as conn:
+                conn.execute(text("SET lock_timeout = '5s'"))
+                conn.execute(text("SET statement_timeout = '60s'"))
+                existing = {
+                    (r[0], r[1]) for r in conn.execute(text(
+                        "SELECT table_name, column_name FROM information_schema.columns "
+                        "WHERE table_schema = current_schema() "
+                        "AND table_name IN ('companies','outreach_logs','users','scout_jobs')"
+                    ))
+                }
+                column_adds = [
+                    ("companies", "is_invalid", "BOOLEAN DEFAULT FALSE"),
+                    ("companies", "invalid_reason", "VARCHAR(255)"),
+                    ("companies", "invalid_at", "TIMESTAMP"),
+                    ("companies", "location_url", "TEXT"),
+                    ("companies", "enrichment_status", "VARCHAR(50) DEFAULT 'PENDING'"),
+                    ("companies", "enrichment_attempts", "INTEGER DEFAULT 0"),
+                    ("companies", "last_enriched_at", "TIMESTAMP"),
+                    ("outreach_logs", "email_body", "TEXT"),
+                    ("users", "resume_link", "VARCHAR(500)"),
+                ]
+                statements = [
+                    f"ALTER TABLE {tbl} ADD COLUMN IF NOT EXISTS {col} {ddl};"
+                    for tbl, col, ddl in column_adds if (tbl, col) not in existing
+                ]
+                if ("companies", "enrichment_status") not in existing:
+                    statements += [
+                        "UPDATE companies SET enrichment_status = 'COMPLETED' WHERE is_enriched = TRUE AND (enrichment_status IS NULL OR enrichment_status = 'PENDING');",
+                        "UPDATE companies SET enrichment_status = 'PENDING' WHERE is_enriched = FALSE AND (enrichment_status IS NULL);",
+                    ]
+                st_type = conn.execute(text(
+                    "SELECT data_type FROM information_schema.columns WHERE table_schema = current_schema() "
+                    "AND table_name = 'scout_jobs' AND column_name = 'status_message'"
+                )).scalar()
+                if st_type and st_type != "text":
+                    statements.append("ALTER TABLE scout_jobs ALTER COLUMN status_message TYPE TEXT;")
+                statements += [
+                    # Performance indexes (no-ops when present)
+                    "CREATE INDEX IF NOT EXISTS ix_companies_is_enriched ON companies(is_enriched);",
+                    "CREATE INDEX IF NOT EXISTS ix_companies_created_at ON companies(created_at DESC);",
+                    "CREATE INDEX IF NOT EXISTS ix_companies_rating ON companies(rating DESC NULLS LAST);",
+                    "CREATE INDEX IF NOT EXISTS ix_companies_reviews_count ON companies(reviews_count DESC);",
+                    "CREATE INDEX IF NOT EXISTS ix_company_emails_company_id ON company_emails(company_id);",
+                    "CREATE INDEX IF NOT EXISTS ix_company_profiles_company_id ON company_profiles(company_id);",
+                    "CREATE INDEX IF NOT EXISTS ix_outreach_logs_user_company ON outreach_logs(user_id, company_id);",
+                ]
+                for stmt in statements:
+                    try:
+                        conn.execute(text(stmt))
+                    except Exception as e:
+                        print(f"[DB] Skipped migration step ({str(e).splitlines()[0][:120]}): {stmt[:70]}")
 
         # Seed default subscription tiers if none exist
         try:
@@ -328,7 +360,7 @@ def init_db():
                         ),
                         SubscriptionTier(
                             code="premium_plus",
-                            name="Premium+ Unlimited",
+                            name="Premium+",
                             subtitle="Maximum Velocity",
                             price_inr=999,
                             daily_pitch_limit=100,

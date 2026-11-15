@@ -11,7 +11,7 @@
       try {
         const saved = localStorage.getItem('pilot_theme');
         const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const theme = saved ? saved : (prefersDark ? 'dark' : 'light');
+        const theme = saved ? saved : 'light'; /* default: light */
         if (theme === 'light') {
           document.documentElement.classList.remove('dark');
           document.documentElement.classList.add('light');
@@ -98,11 +98,11 @@
             "body-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0em", "fontWeight": "400" }],
             "headline-md": ["20px", { "lineHeight": "26px", "letterSpacing": "-0.015em", "fontWeight": "600" }],
             "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.06em", "fontWeight": "600" }],
-            "headline-lg": ["24px", { "lineHeight": "30px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
-            "headline-xl": ["32px", { "lineHeight": "38px", "letterSpacing": "-0.025em", "fontWeight": "600" }],
+            "headline-lg": ["26px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+            "headline-xl": ["40px", { "lineHeight": "44px", "letterSpacing": "-0.03em", "fontWeight": "600" }],
             "body-sm": ["13px", { "lineHeight": "18px", "letterSpacing": "0em", "fontWeight": "400" }],
             "headline-xl-mobile": ["26px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
-            "metric-num": ["28px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+            "metric-num": ["33px", { "lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
             "headline-sm": ["16px", { "lineHeight": "22px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
             "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.04em", "fontWeight": "500" }],
             "body-lg": ["16px", { "lineHeight": "24px", "letterSpacing": "-0.005em", "fontWeight": "400" }]
@@ -111,7 +111,7 @@
       }
     };
   </script>
-  <link rel="stylesheet" href="/static/css/style.css?v=8.7">
+  <link rel="stylesheet" href="/static/css/style.css?v=8.9">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
 </head>
 <body class="bg-surface text-on-surface font-body-md antialiased min-h-screen flex selection:bg-primary-container selection:text-on-primary-container overflow-x-hidden">
@@ -248,7 +248,7 @@
           </div>
           <div class="text-xs text-on-surface-variant mt-2 font-normal flex items-center justify-between">
             <span><strong id="kpi-master-admins" class="text-amber-500 font-semibold">--</strong> Master Admins</span>
-            <span class="text-[11px] text-primary opacity-0 group-hover:opacity-100 transition-opacity font-medium">Manage →</span>
+            <span class="text-[11px] text-primary opacity-0 group-hover:opacity-100 transition-opacity font-medium inline-flex items-center gap-0.5">Manage <span class="material-symbols-outlined text-[12px] align-middle" aria-hidden="true">arrow_forward</span></span>
           </div>
         </div>
 
@@ -266,7 +266,7 @@
           </div>
           <div class="text-xs text-on-surface-variant mt-2 font-normal flex items-center justify-between">
             <span><strong id="kpi-verified-emails" class="text-emerald-500 font-semibold">--</strong> verified contact emails</span>
-            <span class="text-[11px] text-primary opacity-0 group-hover:opacity-100 transition-opacity font-medium">View →</span>
+            <span class="text-[11px] text-primary opacity-0 group-hover:opacity-100 transition-opacity font-medium inline-flex items-center gap-0.5">View <span class="material-symbols-outlined text-[12px] align-middle" aria-hidden="true">arrow_forward</span></span>
           </div>
         </div>
 
@@ -285,7 +285,7 @@
           </div>
           <div class="text-xs text-on-surface-variant mt-2 font-normal flex items-center justify-between">
             <span>Resets daily at midnight UTC</span>
-            <span class="text-[11px] text-primary opacity-0 group-hover:opacity-100 transition-opacity font-medium">Pitches →</span>
+            <span class="text-[11px] text-primary opacity-0 group-hover:opacity-100 transition-opacity font-medium inline-flex items-center gap-0.5">Pitches <span class="material-symbols-outlined text-[12px] align-middle" aria-hidden="true">arrow_forward</span></span>
           </div>
         </div>
 
@@ -304,7 +304,7 @@
           </div>
           <div class="text-xs text-on-surface-variant mt-2 font-normal flex items-center justify-between">
             <span><strong id="kpi-free-users" class="text-on-surface font-semibold">--</strong> Free tier accounts</span>
-            <span class="text-[11px] text-primary opacity-0 group-hover:opacity-100 transition-opacity font-medium">Plans →</span>
+            <span class="text-[11px] text-primary opacity-0 group-hover:opacity-100 transition-opacity font-medium inline-flex items-center gap-0.5">Plans <span class="material-symbols-outlined text-[12px] align-middle" aria-hidden="true">arrow_forward</span></span>
           </div>
         </div>
       </div>
@@ -383,7 +383,7 @@
                 <span class="material-symbols-outlined text-primary text-[20px]">spellcheck</span>
               </div>
               <h3 class="text-sm font-semibold text-on-surface">Auto-Clean Taglines & SEO Clutter</h3>
-              <p class="text-xs text-on-surface-variant">Scans company names across Neon PostgreSQL and strips SEO marketing slogans (e.g. <em>"iRoid Solutions - Best IT Company in India"</em> → <em>"iRoid Solutions"</em>).</p>
+              <p class="text-xs text-on-surface-variant">Scans company names across Neon PostgreSQL and strips SEO marketing slogans (e.g. <em>"iRoid Solutions - Best IT Company in India"</em> becomes <em>"iRoid Solutions"</em>).</p>
             </div>
 
             <div class="flex flex-wrap items-center gap-2 pt-2 border-t border-outline-variant/20">
@@ -423,7 +423,7 @@
                 <span class="material-symbols-outlined text-[16px]">search</span>
                 <span>Audit Preview</span>
               </button>
-              <button id="btn-purge-execute" class="px-3.5 py-2 rounded-lg bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 shadow-sm">
+              <button id="btn-purge-execute" class="px-3.5 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-[#090A0D] text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 shadow-sm">
                 <span class="material-symbols-outlined text-[16px]">delete_sweep</span>
                 <span>Quarantine Non-Companies</span>
               </button>
@@ -515,7 +515,7 @@
       <!-- Users Table -->
       <div class="bg-surface-container-low border border-outline-variant/30 rounded-xl overflow-hidden shadow-sm">
         <div class="overflow-x-auto">
-          <table class="w-full text-left text-sm text-on-surface">
+          <table class="w-full min-w-[720px] text-left text-sm text-on-surface">
             <thead class="bg-surface-container text-xs text-on-surface-variant uppercase font-mono border-b border-outline-variant/30">
               <tr>
                 <th class="px-4 py-3 cursor-pointer select-none group hover:text-on-surface transition-colors sortable-user-header" data-sort="email" title="Click to sort by User Email">
@@ -664,7 +664,7 @@
         <!-- Active Companies Table -->
         <div class="bg-surface-container-low border border-outline-variant/30 rounded-xl overflow-hidden shadow-sm">
           <div class="overflow-x-auto">
-            <table class="w-full text-left text-sm text-on-surface">
+            <table class="w-full min-w-[720px] text-left text-sm text-on-surface">
               <thead class="bg-surface-container text-xs text-on-surface-variant uppercase font-mono border-b border-outline-variant/30">
                 <tr>
                   <th class="px-4 py-3 cursor-pointer select-none group hover:text-on-surface transition-colors sortable-comp-header" data-sort="name" title="Click to sort by Company Name">
@@ -728,7 +728,7 @@
           </div>
 
           <div class="overflow-x-auto">
-            <table class="w-full text-left text-sm text-on-surface">
+            <table class="w-full min-w-[720px] text-left text-sm text-on-surface">
               <thead class="bg-surface-container text-xs text-on-surface-variant uppercase font-mono border-b border-outline-variant/30">
                 <tr>
                   <th class="px-4 py-3 cursor-pointer select-none group hover:text-on-surface transition-colors sortable-invalid-header" data-sort="name" title="Click to sort by Entity Name">
@@ -805,9 +805,10 @@
           </div>
         </div>
         <div class="flex items-center gap-3 shrink-0 self-end md:self-center">
-          <label class="relative inline-flex items-center cursor-pointer select-none" title="Toggle Subscription &amp; RBAC Kill Switch">
+          <label for="toggle-subscription-kill-switch" class="relative inline-flex items-center cursor-pointer select-none" title="Toggle Subscription &amp; RBAC Kill Switch">
             <input type="checkbox" id="toggle-subscription-kill-switch" class="sr-only peer">
-            <div class="w-12 h-6.5 bg-surface-container-highest peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500 shadow-inner"></div>
+            <!-- High-Contrast Tactile Toggle Track -->
+            <div class="relative w-12 h-6 bg-slate-300 dark:bg-slate-700 border-2 border-slate-400 dark:border-slate-500 rounded-full transition-colors duration-200 ease-in-out peer-checked:bg-amber-500 peer-checked:border-amber-600 shadow-inner after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:shadow-md after:transition-transform after:duration-200 peer-checked:after:translate-x-6"></div>
           </label>
         </div>
       </div>
@@ -873,7 +874,7 @@
       <!-- Pitches Table -->
       <div class="bg-surface-container-low border border-outline-variant/30 rounded-xl overflow-hidden flex flex-col shadow-sm">
         <div class="overflow-x-auto">
-          <table class="w-full text-left text-sm text-on-surface">
+          <table class="w-full min-w-[720px] text-left text-sm text-on-surface">
             <thead class="bg-surface-container text-xs text-on-surface-variant uppercase font-mono border-b border-outline-variant/30">
               <tr>
                 <th class="px-4 py-3">ID</th>
@@ -947,7 +948,7 @@
         </div>
 
         <div class="overflow-x-auto">
-          <table class="w-full text-left text-sm text-on-surface">
+          <table class="w-full min-w-[720px] text-left text-sm text-on-surface">
             <thead class="bg-surface-container text-xs text-on-surface-variant uppercase font-mono border-b border-outline-variant/30">
               <tr>
                 <th class="px-4 py-3">Run #</th>
@@ -1046,7 +1047,7 @@
         <div class="p-3 bg-surface-container rounded-lg border border-outline-variant/30 flex flex-col gap-1 text-[11px] font-mono text-on-surface-variant">
           <span class="text-on-surface font-semibold">Accepted CSV Column Headers:</span>
           <span><code>name, domain, city, category, email, phone, tech_stack</code></span>
-          <span class="text-emerald-500 mt-1">✓ Automated name cleaning & domain deduplication applied instantly.</span>
+          <span class="text-emerald-500 mt-1 inline-flex items-center gap-1"><span class="material-symbols-outlined text-[14px]" aria-hidden="true">check</span>Automated name cleaning & domain deduplication applied instantly.</span>
         </div>
 
         <!-- Dropzone -->
@@ -1222,7 +1223,7 @@
 
         <div class="flex items-center justify-end gap-2 pt-3 border-t border-outline-variant/20">
           <button type="button" class="modal-close px-4 py-2 rounded-lg bg-surface-container text-on-surface hover:bg-surface-container-high transition">Cancel</button>
-          <button type="button" id="btn-confirm-quarantine" class="px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-500 text-white font-semibold transition">Confirm Quarantine</button>
+          <button type="button" id="btn-confirm-quarantine" class="px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-[#090A0D] font-semibold transition">Confirm Quarantine</button>
         </div>
       </div>
     </div>
@@ -1397,6 +1398,6 @@
   <div id="admin-toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
   <!-- Admin Application Client Controller Script -->
-  <script src="/static/js/admin.js?v=2.0"></script>
+  <script src="/static/js/admin.js?v=2.3"></script>
 </body>
 </html>

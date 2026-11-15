@@ -11,7 +11,8 @@ import time
 import urllib.parse
 from collections import defaultdict
 from contextlib import asynccontextmanager
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
 from typing import Any, Optional
 
 import requests
@@ -217,11 +218,71 @@ def _prewarm_cache():
         print(f"[Cache Warning] Pre-warming filter cache failed: {e}")
 
 
+# --- Daily pitch quota: one day = midnight to midnight IST ---
+IST = timezone(timedelta(hours=5, minutes=30))
+
+
+def quota_day_start_utc(now: datetime | None = None) -> datetime:
+    """Start of the current quota day (00:00 IST) as a naive UTC datetime,
+    matching how timestamps are stored (datetime.utcnow())."""
+    now_ist = (now.replace(tzinfo=timezone.utc) if now else datetime.now(timezone.utc)).astimezone(IST)
+    midnight_ist = now_ist.replace(hour=0, minute=0, second=0, microsecond=0)
+    return midnight_ist.astimezone(timezone.utc).replace(tzinfo=None)
+
+
+def next_quota_reset_utc(now: datetime | None = None) -> datetime:
+    return quota_day_start_utc(now) + timedelta(days=1)
+
+
+def reset_daily_quota_if_due(user) -> bool:
+    """Zero the user's daily pitch counter if it was last reset before today's
+    00:00 IST. Returns True when it changed something (caller commits)."""
+    last = getattr(user, "last_pitch_reset_date", None)
+    if last is None or last < quota_day_start_utc():
+        user.pitches_sent_today = 0
+        user.last_pitch_reset_date = datetime.utcnow()
+        return True
+    return False
+
+
+def _bulk_reset_daily_quotas() -> int:
+    """Reset every user whose counter is from a previous IST day in one UPDATE.
+    Idempotent, so it is safe with several workers or a late wake-up."""
+    try:
+        with SessionLocal() as s:
+            n = (
+                s.query(User)
+                .filter(or_(User.last_pitch_reset_date.is_(None),
+                            User.last_pitch_reset_date < quota_day_start_utc()))
+                .update({User.pitches_sent_today: 0, User.last_pitch_reset_date: datetime.utcnow()},
+                        synchronize_session=False)
+            )
+            s.commit()
+            return n or 0
+    except Exception as e:
+        print(f"[Quota] Daily reset failed: {e}")
+        return 0
+
+
+async def _daily_quota_reset_loop():
+    """Runs the bulk reset at startup and then just after each midnight IST.
+    The per-request check in get_current_user stays as the guarantee, so a
+    sleeping or restarted server never leaves a user blocked."""
+    while True:
+        n = await asyncio.to_thread(_bulk_reset_daily_quotas)
+        if n:
+            print(f"[Quota] Reset daily pitch counters for {n} user(s).")
+        wait = (next_quota_reset_utc() - datetime.utcnow()).total_seconds() + 5
+        await asyncio.sleep(max(60, wait))
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
     asyncio.create_task(asyncio.to_thread(_prewarm_cache))
+    quota_task = asyncio.create_task(_daily_quota_reset_loop())
     yield
+    quota_task.cancel()
 
 
 app = FastAPI(
@@ -587,11 +648,8 @@ def get_current_user(db: Session, request: Request | None = None) -> User | None
             user.subscription_tier = "premium_plus"
             needs_commit = True
 
-        # Midnight reset of daily pitches sent
-        now_utc = datetime.utcnow()
-        if user.last_pitch_reset_date is None or user.last_pitch_reset_date.date() < now_utc.date():
-            user.pitches_sent_today = 0
-            user.last_pitch_reset_date = now_utc
+        # Daily pitch quota resets at midnight IST.
+        if reset_daily_quota_if_due(user):
             needs_commit = True
 
         if needs_commit:
@@ -753,7 +811,7 @@ def get_user_subscription_info(user: User | None, db: Session) -> dict:
     tier_name_map = {
         "free": "Free Job Seeker",
         "pro": "Pro Outreach",
-        "premium_plus": "Premium+ Unlimited",
+        "premium_plus": "Premium+",
         "master_admin": "Master Admin Persona"
     }
     if not user or not user.oauth_tokens:
@@ -808,7 +866,15 @@ def landing_page(request: Request, db: Session = Depends(get_db)):
     # Query active subscription tiers for landing pricing table (empty if kill switch is active)
     tiers = db.query(SubscriptionTier).filter(SubscriptionTier.is_active == True).order_by(SubscriptionTier.id.asc()).all()
     public_tiers = [] if kill_switch else [t for t in tiers if t.code != "master_admin"]
-    
+
+    # Largest city and category hubs for the crawlable "Browse the directory" section.
+    # Both lists come from cached aggregates; on any failure the section simply hides.
+    try:
+        browse_cities = sorted(seo_engine.get_all_cities(db), key=lambda c: -int(c.get("count") or 0))[:12]
+        browse_categories = sorted(seo_engine.get_all_categories(db), key=lambda c: -int(c.get("count") or 0))[:12]
+    except Exception:
+        browse_cities, browse_categories = [], []
+
     return templates.TemplateResponse(
         request=request,
         name="landing.html",
@@ -823,6 +889,8 @@ def landing_page(request: Request, db: Session = Depends(get_db)):
             "google_client_id": config.GOOGLE_CLIENT_ID,
             "dev_mode": config.DEV_MODE,
             "subscription_kill_switch": kill_switch,
+            "browse_cities": browse_cities,
+            "browse_categories": browse_categories,
         }
     )
 
@@ -963,7 +1031,7 @@ def llms_txt(request: Request, db: Session = Depends(get_db)):
 
 @app.api_route("/llms-full.txt", methods=["GET", "HEAD"], include_in_schema=False)
 def llms_full_txt(request: Request, db: Session = Depends(get_db)):
-    """Comprehensive Machine-Readable LLM Knowledge Base for Agentic Crawlers"""
+    """Machine-readable LLM knowledge base for AI crawlers"""
     base_url = seo_engine.get_canonical_base_url(request)
     content = seo_engine.generate_llms_full_txt(base_url, db)
     return Response(
@@ -1159,7 +1227,7 @@ def directory_city_hub(city_slug: str, request: Request, db: Session = Depends(g
             "page_subtitle": page_subtitle,
             "meta_description": meta_description,
             "hub_name": city_name,
-            "hub_badge": f"Verified Indian Hub • {city_name} ({dom_display})",
+            "hub_badge": f"Verified companies in {city_name} ({dom_display})",
             "total_companies": total_count,
             "avg_rating": avg_rating,
             "related_title": f"Top Specializations in {city_name}",
@@ -1177,6 +1245,7 @@ def directory_city_hub(city_slug: str, request: Request, db: Session = Depends(g
 @app.api_route("/directory/category/{tech_slug}", methods=["GET", "HEAD"], response_class=HTMLResponse)
 def directory_tech_hub(tech_slug: str, request: Request, db: Session = Depends(get_db)):
     """Category & Technology Specialization Hub (Dynamic Across All Industries)"""
+    seo_engine.ensure_category_maps(db)
     tech_name = seo_engine.slug_to_tech_name(tech_slug)
     companies, total_count = seo_engine.get_companies_list(db, tech=tech_name, limit=30)
     if total_count == 0:
@@ -1221,7 +1290,7 @@ def directory_tech_hub(tech_slug: str, request: Request, db: Session = Depends(g
             "page_subtitle": page_subtitle,
             "meta_description": meta_description,
             "hub_name": tech_name,
-            "hub_badge": f"Verified Specialization • {tech_name}",
+            "hub_badge": f"Verified {tech_name} companies",
             "total_companies": total_count,
             "avg_rating": avg_rating,
             "related_title": f"Top Indian Cities for {tech_name}",
@@ -1252,6 +1321,8 @@ def directory_companies(
     """
     base_url = seo_engine.get_canonical_base_url(request)
     selected_category = (category or tech or "").strip()
+    if selected_category:
+        seo_engine.ensure_category_maps(db)
 
     # Case 1: Both city and category/tech provided -> Render Programmatic Intersection Page
     if city and selected_category:
@@ -1326,15 +1397,6 @@ def directory_companies(
     return RedirectResponse(url="/directory", status_code=301)
 
 
-@app.get("/directory/companies/{city_slug}/{tech_slug}", response_class=HTMLResponse)
-async def directory_combo_legacy_redirect(city_slug: str, tech_slug: str):
-    """301 Redirect legacy path format to scalable parameterized format"""
-    return RedirectResponse(
-        url=f"/directory/companies?city={city_slug}&tech={tech_slug}",
-        status_code=301
-    )
-
-
 @app.api_route("/company/{slug}", methods=["GET", "HEAD"], response_class=HTMLResponse)
 def company_showcase_profile(slug: str, request: Request, db: Session = Depends(get_db)):
     """Verified Individual Company Intelligence Profile Dossier"""
@@ -1348,23 +1410,34 @@ def company_showcase_profile(slug: str, request: Request, db: Session = Depends(
 
     base_url = seo_engine.get_canonical_base_url(request)
     canonical_url = f"{base_url}/company/{company['slug']}"
-    city_slug = seo_engine.city_to_slug(company["city"])
+    city_name = company["city"] or ""
+    city_slug = seo_engine.city_to_slug(city_name) if city_name else ""
 
-    # Related companies in same city
-    nearby_companies, _ = seo_engine.get_companies_list(db, city=company["city"], limit=4)
-    nearby_filtered = [c for c in nearby_companies if c["id"] != company["id"]][:3]
+    # Related companies in same city (light, cached per city)
+    nearby_filtered = seo_engine.get_nearby_companies(db, city_name, company["id"], limit=3)
 
-    breadcrumbs = [
-        ("Home", f"{base_url}/"),
-        ("Directory", f"{base_url}/directory"),
-        (company["city"], f"{base_url}/directory/city/{city_slug}"),
-        (company["name"], canonical_url)
-    ]
+    breadcrumbs = [("Home", f"{base_url}/"), ("Directory", f"{base_url}/directory")]
+    if city_slug:
+        breadcrumbs.append((city_name, f"{base_url}/directory/city/{city_slug}"))
+    breadcrumbs.append((company["name"], canonical_url))
     bc_schema = seo_engine.build_breadcrumb_schema(breadcrumbs)
     org_schema = seo_engine.build_local_business_schema(company, base_url)
     combined_schema = json.dumps([bc_schema, org_schema], ensure_ascii=False)
 
-    meta_description = f"{company['name']} in {company['city']}, India. Verified technology stack: {', '.join(company['profile'].get('tech_stack', [])[:4])}. Client rating: {company['rating']}★. View full B2B intelligence dossier."
+    # Meta description states only facts we actually hold.
+    prof = company["profile"]
+    parts = [f"{company['name']}" + (f" in {city_name}, India." if city_name else ".")]
+    if prof.get("summary"):
+        parts.append(prof["summary"])
+    elif company.get("category"):
+        parts.append(f"Listed under {company['category']}.")
+    if company.get("rating") and company.get("reviews_count"):
+        parts.append(f"Rated {company['rating']:.1f} on Google from {company['reviews_count']:,} reviews.")
+    if prof.get("tech_stack"):
+        parts.append("Uses " + ", ".join(prof["tech_stack"][:4]) + ".")
+    meta_description = " ".join(parts)
+    if len(meta_description) > 158:
+        meta_description = meta_description[:155].rsplit(" ", 1)[0] + "..."
 
     response = templates.TemplateResponse(
         request=request,
@@ -1709,6 +1782,7 @@ def get_companies_filters(
                 return None
             profile_conds = []
             company_tech_conds = []
+            seo_engine.ensure_category_maps(db)
             for t_term in t_terms:
                 t_slug = seo_engine.tech_to_slug(t_term)
                 canon_name = seo_engine.slug_to_tech_name(t_slug)
@@ -2071,7 +2145,7 @@ def get_companies_filters(
 def get_companies(
     request: Request,
     page: int = 1,
-    page_size: int = 20,
+    page_size: int = 24,
     search: str = "",
     tech: str = "",
     city: str = "",
@@ -2119,10 +2193,10 @@ def get_companies(
                 }
             query = base_query.filter(Company.is_invalid.is_(True))
         else:
-            if not is_admin:
-                query = base_query.filter(Company.is_invalid.is_(False))
-            else:
-                query = base_query
+            # Everyone (admins included) browses the VALID directory by default;
+            # invalid/excluded companies remain reachable via the dedicated "invalid"
+            # view. This keeps the list total consistent with the "Total Companies" KPI.
+            query = base_query.filter(Company.is_invalid.is_(False))
 
         # 2. Metric / Status filter
         if status == "enriched":
@@ -2194,6 +2268,7 @@ def get_companies(
         if tech_terms:
             profile_conds = []
             company_tech_conds = []
+            seo_engine.ensure_category_maps(db)
             for t_term in tech_terms:
                 t_slug = seo_engine.tech_to_slug(t_term)
                 canon_name = seo_engine.slug_to_tech_name(t_slug)
@@ -2293,7 +2368,10 @@ def get_companies(
 
         if not has_custom_filters and _filter_cache.get("data") and "stats" in _filter_cache["data"]:
             stats_cache = _filter_cache["data"]["stats"]
-            if status == "all" and not is_admin:
+            if status == "all":
+                # stats_cache["total"] is already the VALID count (is_invalid=FALSE),
+                # matching the default list filter and the "Total Companies" KPI.
+                # (Applies to admins too, now that the default list excludes invalid.)
                 total_count = stats_cache.get("total", 0)
             elif status == "enriched":
                 total_count = stats_cache.get("enriched", 0)
@@ -2315,9 +2393,11 @@ def get_companies(
             cur_page = 1
             page_size = total_count
         else:
-            ALLOWED_PAGE_SIZES = {10, 20, 50, 100, 200, 500, 1000}
+            # Multiples of 6 (12/24/48/96/192) fill 2- and 3-column card grids evenly;
+            # the older sizes stay accepted so existing links keep working.
+            ALLOWED_PAGE_SIZES = {12, 24, 48, 96, 192, 10, 20, 50, 100, 200, 500, 1000}
             if page_size not in ALLOWED_PAGE_SIZES:
-                page_size = 20
+                page_size = 24
 
             total_pages = max(1, (total_count + page_size - 1) // page_size) if total_count > 0 else 1
             cur_page = max(1, min(page, total_pages)) if total_count > 0 else 1
@@ -2561,7 +2641,7 @@ def auth_status(request: Request, db: Session = Depends(get_db)):
         tier_code = getattr(user, "subscription_tier", "free") or "free"
         tier_name = "Master Admin"
     elif kill_switch:
-        # Kill switch ON + logged in → infinite, but real tier preserved in DB (not mutated)
+        # Kill switch ON + logged in: infinite, but real tier preserved in DB (not mutated)
         daily_limit = 999999
         sent_today = getattr(user, "pitches_sent_today", 0) or 0
         remaining = 999999
@@ -2573,7 +2653,7 @@ def auth_status(request: Request, db: Session = Depends(get_db)):
         tier_name_map = {
             "free": "Free Job Seeker",
             "pro": "Pro Outreach",
-            "premium_plus": "Premium+ Unlimited",
+            "premium_plus": "Premium+",
             "master_admin": "Master Admin"
         }
         tier_name = tier_name_map.get(tier_code, tier_code.replace("_", " ").title())
@@ -2588,7 +2668,7 @@ def auth_status(request: Request, db: Session = Depends(get_db)):
     real_tier_name_map = {
         "free": "Free Job Seeker",
         "pro": "Pro Outreach",
-        "premium_plus": "Premium+ Unlimited",
+        "premium_plus": "Premium+",
         "master_admin": "Master Admin"
     }
     real_tier_name = "Master Admin" if is_master else real_tier_name_map.get(real_tier_code, real_tier_code.replace("_", " ").title())
@@ -2600,16 +2680,17 @@ def auth_status(request: Request, db: Session = Depends(get_db)):
         "picture": user.picture if is_logged_in else None,
         "is_master_admin": is_master,
         "subscription_kill_switch": kill_switch,
-        # Effective (displayed) tier — overridden when kill switch is on
+        # Effective (displayed) tier: overridden when kill switch is on
         "subscription_tier": tier_code,
         "subscription_tier_name": tier_name,
-        # Real (persisted) tier — always reflects what user actually purchased/has assigned
+        # Real (persisted) tier: always reflects what user actually purchased/has assigned
         "real_subscription_tier": real_tier_code,
         "real_subscription_tier_name": real_tier_name,
         "subscription_status": getattr(user, "subscription_status", "active") if is_logged_in else "active",
         "daily_pitch_limit": daily_limit,
         "pitches_sent_today": sent_today,
         "pitches_remaining": remaining,
+        "quota_resets_at": next_quota_reset_utc().replace(tzinfo=timezone.utc).isoformat(),
         "is_banned": bool(getattr(user, "is_banned", False)) if is_logged_in else False,
         "dev_mode": config.DEV_MODE
     }
@@ -2650,7 +2731,7 @@ def get_public_tiers(db: Session = Depends(get_db)):
                 },
                 {
                     "code": "premium_plus",
-                    "name": "Premium+ Unlimited",
+                    "name": "Premium+",
                     "subtitle": "Maximum Velocity",
                     "price_inr": 999,
                     "daily_pitch_limit": 100,
@@ -3245,7 +3326,7 @@ async def generate_single_pitch(
         for p in raw_proofs[:4]:
             p_clean = p.strip().lstrip("-*•").strip()
             if p_clean:
-                proof_bullets.append(f"• {p_clean}")
+                proof_bullets.append(f"- {p_clean}")
 
         achievements_block = "\n".join(proof_bullets)
         resume_ref = f" (Portfolio / Code: {cand_profile.get('resume_link')})" if cand_profile.get("resume_link") else ""
@@ -3429,7 +3510,7 @@ async def generate_bulk_pitches(
             body = (
                 f"Hi {task['company_name']} team,\n\n"
                 f"I am writing to inquire about open or upcoming {t_role} opportunities on your engineering team at {task['company_name']}.\n\n"
-                f"As a {t_role} specializing in {skills_str}, I focus on building robust, high-performance web systems and data-driven infrastructure.\n\n"
+                f"As a {t_role} specializing in {skills_str}, I focus on building reliable, high-performance web systems and data-driven infrastructure.\n\n"
                 f"{proof_text}"
                 f"Given {task['company_name']}'s engineering focus, I would love to bring my technical experience to your team. "
                 f"I have shared my resume for your consideration{resume_ref}. Are you currently hiring for {t_role} roles, or open to considering my profile for upcoming engineering needs?\n\n"
@@ -4020,6 +4101,12 @@ def get_admin_metrics(
     # 3. Single count for verified emails
     verified_emails = db.query(func.count(CompanyEmail.id)).scalar() or 0
 
+    # 4. Pitches actually sent today: count OutreachLog rows (same source as the
+    #    Sent Pitches tab), not sum(User.pitches_sent_today): the per-user quota
+    #    counter is not incremented for master-admin sends, so it under-reports.
+    _today_start = quota_day_start_utc()  # same IST day as the quota
+    pitches_today = db.query(func.count(OutreachLog.id)).filter(OutreachLog.sent_at >= _today_start).scalar() or 0
+
     data = {
         "users_total": user_row.total if user_row else 0,
         "users_with_oauth": user_row.oauth if user_row else 0,
@@ -4027,7 +4114,7 @@ def get_admin_metrics(
         "subscribers_free": user_row.free if user_row else 0,
         "subscribers_pro": user_row.pro if user_row else 0,
         "subscribers_premium_plus": user_row.premium_plus if user_row else 0,
-        "pitches_sent_today": user_row.pitches if user_row else 0,
+        "pitches_sent_today": pitches_today,
         "companies_valid": comp_row.valid if comp_row else 0,
         "companies_invalid": comp_row.invalid if comp_row else 0,
         "verified_emails": verified_emails,
@@ -4082,6 +4169,7 @@ def list_admin_users(
         order_target = User.id.asc() if is_asc else User.id.desc()
 
     users = q.order_by(order_target, User.id.desc()).offset((page - 1) * page_size).limit(page_size).all()
+    _quota_start = quota_day_start_utc()
 
     return {
         "total_count": total_count,
@@ -4097,7 +4185,8 @@ def list_admin_users(
                 "subscription_tier": u.subscription_tier or "free",
                 "subscription_status": u.subscription_status or "active",
                 "daily_pitch_limit": 999999 if (u.is_admin or config.is_master_admin(u.email)) else (u.daily_pitch_limit or 10),
-                "pitches_sent_today": u.pitches_sent_today or 0,
+                "pitches_sent_today": (u.pitches_sent_today or 0)
+                    if (u.last_pitch_reset_date and u.last_pitch_reset_date >= _quota_start) else 0,
                 "is_banned": bool(u.is_banned),
                 "ban_reason": u.ban_reason or "",
                 "created_at": u.created_at.strftime("%Y-%m-%d %H:%M") if hasattr(u, "created_at") and u.created_at else None
@@ -5412,9 +5501,9 @@ async def toggle_kill_switch_status(
     Design contract (state preservation):
     - The kill switch is a GLOBAL OVERLAY flag only. It never touches individual
       User.subscription_tier or User.daily_pitch_limit columns.
-    - When OFF → each user's real purchased/assigned tier is automatically restored
+    - When OFF: each user's real purchased/assigned tier is automatically restored
       because auth_status and get_user_subscription_info always read from the DB row.
-    - When ON  → all logged-in users are presented as Temp Users (infinite pitches)
+    - When ON: all logged-in users are presented as Temp Users (infinite pitches)
       without any DB mutation. Their real tier is preserved in real_subscription_tier.
     """
     try:
@@ -5429,11 +5518,11 @@ async def toggle_kill_switch_status(
         "previous_state": previous_state,
         "state_preserved": True,  # User DB rows are never mutated; real tiers always persist
         "message": (
-            "Kill Switch ENABLED — Open-access mode active. All logged-in users "
+            "Kill Switch ENABLED. Open-access mode active. All logged-in users "
             "get infinite pitch generation. Subscription UI suppressed. "
             "Individual user tiers are preserved in DB and will be fully restored on disable."
             if new_state else
-            "Kill Switch DISABLED — Standard subscription tiers, RBAC, and daily quota limits "
+            "Kill Switch DISABLED. Standard subscription tiers, RBAC, and daily quota limits "
             "restored. Each user's previously purchased/assigned plan is automatically in effect."
         )
     }

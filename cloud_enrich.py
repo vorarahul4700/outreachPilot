@@ -1,4 +1,4 @@
-﻿"""
+"""
 OutreachPilot - Cloud AI Enrichment & Auto-Healing Worker
 File: cloud_enrich.py
 

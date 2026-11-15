@@ -25,7 +25,7 @@
   <link rel="preload" href="/static/fonts/spacegrotesk-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/static/fonts/dmsans-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/static/css/fonts.css">
-  <link rel="stylesheet" href="/static/css/style.css?v=8.1">
+  <link rel="stylesheet" href="/static/css/style.css?v=8.9">
   <script src="https://cdn.tailwindcss.com/3.4.17?plugins=forms@0.5.10"></script>
 
   <script>
@@ -33,7 +33,7 @@
       try {
         const saved = localStorage.getItem('pilot_theme');
         const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const theme = saved ? saved : (prefersDark ? 'dark' : 'light');
+        const theme = saved ? saved : 'light'; /* default: light */
         if (theme === 'light') {
           document.documentElement.classList.remove('dark');
           document.documentElement.classList.add('light');
@@ -120,8 +120,8 @@
         </a>
         <nav class="hidden md:flex items-center gap-4 text-xs font-mono text-on-surface-variant whitespace-nowrap shrink-0">
           <a href="/directory" class="text-primary font-semibold border-b-2 border-secondary pb-0.5 whitespace-nowrap">Directory</a>
-          <a href="/#workflow" class="hover:text-primary transition-colors whitespace-nowrap">Protocol</a>
-          <a href="/#capabilities" class="hover:text-primary transition-colors whitespace-nowrap">Engine</a>
+          <a href="/#workflow" class="hover:text-primary transition-colors whitespace-nowrap">How It Works</a>
+          <a href="/#capabilities" class="hover:text-primary transition-colors whitespace-nowrap">Features</a>
         </nav>
       </div>
 
@@ -157,13 +157,13 @@
       <section class="space-y-3">
         <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container-high border border-outline-variant text-xs font-mono text-secondary">
           <span class="w-2 h-2 rounded-full bg-secondary"></span>
-          <span>Programmatic B2B Lead Intelligence • {{ city_name }} Hub</span>
+          <span>{{ city_name }} company directory</span>
         </div>
         <h1 class="text-2xl sm:text-3xl md:text-4xl font-display font-bold text-primary tracking-tight">
           Top {{ tech_name }} Companies &amp; Specialists in {{ city_name }}
         </h1>
         <p class="text-sm text-on-surface-variant max-w-3xl leading-relaxed">
-          Comprehensive directory of verified {{ tech_name }} companies and specialized firms in {{ city_name }}. Features verified operational capabilities, direct contacts, customer reviews, and local Google ratings.
+          A directory of verified {{ tech_name }} companies and specialized firms in {{ city_name }}. Features verified operational capabilities, direct contacts, customer reviews, and local Google ratings.
         </p>
       </section>
 
@@ -210,7 +210,7 @@
       <section class="space-y-4">
         <div class="flex items-center justify-between border-b border-outline pb-2.5">
           <h2 class="text-lg font-display font-bold text-primary">
-            Ranked {{ tech_name }} Companies in {{ city_name }} <span class="text-xs font-mono text-on-surface-variant font-normal">({{ companies|length }} showing)</span>
+            Top {{ tech_name }} companies in {{ city_name }} <span class="text-xs font-mono text-on-surface-variant font-normal">({{ companies|length }} shown)</span>
           </h2>
           <a href="/app" class="text-xs font-mono text-secondary hover:underline flex items-center gap-1">
             <span>Prospect in Workspace</span>
@@ -219,64 +219,78 @@
         </div>
 
         {% if companies and companies|length > 0 %}
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+        <ul class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" role="list">
           {% for c in companies %}
-          <div class="bento-cell p-4 flex flex-col justify-between">
-            <div>
-              <div class="flex items-start justify-between gap-2 mb-2">
-                <a href="/company/{{ c.slug }}" class="font-display font-bold text-sm text-primary hover:text-secondary transition-colors line-clamp-1" title="{{ c.name }}">
-                  {{ c.name }}
-                </a>
-                <span class="text-xs font-mono text-secondary flex items-center gap-0.5 shrink-0">
-                  <span class="material-symbols-outlined text-[13px] fill-current">star</span>
-                  <span class="tnum">{{ c.rating }}</span>
-                  <span class="text-on-surface-variant text-[10px] tnum">({{ c.reviews_count }})</span>
-                </span>
+          {% set name_parts = c.name.split() %}
+          {% set initials = (name_parts[0][0] ~ (name_parts[1][0] if name_parts|length > 1 else ''))|upper if name_parts else '?' %}
+          {% set extra_tags = (c.tech_stack or [])|reject('equalto', tech_name)|list %}
+          <li class="h-full">
+            <article class="h-full flex flex-col rounded-2xl border border-outline-variant/40 bg-surface-container-low p-5 transition-colors hover:border-outline">
+              <!-- Identity -->
+              <div class="flex items-start gap-3">
+                <span class="w-10 h-10 shrink-0 rounded-lg bg-surface-container-high border border-outline-variant/50 flex items-center justify-center font-mono text-xs font-bold text-on-surface" aria-hidden="true">{{ initials }}</span>
+                <div class="min-w-0 flex-1">
+                  <h3 class="font-display font-semibold text-[15px] leading-snug text-on-surface line-clamp-2">
+                    <a href="/company/{{ c.slug }}" class="hover:text-primary transition-colors" title="{{ c.name }}">{{ c.name }}</a>
+                  </h3>
+                  {% if c.domain %}
+                  <a href="{{ c.website_url or ('https://' ~ c.domain) }}" target="_blank" rel="nofollow noopener noreferrer" class="mt-0.5 inline-flex max-w-full items-center gap-1 text-xs font-mono text-on-surface-variant hover:text-primary transition-colors">
+                    <span class="truncate">{{ c.domain }}</span>
+                    <span class="material-symbols-outlined text-[12px] shrink-0" aria-hidden="true">open_in_new</span>
+                  </a>
+                  {% endif %}
+                </div>
               </div>
 
-              <div class="text-[11px] font-mono text-on-surface-variant flex items-center gap-1.5 mb-2.5 flex-wrap">
-                <span class="material-symbols-outlined text-[13px]">location_on</span>
-                <span>{{ c.city }}</span>
-                <span class="text-outline-variant">|</span>
-                <span class="text-primary truncate">{{ c.domain }}</span>
-                {% if c.industry_domain %}
-                <span class="text-outline-variant">|</span>
-                <span class="text-[10px] px-1.5 py-0.2 rounded bg-surface-container border border-outline-variant/40 text-on-surface-variant">{{ c.industry_domain }}</span>
-                {% endif %}
-              </div>
-
-              {% if c.profile.summary %}
-              <p class="text-xs text-on-surface-variant leading-relaxed line-clamp-2 mb-3 font-sans">
-                {{ c.profile.summary }}
+              <!-- Rating (Google) -->
+              {% if c.rating and c.rating > 0 %}
+              <p class="mt-3 flex items-center gap-1 text-xs text-on-surface-variant">
+                <span class="material-symbols-outlined text-[14px]" aria-hidden="true">star</span>
+                <span class="font-semibold text-on-surface tnum">{{ c.rating }}</span>
+                <span class="tnum">from {{ "{:,}".format(c.reviews_count or 0) }} Google {{ 'review' if c.reviews_count == 1 else 'reviews' }}</span>
               </p>
               {% endif %}
 
-              <!-- Tech Stack Tags -->
-              {% if c.tech_stack and c.tech_stack|length > 0 %}
-              <div class="flex flex-wrap gap-1 mb-3">
-                {% for tag in c.tech_stack %}
-                <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-surface-container-high text-primary border border-outline">
-                  {{ tag }}
-                </span>
+              {% if c.profile and c.profile.summary %}
+              <p class="mt-3 text-sm text-on-surface-variant leading-relaxed line-clamp-3">{{ c.profile.summary }}</p>
+              {% endif %}
+
+              {% if extra_tags %}
+              <div class="mt-3 flex flex-wrap gap-1.5">
+                {% for tag in extra_tags[:4] %}
+                <span class="px-2 py-0.5 rounded-md text-[11px] font-mono bg-surface-container text-on-surface-variant border border-outline-variant/40">{{ tag }}</span>
                 {% endfor %}
               </div>
               {% endif %}
-            </div>
 
-            <div class="pt-2.5 border-t border-outline flex items-center justify-between text-xs font-mono">
-              <a href="/app?action=pitch&company_id={{ c.id }}&company_name={{ c.name | urlencode }}" class="text-[11px] font-semibold text-secondary hover:underline flex items-center gap-1">
-                <span class="material-symbols-outlined text-[13px]">send</span>
-                <span>Pitch Lead</span>
-              </a>
+              <!-- What we know so far (honest status, no placeholders) -->
+              <ul class="mt-4 space-y-1.5 text-xs" role="list">
+                <li class="flex items-center gap-1.5 {{ 'text-secondary' if c.has_emails else 'text-on-surface-variant' }}">
+                  <span class="material-symbols-outlined text-[15px]" aria-hidden="true">{{ 'mark_email_read' if c.has_emails else 'mail' }}</span>
+                  <span>{{ 'Contact email found' if c.has_emails else 'No contact email yet' }}</span>
+                </li>
+                <li class="flex items-center gap-1.5 {{ 'text-secondary' if c.is_enriched else 'text-on-surface-variant' }}">
+                  <span class="material-symbols-outlined text-[15px]" aria-hidden="true">{{ 'task_alt' if c.is_enriched else 'pending' }}</span>
+                  <span>{{ 'AI research ready' if c.is_enriched else 'Not researched yet' }}</span>
+                </li>
+              </ul>
 
-              <a href="/company/{{ c.slug }}" class="text-xs font-semibold text-primary hover:text-secondary flex items-center gap-1 transition-colors">
-                <span>View Dossier</span>
-                <span class="material-symbols-outlined text-[13px]">arrow_forward</span>
-              </a>
-            </div>
-          </div>
+              <!-- Actions, pinned to the bottom so cards in a row line up -->
+              <div class="mt-auto pt-4">
+                <div class="flex items-center gap-2 border-t border-outline-variant/40 pt-4">
+                  <a href="/company/{{ c.slug }}" class="btn-tactile-ecru flex-1 inline-flex items-center justify-center gap-1 rounded-lg px-3 py-2 text-xs font-semibold">
+                    <span>View profile</span>
+                  </a>
+                  <a href="/app?action=pitch&company_id={{ c.id }}&company_name={{ c.name | urlencode }}" class="flex-1 inline-flex items-center justify-center gap-1 rounded-lg border border-outline-variant/60 px-3 py-2 text-xs font-semibold text-on-surface hover:border-primary hover:text-primary transition-colors">
+                    <span class="material-symbols-outlined text-[14px]" aria-hidden="true">send</span>
+                    <span>Write a pitch</span>
+                  </a>
+                </div>
+              </div>
+            </article>
+          </li>
           {% endfor %}
-        </div>
+        </ul>
         {% else %}
         <div class="bento-cell p-8 text-center text-on-surface-variant font-mono text-xs">
           No verified companies found for this intersection yet.

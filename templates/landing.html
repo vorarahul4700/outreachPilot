@@ -11,7 +11,7 @@
       try {
         const saved = localStorage.getItem('pilot_theme');
         const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const theme = saved ? saved : (prefersDark ? 'dark' : 'light');
+        const theme = saved ? saved : 'light'; /* default: light */
         if (theme === 'light') {
           document.documentElement.classList.remove('dark');
           document.documentElement.classList.add('light');
@@ -25,6 +25,45 @@
   <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
   <title>OutreachPilot - Find Verified Companies, Decision-Maker Emails &amp; Send Cold Outreach</title>
   <meta name="description" content="Find verified local businesses on Google Maps, discover real contact emails and tech stacks, and send personalized cold emails directly from your Gmail with one click."/>
+  <link rel="canonical" href="https://outreachpilot.in/"/>
+  <meta name="robots" content="index, follow, max-image-preview:large"/>
+  <meta property="og:type" content="website"/>
+  <meta property="og:site_name" content="OutreachPilot"/>
+  <meta property="og:url" content="https://outreachpilot.in/"/>
+  <meta property="og:title" content="OutreachPilot - Find Verified Companies and Decision-Maker Emails"/>
+  <meta property="og:description" content="Find verified companies across India, discover real contact emails and tech stacks, and send personalized emails from your own Gmail."/>
+  <meta property="og:image" content="https://outreachpilot.in/static/img/favicon.png"/>
+  <meta property="og:image:width" content="512"/>
+  <meta property="og:image:height" content="512"/>
+  <meta name="twitter:card" content="summary"/>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://outreachpilot.in/#organization",
+        "name": "OutreachPilot",
+        "url": "https://outreachpilot.in/",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://outreachpilot.in/static/img/favicon.png",
+          "width": 512,
+          "height": 512
+        },
+        "email": "support@outreachpilot.in"
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://outreachpilot.in/#website",
+        "url": "https://outreachpilot.in/",
+        "name": "OutreachPilot",
+        "inLanguage": "en-IN",
+        "publisher": { "@id": "https://outreachpilot.in/#organization" }
+      }
+    ]
+  }
+  </script>
 
   <!-- High-Performance Self-Hosted Typography & SEO Font Preloading (Fast LCP & Zero CLS) -->
   <link rel="preload" href="/static/fonts/spacegrotesk-latin.woff2" as="font" type="font/woff2" crossorigin>
@@ -32,7 +71,7 @@
   <link rel="stylesheet" href="/static/css/fonts.css">
 
   <!-- Core Design System CSS -->
-  <link rel="stylesheet" href="/static/css/style.css?v=8.1">
+  <link rel="stylesheet" href="/static/css/style.css?v=8.9">
 
   <!-- Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com/3.4.17?plugins=forms@0.5.10"></script>
@@ -223,8 +262,9 @@
         </button>
 
         {% if is_logged_in %}
-        <a href="/app" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-secondary/40 text-secondary text-xs font-mono font-semibold hover:bg-secondary/10 transition-all whitespace-nowrap shrink-0">
-          <span class="material-symbols-outlined text-sm">dashboard</span>
+        <!-- Logged in: one action. "Find Leads Free" also pointed at /app, so it was a duplicate. -->
+        <a href="/app" class="btn-tactile-ecru flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold cursor-pointer whitespace-nowrap shrink-0">
+          <span class="material-symbols-outlined text-[15px] shrink-0">dashboard</span>
           <span>Open Workspace</span>
         </a>
         {% else %}
@@ -237,12 +277,11 @@
           </svg>
           <span class="whitespace-nowrap">Sign In</span>
         </a>
-        {% endif %}
-
         <a href="/app" class="btn-tactile-ecru flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold cursor-pointer whitespace-nowrap shrink-0">
           <span>Find Leads Free</span>
           <span class="material-symbols-outlined text-[15px] shrink-0">arrow_forward</span>
         </a>
+        {% endif %}
       </div>
     </div>
   </header>
@@ -516,7 +555,7 @@
             </div>
             <h3 class="text-lg font-display font-bold text-primary mb-2">Find Local Companies in Any City</h3>
             <p class="text-xs text-on-surface-variant leading-relaxed mb-4">
-              Type any business type and city—like "Digital Marketing Agencies in Mumbai" or "Software Companies in Austin". OutreachPilot pulls real companies straight from Google Maps, complete with their verified website, address, phone number, and star ratings.
+              Type any business type and city, like "Digital Marketing Agencies in Mumbai" or "Software Companies in Austin". OutreachPilot pulls real companies straight from Google Maps, complete with their verified website, address, phone number, and star ratings.
             </p>
           </div>
           <div class="p-3.5 rounded-lg bg-surface-container-lowest border border-outline font-mono text-xs space-y-1.5">
@@ -542,7 +581,7 @@
             </div>
             <h3 class="text-base font-display font-bold text-primary mb-2">See What Each Company Does</h3>
             <p class="text-xs text-on-surface-variant leading-relaxed mb-3">
-              OutreachPilot automatically visits the company’s website to find what services they offer, what technologies they build with, and their direct contact emails.
+              OutreachPilot automatically visits the company's website to find what services they offer, what technologies they build with, and their direct contact emails.
             </p>
           </div>
           <div class="flex flex-wrap gap-1.5 pt-2 border-t border-outline">
@@ -701,7 +740,7 @@
             <span class="text-on-surface font-semibold">Active: <span class="text-secondary">{{ sub_info.tier_name }}</span></span>
             <span class="text-[11px] text-on-surface-variant">{{ sub_info.pitches_remaining }} / {{ sub_info.daily_pitch_limit }} pitches left today</span>
           </div>
-          <a href="/app" class="px-2.5 py-1 rounded bg-secondary text-on-secondary text-xs font-bold font-mono hover:opacity-90 transition">Open App</a>
+          <a href="/app" class="btn-tactile-ecru px-2.5 py-1 rounded text-xs font-bold font-mono">Open App</a>
         </div>
         {% endif %}
       </div>
@@ -830,14 +869,14 @@
           </div>
         </div>
 
-        <!-- Tier 3: Premium+ Unlimited -->
+        <!-- Tier 3: Premium+ -->
         <div class="bento-cell p-6 sm:p-7 border border-outline flex flex-col justify-between relative">
           <div>
             <div class="flex items-center justify-between mb-3">
               <span class="text-xs font-mono uppercase tracking-wider text-secondary font-bold">Intensive Agency &amp; Senior</span>
               <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-secondary/15 text-secondary border border-secondary/30">PREMIUM+</span>
             </div>
-            <h3 class="text-xl font-display font-bold text-primary">Premium+ Unlimited</h3>
+            <h3 class="text-xl font-display font-bold text-primary">Premium+</h3>
             <p class="text-xs text-on-surface-variant mt-1 mb-4">Maximum outreach volume with 1-click batch sending and cloud priority.</p>
 
             <div class="flex items-baseline gap-1 my-4 pb-4 border-b border-outline/50">
@@ -911,21 +950,106 @@
   </main>
 
   <!-- FOOTER -->
-  <footer class="w-full border-t border-outline bg-surface-dim py-8">
-    <div class="max-w-7xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs font-mono text-on-surface-variant">
-      <div class="flex items-center gap-2">
-        <span class="font-bold text-primary font-display">OutreachPilot</span>
-        <span>- Find Real Companies, Get Direct Emails &amp; Send Personal Outreach</span>
+  <!-- Crawlable links into the directory: a direct path for search engines (and people) to the largest city and category hubs. Lists come live from the database. -->
+  {% if browse_cities or browse_categories %}
+  <section aria-labelledby="browse-directory-heading" class="w-full border-t border-outline bg-surface py-14">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+        <div>
+          <h2 id="browse-directory-heading" class="text-2xl font-display font-bold text-on-surface">Browse the directory</h2>
+          <p class="mt-1 text-sm text-on-surface-variant">The cities and categories with the most companies, biggest first.</p>
+        </div>
+        <a href="/directory" class="inline-flex items-center gap-1 text-sm font-medium text-primary hover:text-secondary transition-colors shrink-0">
+          <span>See every city and category</span>
+          <span class="material-symbols-outlined text-[16px]" aria-hidden="true">arrow_forward</span>
+        </a>
       </div>
-      <div class="flex items-center gap-4">
-        <a href="/directory" class="text-primary hover:text-secondary font-medium transition-colors">B2B Directory</a>
-        <a href="/llms.txt" class="hover:text-primary transition-colors">llms.txt</a>
-        <a href="/app" class="hover:text-primary transition-colors">Workspace</a>
-        <a href="/privacy" class="hover:text-primary transition-colors">Privacy Policy</a>
-        <a href="/terms" class="hover:text-primary transition-colors">Terms of Service</a>
+
+      <div class="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {% if browse_cities %}
+        <nav aria-label="Companies by city" class="rounded-2xl border border-outline-variant/40 bg-surface-container-low p-5">
+          <h3 class="flex items-center gap-2 text-xs font-mono font-semibold uppercase tracking-wider text-on-surface-variant">
+            <span class="material-symbols-outlined text-[16px]" aria-hidden="true">location_city</span>
+            <span>By city</span>
+          </h3>
+          <ul class="mt-4 flex flex-wrap gap-2" role="list">
+            {% for c in browse_cities %}
+            <li>
+              <a href="/directory/city/{{ c.slug }}" class="inline-flex items-center rounded-full border border-outline-variant/50 bg-surface px-3.5 py-1.5 text-sm text-on-surface hover:border-primary hover:text-primary transition-colors">{{ c.name }}</a>
+            </li>
+            {% endfor %}
+          </ul>
+        </nav>
+        {% endif %}
+
+        {% if browse_categories %}
+        <nav aria-label="Companies by category" class="rounded-2xl border border-outline-variant/40 bg-surface-container-low p-5">
+          <h3 class="flex items-center gap-2 text-xs font-mono font-semibold uppercase tracking-wider text-on-surface-variant">
+            <span class="material-symbols-outlined text-[16px]" aria-hidden="true">category</span>
+            <span>By category</span>
+          </h3>
+          <ul class="mt-4 flex flex-wrap gap-2" role="list">
+            {% for t in browse_categories %}
+            <li>
+              <a href="/directory/category/{{ t.slug }}" class="inline-flex items-center rounded-full border border-outline-variant/50 bg-surface px-3.5 py-1.5 text-sm text-on-surface hover:border-primary hover:text-primary transition-colors">{{ t.name }}</a>
+            </li>
+            {% endfor %}
+          </ul>
+        </nav>
+        {% endif %}
       </div>
-      <div class="text-[11px] text-on-surface-variant/70">
-        &copy; 2026 OutreachPilot. All rights reserved.
+    </div>
+  </section>
+  {% endif %}
+
+  <footer class="w-full border-t border-outline bg-surface-dim">
+    <div class="max-w-7xl mx-auto px-6 pt-12 pb-8">
+      <div class="grid grid-cols-2 md:grid-cols-[1.618fr_1fr_1fr_1fr] gap-x-8 gap-y-10">
+        <div class="col-span-2 md:col-span-1 max-w-sm">
+          <a href="/" class="inline-flex items-center gap-2.5">
+            <span class="w-8 h-8 rounded-lg bg-surface-container-high border border-outline-variant flex items-center justify-center text-primary shrink-0">
+              <span class="material-symbols-outlined text-[19px]" aria-hidden="true">rocket_launch</span>
+            </span>
+            <span class="text-base font-bold font-display tracking-tight text-primary">OutreachPilot</span>
+          </a>
+          <p class="mt-3 text-sm leading-relaxed text-on-surface-variant">Find real companies, get direct emails and send personal outreach from your own Gmail.</p>
+        </div>
+
+        <nav aria-label="Product">
+          <h2 class="text-sm font-semibold text-on-surface">Product</h2>
+          <ul class="mt-3 space-y-2.5 text-sm text-on-surface-variant" role="list">
+            <li><a href="/app" class="hover:text-primary transition-colors">Workspace</a></li>
+            <li><a href="/#capabilities" class="hover:text-primary transition-colors">Features</a></li>
+            <li><a href="/#workflow" class="hover:text-primary transition-colors">How it works</a></li>
+            <li><a href="/#pricing" class="hover:text-primary transition-colors">Pricing</a></li>
+          </ul>
+        </nav>
+
+        <nav aria-label="Directory">
+          <h2 class="text-sm font-semibold text-on-surface">Directory</h2>
+          <ul class="mt-3 space-y-2.5 text-sm text-on-surface-variant" role="list">
+            <li><a href="/directory" class="hover:text-primary transition-colors">All cities and categories</a></li>
+            {% for c in (browse_cities or [])[:3] %}
+            <li><a href="/directory/city/{{ c.slug }}" class="hover:text-primary transition-colors">{{ c.name }}</a></li>
+            {% endfor %}
+          </ul>
+        </nav>
+
+        <nav aria-label="Legal">
+          <h2 class="text-sm font-semibold text-on-surface">Legal</h2>
+          <ul class="mt-3 space-y-2.5 text-sm text-on-surface-variant" role="list">
+            <li><a href="/privacy" class="hover:text-primary transition-colors">Privacy policy</a></li>
+            <li><a href="/terms" class="hover:text-primary transition-colors">Terms of service</a></li>
+          </ul>
+        </nav>
+      </div>
+
+      <div class="mt-10 pt-6 border-t border-outline flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-on-surface-variant">
+        <p>&copy; 2026 OutreachPilot. All rights reserved.</p>
+        <div class="flex items-center gap-5">
+          <a href="/sitemap.xml" class="hover:text-primary transition-colors">Sitemap</a>
+          <a href="/llms.txt" class="hover:text-primary transition-colors">llms.txt</a>
+        </div>
       </div>
     </div>
   </footer>

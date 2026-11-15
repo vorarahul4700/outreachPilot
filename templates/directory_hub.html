@@ -25,7 +25,7 @@
   <link rel="preload" href="/static/fonts/spacegrotesk-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/static/fonts/dmsans-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/static/css/fonts.css">
-  <link rel="stylesheet" href="/static/css/style.css?v=8.1">
+  <link rel="stylesheet" href="/static/css/style.css?v=8.9">
   <script src="https://cdn.tailwindcss.com/3.4.17?plugins=forms@0.5.10"></script>
 
   <script>
@@ -33,7 +33,7 @@
       try {
         const saved = localStorage.getItem('pilot_theme');
         const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const theme = saved ? saved : (prefersDark ? 'dark' : 'light');
+        const theme = saved ? saved : 'light'; /* default: light */
         if (theme === 'light') {
           document.documentElement.classList.remove('dark');
           document.documentElement.classList.add('light');
@@ -120,8 +120,8 @@
         </a>
         <nav class="hidden md:flex items-center gap-4 text-xs font-mono text-on-surface-variant whitespace-nowrap shrink-0">
           <a href="/directory" class="text-primary font-semibold border-b-2 border-secondary pb-0.5 whitespace-nowrap">Directory</a>
-          <a href="/#workflow" class="hover:text-primary transition-colors whitespace-nowrap">Protocol</a>
-          <a href="/#capabilities" class="hover:text-primary transition-colors whitespace-nowrap">Engine</a>
+          <a href="/#workflow" class="hover:text-primary transition-colors whitespace-nowrap">How It Works</a>
+          <a href="/#capabilities" class="hover:text-primary transition-colors whitespace-nowrap">Features</a>
         </nav>
       </div>
 
@@ -217,59 +217,69 @@
         </div>
 
         {% if companies and companies|length > 0 %}
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3.5">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {% for c in companies %}
-          <div class="bento-cell p-4 flex flex-col justify-between">
+          <div class="rounded-xl border border-outline-variant/40 bg-surface-container-low p-4 sm:p-5 flex flex-col justify-between hover:border-secondary/60 hover:shadow-md transition-all group">
             <div>
-              <div class="flex items-start justify-between gap-2 mb-2">
-                <a href="/company/{{ c.slug }}" class="font-display font-bold text-sm text-primary hover:text-secondary transition-colors line-clamp-1" title="{{ c.name }}">
+              <div class="flex items-start justify-between gap-2.5 mb-2">
+                <a href="/company/{{ c.slug }}" class="font-display font-bold text-sm text-on-surface hover:text-secondary transition-colors line-clamp-1" title="{{ c.name }}">
                   {{ c.name }}
                 </a>
-                <span class="text-xs font-mono text-secondary flex items-center gap-0.5 shrink-0">
+                <span class="text-xs font-mono text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20 flex items-center gap-1 shrink-0 font-semibold">
                   <span class="material-symbols-outlined text-[13px] fill-current">star</span>
                   <span class="tnum">{{ c.rating }}</span>
-                  <span class="text-on-surface-variant text-[10px] tnum">({{ c.reviews_count }})</span>
+                  <span class="text-on-surface-variant text-[10px] tnum font-normal">({{ c.reviews_count }})</span>
                 </span>
               </div>
 
-              <div class="text-[11px] font-mono text-on-surface-variant flex items-center gap-1.5 mb-2.5 flex-wrap">
-                <span class="material-symbols-outlined text-[13px]">location_on</span>
-                <span>{{ c.city }}</span>
-                <span class="text-outline-variant">|</span>
-                <span class="text-primary truncate">{{ c.domain }}</span>
+              <div class="text-[11px] font-mono text-on-surface-variant flex items-center gap-1.5 mb-3 flex-wrap">
+                <span class="flex items-center gap-0.5 text-on-surface-variant/80">
+                  <span class="material-symbols-outlined text-[13px]">location_on</span>
+                  <span>{{ c.city }}</span>
+                </span>
+                <span class="h-3 w-px bg-outline-variant/50" aria-hidden="true"></span>
+                <a href="{{ c.website_url if c.website_url else 'https://' + c.domain }}" target="_blank" rel="noopener noreferrer" class="text-primary hover:underline truncate max-w-[140px] inline-flex items-center gap-0.5">
+                  <span class="truncate">{{ c.domain }}</span>
+                  <span class="material-symbols-outlined text-[11px] shrink-0">open_in_new</span>
+                </a>
                 {% if c.industry_domain %}
-                <span class="text-outline-variant">|</span>
+                <span class="h-3 w-px bg-outline-variant/50" aria-hidden="true"></span>
                 <span class="text-[10px] px-1.5 py-0.2 rounded bg-surface-container border border-outline-variant/40 text-on-surface-variant">{{ c.industry_domain }}</span>
                 {% endif %}
               </div>
 
               {% if c.profile.summary %}
-              <p class="text-xs text-on-surface-variant leading-relaxed line-clamp-2 mb-3 font-sans">
+              <p class="text-xs text-on-surface-variant leading-relaxed line-clamp-2 mb-3 font-sans min-h-[36px]">
                 {{ c.profile.summary }}
               </p>
+              {% else %}
+              <div class="min-h-[36px] mb-3 text-xs text-on-surface-variant/40 italic">
+                Verified commercial entity with crawled domain intelligence.
+              </div>
               {% endif %}
 
               <!-- Tech Stack Badges -->
               {% if c.tech_stack and c.tech_stack|length > 0 %}
-              <div class="flex flex-wrap gap-1 mb-3">
-                {% for tag in c.tech_stack %}
-                <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-surface-container-high text-primary border border-outline">
+              <div class="flex flex-wrap gap-1 mb-4 min-h-[24px]">
+                {% for tag in c.tech_stack[:4] %}
+                <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-surface-container text-on-surface-variant border border-outline-variant/40">
                   {{ tag }}
                 </span>
                 {% endfor %}
               </div>
+              {% else %}
+              <div class="min-h-[24px] mb-4"></div>
               {% endif %}
             </div>
 
-            <div class="pt-2.5 border-t border-outline flex items-center justify-between text-xs font-mono">
-              <a href="/app?action=pitch&company_id={{ c.id }}&company_name={{ c.name | urlencode }}" class="text-[11px] font-semibold text-secondary hover:underline flex items-center gap-1">
+            <div class="pt-3 border-t border-outline-variant/30 grid grid-cols-2 gap-2 text-xs font-mono">
+              <a href="/company/{{ c.slug }}" class="h-8 px-2.5 rounded-lg border border-outline-variant/50 bg-surface-container hover:bg-surface-container-high text-on-surface flex items-center justify-center gap-1 font-semibold transition-all">
+                <span>Dossier</span>
+                <span class="material-symbols-outlined text-[13px]">arrow_forward</span>
+              </a>
+              <a href="/app?action=pitch&company_id={{ c.id }}&company_name={{ c.name | urlencode }}" class="h-8 px-2.5 rounded-lg bg-primary hover:bg-primary/90 text-on-primary flex items-center justify-center gap-1 font-semibold transition-all shadow-xs">
                 <span class="material-symbols-outlined text-[13px]">send</span>
                 <span>Pitch Lead</span>
-              </a>
-
-              <a href="/company/{{ c.slug }}" class="text-xs font-semibold text-primary hover:text-secondary flex items-center gap-1 transition-colors">
-                <span>View Dossier</span>
-                <span class="material-symbols-outlined text-[13px]">arrow_forward</span>
               </a>
             </div>
           </div>

@@ -5,27 +5,27 @@
   <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
   <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg">
   <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
-  <title>{{ company.name }} - Tech Stack, Services &amp; Company Intelligence | OutreachPilot</title>
+  <title>{{ company.name }}{% if company.city %} - {{ company.city }}{% endif %} | Company profile | OutreachPilot</title>
   <meta name="description" content="{{ meta_description }}"/>
   <link rel="canonical" href="{{ canonical_url }}"/>
 
   <!-- Open Graph -->
   <meta property="og:type" content="business.business"/>
   <meta property="og:url" content="{{ canonical_url }}"/>
-  <meta property="og:title" content="{{ company.name }} - Tech Stack &amp; Verified B2B Profile"/>
+  <meta property="og:title" content="{{ company.name }}{% if company.city %} in {{ company.city }}{% endif %} | OutreachPilot"/>
   <meta property="og:description" content="{{ meta_description }}"/>
   <meta property="og:site_name" content="OutreachPilot"/>
 
   <!-- Twitter -->
-  <meta name="twitter:card" content="summary_large_image"/>
-  <meta name="twitter:title" content="{{ company.name }} - Verified Company Dossier"/>
+  <meta name="twitter:card" content="summary"/>
+  <meta name="twitter:title" content="{{ company.name }}{% if company.city %} in {{ company.city }}{% endif %}"/>
   <meta name="twitter:description" content="{{ meta_description }}"/>
 
   <!-- Typography -->
   <link rel="preload" href="/static/fonts/spacegrotesk-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="preload" href="/static/fonts/dmsans-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/static/css/fonts.css">
-  <link rel="stylesheet" href="/static/css/style.css?v=8.1">
+  <link rel="stylesheet" href="/static/css/style.css?v=8.9">
   <script src="https://cdn.tailwindcss.com/3.4.17?plugins=forms@0.5.10"></script>
 
   <script>
@@ -33,7 +33,7 @@
       try {
         const saved = localStorage.getItem('pilot_theme');
         const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const theme = saved ? saved : (prefersDark ? 'dark' : 'light');
+        const theme = saved ? saved : 'light'; /* default: light */
         if (theme === 'light') {
           document.documentElement.classList.remove('dark');
           document.documentElement.classList.add('light');
@@ -98,6 +98,16 @@
       background-color: #DFDCD5;
       transform: translateY(-1px);
     }
+    .card {
+      background-color: rgb(var(--color-surface-container-low));
+      border: 1px solid rgb(var(--color-outline));
+      border-radius: 1rem;
+    }
+    .section-title { font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 1.05rem; color: rgb(var(--color-primary)); }
+    .facts dt { font-size: 0.75rem; color: rgb(var(--color-on-surface-variant)); }
+    .facts dd { font-size: 0.875rem; color: rgb(var(--color-on-surface)); overflow-wrap: anywhere; }
+    .dossier-rendered h2, .dossier-rendered h3 { font-family: "Space Grotesk", sans-serif; font-weight: 700; color: rgb(var(--color-primary)); margin-top: 1.25rem; }
+    .dossier-rendered p, .dossier-rendered li { font-size: 0.9rem; line-height: 1.65; color: rgb(var(--color-on-surface)); }
   </style>
 
   <!-- Schema.org JSON-LD Structured Data (Organization / LocalBusiness) -->
@@ -119,8 +129,8 @@
         </a>
         <nav class="hidden md:flex items-center gap-4 text-xs font-mono text-on-surface-variant whitespace-nowrap shrink-0">
           <a href="/directory" class="text-primary font-semibold border-b-2 border-secondary pb-0.5 whitespace-nowrap">Directory</a>
-          <a href="/#workflow" class="hover:text-primary transition-colors whitespace-nowrap">Protocol</a>
-          <a href="/#capabilities" class="hover:text-primary transition-colors whitespace-nowrap">Engine</a>
+          <a href="/#workflow" class="hover:text-primary transition-colors whitespace-nowrap">How it works</a>
+          <a href="/#capabilities" class="hover:text-primary transition-colors whitespace-nowrap">Features</a>
         </nav>
       </div>
 
@@ -128,8 +138,8 @@
         <button id="btn-theme-toggle" type="button" aria-label="Toggle Theme" class="w-8 h-8 rounded-lg flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container border border-outline-variant/40 transition cursor-pointer shrink-0">
           <span id="theme-toggle-icon" class="material-symbols-outlined text-[18px]">light_mode</span>
         </button>
-        <a href="/app?action=pitch&company_id={{ company.id }}&company_name={{ company.name | urlencode }}" class="btn-tactile-ecru flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-bold whitespace-nowrap shrink-0">
-          <span>Pitch This Company</span>
+        <a href="/app?action=pitch&company_id={{ company.id }}&company_name={{ company.name | urlencode }}" class="btn-tactile-ecru hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap shrink-0">
+          <span>Write a pitch</span>
           <span class="material-symbols-outlined text-[14px] shrink-0">arrow_forward</span>
         </a>
       </div>
@@ -138,208 +148,186 @@
 
   <!-- BREADCRUMBS -->
   <nav class="w-full border-b border-outline/60 bg-surface-container-lowest/40" aria-label="Breadcrumb">
-    <div class="max-w-6xl mx-auto px-6 py-2.5 text-xs font-mono text-on-surface-variant flex items-center gap-2">
-      <a href="/" class="hover:text-primary transition-colors">Home</a>
-      <span class="text-outline-variant">/</span>
-      <a href="/directory" class="hover:text-primary transition-colors">Directory</a>
-      <span class="text-outline-variant">/</span>
-      <a href="/directory/city/{{ city_slug }}" class="hover:text-primary transition-colors">{{ company.city }}</a>
-      <span class="text-outline-variant">/</span>
-      <span class="text-primary font-medium truncate max-w-[200px] sm:max-w-none">{{ company.name }}</span>
-    </div>
+    <ol class="max-w-6xl mx-auto px-4 sm:px-6 py-2.5 text-xs text-on-surface-variant flex items-center gap-2 min-w-0">
+      <li><a href="/" class="hover:text-primary transition-colors">Home</a></li>
+      <li aria-hidden="true" class="text-outline-variant">/</li>
+      <li><a href="/directory" class="hover:text-primary transition-colors">Directory</a></li>
+      {% if company.city %}
+      <li aria-hidden="true" class="text-outline-variant">/</li>
+      <li><a href="/directory/city/{{ city_slug }}" class="hover:text-primary transition-colors">{{ company.city }}</a></li>
+      {% endif %}
+      <li aria-hidden="true" class="text-outline-variant">/</li>
+      <li class="text-primary font-medium truncate min-w-0" aria-current="page">{{ company.name }}</li>
+    </ol>
   </nav>
 
-  <main class="flex-grow flex flex-col items-center w-full px-6 py-10">
-    <div class="w-full max-w-4xl space-y-8">
+  {% set p = company.profile %}
+  {% set has_research = p.summary or p.services or p.tech_stack or p.hiring_signals or p.detailed_analysis %}
+  {% set pitch_url = "/app?action=pitch&company_id=" ~ company.id ~ "&company_name=" ~ (company.name | urlencode) %}
 
-      <!-- COMPANY HEADER HERO -->
-      <section class="bento-cell p-6 space-y-4">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-outline pb-4">
-          <div>
-            <div class="flex items-center gap-2 mb-2 flex-wrap">
-              <div class="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-secondary/10 border border-secondary/25 text-[11px] font-mono text-secondary">
-                <span class="material-symbols-outlined text-[13px]">verified</span>
-                <span>Verified B2B Lead Dossier</span>
-              </div>
-              {% if company.industry_domain %}
-              <a href="/directory/companies?domain={{ company.domain_code or 'it' }}" class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-surface-container border border-outline hover:border-secondary/50 text-[11px] font-mono text-on-surface-variant hover:text-primary transition-colors" title="Browse all {{ company.industry_domain }} companies">
-                <span class="material-symbols-outlined text-[12px] text-secondary">category</span>
-                <span>{{ company.industry_domain }}</span>
-              </a>
+  <main class="flex-grow w-full">
+    <!-- HERO -->
+    <section class="border-b border-outline bg-surface-container-lowest/40">
+      <div class="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-10 flex flex-col sm:flex-row sm:items-center gap-5">
+        <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-surface-container-high border border-outline-variant flex items-center justify-center font-display font-bold text-xl text-primary shrink-0" aria-hidden="true">
+          {{ (company.name or "?")[:2] | upper }}
+        </div>
+        <div class="min-w-0 flex-1">
+          <h1 class="text-2xl sm:text-3xl font-display font-bold text-primary tracking-tight break-words">{{ company.name }}</h1>
+          <div class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-sm text-on-surface-variant">
+            {% if company.category %}
+              {% if company.category_slug %}
+              <a href="/directory/category/{{ company.category_slug }}" class="inline-flex items-center rounded-full border border-outline-variant/60 bg-surface px-2.5 py-0.5 text-xs text-on-surface hover:border-primary hover:text-primary transition-colors">{{ company.category }}</a>
+              {% else %}
+              <span class="inline-flex items-center rounded-full border border-outline-variant/60 bg-surface px-2.5 py-0.5 text-xs text-on-surface">{{ company.category }}</span>
               {% endif %}
-            </div>
-            <h1 class="text-2xl sm:text-3xl font-display font-bold text-primary tracking-tight">
-              {{ company.name }}
-            </h1>
-            <div class="flex flex-wrap items-center gap-2 text-xs font-mono text-on-surface-variant mt-1.5">
-              <span class="flex items-center gap-1 text-primary">
-                <span class="material-symbols-outlined text-[14px]">location_on</span>
-                <span>{{ company.city }}, India</span>
-              </span>
-              <span class="text-outline-variant">•</span>
-              <a href="{{ company.website_url }}" target="_blank" rel="nofollow noopener noreferrer" class="hover:text-secondary underline flex items-center gap-0.5">
-                <span>{{ company.domain }}</span>
-                <span class="material-symbols-outlined text-[11px]">open_in_new</span>
-              </a>
-            </div>
-          </div>
-
-          <!-- Rating & Contact Badge -->
-          <div class="flex sm:flex-col items-center sm:items-end justify-between gap-2 shrink-0">
-            <div class="flex items-center gap-1 text-secondary font-mono font-bold text-sm bg-surface-container px-2.5 py-1 rounded border border-outline">
-              <span class="material-symbols-outlined text-[15px] fill-current">star</span>
-              <span class="tnum">{{ company.rating }}</span>
-              <span class="text-on-surface-variant text-xs font-normal tnum">({{ company.reviews_count }} reviews)</span>
-            </div>
-            <span class="text-[11px] font-mono {% if company.has_emails %}text-secondary{% else %}text-on-surface-variant{% endif %} flex items-center gap-1">
-              <span class="material-symbols-outlined text-[13px]">{% if company.has_emails %}mark_email_read{% else %}mail{% endif %}</span>
-              <span>{% if company.has_emails %}Verified Contacts Ready{% else %}Public Lead{% endif %}</span>
-            </span>
+            {% endif %}
+            {% if company.city %}
+            <span class="inline-flex items-center gap-1"><span class="material-symbols-outlined text-[16px]" aria-hidden="true">location_on</span>{{ company.city }}, India</span>
+            {% endif %}
+            {% if company.rating %}
+            <span class="inline-flex items-center gap-1 tnum"><span class="material-symbols-outlined text-[16px] text-secondary" aria-hidden="true">star</span>{{ "%.1f"|format(company.rating) }}{% if company.reviews_count %} <span class="text-xs">({{ "{:,}".format(company.reviews_count) }} Google reviews)</span>{% endif %}</span>
+            {% endif %}
           </div>
         </div>
-
-        <!-- AI EXECUTIVE SUMMARY -->
-        <div class="space-y-2">
-          <h2 class="text-xs font-mono uppercase tracking-wider text-on-surface-variant font-semibold flex items-center gap-1.5">
-            <span class="material-symbols-outlined text-[15px] text-secondary">psychology</span>
-            <span>AI Executive Overview</span>
-          </h2>
-          <p class="text-sm text-on-surface leading-relaxed font-sans">
-            {{ company.profile.summary }}
-          </p>
-        </div>
-
-        <!-- ACTION ROW -->
-        <div class="pt-2 flex flex-wrap items-center justify-between gap-3 text-xs font-mono">
-          <div class="flex items-center gap-2">
-            <span class="text-on-surface-variant">Industry:</span>
-            <span class="text-primary font-medium">{{ company.industry_domain or company.profile.industry }}</span>
-          </div>
-          <a href="/app?action=pitch&company_id={{ company.id }}&company_name={{ company.name | urlencode }}" class="btn-tactile-ecru flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold">
-            <span class="material-symbols-outlined text-[14px]">send</span>
-            <span>Draft AI Pitch via Gmail</span>
+        <div class="flex flex-wrap gap-2 shrink-0">
+          <a href="{{ pitch_url }}" class="btn-tactile-ecru inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm">
+            <span class="material-symbols-outlined text-[16px]" aria-hidden="true">edit_note</span><span>Write a pitch</span>
           </a>
-        </div>
-      </section>
-
-      <!-- VERIFIED ENGINEERING TECH STACK -->
-      <section class="bento-cell p-6 space-y-4">
-        <div class="flex items-center justify-between border-b border-outline pb-2">
-          <h2 class="text-base font-display font-bold text-primary flex items-center gap-2">
-            <span class="material-symbols-outlined text-[18px] text-secondary">memory</span>
-            <span>Verified Technology Stack &amp; Frameworks</span>
-          </h2>
-          <span class="text-[11px] font-mono text-tertiary px-2 py-0.5 rounded bg-tertiary/10 border border-tertiary/25">Crawl-Verified</span>
-        </div>
-        <p class="text-xs text-on-surface-variant leading-relaxed">
-          The following technologies and frameworks were identified during automated multi-pass crawler inspection of {{ company.domain }}'s production scripts, server headers, and web architecture.
-        </p>
-
-        {% if company.profile.tech_stack and company.profile.tech_stack|length > 0 %}
-        <div class="flex flex-wrap gap-2 pt-1">
-          {% for tech in company.profile.tech_stack %}
-          <span class="px-3 py-1.5 rounded-lg text-xs font-mono font-medium bg-surface-container-high text-primary border border-outline hover:border-secondary transition-colors">
-            {{ tech }}
-          </span>
-          {% endfor %}
-        </div>
-        {% else %}
-        <div class="p-3 rounded bg-surface-container text-xs font-mono text-on-surface-variant">
-          Standard web technology stack detected.
-        </div>
-        {% endif %}
-      </section>
-
-      <!-- CORE SERVICES & CAPABILITIES -->
-      <section class="bento-cell p-6 space-y-4">
-        <div class="flex items-center justify-between border-b border-outline pb-2">
-          <h2 class="text-base font-display font-bold text-primary flex items-center gap-2">
-            <span class="material-symbols-outlined text-[18px] text-secondary">design_services</span>
-            <span>Services &amp; Development Offerings</span>
-          </h2>
-          <span class="text-[11px] font-mono text-on-surface-variant">Crawl Data</span>
-        </div>
-
-        {% if company.profile.services and company.profile.services|length > 0 %}
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-          {% for serv in company.profile.services %}
-          <div class="p-3 rounded-lg bg-surface-container-high/40 border border-outline text-xs font-mono text-primary flex items-center gap-2">
-            <span class="material-symbols-outlined text-sm text-secondary">check_circle</span>
-            <span>{{ serv }}</span>
-          </div>
-          {% endfor %}
-        </div>
-        {% else %}
-        <p class="text-xs text-on-surface-variant">Custom Software and Technology Solutions.</p>
-        {% endif %}
-      </section>
-
-      <!-- HIRING & GROWTH SIGNALS -->
-      {% if company.profile.hiring_signals %}
-      <section class="bento-cell p-6 space-y-3">
-        <h2 class="text-base font-display font-bold text-primary flex items-center gap-2">
-          <span class="material-symbols-outlined text-[18px] text-secondary">trending_up</span>
-          <span>Hiring &amp; Team Signals</span>
-        </h2>
-        <div class="p-3.5 rounded-lg bg-surface-container border border-outline font-mono text-xs text-on-surface flex items-start gap-2.5">
-          <span class="material-symbols-outlined text-sm text-secondary mt-0.5">radar</span>
-          <span>{{ company.profile.hiring_signals }}</span>
-        </div>
-      </section>
-      {% endif %}
-
-      <!-- DEEP TECHNICAL ANALYSIS (IF ENRICHED) -->
-      {% if company.profile.detailed_analysis %}
-      <section class="bento-cell p-6 space-y-4">
-        <div class="flex items-center justify-between border-b border-outline pb-2">
-          <h2 class="text-base font-display font-bold text-primary flex items-center gap-2">
-            <span class="material-symbols-outlined text-[18px] text-secondary">analytics</span>
-            <span>Detailed Technical Dossier</span>
-          </h2>
-          <span class="text-[11px] font-mono text-secondary px-2 py-0.5 rounded bg-secondary/10 border border-secondary/25">Multi-Pass Intelligence</span>
-        </div>
-        {% if company.profile.detailed_analysis_html %}
-        <div class="dossier-rendered space-y-4 pt-1">
-          {{ company.profile.detailed_analysis_html | safe }}
-        </div>
-        {% else %}
-        <div class="text-xs font-sans text-on-surface-variant leading-relaxed whitespace-pre-line p-4 rounded-lg bg-surface-container-high/30 border border-outline">
-          {{ company.profile.detailed_analysis }}
-        </div>
-        {% endif %}
-      </section>
-      {% endif %}
-
-      <!-- RELATED COMPANIES IN THIS CITY -->
-      {% if nearby_companies and nearby_companies|length > 0 %}
-      <section class="space-y-3">
-        <h2 class="text-xs font-mono uppercase tracking-wider text-on-surface-variant font-semibold">
-          Other Verified Tech Companies in {{ company.city }}
-        </h2>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-          {% for n in nearby_companies %}
-          <a href="/company/{{ n.slug }}" class="bento-cell p-3 flex flex-col justify-between hover:border-secondary transition-colors group">
-            <span class="font-display font-bold text-xs text-primary group-hover:text-secondary line-clamp-1">{{ n.name }}</span>
-            <div class="flex items-center justify-between text-[11px] font-mono text-on-surface-variant mt-2 pt-1.5 border-t border-outline/50">
-              <span class="truncate">{{ n.domain }}</span>
-              <span class="text-secondary tnum">{{ n.rating }}★</span>
-            </div>
+          {% if company.website_url %}
+          <a href="{{ company.website_url }}" target="_blank" rel="nofollow noopener noreferrer" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm border border-outline-variant text-on-surface hover:border-primary hover:text-primary transition-colors">
+            <span>Visit website</span><span class="material-symbols-outlined text-[15px]" aria-hidden="true">open_in_new</span>
           </a>
-          {% endfor %}
+          {% endif %}
         </div>
-      </section>
-      {% endif %}
+      </div>
+    </section>
 
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-10 grid grid-cols-1 lg:grid-cols-[1.618fr_1fr] gap-6 lg:gap-8 items-start">
+
+      <!-- MAIN COLUMN -->
+      <div class="space-y-6 min-w-0">
+        {% if has_research %}
+          {% if p.summary %}
+          <section class="card p-6" aria-labelledby="about-h">
+            <h2 id="about-h" class="section-title">About {{ company.name }}</h2>
+            <p class="mt-3 text-[0.95rem] leading-relaxed text-on-surface">{{ p.summary }}</p>
+            {% if p.industry %}<p class="mt-3 text-sm text-on-surface-variant">Industry: <span class="text-on-surface">{{ p.industry }}</span></p>{% endif %}
+          </section>
+          {% endif %}
+
+          {% if p.services %}
+          <section class="card p-6" aria-labelledby="services-h">
+            <h2 id="services-h" class="section-title">What they do</h2>
+            <ul class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2" role="list">
+              {% for s in p.services %}
+              <li class="flex items-start gap-2 text-sm text-on-surface"><span class="material-symbols-outlined text-[16px] text-secondary mt-0.5" aria-hidden="true">check</span><span>{{ s }}</span></li>
+              {% endfor %}
+            </ul>
+          </section>
+          {% endif %}
+
+          {% if p.tech_stack %}
+          <section class="card p-6" aria-labelledby="tech-h">
+            <h2 id="tech-h" class="section-title">Technology</h2>
+            <p class="mt-1 text-sm text-on-surface-variant">Found on {{ company.domain or "their website" }}.</p>
+            <ul class="mt-4 flex flex-wrap gap-2" role="list">
+              {% for tech in p.tech_stack %}
+              <li class="px-3 py-1 rounded-full text-sm bg-surface border border-outline-variant/60 text-on-surface">{{ tech }}</li>
+              {% endfor %}
+            </ul>
+          </section>
+          {% endif %}
+
+          {% if p.hiring_signals %}
+          <section class="card p-6" aria-labelledby="hiring-h">
+            <h2 id="hiring-h" class="section-title">Hiring and team</h2>
+            <p class="mt-3 text-sm leading-relaxed text-on-surface">{{ p.hiring_signals }}</p>
+          </section>
+          {% endif %}
+
+          {% if p.detailed_analysis %}
+          <section class="card p-6" aria-labelledby="report-h">
+            <h2 id="report-h" class="section-title">Full research report</h2>
+            {% if p.detailed_analysis_html %}
+            <div class="dossier-rendered mt-2 space-y-3">{{ p.detailed_analysis_html | safe }}</div>
+            {% else %}
+            <div class="mt-3 text-sm leading-relaxed text-on-surface whitespace-pre-line">{{ p.detailed_analysis }}</div>
+            {% endif %}
+          </section>
+          {% endif %}
+        {% else %}
+          <section class="card p-6 sm:p-8" aria-labelledby="empty-h">
+            <span class="material-symbols-outlined text-[28px] text-on-surface-variant" aria-hidden="true">travel_explore</span>
+            <h2 id="empty-h" class="section-title mt-2">Not researched yet</h2>
+            <p class="mt-2 text-sm leading-relaxed text-on-surface-variant max-w-prose">
+              We have not read this company's website yet, so there is no summary, service list or tech stack here.
+              The details on this page come from its public Google listing. When you write a pitch, OutreachPilot researches the company first.
+            </p>
+            <a href="{{ pitch_url }}" class="btn-tactile-ecru mt-5 inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm">
+              <span class="material-symbols-outlined text-[16px]" aria-hidden="true">edit_note</span><span>Research and write a pitch</span>
+            </a>
+          </section>
+        {% endif %}
+      </div>
+
+      <!-- AT A GLANCE -->
+      <aside class="lg:sticky lg:top-20 space-y-4" aria-labelledby="glance-h">
+        <section class="card p-5">
+          <h2 id="glance-h" class="section-title">At a glance</h2>
+          <dl class="facts mt-4 space-y-3.5">
+            {% if company.website_url %}
+            <div><dt>Website</dt><dd><a href="{{ company.website_url }}" target="_blank" rel="nofollow noopener noreferrer" class="hover:text-primary underline decoration-outline-variant underline-offset-2">{{ company.domain or company.website_url }}</a></dd></div>
+            {% endif %}
+            {% if company.phone %}
+            <div><dt>Phone</dt><dd><a href="tel:{{ company.phone | replace(' ', '') }}" class="hover:text-primary tnum">{{ company.phone }}</a></dd></div>
+            {% endif %}
+            {% if company.address %}
+            <div><dt>Address</dt><dd>{{ company.address }}{% if company.location_url %} <a href="{{ company.location_url }}" target="_blank" rel="nofollow noopener noreferrer" class="whitespace-nowrap text-xs text-on-surface-variant hover:text-primary underline underline-offset-2">Open map</a>{% endif %}</dd></div>
+            {% elif company.location_url %}
+            <div><dt>Location</dt><dd><a href="{{ company.location_url }}" target="_blank" rel="nofollow noopener noreferrer" class="hover:text-primary underline underline-offset-2">Open map</a></dd></div>
+            {% endif %}
+            <div><dt>Google rating</dt><dd class="tnum">{% if company.rating %}{{ "%.1f"|format(company.rating) }} out of 5{% if company.reviews_count %}, {{ "{:,}".format(company.reviews_count) }} reviews{% endif %}{% else %}No rating yet{% endif %}</dd></div>
+            <div><dt>Contact emails</dt><dd>{% if company.emails_count %}{{ company.emails_count }} found{% else %}None found yet{% endif %}</dd></div>
+            <div><dt>Website research</dt><dd>{% if has_research %}Done{% else %}Not yet{% endif %}</dd></div>
+          </dl>
+          <a href="{{ pitch_url }}" class="btn-tactile-ecru mt-5 w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg text-sm">
+            <span class="material-symbols-outlined text-[16px]" aria-hidden="true">edit_note</span><span>Write a pitch</span>
+          </a>
+        </section>
+      </aside>
     </div>
+
+    {% if nearby_companies %}
+    <section class="max-w-6xl mx-auto px-4 sm:px-6 pb-12" aria-labelledby="nearby-h">
+      <div class="flex items-end justify-between gap-3">
+        <h2 id="nearby-h" class="section-title">More companies in {{ company.city }}</h2>
+        {% if city_slug %}<a href="/directory/city/{{ city_slug }}" class="text-sm text-primary hover:text-secondary whitespace-nowrap">See all</a>{% endif %}
+      </div>
+      <ul class="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3" role="list">
+        {% for n in nearby_companies %}
+        <li>
+          <a href="/company/{{ n.slug }}" class="card p-4 flex items-center gap-3 hover:border-primary transition-colors h-full">
+            <span class="w-9 h-9 rounded-xl bg-surface-container-high border border-outline-variant flex items-center justify-center font-display font-bold text-xs text-primary shrink-0" aria-hidden="true">{{ (n.name or "?")[:2] | upper }}</span>
+            <span class="min-w-0">
+              <span class="block font-display font-semibold text-sm text-primary truncate">{{ n.name }}</span>
+              <span class="block text-xs text-on-surface-variant truncate">{% if n.rating %}{{ "%.1f"|format(n.rating) }} on Google{% endif %}{% if n.rating and n.domain %}, {% endif %}{{ n.domain or "" }}</span>
+            </span>
+          </a>
+        </li>
+        {% endfor %}
+      </ul>
+    </section>
+    {% endif %}
   </main>
 
   <!-- FOOTER -->
-  <footer class="w-full border-t border-outline bg-background py-8 text-xs font-mono text-on-surface-variant">
-    <div class="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-      <div>&copy; 2026 OutreachPilot. Direct Recruiter Outreach & Career Discovery Engine. All rights reserved.</div>
+  <footer class="w-full border-t border-outline bg-background py-8 text-xs text-on-surface-variant">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div>&copy; 2026 OutreachPilot</div>
       <div class="flex items-center gap-4">
         <a href="/directory" class="hover:text-primary transition-colors">Directory</a>
-        <a href="/directory/city/{{ city_slug }}" class="hover:text-primary transition-colors">{{ company.city }} Hub</a>
+        {% if city_slug %}<a href="/directory/city/{{ city_slug }}" class="hover:text-primary transition-colors">{{ company.city }}</a>{% endif %}
         <a href="/llms.txt" class="hover:text-primary transition-colors">llms.txt</a>
         <a href="/sitemap.xml" class="hover:text-primary transition-colors">sitemap.xml</a>
       </div>
