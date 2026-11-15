@@ -1,5 +1,5 @@
 """
-OutreachPilot - Comprehensive SEO, AEO & GEO Engine
+OutreachPilot - SEO, AEO & GEO Engine
 File: seo_engine.py
 
 Provides:
@@ -64,7 +64,7 @@ def get_canonical_base_url(request: Request = None) -> str:
         host = request.headers.get("x-forwarded-host", request.headers.get("host", request.url.netloc))
         return f"{proto}://{host}".rstrip("/")
 
-    return "https://outreachpilot.com"
+    return "https://outreachpilot.in"
 
 
 # --- Dynamic Multi-Domain Taxonomy, Categorization & Slugging Engine ---
@@ -1213,7 +1213,7 @@ def render_dossier_markdown(md_text: str) -> str:
             item_text = re.sub(r'\*\*([^*]+)\*\*', r'<strong class="text-primary font-semibold">\1</strong>', item_text)
             html_parts.append(
                 f'<div class="flex items-start gap-2 py-1 text-on-surface-variant">'
-                f'<span class="text-secondary font-mono mt-0.5">•</span>'
+                f'<span class="mt-2 h-1.5 w-1.5 rounded-full bg-secondary shrink-0" aria-hidden="true"></span>'
                 f'<span>{item_text}</span>'
                 f'</div>'
             )
@@ -1378,7 +1378,7 @@ def generate_llms_txt(base_url: str, db: Session) -> str:
 > Autonomous Direct Company Intelligence & Cold Outreach Platform for Job Seekers & Professionals indexing {stats['total_companies']:,}+ verified companies across {stats['total_cities']} Indian commercial hubs.
 
 ## Overview
-OutreachPilot empowers developers, designers, marketers, and professionals to bypass crowded job boards and reach hiring decision-makers directly. It deep-crawls and structures actionable intelligence on verified companies across India—including their tech stack, engineering capabilities, verified recruiter/founder emails, and company culture—enabling candidates to generate and dispatch personalized cold pitches for career and job opportunities directly via authorized Google OAuth.
+OutreachPilot helps developers, designers, marketers, and professionals to bypass crowded job boards and reach hiring decision-makers directly. It deep-crawls and structures actionable intelligence on verified companies across India, including their tech stack, engineering capabilities, verified recruiter/founder emails, and company culture, so candidates can generate and dispatch personalized cold pitches for career and job opportunities directly via authorized Google OAuth.
 
 ## Verified Directory & Job Discovery Hubs
 - [Company Directory & Tech Explorer]({base_url}/directory): Explore verified companies, tech stacks, and career hubs across Indian commercial centers.
@@ -1414,9 +1414,9 @@ def generate_llms_full_txt(base_url: str, db: Session) -> str:
         return f", {item['avg_rating']}★ average" if item.get("avg_rating") is not None else ""
 
     cities_bullets = "\n".join([f"- {c['name']} (`{base_url}/directory/city/{c['slug']}`): {c['count']} companies{_rating_part(c)}" for c in cities])
-    techs_bullets = "\n".join([f"- {t['name']} (`{base_url}/directory/category/{t['slug']}`): {t['count']} companies{_rating_part(t)} — {t.get('domain', 'Business Specialization')}" for t in techs])
+    techs_bullets = "\n".join([f"- {t['name']} (`{base_url}/directory/category/{t['slug']}`): {t['count']} companies{_rating_part(t)} ({t.get('domain', 'Business Specialization')})" for t in techs])
 
-    return f"""# OutreachPilot — Comprehensive LLM Intelligence Knowledge Base
+    return f"""# OutreachPilot: LLM Knowledge Base
 
 ## Platform Identification
 - Official Name: OutreachPilot
@@ -1428,7 +1428,7 @@ def generate_llms_full_txt(base_url: str, db: Session) -> str:
 - Industry Verticals: {stats['total_techs']} Core Business Domains & Specializations (IT, Sales, Marketing, Pharma, Finance, Legal, Real Estate, Manufacturing)
 
 ## Core Mission
-To empower job seekers, engineering professionals, and career switchers to discover verified companies across India, analyze their technology stacks and hiring requirements, and synthesize high-converting, tailored cold emails sent directly to recruiters and founders via personal Google OAuth2.
+To help job seekers, engineering professionals, and career switchers to discover verified companies across India, analyze their technology stacks and hiring requirements, and synthesize high-converting, tailored cold emails sent directly to recruiters and founders via personal Google OAuth2.
 
 ## Complete Geographic Taxonomy ({len(cities)} Cities)
 {cities_bullets}

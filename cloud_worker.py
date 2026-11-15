@@ -470,10 +470,10 @@ def run_queue_consumer(
     """
     print(f"\n=======================================================")
     print(f"[Runner-{runner_id}] OutreachPilot Autonomous Queue Consumer Started")
-    print(f"  • Batch Budget : {batch_size} jobs")
-    print(f"  • Domain Filter: {domain_filter or 'All Queued Domains'}")
-    print(f"  • City Filter  : {city_filter or 'All Indian Cities'}")
-    print(f"  • Pagination   : All Pages Mode (No max page limit)")
+    print(f"  - Batch Budget : {batch_size} jobs")
+    print(f"  - Domain Filter: {domain_filter or 'All Queued Domains'}")
+    print(f"  - City Filter  : {city_filter or 'All Indian Cities'}")
+    print(f"  - Pagination   : All Pages Mode (No max page limit)")
     print(f"=======================================================\n")
 
     processed_count = 0

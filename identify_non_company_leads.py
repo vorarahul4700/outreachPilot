@@ -1091,7 +1091,7 @@ def apply_csv_cleanup(
 
         cat_counts = Counter(r["category_flag"] for r in rows)
         print("\n" + "=" * 72)
-        print(f" CLEANUP PLAN ({mode.upper()}) — {'DRY RUN (NO DB CHANGES)' if dry_run else 'LIVE EXECUTION'}")
+        print(f" CLEANUP PLAN ({mode.upper()}) - {'DRY RUN (NO DB CHANGES)' if dry_run else 'LIVE EXECUTION'}")
         print("=" * 72)
         print(f" Target companies selected : {len(target_ids)}")
         print(f" Breakdown by category     : {dict(cat_counts)}")
@@ -1235,7 +1235,7 @@ def main() -> None:
     summary = write_csv_reports(findings, Path(args.out_dir), min_score=args.min_score)
 
     print("\n" + "=" * 72)
-    print(" NON-COMPANY AUDIT COMPLETE (READ-ONLY — ZERO DB CHANGES)")
+    print(" NON-COMPANY AUDIT COMPLETE (READ-ONLY, ZERO DB CHANGES)")
     print("=" * 72)
     print(f" Total companies scanned : {summary['total_scanned']}")
     print(f" Total non-companies     : {summary['total_flagged']}")

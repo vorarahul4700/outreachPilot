@@ -1024,7 +1024,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || "Failed to process bulk upload");
 
-      resultTitle.textContent = "✓ Import Completed Successfully";
+      resultTitle.textContent = "Import completed successfully";
       resultDetails.innerHTML = `
         Total Rows in CSV: <strong>${data.total_rows}</strong><br>
         Newly Registered Leads: <strong class="text-emerald-500">${data.imported}</strong><br>
@@ -1072,13 +1072,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
       sanitizeStatusHeading.innerHTML = dryRun
         ? `Preview: <strong class="text-primary">${data.cleaned}</strong> candidates identified out of ${data.scanned} scanned`
-        : `✓ Migration Complete: <strong class="text-emerald-500">${data.cleaned}</strong> records cleaned in DB`;
+        : `Migration complete: <strong class="text-emerald-500">${data.cleaned}</strong> records cleaned in DB`;
       sanitizeStatusTime.textContent = `${data.elapsed_seconds}s`;
 
       if (data.samples && data.samples.length > 0) {
         sanitizeSamples.innerHTML = data.samples.map(s => `
           <div class="border-b border-outline-variant/20 pb-1">
-            <span class="text-rose-400 line-through">${s.before}</span> → <span class="text-emerald-400 font-semibold">${s.after}</span>
+            <span class="text-rose-400 line-through">${s.before}</span> <span class="material-symbols-outlined text-[14px] align-middle text-on-surface-variant" aria-label="becomes">arrow_forward</span> <span class="text-emerald-400 font-semibold">${s.after}</span>
           </div>
         `).join("");
       } else {
@@ -1134,7 +1134,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       purgeStatusHeading.innerHTML = dryRun
         ? `Audit: <strong class="text-amber-500">${data.flagged}</strong> non-company leads flagged out of ${data.scanned} scanned`
-        : `✓ Quarantined <strong class="text-rose-500">${data.flagged}</strong> non-company leads in DB`;
+        : `Quarantined <strong class="text-rose-500">${data.flagged}</strong> non-company leads in DB`;
       purgeStatusTime.textContent = `${data.elapsed_seconds}s`;
 
       if (data.samples && data.samples.length > 0) {
@@ -1206,7 +1206,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const limitDisplay = isMaster ? "Infinite pitches / day" : `${t.daily_pitch_limit} pitches / day`;
 
         const featureItems = (t.features || []).map(f =>
-          `<li class="flex items-center gap-2"><span class="${isMaster ? 'text-amber-500' : 'text-emerald-500'}">✓</span> <span>${f}</span></li>`
+          `<li class="flex items-center gap-2"><span class="material-symbols-outlined text-[16px] ${isMaster ? 'text-amber-500' : 'text-emerald-500'}">check</span> <span>${f}</span></li>`
         ).join("");
 
         return `

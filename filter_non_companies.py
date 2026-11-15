@@ -2,7 +2,7 @@
 OutreachPilot - High-Precision Non-Company Entity Filter & Removal Engine
 Identifies and invalidates entities that are educational institutes, coaching classes,
 academies, universities, tuition centers, or personal portfolios.
-Outputs a comprehensive audit CSV log of all excluded entities.
+Outputs a full audit CSV log of all excluded entities.
 """
 
 import os
