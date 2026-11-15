@@ -30,6 +30,8 @@
 
   <!-- Theme Script -->
   <script>
+    // Card limits and "Show all" only apply when JavaScript runs; without it every card shows.
+    document.documentElement.classList.add('js');
     (function() {
       try {
         const saved = localStorage.getItem('pilot_theme');
@@ -100,6 +102,47 @@
     .btn-tactile-ecru:hover {
       background-color: #DFDCD5;
       transform: translateY(-1px);
+    }
+
+    /* Show the biggest cards first, in full rows for each screen size:
+       phone 8 (2 per row), tablet 12 (3 or 4 per row), laptop 18 (6 per row).
+       "Show all" reveals the rest. Ranks come from the server and are kept
+       current by applyFilters(). */
+    .dir-section { scroll-margin-top: 4.5rem; }
+    .dir-more-btn { display: none; }
+    @media (max-width: 639px) {
+      html.js .dir-grid.is-collapsed > .over-8 { display: none; }
+      html.js .dir-section:not(.is-searching) .dir-more-btn.more-than-8 { display: inline-flex; }
+    }
+    @media (min-width: 640px) and (max-width: 1023px) {
+      html.js .dir-grid.is-collapsed > .over-12 { display: none; }
+      html.js .dir-section:not(.is-searching) .dir-more-btn.more-than-12 { display: inline-flex; }
+    }
+    @media (min-width: 1024px) {
+      html.js .dir-grid.is-collapsed > .over-18 { display: none; }
+      html.js .dir-section:not(.is-searching) .dir-more-btn.more-than-18 { display: inline-flex; }
+    }
+
+    /* Phone: industry buttons in one row you swipe sideways, edge to edge,
+       with a fade on the right until the end of the row is reached. */
+    @media (max-width: 639px) {
+      #domain-filter-pills {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        scrollbar-width: none;
+        -webkit-overflow-scrolling: touch;
+        margin-inline: -1.5rem;
+        padding-inline: 1.5rem;
+        padding-bottom: 2px;
+        -webkit-mask-image: linear-gradient(to right, #000 82%, transparent);
+        mask-image: linear-gradient(to right, #000 82%, transparent);
+      }
+      #domain-filter-pills::-webkit-scrollbar { display: none; }
+      #domain-filter-pills.at-end {
+        -webkit-mask-image: none;
+        mask-image: none;
+      }
+      #domain-filter-pills .domain-pill { flex: none; white-space: nowrap; }
     }
   </style>
 
@@ -190,13 +233,13 @@
             <span class="absolute inset-y-0 left-3 flex items-center text-on-surface-variant">
               <span class="material-symbols-outlined text-[18px]">search</span>
             </span>
-            <input type="text" id="dir-filter-input" placeholder="Filter by city name or specialization (e.g. Surat, React, Python)..." class="w-full pl-10 pr-4 py-2.5 rounded-lg bg-surface-container-high border border-outline text-xs font-mono text-primary placeholder:text-on-surface-variant/70 focus:outline-none focus:border-secondary transition">
+            <input type="text" id="dir-filter-input" placeholder="Search a city or category" class="w-full pl-10 pr-4 py-2.5 rounded-lg bg-surface-container-high border border-outline text-xs font-mono text-primary placeholder:text-on-surface-variant/70 focus:outline-none focus:border-secondary transition">
           </div>
         </div>
       </section>
 
       <!-- SECTION: BROWSE BY SPECIALIZATION & CATEGORY -->
-      <section id="tech-section" class="space-y-4">
+      <section id="tech-section" class="dir-section space-y-4">
         <div class="space-y-3 border-b border-outline pb-3">
           <div class="flex items-center justify-between">
             <div>
@@ -256,14 +299,14 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2.5" id="tech-grid">
+        <div class="dir-grid is-collapsed grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2.5" id="tech-grid">
           {% for t in technologies %}
-          <a href="/directory/tech/{{ t.slug }}" class="tech-card rounded-xl p-3.5 flex flex-col justify-between bg-surface-container-low border border-outline-variant shadow-[0_1px_2px_rgb(0_0_0/0.04)] hover:border-primary/60 hover:bg-surface-container hover:shadow-sm hover:-translate-y-0.5 transition-all group" data-name="{{ t.name|lower }}" data-domain="{{ t.domain_code or 'it' }}">
+          <a href="/directory/tech/{{ t.slug }}" class="tech-card{% if loop.index > 8 %} over-8{% endif %}{% if loop.index > 12 %} over-12{% endif %}{% if loop.index > 18 %} over-18{% endif %} rounded-xl p-3.5 flex flex-col justify-between bg-surface-container-low border border-outline-variant shadow-[0_1px_2px_rgb(0_0_0/0.04)] hover:border-primary/60 hover:bg-surface-container hover:shadow-sm hover:-translate-y-0.5 transition-all group" data-name="{{ t.name|lower }}" data-domain="{{ t.domain_code or 'it' }}">
             <div class="flex items-center justify-between gap-1.5">
-              <span class="font-display font-semibold text-xs sm:text-sm text-on-surface group-hover:text-primary transition-colors leading-snug line-clamp-1" title="{{ t.name }}">{{ t.name }}</span>
+              <span class="font-display font-semibold text-xs sm:text-sm text-on-surface group-hover:text-primary transition-colors leading-snug break-words min-w-0" title="{{ t.name }}">{{ t.name }}</span>
               <span class="material-symbols-outlined text-[13px] text-on-surface-variant group-hover:text-primary group-hover:translate-x-0.5 transition-all shrink-0">arrow_forward</span>
             </div>
-            <div class="text-[11px] font-mono text-on-surface-variant mt-2.5 pt-2 border-t border-outline-variant/60 flex items-center justify-between">
+            <div class="text-[11px] font-mono text-on-surface-variant mt-2.5 pt-2 border-t border-outline-variant/60 flex items-center justify-between gap-2">
               <span class="tnum">{{ "{:,}".format(t.count) }} {{ 'firm' if t.count == 1 else 'firms' }}</span>
               <span class="text-[9px] uppercase tracking-wider px-1 py-0.2 rounded bg-surface-container border border-outline-variant text-on-surface-variant">{{ t.domain_code or 'IT' }}</span>
             </div>
@@ -287,10 +330,16 @@
             </div>
           </div>
         </div>
+        <div class="flex justify-center">
+          <button type="button" id="tech-more-btn" class="dir-more-btn{% if technologies|length > 8 %} more-than-8{% endif %}{% if technologies|length > 12 %} more-than-12{% endif %}{% if technologies|length > 18 %} more-than-18{% endif %} w-full sm:w-auto items-center justify-center gap-1.5 px-5 py-2.5 rounded-lg border border-outline-variant bg-surface-container-low text-sm font-medium text-on-surface hover:border-primary/60 hover:text-primary transition cursor-pointer" aria-controls="tech-grid" aria-expanded="false" data-section="tech" data-noun="categories">
+            <span class="dir-more-label">Show all {{ technologies|length }} categories</span>
+            <span class="dir-more-icon material-symbols-outlined text-[18px]" aria-hidden="true">expand_more</span>
+          </button>
+        </div>
       </section>
 
       <!-- SECTION: BROWSE BY CITY -->
-      <section id="city-section" class="space-y-4">
+      <section id="city-section" class="dir-section space-y-4">
         <div class="flex items-center justify-between border-b border-outline pb-3">
           <div>
             <h2 class="text-xl font-display font-bold text-primary">Browse by City</h2>
@@ -299,22 +348,28 @@
           <span class="text-xs font-mono text-secondary px-2 py-0.5 rounded bg-secondary/10 border border-secondary/25" id="city-section-badge">{{ cities|length }} Cities</span>
         </div>
 
-        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2.5" id="city-grid">
+        <div class="dir-grid is-collapsed grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2.5" id="city-grid">
           {% for c in cities %}
-          <a href="/directory/city/{{ c.slug }}" class="city-card rounded-xl p-3.5 flex flex-col justify-between bg-surface-container-low border border-outline-variant shadow-[0_1px_2px_rgb(0_0_0/0.04)] hover:border-primary/60 hover:bg-surface-container hover:shadow-sm hover:-translate-y-0.5 transition-all group" data-name="{{ c.name|lower }}" data-slug="{{ c.slug }}" data-default-order="{{ loop.index }}" data-counts='{{ c.domain_counts|tojson }}'>
+          <a href="/directory/city/{{ c.slug }}" class="city-card{% if loop.index > 8 %} over-8{% endif %}{% if loop.index > 12 %} over-12{% endif %}{% if loop.index > 18 %} over-18{% endif %} rounded-xl p-3.5 flex flex-col justify-between bg-surface-container-low border border-outline-variant shadow-[0_1px_2px_rgb(0_0_0/0.04)] hover:border-primary/60 hover:bg-surface-container hover:shadow-sm hover:-translate-y-0.5 transition-all group" data-name="{{ c.name|lower }}" data-slug="{{ c.slug }}" data-default-order="{{ loop.index }}" data-counts='{{ c.domain_counts|tojson }}'>
             <div class="flex items-center justify-between gap-1.5">
-              <span class="font-display font-semibold text-xs sm:text-sm text-on-surface group-hover:text-primary transition-colors leading-snug line-clamp-1" title="{{ c.name }}">{{ c.name }}</span>
+              <span class="font-display font-semibold text-xs sm:text-sm text-on-surface group-hover:text-primary transition-colors leading-snug break-words min-w-0" title="{{ c.name }}">{{ c.name }}</span>
               <span class="material-symbols-outlined text-[13px] text-on-surface-variant group-hover:text-primary group-hover:translate-x-0.5 transition-all shrink-0">arrow_forward</span>
             </div>
-            <div class="text-[11px] font-mono text-on-surface-variant mt-2.5 pt-2 border-t border-outline-variant/60 flex items-center justify-between">
+            <div class="text-[11px] font-mono text-on-surface-variant mt-2.5 pt-2 border-t border-outline-variant/60 flex items-center justify-between gap-2">
               <span class="tnum city-firm-count">{{ "{:,}".format(c.count) }} {{ 'company' if c.count == 1 else 'companies' }}</span>
-              <span class="text-[10px] text-on-surface-variant font-mono">India</span>
+              <span class="hidden sm:inline text-[10px] text-on-surface-variant font-mono">India</span>
             </div>
           </a>
           {% endfor %}
           <div id="city-empty-state" class="col-span-full rounded-xl bg-surface-container-low border border-outline-variant/40 p-6 text-center text-xs font-mono text-on-surface-variant hidden">
             No commercial hubs match your search term.
           </div>
+        </div>
+        <div class="flex justify-center">
+          <button type="button" id="city-more-btn" class="dir-more-btn{% if cities|length > 8 %} more-than-8{% endif %}{% if cities|length > 12 %} more-than-12{% endif %}{% if cities|length > 18 %} more-than-18{% endif %} w-full sm:w-auto items-center justify-center gap-1.5 px-5 py-2.5 rounded-lg border border-outline-variant bg-surface-container-low text-sm font-medium text-on-surface hover:border-primary/60 hover:text-primary transition cursor-pointer" aria-controls="city-grid" aria-expanded="false" data-section="city" data-noun="cities">
+            <span class="dir-more-label">Show all {{ cities|length }} cities</span>
+            <span class="dir-more-icon material-symbols-outlined text-[18px]" aria-hidden="true">expand_more</span>
+          </button>
         </div>
       </section>
 
@@ -439,6 +494,92 @@
     const elDirBadgeText = document.getElementById("dir-badge-text");
     const elDirCategoriesBadge = document.getElementById("dir-categories-badge");
 
+    // "Show all" lists: the biggest cards show first. How many depends on the
+    // screen size (CSS: phone 8, tablet 12, laptop 18), so every limit is tracked.
+    const RANK_LIMITS = [8, 12, 18];
+    const expanded = { tech: false, city: false };
+    const listParts = {
+      tech: {
+        grid: document.getElementById("tech-grid"),
+        section: document.getElementById("tech-section"),
+        btn: document.getElementById("tech-more-btn"),
+      },
+      city: {
+        grid: document.getElementById("city-grid"),
+        section: document.getElementById("city-section"),
+        btn: document.getElementById("city-more-btn"),
+      },
+    };
+
+    // Rank = position among the cards currently shown, in the order they appear.
+    function setRanks(allCards, orderedVisible) {
+      allCards.forEach(el => RANK_LIMITS.forEach(n => el.classList.remove("over-" + n)));
+      orderedVisible.forEach((el, i) => {
+        RANK_LIMITS.forEach(n => el.classList.toggle("over-" + n, i + 1 > n));
+      });
+    }
+
+    function updateMoreButton(key, visibleCount, searching) {
+      const { grid, section, btn } = listParts[key];
+      // While searching, every match shows and the button hides.
+      grid?.classList.toggle("is-collapsed", !expanded[key] && !searching);
+      section?.classList.toggle("is-searching", searching);
+      if (!btn) return;
+      RANK_LIMITS.forEach(n => btn.classList.toggle("more-than-" + n, visibleCount > n));
+      btn.setAttribute("aria-expanded", expanded[key] ? "true" : "false");
+      const label = btn.querySelector(".dir-more-label");
+      const icon = btn.querySelector(".dir-more-icon");
+      if (label) {
+        label.textContent = expanded[key]
+          ? "Show fewer"
+          : `Show all ${Number(visibleCount).toLocaleString()} ${btn.getAttribute("data-noun") || ""}`.trim();
+      }
+      if (icon) icon.textContent = expanded[key] ? "expand_less" : "expand_more";
+    }
+
+    function toggleList(key) {
+      expanded[key] = !expanded[key];
+      applyFilters();
+      if (!expanded[key]) {
+        // Back to the top of the list instead of leaving the reader far below it.
+        // Instant jump: the cards above it just collapsed, so a long smooth scroll would only lag.
+        listParts[key].section?.scrollIntoView({ block: "start" });
+      }
+    }
+    listParts.tech.btn?.addEventListener("click", () => toggleList("tech"));
+    listParts.city.btn?.addEventListener("click", () => toggleList("city"));
+
+    // Phone: the industry buttons sit in one row that scrolls sideways.
+    // The right-edge fade goes away once the end of the row is reached.
+    function updatePillFade() {
+      if (!pillContainer) return;
+      const atEnd = pillContainer.scrollLeft + pillContainer.clientWidth >= pillContainer.scrollWidth - 4;
+      pillContainer.classList.toggle("at-end", atEnd);
+    }
+
+    // Bring the selected industry button into view by scrolling the row sideways
+    // only (scrollIntoView would also move the whole page).
+    function revealActivePill() {
+      if (!pillContainer || pillContainer.scrollWidth <= pillContainer.clientWidth) {
+        updatePillFade();
+        return;
+      }
+      const pill = pillContainer.querySelector(".domain-pill.active");
+      if (pill) {
+        const box = pillContainer.getBoundingClientRect();
+        const p = pill.getBoundingClientRect();
+        const leftEdge = box.left + 24;
+        const rightEdge = box.right - box.width * 0.2;
+        if (p.left < leftEdge) pillContainer.scrollLeft -= leftEdge - p.left;
+        else if (p.right > rightEdge) pillContainer.scrollLeft += p.right - rightEdge;
+      }
+      updatePillFade();
+    }
+
+    pillContainer?.addEventListener("scroll", updatePillFade, { passive: true });
+    window.addEventListener("resize", updatePillFade);
+    window.addEventListener("load", revealActivePill);
+
     function setDirectoryDomain(targetDomain) {
       activeDomain = (targetDomain || "all").toLowerCase().trim();
 
@@ -456,7 +597,11 @@
         });
       }
 
+      // A new industry starts with both lists collapsed to their biggest cards.
+      expanded.tech = false;
+      expanded.city = false;
       applyFilters();
+      revealActivePill();
     }
 
     if (pillContainer) {
@@ -481,6 +626,7 @@
 
       // 1. Filter Specialization Tech Cards
       let visibleTechCards = 0;
+      const shownTech = [];
       techCards.forEach(el => {
         const name = (el.getAttribute("data-name") || "").toLowerCase();
         const domain = (el.getAttribute("data-domain") || "it").toLowerCase();
@@ -488,12 +634,19 @@
         const matchesDomain = activeDomain === "all" || domain === activeDomain;
         const visible = matchesQuery && matchesDomain;
         el.style.display = visible ? "" : "none";
-        if (visible) visibleTechCards++;
+        if (visible) {
+          visibleTechCards++;
+          shownTech.push(el);
+        }
       });
+      // Cards are already in count order, so page order is the rank.
+      setRanks(techCards, shownTech);
+      updateMoreButton("tech", visibleTechCards, Boolean(q));
 
       // 2. Filter & Dynamically Update Cities
       let visibleCityCards = 0;
       let activeCitiesInDomain = 0;
+      const shownCities = [];
 
       cityCards.forEach(el => {
         const name = (el.getAttribute("data-name") || "").toLowerCase();
@@ -545,8 +698,19 @@
 
         const matchesQuery = !q || name.includes(q);
         el.style.display = matchesQuery ? "" : "none";
-        if (matchesQuery) visibleCityCards++;
+        if (matchesQuery) {
+          visibleCityCards++;
+          shownCities.push({ el, count: domainCount, order: defaultOrder });
+        }
       });
+
+      // Rank cities in the order they appear: overall size by default, or the
+      // selected industry's count first (same as the CSS order set above).
+      shownCities.sort((a, b) =>
+        activeDomain === "all" ? a.order - b.order : (b.count - a.count) || (a.order - b.order)
+      );
+      setRanks(cityCards, shownCities.map(c => c.el));
+      updateMoreButton("city", visibleCityCards, Boolean(q));
 
       // Update City Section Badge
       const elCitySectionBadge = document.getElementById("city-section-badge");
@@ -604,6 +768,7 @@
         setDirectoryDomain(urlDomain.toLowerCase());
       }
     } catch (_) {}
+    updatePillFade();
   </script>
 </body>
 </html>
