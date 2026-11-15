@@ -805,6 +805,45 @@ def set_subscription_kill_switch(active: bool, db: Session = None) -> bool:
     return active
 
 
+# --- Public plans: what visitors see on the home page and in the workspace ---
+# Read from the subscription_tiers table that the admin panel (Tiers & Plans)
+# edits, so admin changes show up everywhere. Cached for a few minutes; the
+# admin create/update endpoints clear the cache so edits appear immediately.
+_PUBLIC_TIERS_CACHE: dict = {"ts": 0.0, "data": None}
+_PUBLIC_TIERS_TTL = 300
+
+
+def load_public_tiers(db: Session) -> list[dict]:
+    now = time.time()
+    cached = _PUBLIC_TIERS_CACHE["data"]
+    if cached is not None and now - _PUBLIC_TIERS_CACHE["ts"] < _PUBLIC_TIERS_TTL:
+        return cached
+    rows = (
+        db.query(SubscriptionTier)
+        .filter(SubscriptionTier.is_active.is_(True), SubscriptionTier.code != "master_admin")
+        .order_by(SubscriptionTier.price_inr.asc(), SubscriptionTier.id.asc())
+        .all()
+    )
+    data = [
+        {
+            "code": t.code,
+            "name": t.name,
+            "subtitle": (t.subtitle or "").strip(),
+            "price_inr": int(t.price_inr or 0),
+            "daily_pitch_limit": int(t.daily_pitch_limit or 0),
+            "features": [f.strip() for f in (t.features or []) if f and str(f).strip()],
+            "badge": (t.badge or "").strip(),
+        }
+        for t in rows
+    ]
+    _PUBLIC_TIERS_CACHE.update(ts=now, data=data)
+    return data
+
+
+def clear_public_tiers_cache() -> None:
+    _PUBLIC_TIERS_CACHE.update(ts=0.0, data=None)
+
+
 # --- Subscription & Quota Resolution Helper ---
 def get_user_subscription_info(user: User | None, db: Session) -> dict:
     kill_switch_active = is_subscription_kill_switch_active(db)
@@ -863,9 +902,9 @@ def landing_page(request: Request, db: Session = Depends(get_db)):
     sub_info = get_user_subscription_info(user, db)
     kill_switch = sub_info.get("kill_switch_active", False)
     
-    # Query active subscription tiers for landing pricing table (empty if kill switch is active)
-    tiers = db.query(SubscriptionTier).filter(SubscriptionTier.is_active == True).order_by(SubscriptionTier.id.asc()).all()
-    public_tiers = [] if kill_switch else [t for t in tiers if t.code != "master_admin"]
+    # Plans for the pricing section, exactly as set in the admin panel
+    # (empty while the kill switch is on, which hides pricing).
+    public_tiers = [] if kill_switch else load_public_tiers(db)
 
     # Largest city and category hubs for the crawlable "Browse the directory" section.
     # Both lists come from cached aggregates; on any failure the section simply hides.
@@ -935,6 +974,8 @@ def workspace_page(request: Request, db: Session = Depends(get_db)):
             "dev_mode": config.DEV_MODE,
             "domains": all_domains,
             "total_companies": total_valid,
+            # Plan cards in the subscription window, as set in the admin panel
+            "tiers": [] if kill_switch else load_public_tiers(db),
         }
     )
 
@@ -5317,6 +5358,7 @@ def create_tier_admin(
     db.add(tier)
     db.commit()
     db.refresh(tier)
+    clear_public_tiers_cache()  # show the new plan on the home page right away
     return {"success": True, "tier_id": tier.id, "message": f"Created tier '{tier.name}'."}
 
 
@@ -5347,6 +5389,7 @@ def update_tier_admin(
         )
 
     db.commit()
+    clear_public_tiers_cache()  # show the edit on the home page right away
     return {
         "success": True,
         "tier_id": tier.id,

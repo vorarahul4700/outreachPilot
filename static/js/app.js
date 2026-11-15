@@ -3120,18 +3120,25 @@ document.addEventListener("DOMContentLoaded", () => {
     if (subModalRemaining) subModalRemaining.textContent = remainingStr;
     if (subModalTotal) subModalTotal.textContent = totalLimitStr;
 
-    // Highlight active tier card
+    // Mark the current plan's card (cards come from the admin plans, see index.html).
+    // Other cards keep their own "Upgrade to" / "Switch to" link; recomputed on
+    // every call so a plan change moves the mark instead of leaving two.
     document.querySelectorAll("[data-tier-card]").forEach(card => {
       const cardCode = card.getAttribute("data-tier-card");
       const btn = card.querySelector(".btn-tier-action");
-      if (cardCode === tierCode || (isMaster && cardCode === "premium_plus")) {
-        card.classList.add("ring-2", "ring-primary");
-        if (btn && btn.tagName === "BUTTON") {
-          btn.textContent = "Current Active Plan";
-          btn.disabled = true;
-          btn.classList.add("opacity-60", "cursor-default");
-        }
+      const isCurrent = cardCode === tierCode || (isMaster && cardCode === "premium_plus");
+      card.classList.toggle("ring-2", isCurrent);
+      card.classList.toggle("ring-primary", isCurrent);
+      if (!btn) return;
+      btn.textContent = isCurrent ? "Current Active Plan" : (btn.dataset.defaultLabel || btn.textContent);
+      if (isCurrent) {
+        btn.removeAttribute("href");
+        btn.setAttribute("aria-disabled", "true");
+      } else {
+        if (btn.dataset.href) btn.setAttribute("href", btn.dataset.href);
+        btn.removeAttribute("aria-disabled");
       }
+      ["opacity-60", "cursor-default", "pointer-events-none"].forEach(c => btn.classList.toggle(c, isCurrent));
     });
   }
 

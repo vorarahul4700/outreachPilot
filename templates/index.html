@@ -1420,94 +1420,46 @@
           <span class="text-[11px] text-on-surface-variant font-mono">Switch or upgrade at any time</span>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4" id="sub-modal-plans-grid">
-          
-          <!-- Free Pack Card -->
-          <div class="p-4 rounded-xl bg-surface-container border border-outline-variant/30 flex flex-col justify-between" data-tier-card="free">
+        <!-- Plan cards: built from the plans in the admin panel (Tiers & Plans).
+             app.js (updateUserSubscriptionUI) marks the current plan's card. -->
+        {% set plan_count = (tiers or [])|length %}
+        <div class="grid grid-cols-1 {% if plan_count >= 3 %}md:grid-cols-3{% elif plan_count == 2 %}md:grid-cols-2{% endif %} gap-4" id="sub-modal-plans-grid">
+          {% for t in (tiers or []) %}
+          {% set featured = t.code == 'pro' %}
+          {% set is_current = user_subscription_tier == t.code %}
+          {% set verb = "Switch to" if t.price_inr == 0 else "Upgrade to" %}
+          {% set change_href = "mailto:founder@outreachpilot.in?subject=" ~ ((verb ~ " " ~ t.name ~ " plan")|urlencode) %}
+          <div class="p-4 rounded-xl flex flex-col justify-between relative {% if featured %}bg-primary/5 border-2 border-primary shadow-sm{% else %}bg-surface-container border border-outline-variant/30{% endif %}{% if is_current %} ring-2 ring-primary{% endif %}" data-tier-card="{{ t.code }}">
+            {% if t.badge %}
+            <div class="absolute -top-2.5 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase tracking-wider whitespace-nowrap {% if featured %}bg-primary text-on-primary{% else %}bg-surface-container-highest text-on-surface border border-outline-variant/40{% endif %}">
+              {{ t.badge }}
+            </div>
+            {% endif %}
             <div>
-              <div class="flex items-center justify-between mb-1.5">
-                <span class="text-xs font-bold text-on-surface">Free Job Seeker</span>
-                <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-surface-container-highest text-on-surface-variant font-semibold">FREE</span>
+              <div class="flex items-center justify-between gap-2 mb-1.5 {% if t.badge %}pt-1{% endif %}">
+                <span class="text-xs font-bold {% if featured %}text-primary{% else %}text-on-surface{% endif %}">{{ t.name }}</span>
+                {% if t.subtitle %}<span class="text-[10px] font-mono px-1.5 py-0.5 rounded font-semibold whitespace-nowrap {% if featured %}bg-primary/20 text-primary{% else %}bg-surface-container-highest text-on-surface-variant{% endif %}">{{ t.subtitle }}</span>{% endif %}
               </div>
               <div class="flex items-baseline gap-1 my-2">
-                <span class="text-2xl font-bold text-on-surface font-mono">₹0</span>
-                <span class="text-[11px] text-on-surface-variant font-mono">/ forever</span>
-              </div>
-              <div class="p-2 rounded bg-surface-container-lowest text-xs font-mono font-semibold text-primary mb-3">
-                10 Pitches / Day
-              </div>
-              <ul class="text-[11px] space-y-1.5 text-on-surface-variant">
-                <li class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[14px] text-primary">check</span> 10 cold pitches / day</li>
-                <li class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[14px] text-primary">check</span> Verified founder emails</li>
-                <li class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[14px] text-primary">check</span> Standard Gmail sending</li>
-              </ul>
-            </div>
-            <div class="pt-3 mt-3 border-t border-outline-variant/20">
-              <button type="button" class="btn-tier-action w-full py-1.5 rounded-lg text-xs font-mono font-semibold text-center border border-outline-variant/40 bg-surface-container-lowest text-on-surface disabled:opacity-50" data-tier-code="free">
-                Active Plan
-              </button>
-            </div>
-          </div>
-
-          <!-- Pro Pack Card -->
-          <div class="p-4 rounded-xl bg-primary/5 border-2 border-primary flex flex-col justify-between relative shadow-sm" data-tier-card="pro">
-            <div class="absolute -top-2.5 left-1/2 -translate-x-1/2 px-2 py-0.2 rounded-full bg-primary text-on-primary text-[9px] font-mono font-bold uppercase tracking-wider">
-              POPULAR
-            </div>
-            <div>
-              <div class="flex items-center justify-between mb-1.5 pt-1">
-                <span class="text-xs font-bold text-primary">Pro Outreach</span>
-                <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-primary/20 text-primary font-semibold">PRO</span>
-              </div>
-              <div class="flex items-baseline gap-1 my-2">
-                <span class="text-2xl font-bold text-primary font-mono">₹499</span>
+                <span class="text-2xl font-bold font-mono {% if featured %}text-primary{% else %}text-on-surface{% endif %}">₹{{ "{:,}".format(t.price_inr) }}</span>
                 <span class="text-[11px] text-on-surface-variant font-mono">/ month</span>
               </div>
-              <div class="p-2 rounded bg-primary/10 text-xs font-mono font-semibold text-primary mb-3">
-                50 Pitches / Day
+              <div class="p-2 rounded text-xs font-mono font-semibold text-primary mb-3 {% if featured %}bg-primary/10{% else %}bg-surface-container-lowest{% endif %}">
+                {{ "{:,}".format(t.daily_pitch_limit) }} pitches / day
               </div>
-              <ul class="text-[11px] space-y-1.5 text-on-surface">
-                <li class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[14px] text-primary">check</span> 50 cold pitches / day</li>
-                <li class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[14px] text-primary">check</span> Deep website crawler</li>
-                <li class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[14px] text-primary">check</span> Auto-PDF resume attachment</li>
-                <li class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[14px] text-primary">check</span> Custom pitch tone tuning</li>
+              {% if t.features %}
+              <ul class="text-[11px] space-y-1.5 {% if featured %}text-on-surface{% else %}text-on-surface-variant{% endif %}">
+                {% for f in t.features %}
+                <li class="flex items-start gap-1.5"><span class="material-symbols-outlined text-[14px] text-primary shrink-0 mt-px" aria-hidden="true">check</span><span>{{ f }}</span></li>
+                {% endfor %}
               </ul>
+              {% endif %}
             </div>
-            <div class="pt-3 mt-3 border-t border-primary/20">
-              <a href="mailto:founder@outreachpilot.in?subject=Upgrade%20to%20Pro%20Plan" class="btn-tier-action w-full py-1.5 rounded-lg text-xs font-mono font-bold text-center block bg-primary text-on-primary hover:opacity-90 shadow transition" data-tier-code="pro">
-                Upgrade to Pro
-              </a>
+            <div class="pt-3 mt-3 border-t {% if featured %}border-primary/20{% else %}border-outline-variant/20{% endif %}">
+              <a {% if not is_current %}href="{{ change_href }}"{% else %}aria-disabled="true"{% endif %} data-href="{{ change_href }}" data-default-label="{{ verb }} {{ t.name }}" data-tier-code="{{ t.code }}" class="btn-tier-action w-full py-1.5 rounded-lg text-xs font-mono font-bold text-center block transition {% if featured %}bg-primary text-on-primary hover:opacity-90 shadow{% else %}border border-outline-variant/40 bg-surface-container-lowest text-on-surface hover:border-primary/50{% endif %}{% if is_current %} opacity-60 cursor-default pointer-events-none{% endif %}">{% if is_current %}Current Active Plan{% else %}{{ verb }} {{ t.name }}{% endif %}</a>
             </div>
           </div>
-
-          <!-- Premium+ Pack Card -->
-          <div class="p-4 rounded-xl bg-surface-container border border-outline-variant/30 flex flex-col justify-between" data-tier-card="premium_plus">
-            <div>
-              <div class="flex items-center justify-between mb-1.5">
-                <span class="text-xs font-bold text-on-surface">Premium+</span>
-                <span class="text-[10px] font-mono px-1.5 py-0.5 rounded bg-secondary/15 text-secondary font-semibold">PREMIUM+</span>
-              </div>
-              <div class="flex items-baseline gap-1 my-2">
-                <span class="text-2xl font-bold text-on-surface font-mono">₹999</span>
-                <span class="text-[11px] text-on-surface-variant font-mono">/ month</span>
-              </div>
-              <div class="p-2 rounded bg-surface-container-lowest text-xs font-mono font-semibold text-secondary mb-3">
-                100 Pitches / Day
-              </div>
-              <ul class="text-[11px] space-y-1.5 text-on-surface-variant">
-                <li class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[14px] text-secondary">check</span> 100 cold pitches / day</li>
-                <li class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[14px] text-secondary">check</span> 1-Click batch auto-dispatch</li>
-                <li class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[14px] text-secondary">check</span> Cloud Scout priority queue</li>
-                <li class="flex items-center gap-1.5"><span class="material-symbols-outlined text-[14px] text-secondary">check</span> Unlimited pitch rewrites</li>
-              </ul>
-            </div>
-            <div class="pt-3 mt-3 border-t border-outline-variant/20">
-              <a href="mailto:founder@outreachpilot.in?subject=Upgrade%20to%20Premium%2B%20Plan" class="btn-tier-action w-full py-1.5 rounded-lg text-xs font-mono font-semibold text-center border border-outline-variant/40 bg-surface-container-lowest text-on-surface hover:border-secondary transition block" data-tier-code="premium_plus">
-                Upgrade to Premium+
-              </a>
-            </div>
-          </div>
-
+          {% endfor %}
         </div>
       </div>
 
@@ -1605,6 +1557,6 @@
     }
   </script>
   <script src="/static/js/scroll-lock.js?v=1.3"></script>
-  <script src="/static/js/app.js?v=10.12"></script>
+  <script src="/static/js/app.js?v=10.13"></script>
 </body>
 </html>
