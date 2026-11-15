@@ -123,7 +123,7 @@
     }
   </style>
 </head>
-<body class="bg-surface text-on-surface font-body-md antialiased min-h-screen flex selection:bg-primary-container selection:text-on-primary-container overflow-x-hidden">
+<body class="bg-surface text-on-surface font-body-md antialiased min-h-screen flex selection:bg-primary-container selection:text-on-primary-container overflow-x-hidden md:h-[100dvh] md:min-h-0 md:overflow-hidden">
 
   <!-- Mobile Overlay Backdrop -->
   <div id="admin-mobile-backdrop" class="hidden fixed inset-0 z-30 bg-black/60 backdrop-blur-sm md:hidden"></div>
@@ -217,7 +217,11 @@
   <!-- ========================================== -->
   <!-- MAIN ADMIN CONTENT AREA                     -->
   <!-- ========================================== -->
-  <main class="flex-1 md:ml-64 p-4 md:p-8 max-w-7xl mx-auto flex flex-col gap-8 pb-20 min-w-0">
+  <!-- From tablet width up only this area scrolls, so the sidebar always runs the
+       full screen height and anything too wide scrolls inside here instead of
+       stretching the page. -->
+  <main id="admin-main" class="flex-1 min-w-0 md:ml-64 md:overflow-y-auto">
+    <div class="p-4 md:p-8 max-w-7xl mx-auto flex flex-col gap-8 pb-20">
 
     <!-- Phone top bar: the menu button opens the sidebar (it is off-screen below 768px).
          Sticky so the menu stays reachable on long tables. -->
@@ -843,7 +847,7 @@
       </div>
 
       <!-- Dynamic Plans Matrix Container -->
-      <div id="tiers-grid-container" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div id="tiers-grid-container" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         <div class="p-8 text-center text-on-surface-variant col-span-full">Loading tier configurations...</div>
       </div>
 
@@ -998,6 +1002,7 @@
         </div>
       </div>
     </section>
+    </div>
   </main>
 
   <!-- ========================================== -->
@@ -1428,6 +1433,6 @@
 
   <!-- Admin Application Client Controller Script -->
   <script src="/static/js/scroll-lock.js?v=1.3"></script>
-  <script src="/static/js/admin.js?v=2.5"></script>
+  <script src="/static/js/admin.js?v=2.6"></script>
 </body>
 </html>

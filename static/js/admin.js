@@ -1239,9 +1239,9 @@ document.addEventListener("DOMContentLoaded", () => {
           <div class="bg-surface-container-low border ${borderClass} rounded-xl p-6 flex flex-col justify-between relative">
             ${badgeHtml}
             <div class="flex flex-col gap-3">
-              <div class="flex items-center justify-between">
+              <div class="flex flex-wrap items-center justify-between gap-2">
                 <span class="text-xs font-semibold ${isMaster ? 'text-amber-500' : isPro ? 'text-primary' : 'text-on-surface-variant'}">${t.subtitle || t.code.toUpperCase()}</span>
-                <span class="text-[11px] px-2 py-0.5 rounded-full bg-surface-container font-mono text-on-surface-variant">${t.subscriber_count} active</span>
+                <span class="text-[11px] px-2 py-0.5 rounded-full bg-surface-container font-mono text-on-surface-variant whitespace-nowrap">${t.subscriber_count} active</span>
               </div>
               <div class="flex items-baseline gap-1">
                 <span class="text-headline-lg font-headline-lg ${isMaster ? 'text-amber-500' : 'text-on-surface'} font-bold tabular-nums">${priceDisplay}</span>
@@ -1253,9 +1253,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 ${featureItems}
               </ul>
             </div>
-            <div class="mt-6 pt-4 border-t border-outline-variant/20 flex items-center justify-between">
-              <span class="text-xs text-on-surface-variant">Code: <code>${t.code}</code></span>
-              <button onclick="openEditTierModal(${t.id})" class="px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high border border-outline-variant/40 text-xs font-semibold text-on-surface transition cursor-pointer flex items-center gap-1">
+            <div class="mt-6 pt-4 border-t border-outline-variant/20 flex flex-wrap items-center justify-between gap-2">
+              <span class="text-xs text-on-surface-variant min-w-0 break-all">Code: <code>${t.code}</code></span>
+              <button onclick="openEditTierModal(${t.id})" class="px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high border border-outline-variant/40 text-xs font-semibold text-on-surface transition cursor-pointer flex items-center gap-1 shrink-0 whitespace-nowrap">
                 <span class="material-symbols-outlined text-[14px]">edit</span>
                 <span>Edit Plan</span>
               </button>
@@ -1792,9 +1792,9 @@ document.addEventListener("DOMContentLoaded", () => {
           <tr class="hover:bg-surface-container/50 transition cursor-pointer" onclick="window.open('${r.html_url}', '_blank')">
             <td class="px-4 py-3 font-mono text-xs text-on-surface-variant font-semibold">#${r.run_number || r.id}</td>
             <td class="px-4 py-3">
-              <div class="flex flex-col">
+              <div class="flex flex-col min-w-[14rem]">
                 <span class="font-semibold text-xs text-on-surface">${r.display_title || r.name}</span>
-                <span class="text-[11px] text-on-surface-variant">${r.name}</span>
+                ${r.display_title && r.display_title !== r.name ? `<span class="text-[11px] text-on-surface-variant">${r.name}</span>` : ""}
               </div>
             </td>
             <td class="px-4 py-3">${badgeHtml}</td>
