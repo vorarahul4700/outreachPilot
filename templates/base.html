@@ -36,8 +36,11 @@
 
   <div class="toast-stack" id="toast-stack" aria-live="polite" aria-atomic="false"></div>
 
+  {#- The /app workspace runs its own theme toggle in app.js, so it sets skip_site_js. -#}
+  {% if not (skip_site_js is defined and skip_site_js) %}
   <script src="/static/js/site/theme.js?v={{ asset_v }}"></script>
   <script src="/static/js/site/nav.js?v={{ asset_v }}" defer></script>
+  {% endif %}
   <script src="/static/js/site/motion.js?v={{ asset_v }}" defer></script>
   {% block scripts %}{% endblock %}
 </body>

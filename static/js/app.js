@@ -68,11 +68,11 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     }
     let html = escapeHTML(text);
-    html = html.replace(/^### (.*$)/gim, '<h4 class="text-primary font-bold text-xs mt-3 mb-1 uppercase tracking-wider">$1</h4>');
-    html = html.replace(/^## (.*$)/gim, '<h3 class="text-on-surface font-bold text-sm mt-3 mb-1.5">$1</h3>');
-    html = html.replace(/\*\*(.*?)\*\*/gim, '<strong class="text-on-surface font-semibold">$1</strong>');
-    html = html.replace(/^\- (.*$)/gim, '<div class="flex items-start space-x-1.5 my-1 ml-2"><span class="text-primary font-bold">-</span><span class="text-on-surface-variant">$1</span></div>');
-    html = html.replace(/\n\n/gim, '<div class="h-2"></div>');
+    html = html.replace(/^### (.*$)/gim, '<h4>$1</h4>');
+    html = html.replace(/^## (.*$)/gim, '<h3>$1</h3>');
+    html = html.replace(/\*\*(.*?)\*\*/gim, '<strong>$1</strong>');
+    html = html.replace(/^\- (.*$)/gim, '<div class="md-li"><span>$1</span></div>');
+    html = html.replace(/\n\n/gim, '<div class="md-gap"></div>');
     html = html.replace(/\n/gim, '<br>');
     return html;
   }
@@ -92,40 +92,38 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!container) {
       container = document.createElement("div");
       container.id = "toast-container";
-      container.className = "fixed top-6 left-1/2 -translate-x-1/2 z-[9999] flex flex-col items-center space-y-2.5 pointer-events-none w-[94vw] max-w-2xl";
+      container.className = "app-toast-stack";
       document.body.appendChild(container);
     }
     const toast = document.createElement("div");
     
-    let bgClass = "bg-surface-container-low/95 border-outline-variant/50 text-on-surface shadow-[0_12px_40px_rgba(0,0,0,0.6)]";
+    let kind = "info";
     let icon = "info";
-    let badge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-primary-container/20 text-primary border border-primary-container/40 uppercase tracking-wider shrink-0">Info</span>`;
+    let tag = "Info";
 
     if (type === "error") {
-      bgClass = "bg-surface-container-low/95 border-error/60 text-on-surface shadow-[0_14px_45px_rgba(255,84,73,0.25)] ring-1 ring-error/40";
+      kind = "error";
       icon = "alert-octagon";
-      badge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-error/20 text-error border border-error/40 uppercase tracking-wider shrink-0">Error</span>`;
+      tag = "Error";
     } else if (type === "warning") {
-      bgClass = "bg-surface-container-low/95 border-tertiary/60 text-on-surface shadow-[0_14px_45px_rgba(255,185,95,0.25)] ring-1 ring-tertiary/40";
+      kind = "warning";
       const isAuthPrompt = message.toLowerCase().includes("sign in") || message.toLowerCase().includes("login") || message.toLowerCase().includes("auth");
       icon = isAuthPrompt ? "lock" : "alert-triangle";
-      const badgeText = isAuthPrompt ? "Sign In Required" : "Attention";
-      badge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-tertiary/20 text-tertiary border border-tertiary/40 uppercase tracking-wider shrink-0">${badgeText}</span>`;
+      tag = isAuthPrompt ? "Sign In Required" : "Attention";
     } else if (type === "success") {
-      bgClass = "bg-surface-container-low/95 border-secondary/60 text-on-surface shadow-[0_14px_45px_rgba(78,222,163,0.25)] ring-1 ring-secondary/40";
+      kind = "success";
       icon = "check-circle-2";
-      badge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-secondary/20 text-secondary border border-secondary/40 uppercase tracking-wider shrink-0">Success</span>`;
+      tag = "Success";
     }
 
-    toast.className = `${bgClass} border rounded-2xl px-5 py-3.5 flex items-center justify-between space-x-4 text-body-sm font-medium pointer-events-auto backdrop-blur-md transition-all duration-300 transform -translate-y-4 opacity-0 scale-95 w-auto min-w-[340px] sm:min-w-[500px] max-w-2xl shadow-xl`;
+    toast.className = `app-toast ${kind} -translate-y-4 opacity-0 scale-95`;
     toast.innerHTML = `
-      <div class="flex items-center space-x-3.5 min-w-0 flex-1">
-        <i data-lucide="${icon}" class="w-5 h-5 shrink-0 text-on-surface"></i>
-        ${badge}
-        <span class="leading-relaxed text-sm">${message}</span>
+      <div class="l">
+        <span class="ic"><i data-lucide="${icon}"></i></span>
+        <div class="min-w-0"><span class="tag">${tag}</span><span class="msg">${message}</span></div>
       </div>
-      <button type="button" class="toast-close p-1.5 hover:bg-surface-container-highest rounded-lg text-outline hover:text-on-surface transition shrink-0 cursor-pointer ml-2" title="Dismiss">
-        <i data-lucide="x" class="w-4 h-4"></i>
+      <button type="button" class="toast-close" title="Dismiss" aria-label="Dismiss">
+        <i data-lucide="x"></i>
       </button>
     `;
 
@@ -437,11 +435,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Mobile View (< 640px): Prev, Page X of Y, Next
     const mobileWrapper = document.createElement("div");
-    mobileWrapper.className = "flex sm:hidden items-center space-x-1.5";
+    mobileWrapper.className = "pg-mobile";
 
     const prevBtnMobile = document.createElement("button");
     prevBtnMobile.type = "button";
-    prevBtnMobile.className = `p-1.5 rounded-lg text-xs font-medium border ${safeCurrentPage <= 1 ? 'opacity-40 cursor-not-allowed text-on-surface-variant/40 border-outline-variant/30 bg-surface-container' : 'btn-tactile-slate text-on-surface hover:bg-surface-container-high cursor-pointer'}`;
+    prevBtnMobile.className = `pg-btn${safeCurrentPage <= 1 ? ' is-disabled' : ''}`;
     prevBtnMobile.innerHTML = `<i data-lucide="chevron-left" class="w-3.5 h-3.5"></i>`;
     prevBtnMobile.disabled = safeCurrentPage <= 1;
     prevBtnMobile.addEventListener("click", () => {
@@ -449,12 +447,12 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     const pageInfoMobile = document.createElement("span");
-    pageInfoMobile.className = "text-xs font-mono text-on-surface font-semibold px-2";
+    pageInfoMobile.className = "pg-info";
     pageInfoMobile.textContent = `${safeCurrentPage} / ${totalPages}`;
 
     const nextBtnMobile = document.createElement("button");
     nextBtnMobile.type = "button";
-    nextBtnMobile.className = `p-1.5 rounded-lg text-xs font-medium border ${safeCurrentPage >= totalPages ? 'opacity-40 cursor-not-allowed text-on-surface-variant/40 border-outline-variant/30 bg-surface-container' : 'btn-tactile-slate text-on-surface hover:bg-surface-container-high cursor-pointer'}`;
+    nextBtnMobile.className = `pg-btn${safeCurrentPage >= totalPages ? ' is-disabled' : ''}`;
     nextBtnMobile.innerHTML = `<i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>`;
     nextBtnMobile.disabled = safeCurrentPage >= totalPages;
     nextBtnMobile.addEventListener("click", () => {
@@ -468,11 +466,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Desktop/Tablet View (>= 640px): Full numbered sequence with ellipses
     const desktopWrapper = document.createElement("div");
-    desktopWrapper.className = "hidden sm:flex items-center space-x-1";
+    desktopWrapper.className = "pg-desktop";
 
     const prevBtnDesktop = document.createElement("button");
     prevBtnDesktop.type = "button";
-    prevBtnDesktop.className = `px-2.5 py-1 rounded-lg text-xs font-medium border flex items-center space-x-1 ${safeCurrentPage <= 1 ? 'opacity-40 cursor-not-allowed text-on-surface-variant/40 border-outline-variant/30 bg-surface-container' : 'btn-tactile-slate text-on-surface hover:bg-surface-container-high cursor-pointer'}`;
+    prevBtnDesktop.className = `pg-btn${safeCurrentPage <= 1 ? ' is-disabled' : ''}`;
     prevBtnDesktop.innerHTML = `<i data-lucide="chevron-left" class="w-3.5 h-3.5"></i><span>Prev</span>`;
     prevBtnDesktop.disabled = safeCurrentPage <= 1;
     prevBtnDesktop.addEventListener("click", () => {
@@ -498,14 +496,14 @@ document.addEventListener("DOMContentLoaded", () => {
     pageNumbers.forEach(p => {
       if (p === "...") {
         const dots = document.createElement("span");
-        dots.className = "px-2 py-1 text-xs text-on-surface-variant/60 font-mono";
+        dots.className = "pg-dots";
         dots.textContent = "...";
         desktopWrapper.appendChild(dots);
       } else {
         const btn = document.createElement("button");
         btn.type = "button";
         const isActive = (p === safeCurrentPage);
-        btn.className = `min-w-[32px] px-2.5 py-1 rounded-lg text-xs font-mono font-medium transition ${isActive ? 'bg-primary text-on-primary font-bold shadow-sm cursor-default' : 'btn-tactile-slate text-on-surface-variant hover:text-on-surface cursor-pointer'}`;
+        btn.className = `pg-btn${isActive ? ' is-current' : ''}`;
         btn.textContent = p;
         btn.disabled = isActive;
         btn.addEventListener("click", () => {
@@ -517,7 +515,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const nextBtnDesktop = document.createElement("button");
     nextBtnDesktop.type = "button";
-    nextBtnDesktop.className = `px-2.5 py-1 rounded-lg text-xs font-medium border flex items-center space-x-1 ${safeCurrentPage >= totalPages ? 'opacity-40 cursor-not-allowed text-on-surface-variant/40 border-outline-variant/30 bg-surface-container' : 'btn-tactile-slate text-on-surface hover:bg-surface-container-high cursor-pointer'}`;
+    nextBtnDesktop.className = `pg-btn${safeCurrentPage >= totalPages ? ' is-disabled' : ''}`;
     nextBtnDesktop.innerHTML = `<span>Next</span><i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>`;
     nextBtnDesktop.disabled = safeCurrentPage >= totalPages;
     nextBtnDesktop.addEventListener("click", () => {
@@ -1027,19 +1025,19 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!isLoggedIn) {
           statContacted.textContent = "0";
           statContactedBadge.textContent = "Sign in";
-          statContactedBadge.className = "text-caption font-caption text-outline px-1.5 py-0.5 rounded bg-surface-container font-mono text-[11px]";
+          statContactedBadge.className = "mini-badge";
           statContactedText.textContent = "Sign in to track your pitches";
         } else {
           const userContacted = contacted !== null ? contacted : 0;
           statContacted.textContent = userContacted;
           if (userContacted === 0) {
             statContactedBadge.textContent = "0% outreach";
-            statContactedBadge.className = "text-caption font-caption text-outline px-1.5 py-0.5 rounded bg-surface-container-highest font-mono text-[11px]";
+            statContactedBadge.className = "mini-badge";
             statContactedText.textContent = "No campaigns sent yet";
           } else {
             const responseRatePct = total > 0 ? Math.round((userContacted / total) * 100) : 0;
             statContactedBadge.textContent = `${responseRatePct}% outreach`;
-            statContactedBadge.className = "text-caption font-caption text-secondary px-1.5 py-0.5 rounded bg-secondary/10 font-mono text-[11px]";
+            statContactedBadge.className = "mini-badge accent";
             statContactedText.textContent = `${userContacted} of ${total} contacted`;
           }
         }
@@ -1128,29 +1126,11 @@ document.addEventListener("DOMContentLoaded", () => {
   function renderSkeletonCompanies(count = 6) {
     if (!companiesContainer) return;
     companiesContainer.innerHTML = Array.from({ length: count }).map(() => `
-      <div class="skeleton-shimmer bg-surface-container-low border border-outline-variant/30 rounded-xl p-5 flex flex-col justify-between min-h-[220px]">
-        <div class="space-y-3.5">
-          <div class="flex items-start gap-3">
-            <div class="w-9 h-9 rounded-md bg-surface-container-highest shrink-0"></div>
-            <div class="space-y-2 flex-1 min-w-0">
-              <div class="h-4 bg-surface-container-highest rounded w-3/4"></div>
-              <div class="h-3 bg-surface-container rounded w-1/2"></div>
-            </div>
-          </div>
-          <div class="space-y-1.5 pt-1">
-            <div class="h-3 bg-surface-container rounded w-full"></div>
-            <div class="h-3 bg-surface-container rounded w-4/5"></div>
-          </div>
-          <div class="flex gap-1.5 pt-2">
-            <div class="h-5 bg-surface-container-highest rounded w-16"></div>
-            <div class="h-5 bg-surface-container-highest rounded w-20"></div>
-            <div class="h-5 bg-surface-container-highest rounded w-14"></div>
-          </div>
-        </div>
-        <div class="pt-3.5 border-t border-outline-variant/30 flex gap-2 mt-4">
-          <div class="h-8 bg-surface-container-highest rounded w-1/2"></div>
-          <div class="h-8 bg-surface-container-highest rounded w-1/2"></div>
-        </div>
+      <div class="skeleton-shimmer sk-card" aria-hidden="true">
+        <div class="sk-row"><span class="sk" style="width:42px;height:42px;border-radius:13px"></span><span class="sk-col"><span class="sk" style="height:16px;width:70%"></span><span class="sk" style="height:11px;width:45%"></span></span></div>
+        <div class="sk-col"><span class="sk" style="height:11px"></span><span class="sk" style="height:11px;width:80%"></span></div>
+        <div class="flex gap-1.5"><span class="sk" style="height:24px;width:64px;border-radius:99px"></span><span class="sk" style="height:24px;width:80px;border-radius:99px"></span></div>
+        <div class="flex gap-2"><span class="sk" style="height:36px;flex:1;border-radius:99px"></span><span class="sk" style="height:36px;flex:1;border-radius:99px"></span></div>
       </div>
     `).join('');
   }
@@ -1982,12 +1962,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (companiesContainer) {
         companiesContainer.innerHTML = `
-          <div class="col-span-full py-12 px-4 text-center bg-surface-container-low border border-outline-variant/30 rounded-2xl space-y-3 shadow-sm transition-colors">
-            <div class="inline-flex p-3 rounded-full bg-primary/10 text-primary border border-primary/20 shadow-sm">
-              <i data-lucide="layers" class="w-6 h-6"></i>
-            </div>
-            <p class="text-sm font-semibold text-on-surface">${emptyTitle}</p>
-            <p class="text-xs text-on-surface-variant max-w-md mx-auto leading-relaxed">${emptyMsg}</p>
+          <div class="app-empty">
+            <span class="ic"><i data-lucide="layers"></i></span>
+            <p class="t">${emptyTitle}</p>
+            <p>${emptyMsg}</p>
           </div>
         `;
         refreshIcons();
@@ -2009,63 +1987,39 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (c.is_invalid) {
           // Invalid Lead Grid Card (Read-only notice, curation is strictly in /admin)
-          card.className = "company-card-invalid bg-surface-container-low border border-rose-500/30 rounded-2xl p-4 sm:p-5 flex flex-col justify-between transition-all duration-200 group shadow-sm min-w-0";
+          card.className = "company-card-invalid app-card is-invalid";
           card.innerHTML = `
-            <div class="space-y-2 pointer-events-none">
-              <div class="flex items-start justify-between gap-1.5 pointer-events-auto">
-                <div class="flex items-center space-x-2 flex-1 min-w-0">
-                  <h4 class="font-bold text-xs sm:text-sm text-on-surface flex items-center space-x-1.5 break-words flex-1">
-                    <span>${escapeHTML(c.name)}</span>
-                  </h4>
-                </div>
-                <span class="px-2 py-0.5 rounded-full bg-rose-500/15 text-rose-700 dark:text-rose-300 border border-rose-500/30 text-[9px] sm:text-[10px] font-bold flex items-center space-x-1 shrink-0">
-                  <i data-lucide="shield-alert" class="w-2.5 h-2.5 sm:w-3 sm:h-3 text-rose-500"></i>
-                  <span>EXCLUDED</span>
-                </span>
-              </div>
-              <div class="text-[10px] sm:text-[11px] text-rose-800 dark:text-rose-200 bg-rose-500/10 p-2.5 rounded-xl border border-rose-500/25 space-y-0.5">
-                <div class="flex items-center space-x-1 font-semibold text-rose-700 dark:text-rose-400 text-[9px] sm:text-[10px] uppercase tracking-wider">
-                  <i data-lucide="alert-circle" class="w-3 h-3"></i>
-                  <span>Excluded by Admin</span>
-                </div>
-                <p class="break-words leading-tight">${escapeHTML(c.invalid_reason || 'Excluded by Admin')}</p>
-                ${c.invalid_at ? `<p class="text-[9px] sm:text-[10px] text-on-surface-variant font-mono">Date: ${escapeHTML(c.invalid_at)}</p>` : ''}
-              </div>
-              <div class="text-[10px] sm:text-[11px] font-mono text-on-surface-variant flex items-center space-x-1 break-all">
-                <i data-lucide="globe" class="w-3 h-3 text-outline shrink-0"></i>
-                <span>${escapeHTML(c.domain)}</span>
-              </div>
+            <div class="ac-head">
+              <div class="ac-id"><div class="ac-name"><h4>${escapeHTML(c.name)}</h4></div></div>
+              <span class="status-pill excluded"><i data-lucide="shield-alert" class="w-3 h-3"></i><span>EXCLUDED</span></span>
             </div>
+            <div class="invalid-note">
+              <b><i data-lucide="alert-circle" class="w-3 h-3"></i><span>Excluded by Admin</span></b>
+              <p class="break-words">${escapeHTML(c.invalid_reason || 'Excluded by Admin')}</p>
+              ${c.invalid_at ? `<p class="font-mono subtle">Date: ${escapeHTML(c.invalid_at)}</p>` : ''}
+            </div>
+            <div class="ac-sub"><span><i data-lucide="globe" class="w-3 h-3"></i><span class="dom">${escapeHTML(c.domain)}</span></span></div>
           `;
         } else {
           // Genuine Active Company Grid Card
           const monogram = getCompanyMonogram(c.name);
-          const monoThemes = [
-            { bg: "bg-surface-container-high text-on-surface border-outline-variant/60" },
-            { bg: "bg-secondary/15 text-secondary border-secondary/30" },
-            { bg: "bg-tertiary/15 text-tertiary border-tertiary/30" },
-            { bg: "bg-surface-container-highest text-on-surface-variant border-outline-variant/60" }
-          ];
+          const monoThemes = [{ bg: "" }, { bg: "t1" }, { bg: "t2" }, { bg: "t3" }];
           const monoTheme = monoThemes[(c.id || 0) % monoThemes.length];
 
           // Rating & Reviews display
           const ratingVal = (c.rating && c.rating > 0) ? Number(c.rating).toFixed(1) : null;
           const ratingDisplay = ratingVal
-            ? `<div class="flex items-center gap-1 text-on-surface-variant text-caption font-semibold shrink-0">
-                 <span class="material-symbols-outlined text-[13px] text-on-surface-variant">star</span>
-                 <span class="text-on-surface">${ratingVal}</span>
-                 <span class="text-on-surface-variant font-normal">Google (${c.reviews_count || 0})</span>
-               </div>`
+            ? `<span class="ac-rating"><span class="material-symbols-outlined">star</span><b>${ratingVal}</b><span>Google (${c.reviews_count || 0})</span></span>`
             : '';
 
           // Status Badge: Pitched, Researched, Uncontacted
           let statusBadge = "";
           if (c.already_contacted) {
-            statusBadge = `<span onclick="event.stopPropagation(); window.viewSentEmailForCompany && window.viewSentEmailForCompany(${c.id})" class="px-2.5 py-0.5 rounded text-caption font-mono bg-primary/10 text-primary border border-primary/30 shrink-0 cursor-pointer flex items-center gap-1 font-semibold hover:brightness-110" title="Click to view outreach sent"><span class="material-symbols-outlined text-[13px]">check_circle</span><span>Pitched</span></span>`;
+            statusBadge = `<span onclick="event.stopPropagation(); window.viewSentEmailForCompany && window.viewSentEmailForCompany(${c.id})" class="status-pill sent" title="Click to view outreach sent"><span class="material-symbols-outlined">check_circle</span><span>Pitched</span></span>`;
           } else if (c.is_enriched) {
-            statusBadge = `<span class="px-2.5 py-0.5 rounded text-caption font-mono bg-secondary/15 text-secondary border border-secondary/30 shrink-0 flex items-center gap-1 font-semibold"><span class="material-symbols-outlined text-[13px]">auto_awesome</span><span>Researched</span></span>`;
+            statusBadge = `<span class="status-pill researched"><span class="material-symbols-outlined">auto_awesome</span><span>Researched</span></span>`;
           } else {
-            statusBadge = `<span class="px-2.5 py-0.5 rounded text-caption font-mono bg-surface-container text-on-surface-variant border border-outline-variant/60 shrink-0">Uncontacted</span>`;
+            statusBadge = `<span class="status-pill">Uncontacted</span>`;
           }
 
           // Description: Only use actual scraped description or AI summary. Never manufacture fake text.
@@ -2087,90 +2041,67 @@ document.addEventListener("DOMContentLoaded", () => {
           const hasEmail = Boolean(c.emails && c.emails.length > 0);
           const primaryEmail = hasEmail ? c.emails[0] : null;
           const emailIcon = hasEmail ? 'mark_email_read' : 'mail_off';
-          const emailColor = hasEmail ? 'text-secondary' : 'text-amber-500/80';
-          const emailTextClass = hasEmail ? 'text-secondary font-medium' : 'text-amber-500/80 font-normal';
+          const emailTextClass = hasEmail ? 'has' : 'none';
           const locationText = c.city ? `${c.city}, IN` : (cleanAddressText(c.address) || 'India');
 
           // Tech stack pills (Only show verified AI-enriched tech stack; never misleading placeholders)
           let techPillsHtml = '';
           if (c.profile && Array.isArray(c.profile.tech_stack) && c.profile.tech_stack.length > 0) {
-            techPillsHtml = c.profile.tech_stack.slice(0, 4).map(t => `<span class="px-2 py-0.5 rounded text-[11px] font-mono tracking-wide bg-surface-container text-on-surface-variant border border-outline-variant/30">${escapeHTML(t)}</span>`).join('');
+            techPillsHtml = c.profile.tech_stack.slice(0, 4).map(t => `<span class="ac-tag">${escapeHTML(t)}</span>`).join('');
           } else if (c.is_enriched) {
-            techPillsHtml = `<span class="px-2 py-0.5 rounded text-[11px] font-mono tracking-wide text-on-surface-variant/60 bg-surface-container/40 border border-outline-variant/20 italic">No frameworks detected</span>`;
+            techPillsHtml = `<span class="ac-tag muted">No frameworks detected</span>`;
           } else {
-            techPillsHtml = `<span class="px-2 py-0.5 rounded text-[11px] font-mono tracking-wide text-on-surface-variant/60 bg-surface-container/40 border border-outline-variant/20 italic flex items-center gap-1.5"><span class="material-symbols-outlined text-[13px] text-amber-500/70">hourglass_top</span><span>Stack pending AI enrichment</span></span>`;
+            techPillsHtml = `<span class="ac-tag muted"><span class="material-symbols-outlined">hourglass_top</span><span>Stack pending AI enrichment</span></span>`;
           }
 
-          card.className = "company-card group bg-surface-container-low border border-outline-variant/40 hover:border-outline-variant/80 hover:shadow-lg rounded-xl p-4 sm:p-5 flex flex-col justify-between transition-all duration-150 relative cursor-pointer min-w-0";
+          card.className = "company-card app-card is-clickable";
           card.innerHTML = `
-            <div>
-              <!-- Header Row: Monogram + Title & Domain (left) | Status Badge (right) -->
-              <div class="flex items-start justify-between gap-2.5 mb-2.5">
-                <div class="flex items-start gap-2.5 min-w-0 flex-1">
-                  <div class="w-9 h-9 rounded-lg flex items-center justify-center font-bold text-xs ${monoTheme.bg} border shrink-0 font-mono shadow-sm">
-                    ${monogram}
+            <div class="ac-head">
+              <div class="ac-id">
+                <div class="ac-mono ${monoTheme.bg}">${monogram}</div>
+                <div class="min-w-0 flex-1">
+                  <div class="ac-name">
+                    <h3 title="${escapeHTML(c.name)}">${escapeHTML(c.name)}</h3>
+                    ${c.domain ? `
+                    <a href="${c.website_url || 'https://' + c.domain}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();" title="Visit ${escapeHTML(c.domain)}">
+                      <span class="material-symbols-outlined">open_in_new</span>
+                    </a>` : ''}
                   </div>
-                  <div class="min-w-0 flex-1">
-                    <div class="flex items-center gap-1.5 flex-wrap">
-                      <h3 class="text-sm font-bold text-on-surface leading-tight truncate" title="${escapeHTML(c.name)}">${escapeHTML(c.name)}</h3>
-                      ${c.domain ? `
-                      <a class="inline-flex items-center text-on-surface-variant hover:text-primary transition-colors shrink-0" href="${c.website_url || 'https://' + c.domain}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();" title="Visit ${escapeHTML(c.domain)}">
-                        <span class="material-symbols-outlined text-[13px]">open_in_new</span>
-                      </a>` : ''}
-                    </div>
-                    ${c.domain ? `<span class="text-[11px] font-mono text-on-surface-variant/80 truncate block mt-0.5">${escapeHTML(c.domain)}</span>` : ''}
-                  </div>
-                </div>
-                <div class="flex items-center gap-1.5 shrink-0 -mt-0.5">
-                  ${statusBadge}
+                  ${c.domain ? `<div class="ac-sub"><span class="dom">${escapeHTML(c.domain)}</span></div>` : ''}
                 </div>
               </div>
-
-              <!-- Meta Row: Industry Pill (left) + Google Rating (right) in unified row -->
-              <div class="flex items-center justify-between gap-2 text-[11px] mb-3 pb-2.5 border-b border-outline-variant/20">
-                <div class="flex items-center gap-1.5 min-w-0">
-                  ${c.industry_domain ? `<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-surface-container-high border border-outline-variant/40 text-on-surface-variant truncate max-w-[170px]" title="${escapeHTML(c.industry_domain)}">${escapeHTML(c.industry_domain)}</span>` : '<span class="text-[10px] font-mono text-on-surface-variant/50">Technology</span>'}
-                </div>
-                ${ratingDisplay ? `<div class="shrink-0 text-right">${ratingDisplay}</div>` : ''}
-              </div>
-
-              <!-- Description: Uniform 2-line clamp -->
-              <div class="min-h-[36px] mb-3">
-                ${descText ? `
-                  <p class="text-xs text-on-surface-variant line-clamp-2 leading-relaxed">
-                    ${escapeHTML(descText)}
-                  </p>
-                ` : `
-                  <p class="text-xs text-on-surface-variant/40 italic">Capabilities profile pending extraction</p>
-                `}
-              </div>
-
-              <!-- Contact & Location Box -->
-              <div class="flex items-center justify-between text-caption font-caption gap-2 mb-3 px-2.5 py-1.5 rounded-lg bg-surface-container/60 border border-outline-variant/20">
-                <div class="flex items-center gap-1.5 ${emailTextClass} truncate min-w-0 font-mono text-[11px]">
-                  <span class="material-symbols-outlined text-[14px] ${emailColor} shrink-0">${emailIcon}</span>
-                  <span class="truncate">${hasEmail ? escapeHTML(primaryEmail) : '<span class="text-amber-500 font-medium not-italic">Email not found</span>'}</span>
-                </div>
-                <div class="flex items-center gap-1 text-on-surface-variant shrink-0 font-mono text-[11px]">
-                  <span class="material-symbols-outlined text-[13px] text-on-surface-variant/70">location_on</span>
-                  <span class="truncate max-w-[120px]">${escapeHTML(locationText)}</span>
-                </div>
-              </div>
-
-              <!-- Tech Stack Pills: Fixed height container -->
-              <div class="min-h-[26px] flex flex-wrap items-center gap-1 mb-3.5">
-                ${techPillsHtml}
-              </div>
+              ${statusBadge}
             </div>
 
-            <!-- Action Buttons: Tactile Milled Secondary + Amber Primary CTA -->
-            <div class="grid grid-cols-2 gap-2 mt-auto pt-3 border-t border-outline-variant/30">
-              <button type="button" class="btn-single-details h-9 px-2.5 rounded-lg border border-outline-variant/60 bg-surface-container hover:bg-surface-container-high text-on-surface text-xs font-semibold font-body-md transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs active:scale-[0.98]">
-                <span class="material-symbols-outlined text-[15px]">visibility</span>
+            <div class="ac-meta">
+              ${c.industry_domain ? `<span class="ac-industry" title="${escapeHTML(c.industry_domain)}">${escapeHTML(c.industry_domain)}</span>` : '<span class="ac-industry">Technology</span>'}
+              ${ratingDisplay}
+            </div>
+
+            ${descText
+              ? `<p class="ac-desc">${escapeHTML(descText)}</p>`
+              : `<p class="ac-desc is-empty">Capabilities profile pending extraction</p>`}
+
+            <div class="ac-contact">
+              <span class="${emailTextClass}">
+                <span class="material-symbols-outlined">${emailIcon}</span>
+                <span>${hasEmail ? escapeHTML(primaryEmail) : 'Email not found'}</span>
+              </span>
+              <span class="loc">
+                <span class="material-symbols-outlined">location_on</span>
+                <span>${escapeHTML(locationText)}</span>
+              </span>
+            </div>
+
+            <div class="ac-tags">${techPillsHtml}</div>
+
+            <div class="ac-actions">
+              <button type="button" class="btn-single-details btn btn-secondary btn-sm">
+                <span class="material-symbols-outlined">visibility</span>
                 <span class="truncate">View Intel</span>
               </button>
-              <button type="button" class="btn-single-pitch h-9 px-2.5 rounded-lg bg-primary hover:bg-primary/90 text-on-primary text-xs font-semibold font-body-md transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs active:scale-[0.98]">
-                <span class="material-symbols-outlined text-[15px]">send</span>
+              <button type="button" class="btn-single-pitch btn btn-primary btn-sm">
+                <span class="material-symbols-outlined">send</span>
                 <span class="truncate">Draft Pitch</span>
               </button>
             </div>
@@ -2373,11 +2304,11 @@ document.addEventListener("DOMContentLoaded", () => {
       if (canManageLeads) {
         cmodalBtnAdminAction.classList.remove("hidden");
         if (company.is_invalid) {
-          cmodalBtnAdminAction.className = "px-3.5 py-2 rounded-lg text-label-sm font-label-sm font-semibold transition flex items-center gap-1.5 cursor-pointer bg-secondary/15 hover:bg-secondary/25 text-secondary border border-secondary/30";
+          cmodalBtnAdminAction.className = "btn admin-action restore";
           cmodalBtnAdminAction.innerHTML = `<span class="material-symbols-outlined text-[16px]">restore</span><span>Restore Lead</span>`;
           cmodalBtnAdminAction.onclick = () => handleRestoreCompany(company.id, company.name);
         } else {
-          cmodalBtnAdminAction.className = "px-3.5 py-2 rounded-lg text-label-sm font-label-sm font-semibold transition flex items-center gap-1.5 cursor-pointer bg-error/10 hover:bg-error/20 border border-error/30 text-error";
+          cmodalBtnAdminAction.className = "btn admin-action exclude";
           cmodalBtnAdminAction.innerHTML = `<span class="material-symbols-outlined text-[16px]">block</span><span>Mark as Excluded</span>`;
           cmodalBtnAdminAction.onclick = () => handleInvalidateCompany(company.id, company.name);
         }
@@ -2390,18 +2321,18 @@ document.addEventListener("DOMContentLoaded", () => {
     cmodalBadge.onclick = null;
     cmodalBadge.removeAttribute("title");
     if (company.is_invalid) {
-      cmodalBadge.className = "px-2.5 py-0.5 rounded-full text-caption font-bold bg-error/10 hover:bg-error/20 text-error border border-error/30 flex items-center gap-1 shadow-xs";
+      cmodalBadge.className = "modal-badge invalid";
       cmodalBadge.innerHTML = `<span class="material-symbols-outlined text-[13px]">shield</span><span>INVALID LEAD</span>`;
     } else if (company.already_contacted) {
-      cmodalBadge.className = "px-2.5 py-0.5 rounded-full text-caption font-semibold bg-secondary/15 hover:bg-secondary/25 text-secondary border border-secondary/30 flex items-center gap-1 cursor-pointer transition shadow-xs";
+      cmodalBadge.className = "modal-badge contacted";
       cmodalBadge.title = "Click to view message sent";
       cmodalBadge.innerHTML = `<span class="material-symbols-outlined text-[13px]">check_circle</span><span>Contacted ${company.contacted_at || ''}</span>`;
       cmodalBadge.onclick = () => window.viewSentEmailForCompany(company.id);
     } else if (company.is_enriched) {
-      cmodalBadge.className = "px-2.5 py-0.5 rounded-full text-caption font-semibold bg-primary/10 text-primary border border-primary/30 flex items-center gap-1 shadow-xs";
+      cmodalBadge.className = "modal-badge enriched";
       cmodalBadge.innerHTML = `<span class="material-symbols-outlined text-[13px]">auto_awesome</span><span>AI Enriched</span>`;
     } else {
-      cmodalBadge.className = "px-2.5 py-0.5 rounded-full bg-surface-container text-on-surface-variant border border-outline-variant/60 text-caption font-mono flex items-center gap-1";
+      cmodalBadge.className = "modal-badge verified";
       cmodalBadge.innerHTML = `<span class="material-symbols-outlined text-[13px]">verified</span><span>Verified Lead</span>`;
     }
 
@@ -2410,11 +2341,11 @@ document.addEventListener("DOMContentLoaded", () => {
     cmodalEmailsCount.textContent = `${emails.length} discovered`;
     if (emails.length > 0) {
       cmodalEmailsContainer.innerHTML = emails.map(em => `
-        <div class="flex items-center space-x-2 px-2.5 py-1 bg-surface-container border border-outline-variant/40 rounded-lg text-secondary font-mono text-xs">
-          <span class="material-symbols-outlined text-[16px] text-secondary shrink-0">mail</span>
+        <div class="email-chip">
+          <span class="material-symbols-outlined">mail</span>
           <span class="break-all">${escapeHTML(em)}</span>
-          <button class="text-on-surface-variant hover:text-on-surface copy-em-btn text-xs ml-1 p-0.5 rounded hover:bg-surface-container-high flex items-center cursor-pointer" data-email="${escapeHTML(em)}" title="Copy email">
-            <span class="material-symbols-outlined text-[14px]">content_copy</span>
+          <button class="copy-em-btn" data-email="${escapeHTML(em)}" title="Copy email">
+            <span class="material-symbols-outlined">content_copy</span>
           </button>
         </div>
       `).join("");
@@ -2422,16 +2353,16 @@ document.addEventListener("DOMContentLoaded", () => {
       cmodalEmailsContainer.querySelectorAll(".copy-em-btn").forEach(b => {
         b.addEventListener("click", () => {
           navigator.clipboard.writeText(b.dataset.email);
-          b.innerHTML = `<span class="material-symbols-outlined text-[14px] text-secondary">check</span>`;
+          b.innerHTML = `<span class="material-symbols-outlined text-emerald-400">check</span>`;
           setTimeout(() => {
-            b.innerHTML = `<span class="material-symbols-outlined text-[14px]">content_copy</span>`;
+            b.innerHTML = `<span class="material-symbols-outlined">content_copy</span>`;
           }, 1500);
         });
       });
     } else {
       cmodalEmailsContainer.innerHTML = `
-        <div class="flex items-center gap-2 p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-500 text-xs font-mono">
-          <span class="material-symbols-outlined text-[16px]">mail_off</span>
+        <div class="no-email">
+          <span class="material-symbols-outlined">mail_off</span>
           <span>Email not found -- Click "Enrich with AI" below to scan company website for verified contacts.</span>
         </div>
       `;
@@ -2447,16 +2378,16 @@ document.addEventListener("DOMContentLoaded", () => {
       const stack = company.profile.tech_stack || [];
       if (stack.length > 0) {
         cmodalTechstack.innerHTML = stack.map(tech => `
-          <span class="px-2.5 py-1 rounded bg-surface-container-high border border-outline-variant/40 text-on-surface text-xs font-mono font-medium">${escapeHTML(tech)}</span>
+          <span class="tech-chip">${escapeHTML(tech)}</span>
         `).join("");
       } else {
-        cmodalTechstack.innerHTML = `<span class="text-on-surface-variant italic text-[11px]">No tech stack detected</span>`;
+        cmodalTechstack.innerHTML = `<span class="muted-note">No tech stack detected</span>`;
       }
     } else {
       cmodalSummary.textContent = "Awaiting AI enrichment...";
       cmodalIndustry.textContent = "Pending Analysis";
       cmodalTone.textContent = "Professional";
-      cmodalTechstack.innerHTML = `<span class="text-on-surface-variant italic text-[11px]">Pending AI enrichment</span>`;
+      cmodalTechstack.innerHTML = `<span class="muted-note">Pending AI enrichment</span>`;
     }
 
     // Check if detailed analysis is already loaded or in local memory cache
@@ -2473,11 +2404,11 @@ document.addEventListener("DOMContentLoaded", () => {
       // Show tactile skeleton shimmer and fetch on-demand via AJAX
       cmodalDetailedAnalysis.dataset.rawText = "";
       cmodalDetailedAnalysis.innerHTML = `
-        <div class="space-y-3 py-4 animate-pulse">
-          <div class="h-4 bg-surface-container-high rounded w-3/4"></div>
-          <div class="h-3.5 bg-surface-container rounded w-full"></div>
-          <div class="h-3.5 bg-surface-container rounded w-5/6"></div>
-          <div class="h-3.5 bg-surface-container rounded w-2/3"></div>
+        <div class="sk-lines">
+          <span class="sk" style="height:16px;width:75%"></span>
+          <span class="sk" style="height:12px"></span>
+          <span class="sk" style="height:12px;width:85%"></span>
+          <span class="sk" style="height:12px;width:65%"></span>
         </div>
       `;
 
@@ -2496,29 +2427,29 @@ document.addEventListener("DOMContentLoaded", () => {
                 cmodalDetailedAnalysis.dataset.rawText = detailData.profile.detailed_analysis;
                 cmodalDetailedAnalysis.innerHTML = formatMarkdown(detailData.profile.detailed_analysis);
               } else {
-                cmodalDetailedAnalysis.innerHTML = `<span class="text-on-surface-variant italic">Click 'Enrich with AI' below to generate detailed intelligence report.</span>`;
+                cmodalDetailedAnalysis.innerHTML = `<span class="muted-note">Click 'Enrich with AI' below to generate detailed intelligence report.</span>`;
               }
               const stack = detailData.profile.tech_stack || [];
               if (stack.length > 0) {
                 cmodalTechstack.innerHTML = stack.map(tech => `
-                  <span class="px-2.5 py-1 rounded bg-surface-container-high border border-outline-variant/40 text-on-surface text-xs font-mono font-medium">${escapeHTML(tech)}</span>
+                  <span class="tech-chip">${escapeHTML(tech)}</span>
                 `).join("");
               } else {
-                cmodalTechstack.innerHTML = `<span class="text-on-surface-variant italic text-[11px]">No tech stack detected</span>`;
+                cmodalTechstack.innerHTML = `<span class="muted-note">No tech stack detected</span>`;
               }
             } else {
-              cmodalDetailedAnalysis.innerHTML = `<span class="text-on-surface-variant italic">Not enriched yet. Click 'Enrich with AI' below to generate detailed intelligence report.</span>`;
+              cmodalDetailedAnalysis.innerHTML = `<span class="muted-note">Not enriched yet. Click 'Enrich with AI' below to generate detailed intelligence report.</span>`;
             }
 
             if (detailData.emails && detailData.emails.length > 0) {
               company.emails = detailData.emails;
               cmodalEmailsCount.textContent = `${detailData.emails.length} discovered`;
               cmodalEmailsContainer.innerHTML = detailData.emails.map(em => `
-                <div class="flex items-center space-x-2 px-2.5 py-1 bg-surface-container border border-outline-variant/40 rounded-lg text-secondary font-mono text-xs">
-                  <span class="material-symbols-outlined text-[16px] text-secondary shrink-0">mail</span>
+                        <div class="email-chip">
+                  <span class="material-symbols-outlined">mail</span>
                   <span class="break-all">${escapeHTML(em)}</span>
-                  <button class="text-on-surface-variant hover:text-on-surface copy-em-btn text-xs ml-1 p-0.5 rounded hover:bg-surface-container-high flex items-center cursor-pointer" data-email="${escapeHTML(em)}" title="Copy email">
-                    <span class="material-symbols-outlined text-[14px]">content_copy</span>
+                  <button class="copy-em-btn" data-email="${escapeHTML(em)}" title="Copy email">
+                    <span class="material-symbols-outlined">content_copy</span>
                   </button>
                 </div>
               `).join("");
@@ -2528,7 +2459,7 @@ document.addEventListener("DOMContentLoaded", () => {
         .catch(err => {
           console.warn("Failed to fetch on-demand company intel:", err);
           if (activeModalCompany && activeModalCompany.id === company.id) {
-            cmodalDetailedAnalysis.innerHTML = `<span class="text-on-surface-variant italic">Click 'Enrich with AI' below to generate detailed intelligence report.</span>`;
+            cmodalDetailedAnalysis.innerHTML = `<span class="muted-note">Click 'Enrich with AI' below to generate detailed intelligence report.</span>`;
           }
         });
     }
@@ -2844,10 +2775,10 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     return `
-      <div class="flex items-center gap-2.5 py-1 px-2 rounded hover:bg-surface-container/60 transition text-xs font-mono text-on-surface-variant border-b border-outline-variant/20 last:border-0">
-        ${timeStr ? `<span class="text-on-surface-variant/70 text-[10px] shrink-0 font-mono">${escapeHTML(timeStr)}</span>` : ""}
-        <span class="material-symbols-outlined text-[15px] ${iconColor} shrink-0">${icon}</span>
-        <span class="text-on-surface leading-snug">${escapeHTML(friendlyText)}</span>
+      <div class="log-line">
+        ${timeStr ? `<span class="ts">${escapeHTML(timeStr)}</span>` : ""}
+        <span class="material-symbols-outlined ${iconColor}">${icon}</span>
+        <span class="msg">${escapeHTML(friendlyText)}</span>
       </div>
     `;
   }
@@ -3642,7 +3573,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const skillsContainer = document.getElementById("profile-skills");
     if (skillsContainer && profile.top_skills) {
       skillsContainer.innerHTML = profile.top_skills.map(s => `
-        <span class="px-2.5 py-1 rounded bg-primary/10 text-primary border border-primary/30 text-xs font-medium">${escapeHTML(s)}</span>
+        <span class="skill-chip">${escapeHTML(s)}</span>
       `).join("");
     }
 
@@ -3661,7 +3592,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (rolesSec && rolesContainer) {
       if (profile.best_fit_roles && profile.best_fit_roles.length > 0) {
         rolesContainer.innerHTML = profile.best_fit_roles.map(r => `
-          <span class="px-2.5 py-0.5 rounded bg-surface-container text-on-surface border border-outline-variant/40 text-xs font-medium">${escapeHTML(r)}</span>
+          <span class="role-chip">${escapeHTML(r)}</span>
         `).join("");
         rolesSec.classList.remove("hidden");
       } else {
@@ -3674,7 +3605,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (atsSec && atsContainer) {
       if (profile.ats_keywords && profile.ats_keywords.length > 0) {
         atsContainer.innerHTML = profile.ats_keywords.map(k => `
-          <span class="px-2 py-0.5 rounded bg-surface-container-high/60 text-on-surface-variant border border-outline-variant/30 text-[11px] font-mono">${escapeHTML(k)}</span>
+          <span class="kw-chip">${escapeHTML(k)}</span>
         `).join("");
         atsSec.classList.remove("hidden");
       } else {
@@ -3986,7 +3917,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const text = (modalBody.value || "").trim();
     const count = text ? text.split(/\s+/).filter(Boolean).length : 0;
     pitchWordCount.textContent = `${count} words`;
-    pitchWordCount.className = "text-caption font-mono text-outline";
+    pitchWordCount.className = "word-count";
   }
 
   if (modalBody) {
@@ -4053,9 +3984,9 @@ document.addEventListener("DOMContentLoaded", () => {
         currentPitchTargetEmail = (data.target_email || "").trim();
         modalCompanyName.textContent = `Personalized Outreach for ${data.company_name}`;
         if (currentPitchTargetEmail) {
-          modalTargetEmail.innerHTML = `<span class="material-symbols-outlined text-[14px] text-secondary">alternate_email</span> <span class="font-mono text-secondary font-semibold">${escapeHTML(currentPitchTargetEmail)}</span>`;
+          modalTargetEmail.innerHTML = `<span class="em">${escapeHTML(currentPitchTargetEmail)}</span>`;
         } else {
-          modalTargetEmail.innerHTML = `<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-mono bg-amber-500/10 text-amber-500 border border-amber-500/20 font-semibold"><span class="material-symbols-outlined text-[13px]">mail_off</span><span>Email not found (Sending disabled)</span></span>`;
+          modalTargetEmail.innerHTML = `<span class="recipient-missing"><span class="material-symbols-outlined">mail_off</span><span>Email not found (Sending disabled)</span></span>`;
         }
 
         modalSubject.value = data.subject_line || "";
@@ -4451,8 +4382,8 @@ document.addEventListener("DOMContentLoaded", () => {
   if (btnOutreachViewGrid) {
     btnOutreachViewGrid.addEventListener("click", () => {
       outreachViewMode = "grid";
-      btnOutreachViewGrid.className = "h-9 px-2.5 rounded-md text-xs font-mono flex items-center gap-1 bg-surface-container-highest text-on-surface cursor-pointer transition";
-      btnOutreachViewList.className = "h-9 px-2.5 rounded-md text-xs font-mono flex items-center gap-1 text-on-surface-variant hover:text-on-surface cursor-pointer transition";
+      btnOutreachViewGrid.className = "is-active";
+      btnOutreachViewList.className = "";
       renderPitchesList();
     });
   }
@@ -4460,8 +4391,8 @@ document.addEventListener("DOMContentLoaded", () => {
   if (btnOutreachViewList) {
     btnOutreachViewList.addEventListener("click", () => {
       outreachViewMode = "list";
-      btnOutreachViewList.className = "h-9 px-2.5 rounded-md text-xs font-mono flex items-center gap-1 bg-surface-container-highest text-on-surface cursor-pointer transition";
-      btnOutreachViewGrid.className = "h-9 px-2.5 rounded-md text-xs font-mono flex items-center gap-1 text-on-surface-variant hover:text-on-surface cursor-pointer transition";
+      btnOutreachViewList.className = "is-active";
+      btnOutreachViewGrid.className = "";
       renderPitchesList();
     });
   }
@@ -4496,9 +4427,7 @@ document.addEventListener("DOMContentLoaded", () => {
     container.innerHTML = "";
 
     // Set responsive grid vs compact stream layout class
-    container.className = (outreachViewMode === "grid")
-      ? "grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5"
-      : "space-y-3";
+    container.className = (outreachViewMode === "grid") ? "card-grid" : "row-list";
 
     const totalCount = outreachTotalServerCount || (allOutreachCompanies ? allOutreachCompanies.length : 0);
     if (countSpan) countSpan.textContent = totalCount.toLocaleString();
@@ -4507,10 +4436,10 @@ document.addEventListener("DOMContentLoaded", () => {
       if (outreachPagination) outreachPagination.classList.add("hidden");
       if (outreachPaginationBottom) outreachPaginationBottom.classList.add("hidden");
       container.innerHTML = `
-        <div class="col-span-full bg-surface-container-low border border-outline-variant/50 rounded-xl p-10 text-center space-y-3">
-          <span class="material-symbols-outlined text-[36px] text-on-surface-variant">search_off</span>
-          <p class="text-sm font-semibold text-on-surface">No matching outreach targets</p>
-          <p class="text-xs text-on-surface-variant max-w-sm mx-auto">Try adjusting your search query or clearing dropdown filters.</p>
+        <div class="app-empty">
+          <span class="ic"><span class="material-symbols-outlined">search_off</span></span>
+          <p class="t">No matching outreach targets</p>
+          <p>Try adjusting your search query or clearing dropdown filters.</p>
         </div>
       `;
       updateOutreachSelectionUI([]);
@@ -4520,12 +4449,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const pageItems = allOutreachCompanies;
 
-    const monoThemes = [
-      { bg: "bg-surface-container-high text-on-surface border-outline-variant/60" },
-      { bg: "bg-secondary/15 text-secondary border-secondary/30" },
-      { bg: "bg-tertiary/15 text-tertiary border-tertiary/30" },
-      { bg: "bg-surface-container-highest text-on-surface-variant border-outline-variant/60" }
-    ];
+    const monoThemes = [{ bg: "" }, { bg: "t1" }, { bg: "t2" }, { bg: "t3" }];
 
     pageItems.forEach(c => {
       const card = document.createElement("div");
@@ -4538,181 +4462,135 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const ratingVal = (c.rating && c.rating > 0) ? Number(c.rating).toFixed(1) : null;
       const ratingDisplay = ratingVal
-        ? `<span class="text-on-surface-variant font-semibold flex items-center gap-1 font-mono text-[11px]"><span class="material-symbols-outlined text-[12px] text-on-surface-variant">star</span><span class="text-on-surface">${ratingVal}</span><span class="text-on-surface-variant font-normal text-[10px]">Google (${c.reviews_count || 0})</span></span>`
-        : `<span class="text-on-surface-variant text-[10px] font-mono">No reviews</span>`;
+        ? `<span class="ac-rating"><span class="material-symbols-outlined">star</span><b>${ratingVal}</b><span>Google (${c.reviews_count || 0})</span></span>`
+        : `<span class="subtle">No reviews</span>`;
 
       const statusBadge = c.already_contacted
-        ? `<button type="button" onclick="window.viewSentEmailForCompany(${c.id})" class="px-2 py-0.5 rounded text-[10px] font-mono bg-primary/10 hover:bg-primary/20 text-primary border border-primary/30 font-semibold flex items-center gap-1 shrink-0 cursor-pointer transition shadow-sm" title="Click to view message sent"><span class="material-symbols-outlined text-[12px]">check_circle</span><span>Sent</span></button>`
-        : `<span class="px-2 py-0.5 rounded text-[10px] font-mono bg-surface-container text-on-surface-variant border border-outline-variant/60 shrink-0">Queue</span>`;
+        ? `<button type="button" onclick="window.viewSentEmailForCompany(${c.id})" class="status-pill sent" title="Click to view message sent"><span class="material-symbols-outlined">check_circle</span><span>Sent</span></button>`
+        : `<span class="status-pill">Queue</span>`;
 
       // Tech stack pills (Strict: only verified AI-enriched tech stack)
       let techPillsHtml = '';
       if (c.profile && Array.isArray(c.profile.tech_stack) && c.profile.tech_stack.length > 0) {
-        techPillsHtml = c.profile.tech_stack.slice(0, 4).map(t => `<span class="px-2 py-0.5 rounded text-[10px] font-mono tracking-wide bg-surface-container-lowest text-on-surface-variant border border-outline-variant/40">${escapeHTML(t)}</span>`).join('');
+        techPillsHtml = c.profile.tech_stack.slice(0, 4).map(t => `<span class="ac-tag">${escapeHTML(t)}</span>`).join('');
       } else if (c.is_enriched) {
-        techPillsHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-mono tracking-wide text-on-surface-variant/60 bg-surface-container-lowest/50 border border-outline-variant/30 italic">No frameworks detected</span>`;
+        techPillsHtml = `<span class="ac-tag muted">No frameworks detected</span>`;
       } else {
-        techPillsHtml = `<span class="px-2 py-0.5 rounded text-[10px] font-mono tracking-wide text-on-surface-variant/60 bg-surface-container-lowest/50 border border-outline-variant/30 italic flex items-center gap-1"><span class="material-symbols-outlined text-[12px] text-amber-500/70">hourglass_top</span><span>Stack pending AI enrichment</span></span>`;
+        techPillsHtml = `<span class="ac-tag muted"><span class="material-symbols-outlined">hourglass_top</span><span>Stack pending AI enrichment</span></span>`;
       }
 
       const isSelected = selectedOutreachCompanyIds.has(c.id);
 
       if (outreachViewMode === "grid") {
         // Mode A: Executive Dispatch Bento Card
-        card.className = `company-card group border rounded-xl p-5 flex flex-col justify-between transition-all duration-200 shadow-sm hover:shadow-lg relative min-w-0 ${isSelected ? 'ring-2 ring-primary/50 bg-surface-container-high border-primary/60' : 'bg-surface-container-low border-outline-variant/50 hover:border-outline hover:bg-surface-container'}`;
+        card.className = "company-card app-card";
         card.innerHTML = `
-          <div>
-            <!-- Part 1: Top Checkbox + Monogram + Name + Domain + Status -->
-            <div class="flex items-start justify-between gap-3 mb-3">
-              <div class="flex items-start gap-2.5 min-w-0 flex-1">
-                <label class="flex items-center justify-center p-0.5 cursor-pointer select-none shrink-0 mt-2" onclick="event.stopPropagation();" title="Select company">
-                  <input type="checkbox" class="outreach-card-checkbox w-4 h-4 rounded border-outline-variant/60 bg-surface-container-lowest text-primary focus:ring-0 cursor-pointer transition" data-id="${c.id}" ${isSelected ? 'checked' : ''}>
-                </label>
-                <div class="w-10 h-10 rounded-lg flex items-center justify-center font-bold text-label-md ${monoTheme.bg} border shrink-0 font-mono shadow-sm">
-                  ${monogram}
+          <div class="ac-head">
+            <div class="ac-id">
+              <label class="ac-check" onclick="event.stopPropagation();" title="Select company">
+                <input type="checkbox" class="outreach-card-checkbox" data-id="${c.id}" ${isSelected ? 'checked' : ''}>
+              </label>
+              <div class="ac-mono ${monoTheme.bg}">${monogram}</div>
+              <div class="min-w-0 flex-1">
+                <div class="ac-name">
+                  <h3 class="clickable" onclick="window.openCompanyModalById(${c.id})" title="${escapeHTML(c.name)}">${escapeHTML(c.name)}</h3>
+                  <a href="${c.website_url || 'https://' + c.domain}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();" title="Visit website">
+                    <span class="material-symbols-outlined">open_in_new</span>
+                  </a>
                 </div>
-                <div class="min-w-0 flex-1">
-                  <div class="flex items-start justify-between gap-1.5">
-                    <h3 class="text-headline-sm font-headline-sm text-on-surface font-semibold break-words line-clamp-2 leading-snug cursor-pointer hover:text-primary" onclick="window.openCompanyModalById(${c.id})" title="${escapeHTML(c.name)}">${escapeHTML(c.name)}</h3>
-                    <a class="text-on-surface-variant hover:text-primary transition-colors shrink-0 mt-0.5" href="${c.website_url || 'https://' + c.domain}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();" title="Visit website">
-                      <span class="material-symbols-outlined text-[14px]">open_in_new</span>
-                    </a>
-                  </div>
-                  <div class="flex items-center gap-2 mt-1">
-                    <span class="text-caption font-mono text-on-surface-variant truncate block">${escapeHTML(c.domain || '')}</span>
-                    ${c.city ? `<span class="text-on-surface-variant font-mono text-[11px] flex items-center gap-0.5 shrink-0"><span class="material-symbols-outlined text-[12px]">location_on</span>${escapeHTML(c.city)}</span>` : ''}
-                  </div>
+                <div class="ac-sub">
+                  <span class="dom">${escapeHTML(c.domain || '')}</span>
+                  ${c.city ? `<span><span class="material-symbols-outlined">location_on</span>${escapeHTML(c.city)}</span>` : ''}
                 </div>
-              </div>
-              <div class="shrink-0 pt-0.5">
-                ${statusBadge}
               </div>
             </div>
-
-            <!-- Part 2: Recipient Email Well -->
-            ${hasDirectEmail ? `
-              <div class="bg-surface-container-lowest border border-outline-variant/40 rounded-lg p-2.5 mb-3 flex items-center justify-between gap-2">
-                <div class="flex items-center gap-2 min-w-0">
-                  <span class="material-symbols-outlined text-[15px] text-secondary shrink-0">
-                    alternate_email
-                  </span>
-                  <div class="min-w-0">
-                    <span class="text-[10px] font-mono uppercase tracking-wider block text-secondary font-semibold">
-                      Verified Direct Email
-                    </span>
-                    <span class="font-mono text-xs text-on-surface font-semibold truncate block">
-                      ${escapeHTML(directEmail)}
-                    </span>
-                  </div>
-                </div>
-                <button type="button" class="btn-copy-email p-1.5 rounded hover:bg-surface-container text-on-surface-variant hover:text-on-surface transition shrink-0 cursor-pointer" data-email="${escapeHTML(directEmail)}" title="Copy email address">
-                  <span class="material-symbols-outlined text-[15px]">content_copy</span>
-                </button>
-              </div>
-            ` : `
-              <div class="bg-surface-container-lowest/70 border border-dashed border-amber-500/30 rounded-lg p-2.5 mb-3 flex items-center justify-between gap-2">
-                <div class="flex items-center gap-2 min-w-0">
-                  <span class="material-symbols-outlined text-[15px] text-amber-500 shrink-0">
-                    mail_off
-                  </span>
-                  <div class="min-w-0">
-                    <span class="text-[10px] font-mono uppercase tracking-wider block text-amber-500 font-semibold">
-                      Email Not Found
-                    </span>
-                    <span class="font-mono text-xs text-on-surface-variant italic truncate block">
-                      No verified recruiter email discovered
-                    </span>
-                  </div>
-                </div>
-                <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-amber-500/10 text-amber-500 border border-amber-500/20 font-medium">Unreachable</span>
-              </div>
-            `}
-
-            <!-- Part 3: Detected Tech Stack Chips & Rating -->
-            <div class="space-y-1.5 mb-4">
-              <div class="flex items-center justify-between text-[10px] font-mono text-on-surface-variant">
-                <span>${(c.profile && Array.isArray(c.profile.tech_stack) && c.profile.tech_stack.length > 0) ? 'DETECTED TECH STACK' : 'INTELLIGENCE STATUS'}</span>
-                ${ratingDisplay}
-              </div>
-              <div class="flex flex-wrap gap-1.5">
-                ${techPillsHtml}
-              </div>
-            </div>
+            ${statusBadge}
           </div>
 
-          <!-- Part 4: Bottom Tactile Actions -->
-          <div class="pt-3 border-t border-outline-variant/40 flex items-center justify-between gap-2">
-            <button type="button" class="btn-view-intel-row btn-tactile-slate px-3 py-1.5 rounded-lg text-xs font-mono font-medium flex items-center gap-1.5 transition cursor-pointer shadow-sm text-on-surface" data-id="${c.id}" title="Inspect full intelligence profile">
-              <span class="material-symbols-outlined text-[15px]">visibility</span>
+          ${hasDirectEmail ? `
+            <div class="email-well">
+              <div class="l">
+                <span class="material-symbols-outlined">alternate_email</span>
+                <div class="min-w-0"><small>Verified Direct Email</small><b>${escapeHTML(directEmail)}</b></div>
+              </div>
+              <button type="button" class="btn-copy-email icon-btn sm bare" data-email="${escapeHTML(directEmail)}" title="Copy email address">
+                <span class="material-symbols-outlined">content_copy</span>
+              </button>
+            </div>
+          ` : `
+            <div class="email-well missing">
+              <div class="l">
+                <span class="material-symbols-outlined">mail_off</span>
+                <div class="min-w-0"><small>Email Not Found</small><b>No verified recruiter email discovered</b></div>
+              </div>
+              <span class="chip-warn">Unreachable</span>
+            </div>
+          `}
+
+          <div>
+            <div class="intel-head">
+              <span>${(c.profile && Array.isArray(c.profile.tech_stack) && c.profile.tech_stack.length > 0) ? 'Detected tech stack' : 'Research status'}</span>
+              ${ratingDisplay}
+            </div>
+            <div class="ac-tags">${techPillsHtml}</div>
+          </div>
+
+          <div class="ac-actions split">
+            <button type="button" class="btn-view-intel-row btn btn-secondary btn-sm" data-id="${c.id}" title="Inspect full intelligence profile">
+              <span class="material-symbols-outlined">visibility</span>
               <span>View Intel</span>
             </button>
-            <div class="flex items-center gap-2">
-              ${c.already_contacted ? `
-                <button type="button" onclick="window.viewSentEmailForCompany(${c.id})" class="btn-tactile-slate px-3 py-1.5 rounded text-xs font-mono font-medium transition flex items-center gap-1 cursor-pointer">
-                  <span class="material-symbols-outlined text-[14px]">history</span>
-                  <span>Sent Log</span>
-                </button>
-              ` : `
-                <button type="button" class="btn-gen-pitch-row btn-card-pitch px-3.5 py-1.5 rounded text-xs font-headline font-semibold transition flex items-center gap-1.5 cursor-pointer shadow-sm" data-id="${c.id}">
-                  <span class="material-symbols-outlined text-[15px]">send</span>
-                  <span>Review & Send</span>
-                </button>
-              `}
-            </div>
+            ${c.already_contacted ? `
+              <button type="button" onclick="window.viewSentEmailForCompany(${c.id})" class="btn btn-secondary btn-sm">
+                <span class="material-symbols-outlined">history</span>
+                <span>Sent Log</span>
+              </button>
+            ` : `
+              <button type="button" class="btn-gen-pitch-row btn btn-primary btn-sm" data-id="${c.id}">
+                <span class="material-symbols-outlined">send</span>
+                <span>Review & Send</span>
+              </button>
+            `}
           </div>
         `;
       } else {
         // Mode B: Streamlined Compact Row
-        card.className = `company-card group border rounded-xl p-4 transition-all duration-150 flex flex-col md:flex-row md:items-center justify-between gap-3 shadow-sm min-w-0 ${isSelected ? 'ring-2 ring-primary/50 bg-surface-container-high border-primary/60' : 'bg-surface-container-low border-outline-variant/50 hover:border-outline hover:bg-surface-container'}`;
+        card.className = "company-card app-row";
         card.innerHTML = `
-          <div class="flex items-center gap-3 min-w-0 flex-1">
-            <label class="flex items-center justify-center p-0.5 cursor-pointer select-none shrink-0" onclick="event.stopPropagation();" title="Select company">
-              <input type="checkbox" class="outreach-card-checkbox w-4 h-4 rounded border-outline-variant/60 bg-surface-container-lowest text-primary focus:ring-0 cursor-pointer transition" data-id="${c.id}" ${isSelected ? 'checked' : ''}>
+          <div class="l">
+            <label class="ac-check" onclick="event.stopPropagation();" title="Select company">
+              <input type="checkbox" class="outreach-card-checkbox" data-id="${c.id}" ${isSelected ? 'checked' : ''}>
             </label>
-            <div class="w-9 h-9 rounded-md flex items-center justify-center font-bold text-xs ${monoTheme.bg} border shrink-0 font-mono shadow-sm">
-              ${monogram}
-            </div>
+            <div class="ac-mono ${monoTheme.bg}">${monogram}</div>
             <div class="min-w-0 flex-1">
-              <div class="flex items-center gap-2 flex-wrap">
-                <h4 class="font-semibold text-sm text-on-surface break-words cursor-pointer hover:text-primary" onclick="window.openCompanyModalById(${c.id})">${escapeHTML(c.name)}</h4>
+              <div class="row-badges">
+                <div class="ac-name"><h4 class="clickable" onclick="window.openCompanyModalById(${c.id})">${escapeHTML(c.name)}</h4></div>
                 ${statusBadge}
-                ${hasDirectEmail ? `
-                  <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-secondary/15 text-secondary border border-secondary/30 font-semibold">
-                    @ Direct Recruiter
-                  </span>
-                ` : `
-                  <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-amber-500/10 text-amber-500 border border-amber-500/20 font-semibold flex items-center gap-1">
-                    <span class="material-symbols-outlined text-[12px]">mail_off</span>
-                    <span>Email Not Found</span>
-                  </span>
-                `}
+                ${hasDirectEmail
+                  ? `<span class="chip-ok">Direct email</span>`
+                  : `<span class="chip-warn"><span class="material-symbols-outlined">mail_off</span><span>Email Not Found</span></span>`}
               </div>
-              <div class="flex items-center gap-2 text-xs font-mono text-on-surface-variant mt-0.5 flex-wrap">
-                ${hasDirectEmail ? `
-                  <span class="text-on-surface font-medium">${escapeHTML(directEmail)}</span>
-                ` : `
-                  <span class="text-amber-500 font-medium italic">Email not found</span>
-                `}
-                <span class="text-outline-variant">|</span>
-                <span class="text-on-surface-variant">${escapeHTML(c.domain || '')}</span>
-                ${c.city ? `<span class="text-outline-variant">|</span><span class="text-on-surface-variant flex items-center gap-0.5"><span class="material-symbols-outlined text-[12px]">location_on</span>${escapeHTML(c.city)}</span>` : ''}
+              <div class="row-meta">
+                ${hasDirectEmail ? `<span class="em">${escapeHTML(directEmail)}</span>` : `<span class="miss">Email not found</span>`}
+                <span>${escapeHTML(c.domain || '')}</span>
+                ${c.city ? `<span class="inline-flex items-center gap-1"><span class="material-symbols-outlined" style="font-size:14px">location_on</span>${escapeHTML(c.city)}</span>` : ''}
               </div>
             </div>
           </div>
 
-          <div class="flex items-center gap-2 shrink-0 pt-2 md:pt-0">
-            <button type="button" class="btn-view-intel-row text-xs font-mono text-on-surface-variant hover:text-on-surface flex items-center gap-1 transition cursor-pointer px-2.5 py-1.5 rounded hover:bg-surface-container" data-id="${c.id}">
-              <span class="material-symbols-outlined text-[15px]">visibility</span>
+          <div class="r">
+            <button type="button" class="btn-view-intel-row btn btn-ghost btn-sm" data-id="${c.id}">
+              <span class="material-symbols-outlined">visibility</span>
               <span class="hidden sm:inline">Intel</span>
             </button>
             ${c.already_contacted ? `
-              <button type="button" onclick="window.viewSentEmailForCompany(${c.id})" class="btn-tactile-slate px-3 py-1.5 rounded text-xs font-mono font-medium transition flex items-center gap-1 cursor-pointer">
-                <span class="material-symbols-outlined text-[14px]">history</span>
+              <button type="button" onclick="window.viewSentEmailForCompany(${c.id})" class="btn btn-secondary btn-sm">
+                <span class="material-symbols-outlined">history</span>
                 <span>Sent</span>
               </button>
             ` : `
-              <button type="button" class="btn-gen-pitch-row btn-card-pitch px-3.5 py-1.5 rounded text-xs font-headline font-semibold transition flex items-center gap-1.5 cursor-pointer shadow-sm" data-id="${c.id}">
-                <span class="material-symbols-outlined text-[15px]">send</span>
+              <button type="button" class="btn-gen-pitch-row btn btn-primary btn-sm" data-id="${c.id}">
+                <span class="material-symbols-outlined">send</span>
                 <span>Review & Send</span>
               </button>
             `}
@@ -4762,9 +4640,9 @@ document.addEventListener("DOMContentLoaded", () => {
           e.stopPropagation();
           const em = btnCopy.dataset.email;
           navigator.clipboard.writeText(em);
-          btnCopy.innerHTML = `<span class="material-symbols-outlined text-[15px] text-[#86B29B]">check</span>`;
+          btnCopy.innerHTML = `<span class="material-symbols-outlined text-emerald-400">check</span>`;
           setTimeout(() => {
-            btnCopy.innerHTML = `<span class="material-symbols-outlined text-[15px]">content_copy</span>`;
+            btnCopy.innerHTML = `<span class="material-symbols-outlined">content_copy</span>`;
           }, 1500);
         });
       }
@@ -4884,7 +4762,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (res.status === 401) {
         const logsContainer = document.getElementById("audit-logs");
         if (logsContainer) {
-          logsContainer.innerHTML = `<p class="text-outline italic text-caption py-4 text-center">Sign in to view your sent outreach history.</p>`;
+          logsContainer.innerHTML = `<p class="log-empty">Sign in to view your sent outreach history.</p>`;
         }
         return;
       }
@@ -4892,25 +4770,22 @@ document.addEventListener("DOMContentLoaded", () => {
       const logsContainer = document.getElementById("audit-logs");
       if (!logsContainer) return;
       if (!data.logs || data.logs.length === 0) {
-        logsContainer.innerHTML = `<p class="text-outline italic text-caption py-4 text-center">No emails sent yet today.</p>`;
+        logsContainer.innerHTML = `<p class="log-empty">No emails sent yet today.</p>`;
         return;
       }
 
       window._cachedAuditLogs = data.logs;
 
       logsContainer.innerHTML = data.logs.map((l, idx) => `
-        <div onclick="window._openCachedLog(${idx})" class="bg-surface-container border border-outline-variant/40 hover:border-outline-variant/80 rounded-lg p-3 space-y-1.5 transition cursor-pointer group shadow-sm" title="Click to view message sent">
-          <div class="flex items-center justify-between gap-2">
-            <span class="font-bold text-on-surface group-hover:text-primary transition truncate text-body-sm">${escapeHTML(l.company_name)}</span>
-            <span class="text-[10px] font-mono text-secondary font-semibold uppercase bg-secondary/15 border border-secondary/30 px-1.5 py-0.5 rounded shrink-0">${escapeHTML(l.delivery_method)}</span>
+        <div onclick="window._openCachedLog(${idx})" class="log-card" title="Click to view message sent">
+          <div class="top">
+            <b>${escapeHTML(l.company_name)}</b>
+            <span class="method">${escapeHTML(l.delivery_method)}</span>
           </div>
-          <p class="text-caption font-mono text-on-surface-variant truncate">To: ${escapeHTML(l.recipient_email)}</p>
-          <div class="flex items-center justify-between text-[11px] font-mono text-outline pt-0.5">
+          <p class="to">To: ${escapeHTML(l.recipient_email)}</p>
+          <div class="bottom">
             <span>${escapeHTML(l.sent_at)}</span>
-            <span class="text-primary group-hover:underline font-medium flex items-center space-x-0.5 text-caption">
-              <span>View message</span>
-              <i data-lucide="chevron-right" class="w-3 h-3"></i>
-            </span>
+            <span class="view"><span>View message</span><i data-lucide="chevron-right" class="w-3 h-3"></i></span>
           </div>
         </div>
       `).join("");
