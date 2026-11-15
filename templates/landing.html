@@ -262,8 +262,9 @@
         </button>
 
         {% if is_logged_in %}
-        <a href="/app" class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-secondary/40 text-secondary text-xs font-mono font-semibold hover:bg-secondary/10 transition-all whitespace-nowrap shrink-0">
-          <span class="material-symbols-outlined text-sm">dashboard</span>
+        <!-- Logged in: one action. "Find Leads Free" also pointed at /app, so it was a duplicate. -->
+        <a href="/app" class="btn-tactile-ecru flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold cursor-pointer whitespace-nowrap shrink-0">
+          <span class="material-symbols-outlined text-[15px] shrink-0">dashboard</span>
           <span>Open Workspace</span>
         </a>
         {% else %}
@@ -276,12 +277,11 @@
           </svg>
           <span class="whitespace-nowrap">Sign In</span>
         </a>
-        {% endif %}
-
         <a href="/app" class="btn-tactile-ecru flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold cursor-pointer whitespace-nowrap shrink-0">
           <span>Find Leads Free</span>
           <span class="material-symbols-outlined text-[15px] shrink-0">arrow_forward</span>
         </a>
+        {% endif %}
       </div>
     </div>
   </header>
