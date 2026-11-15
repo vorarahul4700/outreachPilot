@@ -54,13 +54,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const s = TOAST_STYLES[type] || TOAST_STYLES.info;
     const toast = document.createElement("div");
     toast.setAttribute("role", type === "error" ? "alert" : "status");
-    toast.className = `bg-surface-container-low/95 text-on-surface border ${s.ring} rounded-2xl px-4 sm:px-5 py-3 flex items-center gap-3 shadow-xl backdrop-blur-md pointer-events-auto transition-all duration-300 -translate-y-4 opacity-0 w-full sm:w-auto sm:min-w-[500px] max-w-full`;
+    const kind = TOAST_STYLES[type] ? type : "info";
+    toast.className = `app-toast ${kind} -translate-y-4 opacity-0`;
     toast.innerHTML = `
-      <span class="material-symbols-outlined text-[20px] shrink-0 ${s.tone}" aria-hidden="true">${s.icon}</span>
-      <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border shrink-0 ${s.chip}">${s.label}</span>
-      <span class="toast-message text-sm leading-relaxed flex-1 min-w-0"></span>
-      <button type="button" class="toast-close p-1.5 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition shrink-0 cursor-pointer" aria-label="Dismiss">
-        <span class="material-symbols-outlined text-[18px]" aria-hidden="true">close</span>
+      <div class="l">
+        <span class="ic"><span class="material-symbols-outlined" aria-hidden="true">${s.icon}</span></span>
+        <div class="min-w-0"><span class="tag">${s.label}</span><span class="toast-message msg"></span></div>
+      </div>
+      <button type="button" class="toast-close" aria-label="Dismiss">
+        <span class="material-symbols-outlined" aria-hidden="true">close</span>
       </button>
     `;
     // Plain text, so server error messages can never inject markup.

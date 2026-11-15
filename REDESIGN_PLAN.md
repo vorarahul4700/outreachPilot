@@ -1,6 +1,6 @@
 # OutreachPilot Full Redesign Plan
 
-Status: Phases 0 to 4 committed on redesign/v2 (2026-11-16). Next: Phase 5, admin.
+Status: Phases 0 to 5 committed on redesign/v2 (2026-11-16). Next: Phase 6, split app.js and admin.js.
 
 ## Ground rules
 
