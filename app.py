@@ -3861,6 +3861,12 @@ def get_effective_redirect_uri(request: Request) -> str:
 
 
 # --- Google OAuth Flow ---
+@app.get("/auth/login")
+async def legacy_login_redirect():
+    """Older links pointed here; Google sign-in lives at /auth/google/login."""
+    return RedirectResponse(url="/auth/google/login", status_code=302)
+
+
 @app.get("/auth/google/login")
 async def google_login(request: Request):
     if not config.GOOGLE_CLIENT_ID or not config.GOOGLE_CLIENT_SECRET:
