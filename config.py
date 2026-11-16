@@ -91,13 +91,17 @@ MASTER_ADMIN_EMAILS = [
 #   python -c "import secrets; print(secrets.token_urlsafe(64))"
 SECRET_KEY = os.getenv("SECRET_KEY", "").strip()
 if not SECRET_KEY:
-    raise RuntimeError(
-        "SECRET_KEY is not set. The application refuses to start without it. "
-        "Generate a strong value with: "
-        "python -c \"import secrets; print(secrets.token_urlsafe(64))\" "
-        "then set SECRET_KEY in your local .env and in the production environment "
-        "(Render > Environment)."
-    )
+    # If running inside GitHub Actions or headless background workers, provide a safe non-web key
+    if os.getenv("GITHUB_ACTIONS") == "true" or os.getenv("CI") == "true":
+        SECRET_KEY = "ci_cloud_worker_runtime_key_for_non_web_background_tasks"
+    else:
+        raise RuntimeError(
+            "SECRET_KEY is not set. The application refuses to start without it. "
+            "Generate a strong value with: "
+            "python -c \"import secrets; print(secrets.token_urlsafe(64))\" "
+            "then set SECRET_KEY in your local .env and in the production environment "
+            "(Render > Environment)."
+        )
 
 # The key that was previously hardcoded in source. Kept ONLY to decrypt OAuth
 # tokens that were stored before the key rotation, so existing users are not
