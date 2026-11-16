@@ -146,6 +146,15 @@ class ColdPitch(Base):
     user = relationship("User", back_populates="cold_pitches")
 
 
+class DoNotContact(Base):
+    """Addresses that opted out. No user can send to them again (outreach.send_via_google_oauth)."""
+    __tablename__ = "do_not_contact"
+
+    email = Column(String(255), primary_key=True)  # stored lowercase
+    source = Column(String(50), default="unsubscribe_link")
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
 class OutreachLog(Base):
     __tablename__ = "outreach_logs"
 

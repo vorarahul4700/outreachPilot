@@ -88,7 +88,9 @@ from db import (
 )
 from enricher import is_recruitment_email
 from outreach import (
+    add_do_not_contact,
     dispatch_batch_outreach,
+    read_optout_token,
     generate_mailto_link,
     send_via_google_oauth,
 )
@@ -363,7 +365,7 @@ async def maintenance_mode_middleware(request: Request, call_next):
         path = request.url.path
         # Allowed routes: health checks, landing page, directory, SEO, GEO, sitemaps, maintenance page, static assets, and icons
         is_allowed = (
-            path in ("/health", "/healthz", "/", "/home", "/landing", "/maintenance", "/privacy", "/terms",
+            path in ("/health", "/healthz", "/", "/home", "/landing", "/maintenance", "/privacy", "/terms", "/unsubscribe",
                      "/favicon.ico", "/apple-touch-icon.png", "/apple-touch-icon-precomposed.png",
                      "/robots.txt", "/llms.txt", "/llms-full.txt", "/sitemap.xml",
                      "/sitemap-core.xml", "/sitemap-cities.xml", "/sitemap-tech.xml", "/sitemap-directory.xml")
@@ -1033,6 +1035,51 @@ def terms_page(request: Request):
         name="terms.html",
         context={"project_name": config.PROJECT_NAME}
     )
+
+
+def _optout_page(title: str, message: str, form_token: str | None = None) -> HTMLResponse:
+    import html as _html
+    form = (
+        '<form method="post"><input type="hidden" name="t" value="' + _html.escape(form_token) + '">'
+        '<button type="submit">Opt out</button></form>'
+    ) if form_token else ""
+    return HTMLResponse(
+        "<!doctype html><html lang=en><head><meta charset=utf-8>"
+        "<meta name=viewport content='width=device-width,initial-scale=1'><meta name=robots content=noindex>"
+        f"<title>{_html.escape(title)} | OutreachPilot</title><style>"
+        "body{font-family:system-ui,sans-serif;max-width:520px;margin:15vh auto;padding:0 16px;"
+        "background:#faf9f6;color:#1f2420;line-height:1.5}"
+        "@media(prefers-color-scheme:dark){body{background:#161a17;color:#e8ebe6}}"
+        "button{font:inherit;padding:10px 20px;border-radius:8px;border:0;background:#2f5d46;color:#fff;cursor:pointer}"
+        f"</style></head><body><h1>{_html.escape(title)}</h1><p>{message}</p>{form}</body></html>"
+    )
+
+
+@app.get("/unsubscribe", response_class=HTMLResponse)
+def unsubscribe_page(t: str = ""):
+    """Opt-out link in every email. Shows a confirm button so link scanners do not opt people out."""
+    import html as _html
+    email = read_optout_token(t)
+    if not email:
+        return _optout_page("Link not valid", "This opt-out link is broken or incomplete.")
+    return _optout_page(
+        "Stop these emails?",
+        f"No OutreachPilot user will be able to email <b>{_html.escape(email)}</b> again.",
+        form_token=t,
+    )
+
+
+@app.post("/unsubscribe", response_class=HTMLResponse)
+async def unsubscribe_confirm(request: Request, t: str = "", db: Session = Depends(get_db)):
+    """Confirm button and RFC 8058 one-click (Gmail posts List-Unsubscribe=One-Click with ?t= in the URL)."""
+    import html as _html
+    form = await request.form()
+    email = read_optout_token(t or str(form.get("t") or ""))
+    if not email:
+        return _optout_page("Link not valid", "This opt-out link is broken or incomplete.")
+    add_do_not_contact(db, email)
+    return _optout_page("You are opted out",
+                        f"No OutreachPilot user will email <b>{_html.escape(email)}</b> again.")
 
 
 # ==============================================================================
