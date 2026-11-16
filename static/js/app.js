@@ -3016,6 +3016,18 @@ document.addEventListener("DOMContentLoaded", () => {
   let outreachViewMode = "grid"; // "grid" | "list"
   const selectedOutreachCompanyIds = new Set();
 
+  // Daily send limit: refuse selecting more companies than emails left today.
+  function outreachQuotaLeft() {
+    const r = window.__quotaRemaining;
+    return typeof r === "number" ? r : Infinity;
+  }
+  function warnOverQuota(left) {
+    showToast(left <= 0
+      ? "You have no emails left today. Your limit resets at midnight IST."
+      : `You can send ${left} more email${left === 1 ? "" : "s"} today. Select up to ${left} compan${left === 1 ? "y" : "ies"}.`,
+      "warning");
+  }
+
   function updateOutreachSelectionUI(currentPageItems = []) {
     const badge = document.getElementById("outreach-selected-badge");
     const countEl = document.getElementById("outreach-selected-count");
@@ -3238,13 +3250,18 @@ document.addEventListener("DOMContentLoaded", () => {
   if (outreachSelectAll) {
     outreachSelectAll.addEventListener("change", (e) => {
       const isChecked = e.target.checked;
+      const left = outreachQuotaLeft();
+      let skipped = 0;
       (allOutreachCompanies || []).forEach(c => {
         if (isChecked) {
+          if (selectedOutreachCompanyIds.has(c.id)) return;
+          if (selectedOutreachCompanyIds.size >= left) { skipped++; return; }
           selectedOutreachCompanyIds.add(c.id);
         } else {
           selectedOutreachCompanyIds.delete(c.id);
         }
       });
+      if (skipped) warnOverQuota(left);
       renderPitchesList();
     });
   }
@@ -3517,6 +3534,11 @@ document.addEventListener("DOMContentLoaded", () => {
         chk.addEventListener("click", (e) => e.stopPropagation());
         chk.addEventListener("change", (e) => {
           e.stopPropagation();
+          if (chk.checked && !selectedOutreachCompanyIds.has(c.id) && selectedOutreachCompanyIds.size >= outreachQuotaLeft()) {
+            chk.checked = false;
+            warnOverQuota(outreachQuotaLeft());
+            return;
+          }
           if (chk.checked) {
             selectedOutreachCompanyIds.add(c.id);
             card.classList.add("ring-2", "ring-primary/50", "bg-surface-container-high", "border-primary/60");

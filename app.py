@@ -248,6 +248,39 @@ def reset_daily_quota_if_due(user) -> bool:
     return False
 
 
+def reserve_daily_pitches(db: Session, user_id: int, wanted: int) -> int:
+    """Atomically take up to `wanted` sends from today's quota and return how many
+    were granted (0 = limit reached). The row lock makes parallel sends (two tabs,
+    bulk + single) queue up instead of both passing a stale check."""
+    if wanted <= 0:
+        return 0
+    row = db.execute(text("""
+        WITH cur AS (
+            SELECT id,
+                   COALESCE(pitches_sent_today, 0) AS sent,
+                   COALESCE(NULLIF(daily_pitch_limit, 0), 10) AS lim
+            FROM users WHERE id = :uid FOR UPDATE
+        )
+        UPDATE users u
+        SET pitches_sent_today = cur.sent + LEAST(:wanted, cur.lim - cur.sent)
+        FROM cur
+        WHERE u.id = cur.id AND cur.sent < cur.lim
+        RETURNING LEAST(:wanted, cur.lim - cur.sent)
+    """), {"uid": user_id, "wanted": int(wanted)}).fetchone()
+    db.commit()
+    return int(row[0]) if row else 0
+
+
+def refund_daily_pitches(db: Session, user_id: int, count: int) -> None:
+    """Give back reserved sends that did not go out (failed or skipped)."""
+    if count <= 0:
+        return
+    db.execute(text(
+        "UPDATE users SET pitches_sent_today = GREATEST(0, COALESCE(pitches_sent_today, 0) - :n) WHERE id = :uid"
+    ), {"uid": user_id, "n": int(count)})
+    db.commit()
+
+
 def _bulk_reset_daily_quotas() -> int:
     """Reset every user whose counter is from a previous IST day in one UPDATE.
     Idempotent, so it is safe with several workers or a late wake-up."""
@@ -3475,14 +3508,6 @@ async def send_single_pitch_direct(
 
     is_master = bool(getattr(user, "is_admin", False) or config.is_master_admin(user.email))
     is_unrestricted = is_master or is_subscription_kill_switch_active(db)
-    if not is_unrestricted:
-        limit = getattr(user, "daily_pitch_limit", 10) or 10
-        sent = getattr(user, "pitches_sent_today", 0) or 0
-        if sent >= limit:
-            raise HTTPException(
-                status_code=403,
-                detail=f"Daily dispatch limit reached ({sent}/{limit} pitches sent today). Upgrade your subscription tier for additional volume."
-            )
 
     pitch = db.query(ColdPitch).filter(ColdPitch.id == pitch_id).first()
     if not pitch:
@@ -3490,6 +3515,17 @@ async def send_single_pitch_direct(
 
     if not is_master and pitch.user_id != user.id:
         raise HTTPException(status_code=403, detail="Forbidden: You do not own this pitch record.")
+
+    # Take this send from today's quota up front (atomic); refunded below if it fails.
+    reserved = 0
+    if not is_unrestricted:
+        reserved = reserve_daily_pitches(db, user.id, 1)
+        if reserved == 0:
+            limit = getattr(user, "daily_pitch_limit", 10) or 10
+            raise HTTPException(
+                status_code=403,
+                detail=f"Daily limit reached ({limit} emails a day on your plan). It resets at midnight IST."
+            )
 
     content_type = request.headers.get("content-type", "") if request else ""
     attach_resume = False
@@ -3518,6 +3554,7 @@ async def send_single_pitch_direct(
 
     target = (pitch.target_email or "").strip()
     if not target:
+        refund_daily_pitches(db, user.id, reserved)
         return {
             "success": False,
             "error": "Company email not found! Cannot send email."
@@ -3553,11 +3590,10 @@ async def send_single_pitch_direct(
         pitch.status = "SENT"
         pitch.sent_at = datetime.utcnow()
         pitch.delivery_method = "OAUTH_DIRECT"
-        if not is_master:
-            user.pitches_sent_today = (getattr(user, "pitches_sent_today", 0) or 0) + 1
         db.commit()
         return {"success": True, "message_id": result.get("message_id")}
     else:
+        refund_daily_pitches(db, user.id, reserved)
         return {"success": False, "error": result.get("error", "Failed to dispatch email via Google OAuth.")}
 
 
@@ -3618,31 +3654,38 @@ async def bulk_send_outreach(
             delay_min, delay_max = 2.0, 3.5
 
     is_unrestricted = is_master or is_subscription_kill_switch_active(db)
-    if not is_unrestricted:
-        limit = getattr(user, "daily_pitch_limit", 10) or 10
-        sent = getattr(user, "pitches_sent_today", 0) or 0
-        remaining = max(0, limit - sent)
-        if remaining <= 0:
+    requested = len(pitch_ids)
+    reserved = 0
+    if not is_unrestricted and requested:
+        # Atomic: parallel requests cannot both spend the same remaining quota.
+        reserved = reserve_daily_pitches(db, user.id, requested)
+        if reserved == 0:
+            limit = getattr(user, "daily_pitch_limit", 10) or 10
             raise HTTPException(
                 status_code=403,
-                detail=f"Daily dispatch limit reached ({sent}/{limit} pitches sent today). Upgrade your subscription tier to send more pitches."
+                detail=f"Daily limit reached ({limit} emails a day on your plan). It resets at midnight IST."
             )
-        if len(pitch_ids) > remaining:
-            pitch_ids = pitch_ids[:remaining]
+        pitch_ids = pitch_ids[:reserved]
 
-    result = await dispatch_batch_outreach(
-        pitch_ids=pitch_ids,
-        user=user,
-        db=db,
-        delay_min=delay_min,
-        delay_max=delay_max,
-        resume_attachment_bytes=resume_bytes,
-        resume_attachment_name=resume_name
-    )
+    try:
+        result = await dispatch_batch_outreach(
+            pitch_ids=pitch_ids,
+            user=user,
+            db=db,
+            delay_min=delay_min,
+            delay_max=delay_max,
+            resume_attachment_bytes=resume_bytes,
+            resume_attachment_name=resume_name
+        )
+    except Exception:
+        refund_daily_pitches(db, user.id, reserved)  # nothing went out
+        raise
 
-    if not is_master and result and result.get("sent_count"):
-        user.pitches_sent_today = (getattr(user, "pitches_sent_today", 0) or 0) + result.get("sent_count")
-        db.commit()
+    # Give back reserved sends that did not go out.
+    sent_count = int((result or {}).get("sent_count") or 0)
+    refund_daily_pitches(db, user.id, reserved - sent_count)
+    if result is not None and reserved and requested > reserved:
+        result["skipped_over_limit"] = requested - reserved
 
     return result
 
