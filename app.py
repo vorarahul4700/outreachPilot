@@ -690,7 +690,7 @@ def favicon():
 @app.api_route("/apple-touch-icon-precomposed.png", methods=["GET", "HEAD"], include_in_schema=False)
 def apple_touch_icon():
     return FileResponse(
-        "static/img/favicon.png",
+        "static/img/apple-touch-icon.png",
         media_type="image/png",
         headers={
             "Cache-Control": "public, max-age=604800, s-maxage=604800",
