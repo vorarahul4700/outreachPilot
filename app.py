@@ -86,7 +86,7 @@ from db import (
     get_db,
     init_db,
 )
-from enricher import deep_enrich_company, is_recruitment_email
+from enricher import is_recruitment_email
 from outreach import (
     dispatch_batch_outreach,
     generate_mailto_link,
@@ -475,10 +475,6 @@ class ScrapeRequest(BaseModel):
     hl: str = "en"
 
 
-class BulkEnrichRequest(BaseModel):
-    company_ids: list[int]
-
-
 class PitchGenRequest(BaseModel):
     company_id: int
     target_role: str | None = ""
@@ -505,19 +501,6 @@ class DirectSendRequest(BaseModel):
 class DemoLoginRequest(BaseModel):
     as_admin: bool = False
     email: str | None = None
-
-
-class InvalidateCompanyRequest(BaseModel):
-    reason: str | None = "Excluded by Master Admin"
-
-
-class BulkInvalidateCompaniesRequest(BaseModel):
-    company_ids: list[int]
-    reason: str | None = "Excluded by Master Admin"
-
-
-class BulkRestoreCompaniesRequest(BaseModel):
-    company_ids: list[int]
 
 
 class UpdatePlanRequest(BaseModel):
@@ -2908,218 +2891,8 @@ async def logout(request: Request, db: Session = Depends(get_db)):
     return resp
 
 
-@app.post("/api/companies/{company_id}/invalidate")
-async def invalidate_company(
-    company_id: int,
-    req_body: InvalidateCompanyRequest | None = None,
-    request: Request = None,
-    db: Session = Depends(get_db)
-):
-    user = get_current_user(db, request)
-    is_authorized = bool(user and config.is_master_admin(user.email))
-    if not is_authorized:
-        raise HTTPException(
-            status_code=403,
-            detail="Forbidden: Master Admin privileges required to exclude companies."
-        )
-
-    company = db.query(Company).filter(Company.id == company_id).first()
-    if not company:
-        raise HTTPException(status_code=404, detail="Company not found")
-
-    company.is_invalid = True
-    company.invalid_at = datetime.utcnow()
-    company.invalid_reason = (req_body.reason if req_body and req_body.reason else "Excluded by Admin")
-    db.commit()
-    invalidate_filter_cache()
-
-    return {
-        "success": True,
-        "message": f"'{company.name}' marked as invalid and excluded from user views.",
-        "company_id": company.id,
-        "is_invalid": True
-    }
-
-
-@app.post("/api/companies/{company_id}/restore")
-async def restore_company(
-    company_id: int,
-    request: Request = None,
-    db: Session = Depends(get_db)
-):
-    user = get_current_user(db, request)
-    is_authorized = bool(user and config.is_master_admin(user.email))
-    if not is_authorized:
-        raise HTTPException(
-            status_code=403,
-            detail="Forbidden: Master Admin privileges required to restore companies."
-        )
-
-    company = db.query(Company).filter(Company.id == company_id).first()
-    if not company:
-        raise HTTPException(status_code=404, detail="Company not found")
-
-    company.is_invalid = False
-    company.invalid_at = None
-    company.invalid_reason = None
-    db.commit()
-    invalidate_filter_cache()
-
-    return {
-        "success": True,
-        "message": f"'{company.name}' restored to active genuine leads.",
-        "company_id": company.id,
-        "is_invalid": False
-    }
-
-
-@app.post("/api/companies/bulk-invalidate")
-async def bulk_invalidate_companies(
-    req_body: BulkInvalidateCompaniesRequest,
-    request: Request = None,
-    db: Session = Depends(get_db)
-):
-    user = get_current_user(db, request)
-    is_authorized = bool(user and config.is_master_admin(user.email))
-    if not is_authorized:
-        raise HTTPException(
-            status_code=403,
-            detail="Forbidden: Master Admin privileges required to exclude companies."
-        )
-
-    if not req_body.company_ids:
-        return {"success": True, "count": 0, "message": "No companies selected."}
-
-    now = datetime.utcnow()
-    reason = req_body.reason or "Excluded by Admin"
-
-    updated = (
-        db.query(Company)
-        .filter(Company.id.in_(req_body.company_ids))
-        .update(
-            {
-                Company.is_invalid: True,
-                Company.invalid_at: now,
-                Company.invalid_reason: reason,
-            },
-            synchronize_session=False,
-        )
-    )
-    db.commit()
-    invalidate_filter_cache()
-
-    return {
-        "success": True,
-        "count": updated,
-        "message": f"Successfully marked {updated} companies as invalid and excluded from user views.",
-    }
-
-
-@app.post("/api/companies/bulk-restore")
-async def bulk_restore_companies(
-    req_body: BulkRestoreCompaniesRequest,
-    request: Request = None,
-    db: Session = Depends(get_db)
-):
-    user = get_current_user(db, request)
-    is_authorized = bool(user and config.is_master_admin(user.email))
-    if not is_authorized:
-        raise HTTPException(
-            status_code=403,
-            detail="Forbidden: Master Admin privileges required to restore companies."
-        )
-
-    if not req_body.company_ids:
-        return {"success": True, "count": 0, "message": "No companies selected."}
-
-    updated = (
-        db.query(Company)
-        .filter(Company.id.in_(req_body.company_ids))
-        .update(
-            {
-                Company.is_invalid: False,
-                Company.invalid_at: None,
-                Company.invalid_reason: None,
-            },
-            synchronize_session=False,
-        )
-    )
-    db.commit()
-    invalidate_filter_cache()
-
-    return {
-        "success": True,
-        "count": updated,
-        "message": f"Successfully restored {updated} companies to active genuine leads.",
-    }
-
-
-
-@app.post("/api/companies/{company_id}/enrich")
-async def enrich_single_company(
-    company_id: int,
-    force_refresh: bool = False,
-    request: Request = None,
-    db: Session = Depends(get_db)
-):
-    user = get_current_user(db, request)
-    if not user or not user.oauth_tokens:
-        raise HTTPException(
-            status_code=401,
-            detail="Authentication required. Please connect your Google account or log in to run Deep Enrichment."
-        )
-    if getattr(user, "is_banned", False):
-        raise HTTPException(
-            status_code=403,
-            detail=f"Account suspended: {user.ban_reason or 'Access denied by administrator.'}"
-        )
-
-    client_id = f"{user.id}_{request.client.host if request and request.client else 'unknown'}"
-    enforce_rate_limit(f"enrich_single_{client_id}", max_calls=20, window_seconds=60)
-
-    result = await deep_enrich_company(company_id=company_id, db=db, force_refresh=force_refresh)
-    invalidate_filter_cache()
-    return result
-
-
-@app.post("/api/companies/bulk-enrich")
-async def enrich_bulk_companies(
-    req: BulkEnrichRequest,
-    request: Request = None,
-    db: Session = Depends(get_db)
-):
-    user = get_current_user(db, request)
-    if not user or not user.oauth_tokens:
-        raise HTTPException(
-            status_code=401,
-            detail="Authentication required. Please connect your Google account or log in to run Deep Enrichment."
-        )
-    if getattr(user, "is_banned", False):
-        raise HTTPException(
-            status_code=403,
-            detail=f"Account suspended: {user.ban_reason or 'Access denied by administrator.'}"
-        )
-
-    client_id = f"{user.id}_{request.client.host if request and request.client else 'unknown'}"
-    enforce_rate_limit(f"bulk_enrich_{client_id}", max_calls=10, window_seconds=60)
-
-    # Cap maximum concurrent company batch size to prevent resource exhaustion
-    target_ids = req.company_ids[:50]
-    semaphore = asyncio.Semaphore(8)  # 8 concurrent enrichment workers
-
-    async def worker(cid: int):
-        async with semaphore:
-            worker_db = SessionLocal()
-            try:
-                return await deep_enrich_company(company_id=cid, db=worker_db, force_refresh=False)
-            except Exception as e:
-                return {"error": str(e), "success": False, "company_id": cid}
-            finally:
-                worker_db.close()
-
-    tasks = [worker(cid) for cid in target_ids]
-    results = await asyncio.gather(*tasks)
-    return {"total": len(target_ids), "results": results}
+# Company enrichment and exclusion are admin-only (see /api/admin/...); normal users
+# use AI only for resume analysis and personalized emails.
 
 
 # --- Stage 3: In-Memory Resume Ingestion & Parsing ---

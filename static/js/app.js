@@ -587,68 +587,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   if (statCardInvalid) statCardInvalid.addEventListener("click", () => setActiveMetricFilter("invalid"));
 
-  async function handleInvalidateCompany(id, companyName) {
-    selectedCompanyIds.delete(id);
-    updateBulkActionBar();
-    try {
-      const res = await fetch(`/api/companies/${id}/invalidate`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ reason: "Excluded by Master Admin" })
-      });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        // Optimistically update in-memory model
-        const target = companies.find(c => c.id === id);
-        if (target) {
-          target.is_invalid = true;
-          target.invalid_reason = "Excluded by Master Admin";
-        }
-        selectedCompanyIds.delete(id);
-        updateBulkActionBar();
-        await fetchCompanies(true);
-        if (activeModalCompany && activeModalCompany.id === id) {
-          cmodal?.classList.add("hidden");
-        }
-        showToast(`'${companyName || 'Company'}' marked as invalid lead.`, "error");
-      } else {
-        showToast("Action failed: " + (data.detail || data.message || "Unauthorized"), "error");
-      }
-    } catch (err) {
-      showToast("Invalidate error: " + err.message, "error");
-    }
-  }
-
-  async function handleRestoreCompany(id, companyName) {
-    selectedCompanyIds.delete(id);
-    updateBulkActionBar();
-    try {
-      const res = await fetch(`/api/companies/${id}/restore`, {
-        method: "POST"
-      });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        // Optimistically update in-memory model
-        const target = companies.find(c => c.id === id);
-        if (target) {
-          target.is_invalid = false;
-          target.invalid_reason = null;
-        }
-        selectedCompanyIds.delete(id);
-        updateBulkActionBar();
-        await fetchCompanies(true);
-        if (activeModalCompany && activeModalCompany.id === id) {
-          cmodal?.classList.add("hidden");
-        }
-        showToast(`'${companyName || 'Company'}' restored to active leads.`, "success");
-      } else {
-        showToast("Restore failed: " + (data.detail || data.message || "Unauthorized"), "error");
-      }
-    } catch (err) {
-      showToast("Restore error: " + err.message, "error");
-    }
-  }
-
   function updateCompanyMetrics(statsOrList) {
     const isLoggedIn = Boolean(
       (currentUser && currentUser.is_logged_in) ||
@@ -1624,9 +1562,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const cmodalIndustry = document.getElementById("cmodal-industry");
   const cmodalTone = document.getElementById("cmodal-tone");
   const cmodalTechstack = document.getElementById("cmodal-techstack");
-  const cmodalBtnEnrich = document.getElementById("cmodal-btn-enrich");
   const cmodalBtnPitch = document.getElementById("cmodal-btn-pitch");
-  const cmodalBtnAdminAction = document.getElementById("cmodal-btn-admin-action");
   let activeModalCompany = null;
 
   const cmodalTabBtnOverview = document.getElementById("cmodal-tab-btn-overview");
@@ -1693,25 +1629,6 @@ document.addEventListener("DOMContentLoaded", () => {
       cmodalAddress.textContent = modalCleanAddr || "Open in Google Maps";
     }
 
-    const canManageLeads = Boolean((isMasterAdmin && currentUser && currentUser.is_logged_in) || isDevMode);
-    // Exclude / Restore Button in Modal
-    if (cmodalBtnAdminAction) {
-      if (canManageLeads) {
-        cmodalBtnAdminAction.classList.remove("hidden");
-        if (company.is_invalid) {
-          cmodalBtnAdminAction.className = "btn admin-action restore";
-          cmodalBtnAdminAction.innerHTML = `<span class="material-symbols-outlined text-[16px]">restore</span><span>Restore Lead</span>`;
-          cmodalBtnAdminAction.onclick = () => handleRestoreCompany(company.id, company.name);
-        } else {
-          cmodalBtnAdminAction.className = "btn admin-action exclude";
-          cmodalBtnAdminAction.innerHTML = `<span class="material-symbols-outlined text-[16px]">block</span><span>Mark as Excluded</span>`;
-          cmodalBtnAdminAction.onclick = () => handleInvalidateCompany(company.id, company.name);
-        }
-      } else {
-        cmodalBtnAdminAction.classList.add("hidden");
-      }
-    }
-
     // Status Badge
     cmodalBadge.onclick = null;
     cmodalBadge.removeAttribute("title");
@@ -1758,7 +1675,7 @@ document.addEventListener("DOMContentLoaded", () => {
       cmodalEmailsContainer.innerHTML = `
         <div class="no-email">
           <span class="material-symbols-outlined">mail_off</span>
-          <span>Email not found -- Click "Enrich with AI" below to scan company website for verified contacts.</span>
+          <span>No contact email found for this company yet.</span>
         </div>
       `;
     }
@@ -1779,10 +1696,10 @@ document.addEventListener("DOMContentLoaded", () => {
         cmodalTechstack.innerHTML = `<span class="muted-note">No tech stack detected</span>`;
       }
     } else {
-      cmodalSummary.textContent = "Awaiting AI enrichment...";
-      cmodalIndustry.textContent = "Pending Analysis";
+      cmodalSummary.textContent = "No research for this company yet.";
+      cmodalIndustry.textContent = "Not available yet";
       cmodalTone.textContent = "Professional";
-      cmodalTechstack.innerHTML = `<span class="muted-note">Pending AI enrichment</span>`;
+      cmodalTechstack.innerHTML = `<span class="muted-note">Not detected yet</span>`;
     }
 
     // Check if detailed analysis is already loaded or in local memory cache
@@ -1822,7 +1739,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 cmodalDetailedAnalysis.dataset.rawText = detailData.profile.detailed_analysis;
                 cmodalDetailedAnalysis.innerHTML = formatMarkdown(detailData.profile.detailed_analysis);
               } else {
-                cmodalDetailedAnalysis.innerHTML = `<span class="muted-note">Click 'Enrich with AI' below to generate detailed intelligence report.</span>`;
+                cmodalDetailedAnalysis.innerHTML = `<span class="muted-note">No research report for this company yet.</span>`;
               }
               const stack = detailData.profile.tech_stack || [];
               if (stack.length > 0) {
@@ -1833,7 +1750,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 cmodalTechstack.innerHTML = `<span class="muted-note">No tech stack detected</span>`;
               }
             } else {
-              cmodalDetailedAnalysis.innerHTML = `<span class="muted-note">Not enriched yet. Click 'Enrich with AI' below to generate detailed intelligence report.</span>`;
+              cmodalDetailedAnalysis.innerHTML = `<span class="muted-note">No research report for this company yet.</span>`;
             }
 
             if (detailData.emails && detailData.emails.length > 0) {
@@ -1854,7 +1771,7 @@ document.addEventListener("DOMContentLoaded", () => {
         .catch(err => {
           console.warn("Failed to fetch on-demand company intel:", err);
           if (activeModalCompany && activeModalCompany.id === company.id) {
-            cmodalDetailedAnalysis.innerHTML = `<span class="muted-note">Click 'Enrich with AI' below to generate detailed intelligence report.</span>`;
+            cmodalDetailedAnalysis.innerHTML = `<span class="muted-note">No research report for this company yet.</span>`;
           }
         });
     }
@@ -1866,37 +1783,6 @@ document.addEventListener("DOMContentLoaded", () => {
   cmodalClose.addEventListener("click", () => cmodal.classList.add("hidden"));
   cmodal.addEventListener("click", (e) => {
     if (e.target === cmodal) cmodal.classList.add("hidden");
-  });
-
-  cmodalBtnEnrich.addEventListener("click", async () => {
-    if (!activeModalCompany) return;
-    companyDetailCache.delete(activeModalCompany.id);
-    requireLogin(async () => {
-      const oldHtml = cmodalBtnEnrich.innerHTML;
-      cmodalBtnEnrich.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i><span>Analyzing with AI...</span>`;
-      cmodalBtnEnrich.disabled = true;
-      refreshIcons();
-
-      try {
-        const res = await fetch(`/api/companies/${activeModalCompany.id}/enrich?force_refresh=true`, { method: "POST" });
-        if (res.status === 401) {
-          currentUser.is_logged_in = false;
-          showToast("Please sign in with Google to use AI Deep Enrichment.", "warning");
-          showLoginModal("Please sign in with Google to use AI Deep Enrichment.");
-          return;
-        }
-        await res.json();
-        await fetchCompanies();
-        const updated = companies.find(c => c.id === activeModalCompany.id);
-        if (updated) openCompanyDetailsModal(updated);
-      } catch (err) {
-        showToast("Enrichment failed: " + err.message, "error");
-      } finally {
-        cmodalBtnEnrich.innerHTML = oldHtml;
-        cmodalBtnEnrich.disabled = false;
-        refreshIcons();
-      }
-    }, "Please sign in with Google to use AI Deep Enrichment.");
   });
 
   cmodalBtnPitch.addEventListener("click", () => {
@@ -2202,7 +2088,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   window.showLoginModal = showLoginModal;
 
-  function requireLogin(callback, actionPrompt = "Please sign in with Google to use AI Deep Enrichment.") {
+  function requireLogin(callback, actionPrompt = "Please sign in with Google to continue.") {
     if (currentUser && currentUser.is_logged_in) {
       callback();
     } else {
@@ -2384,107 +2270,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // ==========================================
-  // STAGE 2: DEEP ENRICHMENT (LOGIN GATED)
-  // ==========================================
-  async function handleSingleEnrich(btn, companyId) {
-    requireLogin(async () => {
-      const oldHtml = btn.innerHTML;
-      btn.innerHTML = `<i data-lucide="loader-2" class="w-3 h-3 animate-spin"></i><span>Analyzing...</span>`;
-      btn.disabled = true;
-      refreshIcons();
-      try {
-        const res = await fetch(`/api/companies/${companyId}/enrich`, { method: "POST" });
-        if (res.status === 401) {
-          currentUser.is_logged_in = false;
-          showToast("Please sign in with Google to use AI Deep Enrichment.", "warning");
-          showLoginModal("Please sign in with Google to use AI Deep Enrichment.");
-          return;
-        }
-        await res.json();
-        await fetchCompanies();
-      } catch (err) {
-        showToast("Enrichment failed: " + err.message, "error");
-      } finally {
-        btn.innerHTML = oldHtml;
-        btn.disabled = false;
-        refreshIcons();
-      }
-    }, "Please sign in with Google to use AI Deep Enrichment.");
-  }
-
-  // Bulk Enrichment Handlers
-  const btnBulkEnrichTop = document.getElementById("btn-bulk-enrich-top");
   const btnGenAllPitches = document.getElementById("btn-gen-all-pitches");
-
-  async function handleBulkEnrich(btn) {
-    if (!companies || companies.length === 0) {
-      showToast("No companies found to enrich. Scout companies in Step 1 first!", "warning");
-      return;
-    }
-    requireLogin(async () => {
-      const pending = companies.filter(c => !c.is_enriched);
-      const targetList = pending.length > 0 ? pending : companies;
-      const oldText = btn.innerHTML;
-      btn.disabled = true;
-
-      let completed = 0;
-      const total = targetList.length;
-      const CONCURRENCY = 6; // 6 parallel worker threads for ultra-fast throughput
-
-      btn.innerHTML = `<i data-lucide="zap" class="w-3.5 h-3.5 text-amber-300 animate-spin"></i><span>Enriching (0/${total})...</span>`;
-      refreshIcons();
-
-      let index = 0;
-      let unauthorizedOccurred = false;
-      async function worker() {
-        while (index < targetList.length) {
-          if (unauthorizedOccurred) break;
-          const comp = targetList[index++];
-          try {
-            const res = await fetch(`/api/companies/${comp.id}/enrich`, { method: "POST" });
-            if (res.status === 401) {
-              unauthorizedOccurred = true;
-              currentUser.is_logged_in = false;
-              showToast("Please sign in with Google to run bulk AI enrichment.", "warning");
-              showLoginModal("Please sign in with Google to run bulk AI enrichment.");
-              break;
-            }
-          } catch (err) {
-            console.error("Enrich error for", comp.name, err);
-          }
-          completed++;
-          btn.innerHTML = `<i data-lucide="zap" class="w-3.5 h-3.5 text-amber-300"></i><span>Enriching (${completed}/${total}): ${comp.name.substring(0, 14)}...</span>`;
-          refreshIcons();
-          fetchCompanies();
-        }
-      }
-
-      // Launch 6 parallel workers simultaneously
-      const workerPromises = [];
-      const activeWorkers = Math.min(CONCURRENCY, targetList.length);
-      for (let w = 0; w < activeWorkers; w++) {
-        workerPromises.push(worker());
-      }
-      await Promise.all(workerPromises);
-
-      if (!unauthorizedOccurred) {
-        btn.innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5 text-emerald-400"></i><span>Completed (${total} Enriched)</span>`;
-        refreshIcons();
-        await fetchCompanies();
-      }
-      setTimeout(() => {
-        btn.innerHTML = oldText;
-        btn.disabled = false;
-        refreshIcons();
-      }, 2500);
-    }, "Please sign in with Google to run bulk AI enrichment.");
-  }
-
-  if (btnBulkEnrichTop) {
-    btnBulkEnrichTop.addEventListener("click", () => handleBulkEnrich(btnBulkEnrichTop));
-  }
-
   if (btnGenAllPitches) {
     btnGenAllPitches.addEventListener("click", async () => {
       if (!selectedOutreachCompanyIds || selectedOutreachCompanyIds.size === 0) {
