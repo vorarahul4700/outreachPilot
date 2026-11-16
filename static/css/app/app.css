@@ -678,3 +678,11 @@ textarea.recessed-well { min-height: 220px; resize: vertical; line-height: 1.7; 
 .app-search .app-search-kbd { position: absolute; right: 12px; pointer-events: none; }
 .app-search input:focus ~ .app-search-kbd { opacity: 0; }
 @media (hover: none) { .app-search .app-search-kbd { display: none; } }
+
+/* Review pass 2: on wide screens keep search and filters on one line; search takes the free space */
+@media (min-width: 1024px) {
+  .app-search { max-width: none; flex: 1 1 auto; min-width: 260px; }
+  .app-toolbar > .toolbar-right { flex: 0 0 auto; flex-wrap: nowrap; width: auto; }
+  .app-toolbar .toolbar-filters { flex: 0 0 auto; }
+  .app-toolbar .toolbar-filters .custom-dropdown { flex: 0 0 auto; width: clamp(150px, 13vw, 200px); max-width: none; }
+}

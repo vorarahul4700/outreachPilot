@@ -274,3 +274,6 @@ a.co-name:hover, .co-name a:hover { color: var(--accent-text); }
 @media (min-width: 1100px) { .co-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 .co-grid > li, .co-card, .co-id .grow, .co-meta { min-width: 0; }
 .co-name, .co-site span:first-child { overflow-wrap: anywhere; }
+
+/* Review pass 2: let the aside fill the row so the At a glance card can actually stick */
+@media (min-width: 1000px) { .profile-layout > aside { align-self: stretch; } }

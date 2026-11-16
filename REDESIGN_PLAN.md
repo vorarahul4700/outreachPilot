@@ -117,3 +117,4 @@ Each phase ends with your review. I commit to the branch only after you approve 
 - Phase 7 QA (commit d656741): contrast tokens fixed to WCAG AA, directory card overflow at 375px, /app toolbar and card grid at 768px, cache version bump. 11 pages checked at 375, 768 and 1440 in light and dark.
 - Review pass 1: workspace counters show thousands separators (display only); stat card wording made plain; "/" focuses the search box on /app; app.js and admin.js now use the shared cache version so restyled code always reaches the browser.
 - Functional ideas from the review are in REDESIGN_PROPOSALS.md and are not built.
+- Review pass 2: /app search and filters sit on one line on wide screens with search taking the free space; pager numbers use separators (5,538); the company profile "At a glance" card now really stays in view while scrolling.

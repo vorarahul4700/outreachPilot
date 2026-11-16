@@ -25,7 +25,7 @@ function renderPaginationControls({
   const startIdx = pageSize > 0 ? (safeCurrentPage - 1) * pageSize + 1 : 1;
   const endIdx = pageSize > 0 ? Math.min(safeCurrentPage * pageSize, totalItems) : totalItems;
 
-  if (rangeEl) rangeEl.textContent = `${startIdx}-${endIdx}`;
+  if (rangeEl) rangeEl.textContent = `${startIdx.toLocaleString()}-${endIdx.toLocaleString()}`;
   if (totalEl) totalEl.textContent = totalItems.toLocaleString();
 
   if (!buttonsEl) return;
@@ -46,7 +46,7 @@ function renderPaginationControls({
 
   const pageInfoMobile = document.createElement("span");
   pageInfoMobile.className = "pg-info";
-  pageInfoMobile.textContent = `${safeCurrentPage} / ${totalPages}`;
+  pageInfoMobile.textContent = `${safeCurrentPage.toLocaleString()} / ${totalPages.toLocaleString()}`;
 
   const nextBtnMobile = document.createElement("button");
   nextBtnMobile.type = "button";
@@ -102,7 +102,7 @@ function renderPaginationControls({
       btn.type = "button";
       const isActive = (p === safeCurrentPage);
       btn.className = `pg-btn${isActive ? ' is-current' : ''}`;
-      btn.textContent = p;
+      btn.textContent = p.toLocaleString();
       btn.disabled = isActive;
       btn.addEventListener("click", () => {
         if (p !== safeCurrentPage) onPageChange(p);
