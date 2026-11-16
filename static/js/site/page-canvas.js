@@ -1,14 +1,13 @@
-/* Living topographic map behind every page (loaded from base.html).
-   The background is a contour map of an imaginary terrain, drawn the way a
-   field survey sheet would draw it:
-   - The terrain slowly breathes, and it scrolls with the page in parallax, so
-     every scroll reveals new ground.
-   - Your pointer raises a hill: contour lines bend and close into rings
-     around it, and the summit shows a survey mark.
-   - Click or tap open background: a ripple runs out through the lines.
-   - Every fifth line is an index contour, drawn heavier, as on real maps.
+/* Folded paper background behind every page (loaded from base.html).
+   The page is a sheet of softly folded paper made of triangle facets:
+   - The cursor is a lamp. Facets turned toward it catch light, the rest fall
+     into shade, so the whole sheet shifts as you move. The brightest facets
+     take the moss accent.
+   - The sheet scrolls with the page in parallax, so new folds come into view.
+   - Click open background: a ring of light runs out across the folds.
+   - With no pointer (touch, or the pointer has left) the lamp drifts slowly.
    Colors come from the CSS tokens, so light and dark share one design.
-   Pauses when the tab is hidden. With reduced motion it draws a still map
+   Pauses when the tab is hidden. With reduced motion it draws a still sheet
    that only updates on scroll. Decorative only: aria-hidden, no focus. */
 (function () {
   var canvas = document.getElementById("page-canvas");
@@ -16,166 +15,117 @@
   var ctx = canvas.getContext("2d");
   var reduce = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  var W = 0, H = 0, DPR = 1, CELL = 16, cols = 0, rows = 0;
-  var field = null;
+  var W = 0, H = 0, DPR = 1, S = 90;
   var scrollY = window.scrollY || 0;
-  var mouse = { x: -9999, y: -9999, on: false };
-  var hill = { x: -9999, y: -9999, h: 0 };    // eased pointer hill
-  var ripples = [];                            // {x, y (viewport), t0}
+  var mouse = { x: 0, y: 0, on: false };
+  var lamp = { x: 0, y: 0, ready: false };
+  var flashes = [];                 // {x, y (viewport), t0}
   var colors = {};
   var raf = 0, hidden = false, lastFrame = 0;
-  var LEVELS = 14;                             // contour levels across the value range
 
   function readColors() {
     var cs = getComputedStyle(document.documentElement);
-    colors.line = cs.getPropertyValue("--line-3").trim() || "#908B7A";
     colors.accent = cs.getPropertyValue("--accent").trim() || "#607037";
-    colors.accentText = cs.getPropertyValue("--accent-text").trim() || "#4B5A24";
+    colors.accentText = cs.getPropertyValue("--accent-text").trim() || "#A9BC72";
+    colors.shade = cs.getPropertyValue("--text").trim() || "#1F2018";
+    colors.line = cs.getPropertyValue("--line-3").trim() || "#908B7A";
     colors.dark = document.documentElement.classList.contains("dark");
   }
 
-  /* ---------- 2D gradient noise (Perlin style) ---------- */
-  var perm = new Uint8Array(512);
-  (function () {
-    var p = [], i, j, t, seed = 1337;
-    for (i = 0; i < 256; i++) p[i] = i;
-    for (i = 255; i > 0; i--) {
-      seed = (seed * 16807) % 2147483647;
-      j = seed % (i + 1); t = p[i]; p[i] = p[j]; p[j] = t;
-    }
-    for (i = 0; i < 512; i++) perm[i] = p[i & 255];
-  })();
-  function fade(t) { return t * t * t * (t * (t * 6 - 15) + 10); }
-  function grad(h, x, y) {
-    switch (h & 7) {
-      case 0: return x + y; case 1: return -x + y; case 2: return x - y; case 3: return -x - y;
-      case 4: return x; case 5: return -x; case 6: return y; default: return -y;
-    }
-  }
-  function noise(x, y) {
-    var X = Math.floor(x), Y = Math.floor(y);
-    x -= X; y -= Y; X &= 255; Y &= 255;
-    var u = fade(x), v = fade(y);
-    var a = perm[X] + Y, b = perm[X + 1] + Y;
-    var n00 = grad(perm[a], x, y), n10 = grad(perm[b], x - 1, y);
-    var n01 = grad(perm[a + 1], x, y - 1), n11 = grad(perm[b + 1], x - 1, y - 1);
-    var nx0 = n00 + u * (n10 - n00), nx1 = n01 + u * (n11 - n01);
-    return nx0 + v * (nx1 - nx0);   // about -1..1
+  // Stable pseudo-random value per grid point, so folds never jump while scrolling.
+  function hash(a, b, k) {
+    var h = (a * 374761393 + b * 668265263 + k * 2147483647) | 0;
+    h = (h ^ (h >>> 13)) * 1274126177 | 0;
+    return ((h ^ (h >>> 16)) >>> 0) / 4294967295;
   }
 
-  /* ---------- terrain ---------- */
   function measure() {
     W = window.innerWidth; H = window.innerHeight;
     DPR = Math.min(window.devicePixelRatio || 1, 2);
     canvas.width = Math.round(W * DPR); canvas.height = Math.round(H * DPR);
     ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
-    CELL = W < 640 ? 20 : 16;
-    cols = Math.ceil(W / CELL) + 2; rows = Math.ceil(H / CELL) + 2;
-    field = new Float32Array(cols * rows);
+    S = W < 640 ? 72 : 96;
+    if (!lamp.ready) { lamp.x = W * 0.6; lamp.y = H * 0.3; lamp.ready = true; }
   }
 
-  function height(px, py, t) {
-    // Terrain lives in page coordinates, so scrolling moves over it (with parallax).
-    var x = px / 520, y = (py + scrollY * 0.55) / 520;
-    var v = noise(x + t * 0.018, y - t * 0.011) * 0.75
-          + noise(x * 2.1 - t * 0.025, y * 2.1 + 3.7) * 0.3
-          + noise(x * 4.3 + 9.1, y * 4.3 + t * 0.03) * 0.09;
-    if (hill.h > 0.001) {
-      var dx = px - hill.x, dy = py - hill.y;
-      v += hill.h * 0.95 * Math.exp(-(dx * dx + dy * dy) / (2 * 120 * 120));
-    }
-    for (var i = 0; i < ripples.length; i++) {
-      var r = ripples[i], age = (t * 1000 - r.t0) / 1000;
-      var rad = age * 420, life = Math.max(0, 1 - age / 1.8);
-      if (life <= 0) continue;
-      var rx = px - r.x, ry = py - r.y, w = Math.sqrt(rx * rx + ry * ry) - rad;
-      v += 0.42 * life * Math.exp(-(w * w) / (2 * 34 * 34));
-    }
-    return v;
+  // Vertex of the sheet at grid (row r, col c), in viewport coordinates.
+  function vert(r, c, off) {
+    var x = c * S + ((r & 1) ? S / 2 : 0) + (hash(r, c, 1) - 0.5) * S * 0.36;
+    var y = r * S - off + (hash(r, c, 2) - 0.5) * S * 0.36;
+    var z = (hash(r, c, 3) - 0.5) * S * 0.7;
+    return [x, y, z];
   }
 
-  function sample(t) {
-    for (var j = 0; j < rows; j++) {
-      for (var i = 0; i < cols; i++) {
-        field[j * cols + i] = height((i - 1) * CELL, (j - 1) * CELL, t);
-      }
-    }
-  }
-
-  // Marching squares for one level; appends segments to the current path.
-  function seg(ax, ay, bx, by) { ctx.moveTo(ax, ay); ctx.lineTo(bx, by); }
-  function contour(level) {
-    var c = CELL;
-    for (var j = 0; j < rows - 1; j++) {
-      var y0 = (j - 1) * c, y1 = y0 + c, r0 = j * cols, r1 = r0 + cols;
-      for (var i = 0; i < cols - 1; i++) {
-        var a = field[r0 + i], b = field[r0 + i + 1], d = field[r1 + i], e = field[r1 + i + 1];
-        var idx = (a > level ? 8 : 0) | (b > level ? 4 : 0) | (e > level ? 2 : 0) | (d > level ? 1 : 0);
-        if (idx === 0 || idx === 15) continue;
-        var x0 = (i - 1) * c, x1 = x0 + c;
-        var top = x0 + c * (level - a) / (b - a);
-        var right = y0 + c * (level - b) / (e - b);
-        var bottom = x0 + c * (level - d) / (e - d);
-        var left = y0 + c * (level - a) / (d - a);
-        switch (idx) {
-          case 1: case 14: seg(x0, left, bottom, y1); break;
-          case 2: case 13: seg(bottom, y1, x1, right); break;
-          case 3: case 12: seg(x0, left, x1, right); break;
-          case 4: case 11: seg(top, y0, x1, right); break;
-          case 6: case 9: seg(top, y0, bottom, y1); break;
-          case 7: case 8: seg(x0, left, top, y0); break;
-          case 5: seg(x0, left, top, y0); seg(bottom, y1, x1, right); break;
-          case 10: seg(top, y0, x1, right); seg(x0, left, bottom, y1); break;
-        }
-      }
-    }
-  }
-
-  /* ---------- drawing ---------- */
   function draw(now) {
-    var t = now / 1000;
-    // Ease the pointer hill toward the pointer, and let it sink when the pointer leaves.
-    if (mouse.on) {
-      if (hill.x < -9000) { hill.x = mouse.x; hill.y = mouse.y; }
-      hill.x += (mouse.x - hill.x) * 0.12; hill.y += (mouse.y - hill.y) * 0.12;
-      hill.h += (1 - hill.h) * 0.06;
-    } else {
-      hill.h *= 0.94;
-    }
-    ripples = ripples.filter(function (r) { return now - r.t0 < 1800; });
+    // Lamp follows the pointer; without one it drifts on a slow loop.
+    var tx = mouse.on ? mouse.x : W * (0.5 + 0.32 * Math.cos(now / 5200));
+    var ty = mouse.on ? mouse.y : H * (0.35 + 0.18 * Math.sin(now / 4100));
+    lamp.x += (tx - lamp.x) * (reduce ? 1 : 0.12);
+    lamp.y += (ty - lamp.y) * (reduce ? 1 : 0.12);
+    flashes = flashes.filter(function (f) { return now - f.t0 < 1600; });
 
-    sample(t);
     ctx.clearRect(0, 0, W, H);
-    ctx.lineJoin = "round"; ctx.lineCap = "round";
-
-    var lo = -1.1, hi = 1.6, step = (hi - lo) / LEVELS;
-    var base = colors.dark ? 0.75 : 0.8;
-    for (var k = 1; k < LEVELS; k++) {
-      var index = k % 5 === 0;
-      ctx.beginPath();
-      contour(lo + k * step);
-      ctx.strokeStyle = index ? colors.accent : colors.line;
-      ctx.globalAlpha = index ? base : base * 0.62;
-      ctx.lineWidth = index ? 1.3 : 0.85;
-      ctx.stroke();
+    var par = scrollY * 0.35;
+    var r0 = Math.floor(par / S) - 1, r1 = r0 + Math.ceil(H / S) + 3;
+    var c1 = Math.ceil(W / S) + 1;
+    var rowsV = [];
+    for (var r = r0; r <= r1; r++) {
+      var row = [];
+      for (var c = -1; c <= c1; c++) row.push(vert(r, c, par));
+      rowsV.push(row);
     }
-
-    // Survey mark on the pointer summit.
-    if (hill.h > 0.25 && hill.x > -9000) {
-      var hx = hill.x, hy = hill.y, s = 5;
-      ctx.globalAlpha = Math.min(1, hill.h) * 0.9;
-      ctx.strokeStyle = colors.accentText; ctx.lineWidth = 1.3;
-      ctx.beginPath();
-      ctx.moveTo(hx, hy - s - 2); ctx.lineTo(hx + s, hy + s - 1); ctx.lineTo(hx - s, hy + s - 1); ctx.closePath();
-      ctx.stroke();
+    var shadeA = colors.dark ? 0.2 : 0.16, litA = colors.dark ? 0.16 : 0.13;
+    ctx.lineWidth = 0.7;
+    for (var j = 0; j < rowsV.length - 1; j++) {
+      var odd = ((r0 + j) & 1) === 1, A = rowsV[j], B = rowsV[j + 1];
+      for (var i = 0; i < A.length - 1; i++) {
+        var a = A[i], b = A[i + 1], cc = B[i], d = B[i + 1];
+        if (odd) { facet(a, b, d, now, shadeA, litA); facet(a, d, cc, now, shadeA, litA); }
+        else { facet(a, b, cc, now, shadeA, litA); facet(b, d, cc, now, shadeA, litA); }
+      }
     }
     ctx.globalAlpha = 1;
+  }
+
+  function facet(p, q, s, now, shadeA, litA) {
+    var ux = q[0] - p[0], uy = q[1] - p[1], uz = q[2] - p[2];
+    var vx = s[0] - p[0], vy = s[1] - p[1], vz = s[2] - p[2];
+    var nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx;
+    if (nz < 0) { nx = -nx; ny = -ny; nz = -nz; }
+    var nl = Math.sqrt(nx * nx + ny * ny + nz * nz) || 1;
+    var cx = (p[0] + q[0] + s[0]) / 3, cy = (p[1] + q[1] + s[1]) / 3;
+    var Lx = lamp.x - cx, Ly = lamp.y - cy, Lz = 240;
+    var Ll = Math.sqrt(Lx * Lx + Ly * Ly + Lz * Lz);
+    var light = Math.max(0, (nx * Lx + ny * Ly + nz * Lz) / (nl * Ll));
+    // Fall-off with distance from the lamp keeps the glow local.
+    var near = Math.max(0, 1 - Math.sqrt(Lx * Lx + Ly * Ly) / (Math.max(W, H) * 0.75));
+    var boost = 0;
+    for (var k = 0; k < flashes.length; k++) {
+      var f = flashes[k], age = (now - f.t0) / 1000, rad = age * 620;
+      var dd = Math.sqrt((cx - f.x) * (cx - f.x) + (cy - f.y) * (cy - f.y)) - rad;
+      boost += Math.max(0, 1 - age / 1.6) * Math.exp(-(dd * dd) / (2 * 60 * 60));
+    }
+    ctx.beginPath(); ctx.moveTo(p[0], p[1]); ctx.lineTo(q[0], q[1]); ctx.lineTo(s[0], s[1]); ctx.closePath();
+    var lit = light * (0.35 + 0.65 * near) + boost * 0.6;
+    if (lit > 0.82) {
+      // The facets facing the lamp most directly take the moss accent.
+      ctx.fillStyle = colors.dark ? colors.accentText : colors.accent;
+      ctx.globalAlpha = litA * Math.min(1.6, lit);
+    } else if (colors.dark) {
+      // On near-black the lamp brightens the paper instead of shading it.
+      ctx.fillStyle = "#FFFFFF"; ctx.globalAlpha = 0.012 + 0.07 * Math.min(1, lit);
+    } else {
+      // On light paper, facets that face away from the lamp fall into shade.
+      ctx.fillStyle = colors.shade; ctx.globalAlpha = shadeA * (1 - Math.min(1, lit)) * 0.55;
+    }
+    ctx.fill();
+    ctx.strokeStyle = colors.line; ctx.globalAlpha = colors.dark ? 0.1 : 0.12;
+    ctx.stroke();
   }
 
   function loop(now) {
     raf = 0;
     if (hidden) return;
-    // About 30 frames a second is plenty for a slow terrain and keeps the CPU calm.
     if (reduce || now - lastFrame >= 32) { lastFrame = now; draw(now); }
     if (!reduce) raf = requestAnimationFrame(loop);
   }
@@ -193,7 +143,7 @@
   document.documentElement.addEventListener("mouseleave", function () { mouse.on = false; if (reduce) kick(); });
 
   // True when the click landed on a solid panel (card, sidebar, table, modal) rather than
-  // on the open page background. Keeps the map out of the way in /app and /admin.
+  // on the open page background. Keeps the sheet out of the way in /app and /admin.
   var SKIP = "a,button,input,textarea,select,label,summary,details,[role=button],[role=tab],.fixed";
   function onSolid(el) {
     for (var n = el; n && n !== document.body && n !== document.documentElement; n = n.parentElement) {
@@ -206,11 +156,11 @@
     return false;
   }
   document.addEventListener("click", function (e) {
-    if (reduce || e.target.closest(SKIP) || onSolid(e.target)) return;
+    if (reduce || !e.target.closest || e.target.closest(SKIP) || onSolid(e.target)) return;
     if (document.documentElement.classList.contains("scroll-locked")) return;
     if (window.getSelection && String(window.getSelection())) return;
-    ripples.push({ x: e.clientX, y: e.clientY, t0: performance.now() });
-    if (ripples.length > 4) ripples.shift();
+    flashes.push({ x: e.clientX, y: e.clientY, t0: performance.now() });
+    if (flashes.length > 3) flashes.shift();
     kick();
   });
 
