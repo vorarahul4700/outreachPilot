@@ -493,17 +493,36 @@ Candidate Resume:
 {sample_resume}
 ---"""
 
-    response = call_groq_with_fallback(
-        messages=[
-            {"role": "system", "content": "You are a Senior Technical Recruiter and Hiring Manager. Ground all analysis strictly and 100% in the provided resume. Never fabricate projects, numbers, or tech stacks."},
-            {"role": "user", "content": prompt}
-        ],
-        temperature=0.1,
-        max_tokens=3200,
-        response_format={"type": "json_object"}
-    )
-    parsed = clean_json_response(response.choices[0].message.content)
-    if not parsed or not isinstance(parsed, dict):
+    # The report needs about 2,000 output tokens. Groq answers are capped at 950 tokens, so they
+    # arrive cut off, and small local models often return malformed or differently shaped JSON.
+    # Ask Gemini first (the second Gemini attempt rotates to the next key), use Groq only as a
+    # last resort, and accept an answer only when it has the fields the app needs.
+    parsed = None
+    last_error: Exception | None = None
+    for provider in ("gemini", "gemini", "groq"):
+        try:
+            response = call_groq_with_fallback(
+                messages=[
+                    {"role": "system", "content": "You are a Senior Technical Recruiter and Hiring Manager. Ground all analysis strictly and 100% in the provided resume. Never fabricate projects, numbers, or tech stacks."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.1,
+                max_tokens=3200,
+                response_format={"type": "json_object"},
+                prefer_provider=provider
+            )
+        except Exception as e:
+            last_error = e
+            continue
+        candidate = clean_json_response(response.choices[0].message.content)
+        if (isinstance(candidate, dict) and isinstance(candidate.get("top_skills"), list)
+                and candidate.get("top_skills") and candidate.get("elevator_pitch")):
+            parsed = candidate
+            break
+        print(f"[AI Agent] Resume analysis from {provider} was not complete JSON; trying again.")
+    if not parsed:
+        if last_error:
+            print(f"[AI Agent] Resume analysis provider error: {last_error}")
         raise ValueError("Could not parse structured JSON from resume analysis.")
 
     if not parsed.get("target_role") or (parsed["target_role"].lower() == "software engineer" and target_role):
@@ -694,16 +713,31 @@ Deliverables (must return valid JSON matching this schema):
         return make_pitch_fallback()
 
     try:
-        response = call_groq_with_fallback(
-            messages=[
-                {"role": "system", "content": "You are a senior technical talent advisor and candidate career strategist. You write direct, respectful cold job application outreach from technical candidates to engineering teams. Never use bracket placeholders. Never pitch products or sales services. Connect candidate proof points to company engineering needs with precision. Return pure JSON."},
-                {"role": "user", "content": prompt}
-            ],
-            temperature=0.3,
-            max_tokens=1500,
-            response_format={"type": "json_object"}
-        )
-        parsed = clean_json_response(response.choices[0].message.content)
+        # Groq first: about 3 s per draft against 20 s on Gemini (measured 2026-11-16).
+        # Groq can return an empty or cut-off answer (950-token cap, reasoning model), so
+        # Gemini gets a turn before the template email is ever used.
+        parsed = {}
+        for provider in ("groq", "gemini"):
+            try:
+                response = call_groq_with_fallback(
+                    messages=[
+                        {"role": "system", "content": "You are a senior technical talent advisor and candidate career strategist. You write direct, respectful cold job application outreach from technical candidates to engineering teams. Never use bracket placeholders. Never pitch products or sales services. Connect candidate proof points to company engineering needs with precision. Return pure JSON."},
+                        {"role": "user", "content": prompt}
+                    ],
+                    temperature=0.3,
+                    max_tokens=1500,
+                    response_format={"type": "json_object"},
+                    prefer_provider=provider
+                )
+            except Exception as e:
+                print(f"[AI Agent] Draft from {provider} failed: {e}")
+                continue
+            candidate = clean_json_response(response.choices[0].message.content)
+            if (isinstance(candidate, dict) and (candidate.get("subject_line") or "").strip()
+                    and (candidate.get("primary_email") or candidate.get("email_body") or "").strip()):
+                parsed = candidate
+                break
+            print(f"[AI Agent] Draft from {provider} was not complete JSON; trying the next provider.")
         if not parsed or not isinstance(parsed, dict):
             return make_pitch_fallback()
 
