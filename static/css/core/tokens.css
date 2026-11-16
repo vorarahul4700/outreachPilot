@@ -119,23 +119,24 @@
 html.dark {
   /* Dark theme follows the reference (var/temp/index.html): cool near-black layers,
      translucent white hairlines, deep soft shadows. Only backgrounds, lines and text
-     change; the moss accent stays. text-3 is lifted from the reference's #717582 to pass AA. */
+     change; the moss accent stays. Surfaces and hairlines are lifted so cards separate from
+     the page as clearly as in light (about 1.2:1 surface, 1.4:1 lines); text-3 passes AA. */
   color-scheme: dark;
   --bg: #07080B;
-  --bg-2: #0B0D12;
-  --surface: #101218;
-  --surface-2: #151821;
-  --surface-3: #1C202B;
+  --bg-2: #0D0F14;
+  --surface: #171A21;
+  --surface-2: #1D2029;
+  --surface-3: #252935;
   --overlay: rgba(3, 4, 6, .72);
   --glass: rgba(14, 16, 22, .74);
 
-  --line: rgba(255, 255, 255, .07);
-  --line-2: rgba(255, 255, 255, .12);
-  --line-3: rgba(255, 255, 255, .26);
+  --line: rgba(255, 255, 255, .12);
+  --line-2: rgba(255, 255, 255, .18);
+  --line-3: rgba(255, 255, 255, .30);
 
   --text: #F5F3EF;
-  --text-2: #A9ACB6;
-  --text-3: #868A95;
+  --text-2: #B4B7C0;
+  --text-3: #9295A0;
   --text-inverse: #07080B;
 
   --accent-soft: rgba(150, 172, 92, .12);

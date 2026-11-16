@@ -1,5 +1,5 @@
 /* Presentational motion shared by all redesigned pages:
-   - .reveal / .reveal-stagger fade up when they enter the viewport
+   - .reveal / .reveal-stagger fade in when they enter the viewport and out when they leave
    - [data-count] numbers count up once (value stays correct without JS)
    - .marquee tracks are cloned for a seamless loop
    - .rotator cycles its child words
@@ -17,11 +17,18 @@
   if (reduce || !("IntersectionObserver" in window)) {
     revealables.forEach(function (el) { el.classList.add("is-in"); });
   } else {
+    // Two-way, like the reference: in on enter, out on leave. Elements that leave
+    // through the top get .is-above so they drift up instead of down.
     var io = new IntersectionObserver(function (entries) {
       entries.forEach(function (en) {
-        if (en.isIntersecting) { en.target.classList.add("is-in"); io.unobserve(en.target); }
+        var el = en.target;
+        if (en.isIntersecting) { el.classList.remove("is-above"); el.classList.add("is-in"); }
+        else {
+          el.classList.remove("is-in");
+          el.classList.toggle("is-above", en.boundingClientRect.top < 0);
+        }
       });
-    }, { rootMargin: "0px 0px -8% 0px", threshold: 0.08 });
+    }, { rootMargin: "-4% 0px -6% 0px", threshold: 0 });
     revealables.forEach(function (el) { io.observe(el); });
   }
 

@@ -211,21 +211,28 @@ h5, h6, .h5 { font-family: var(--font-body); font-weight: 700; line-height: var(
 @media (max-width: 1023px) { .hide-md { display: none !important; } }
 @media (min-width: 1024px) { .show-md { display: none !important; } }
 
-/* ---------- Reveal on scroll (site/motion.js adds .is-in) ---------- */
+/* ---------- Reveal on scroll (site/motion.js) ----------
+   As in the reference: content fades and rises in as it enters the viewport and
+   fades back out as it leaves, drifting up when it leaves through the top
+   (.is-above) and down when it leaves through the bottom. */
 .js .reveal {
   opacity: 0;
-  transform: translateY(18px);
-  transition: opacity var(--t-reveal) var(--ease-out), transform var(--t-reveal) var(--ease-out);
+  transform: translateY(26px);
+  transition: opacity 1s var(--ease-out), transform 1s var(--ease-out);
   transition-delay: var(--d, 0s);
 }
+.js .reveal.is-above { transform: translateY(-26px); }
 .js .reveal.is-in { opacity: 1; transform: none; }
 .js .reveal-stagger > * {
   opacity: 0;
-  transform: translateY(14px);
-  transition: opacity var(--t-reveal) var(--ease-out), transform var(--t-reveal) var(--ease-out);
+  transform: translateY(20px);
+  transition: opacity .9s var(--ease-out), transform .9s var(--ease-out);
   transition-delay: calc(var(--i, 0) * 70ms);
 }
+.js .reveal-stagger.is-above > * { transform: translateY(-20px); }
 .js .reveal-stagger.is-in > * { opacity: 1; transform: none; }
+/* Leaving is quicker than arriving and has no stagger delay */
+.js .reveal:not(.is-in), .js .reveal-stagger:not(.is-in) > * { transition-duration: .6s; transition-delay: 0s; }
 
 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
 @keyframes rise-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
