@@ -6,12 +6,52 @@ from datetime import datetime
 from email.mime.text import MIMEText
 from typing import Any
 
+import os
+
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
+from itsdangerous import BadSignature, URLSafeSerializer
 from sqlalchemy.orm import Session
 
 import config
-from db import ColdPitch, OutreachLog, User
+from db import ColdPitch, DoNotContact, OutreachLog, User
+
+# --- Opt-out (do-not-contact) ---
+# Every email carries a signed link; opening it adds the recipient to
+# do_not_contact, and no OutreachPilot user can email that address again.
+_optout_signer = URLSafeSerializer(config.SECRET_KEY, salt="recipient-optout")
+PUBLIC_BASE_URL = (os.getenv("APP_BASE_URL") or "https://outreachpilot.in").rstrip("/")
+
+
+def optout_url(recipient: str) -> str:
+    return f"{PUBLIC_BASE_URL}/unsubscribe?t={_optout_signer.dumps(recipient.strip().lower())}"
+
+
+def read_optout_token(token: str) -> str | None:
+    try:
+        email = _optout_signer.loads(token)
+        return email if isinstance(email, str) and "@" in email else None
+    except BadSignature:
+        return None
+
+
+def is_do_not_contact(db: Session, email: str) -> bool:
+    return db.query(DoNotContact).filter(DoNotContact.email == email.strip().lower()).first() is not None
+
+
+def add_do_not_contact(db: Session, email: str, source: str = "unsubscribe_link") -> None:
+    email = email.strip().lower()
+    if not is_do_not_contact(db, email):
+        db.add(DoNotContact(email=email, source=source))
+        db.commit()
+
+
+def with_optout_footer(body: str, recipient: str) -> str:
+    return (
+        f"{body.rstrip()}\n\n--\n"
+        "Not interested in emails like this? Opt out and no OutreachPilot user will email this address again:\n"
+        f"{optout_url(recipient)}"
+    )
 
 
 def get_effective_recipient(actual_email: str) -> str:
@@ -75,6 +115,13 @@ async def send_via_google_oauth(
 
     if not to_email or not str(to_email).strip():
         return {"success": False, "error": "Company email not found! Cannot send email."}
+
+    # Opted-out recipients are never emailed, by any user.
+    if is_do_not_contact(db, to_email):
+        return {"success": False, "blocked": True,
+                "error": "This address opted out of emails from OutreachPilot users. Not sent."}
+    sent_body = with_optout_footer(body, to_email)
+    unsubscribe_link = optout_url(to_email)
 
     effective_to = get_effective_recipient(to_email)
     effective_subject = f"[TEST -> {to_email}] {subject}" if config.DEV_MODE else subject
@@ -151,7 +198,7 @@ async def send_via_google_oauth(
             message["to"] = effective_to
             message["from"] = user.email
             message["subject"] = effective_subject
-            message.attach(MIMEText(body, "plain"))
+            message.attach(MIMEText(sent_body, "plain"))
             try:
                 subtype = "pdf" if att_filename.lower().endswith(".pdf") else "octet-stream"
                 part = MIMEBase("application", subtype)
@@ -162,10 +209,14 @@ async def send_via_google_oauth(
             except Exception as att_err:
                 print(f"[Attachment Warning] Could not attach resume bytes: {att_err}")
         else:
-            message = MIMEText(body)
+            message = MIMEText(sent_body)
             message["to"] = effective_to
             message["from"] = user.email
             message["subject"] = effective_subject
+
+        # RFC 8058 one-click unsubscribe (Gmail shows an "Unsubscribe" button).
+        message["List-Unsubscribe"] = f"<{unsubscribe_link}>"
+        message["List-Unsubscribe-Post"] = "List-Unsubscribe=One-Click"
 
         raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode("utf-8")
         send_result = service.users().messages().send(
@@ -180,7 +231,7 @@ async def send_via_google_oauth(
                 user_id=user.id,
                 recipient_email=effective_to,
                 subject=effective_subject,
-                email_body=body,
+                email_body=sent_body,
                 delivery_method="OAUTH_DIRECT",
                 status="SENT",
                 sent_at=datetime.utcnow()

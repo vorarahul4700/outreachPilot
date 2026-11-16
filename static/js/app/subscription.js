@@ -13,6 +13,10 @@ function updateUserSubscriptionUI(data) {
   const sentToday = typeof data.pitches_sent_today === "number" ? data.pitches_sent_today : 0;
   const remaining = (isMaster || isKillSwitch) ? 999999 : (typeof data.pitches_remaining === "number" ? data.pitches_remaining : Math.max(0, totalLimit - sentToday));
 
+  // Emails the user can still send today; app.js caps Outreach Hub selections to it.
+  // Guests are not capped here: sending asks them to sign in first.
+  window.__quotaRemaining = (isMaster || isKillSwitch || data.is_logged_in === false) ? Infinity : remaining;
+
   const totalLimitStr = (isMaster || isKillSwitch) ? "∞" : String(totalLimit);
   const remainingStr = (isMaster || isKillSwitch) ? "∞" : String(remaining);
   const pct = (isMaster || isKillSwitch) ? 100 : (totalLimit > 0 ? Math.min(100, Math.max(0, Math.round((remaining / totalLimit) * 100))) : 0);
