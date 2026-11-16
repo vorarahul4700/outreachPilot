@@ -737,8 +737,32 @@ class GoogleScraper:
                         raise init_err
                     time.sleep(1.2)
 
+            # Pre-inject anti-abuse Google session cookies into Chromium browser session
+            try:
+                active_cookie = (os.environ.get("GOOGLE_COOKIE") or "").strip() or VERIFIED_GOOGLE_COOKIE
+                if active_cookie:
+                    driver.get("https://www.google.com/robots.txt")
+                    time.sleep(0.4)
+                    for c_part in active_cookie.split(";"):
+                        if "=" in c_part:
+                            c_k, c_v = c_part.split("=", 1)
+                            c_k, c_v = c_k.strip(), c_v.strip()
+                            if c_k and c_v:
+                                try:
+                                    driver.add_cookie({
+                                        "name": c_k,
+                                        "value": c_v,
+                                        "domain": ".google.com",
+                                        "path": "/",
+                                    })
+                                except Exception:
+                                    pass
+            except Exception:
+                pass
+
+            use_uc_reconnect = hasattr(driver, "uc_open_with_reconnect") and not bool(os.environ.get("GITHUB_ACTIONS"))
             self._log(f"Navigating to Google Local: {target_url}", 20)
-            if hasattr(driver, "uc_open_with_reconnect"):
+            if use_uc_reconnect:
                 try:
                     driver.uc_open_with_reconnect(target_url, reconnect_time=4.0)
                 except Exception as ne:
@@ -847,7 +871,7 @@ class GoogleScraper:
                             pass
 
                     # Reconnect to target_url with udm=local strictly preserved
-                    if hasattr(driver, "uc_open_with_reconnect"):
+                    if use_uc_reconnect:
                         try:
                             driver.uc_open_with_reconnect(target_url, reconnect_time=3.5)
                         except Exception:

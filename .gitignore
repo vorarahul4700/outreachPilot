@@ -136,3 +136,5 @@ local_enrich.py
 ollama_*
 
 
+brag-output/
+brand/

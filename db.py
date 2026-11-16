@@ -217,7 +217,7 @@ elif clean_db_url.startswith("postgresql://") and not clean_db_url.startswith("p
     clean_db_url = clean_db_url.replace("postgresql://", "postgresql+psycopg2://", 1)
 
 connect_args = {
-    "connect_timeout": 10,
+    "connect_timeout": 20,
     "keepalives": 1,
     "keepalives_idle": 15,
     "keepalives_interval": 5,
@@ -246,7 +246,7 @@ try:
         pool_recycle=60,
         pool_size=20,
         max_overflow=30,
-        pool_timeout=25,
+        pool_timeout=35,
         connect_args=connect_args
     )
     print(f"[DB] Initialized database engine: {engine.name} ({engine.url.render_as_string(hide_password=True)})")
