@@ -187,7 +187,7 @@
 #wf-dynamic-fields-wrapper input, #wf-dynamic-fields-wrapper select, #wf-dynamic-fields-wrapper textarea { width: 100%; min-height: 42px; padding: 9px 12px; border-radius: var(--r-md); background: var(--surface); border: 1px solid var(--line); color: var(--text); font-size: .88rem; }
 #wf-dynamic-fields-wrapper input[type="checkbox"] { width: 16px; min-height: 0; height: 16px; accent-color: var(--accent); }
 #wf-dynamic-fields-wrapper input:focus, #wf-dynamic-fields-wrapper select:focus { outline: none; border-color: var(--accent); box-shadow: var(--focus-ring); }
-.btn-warn { background: var(--warn); color: #1f2018; }
+.btn-warn { background: var(--warn); color: #fff; } /* white on --warn is 5:1, dark text was 3.3:1 */
 .btn-warn:hover { filter: brightness(.95); }
 #admin-toast-container { position: fixed; top: 18px; left: 50%; translate: -50% 0; z-index: 9999; display: grid; gap: 10px; justify-items: center; width: min(94vw, 620px); pointer-events: none; }
 .pitch-meta { display: grid; gap: 6px; padding: 12px 14px; border-radius: var(--r-md); background: var(--surface-2); border: 1px solid var(--line); font-family: var(--font-mono); font-size: .78rem; color: var(--text-2); }

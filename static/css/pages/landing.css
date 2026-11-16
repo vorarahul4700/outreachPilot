@@ -134,6 +134,7 @@
 .console.is-listed .c-row { opacity: 1; transform: none; }
 .console.is-verified .c-ok { opacity: 1; transform: none; }
 .console.is-drafting .c-row:first-child { border-color: var(--accent-line); background: var(--accent-soft); }
+.console.is-drafting .c-row:first-child .grow span { color: var(--text-2); } /* keeps AA contrast on the tinted row */
 
 .c-draft {
   margin-top: auto;

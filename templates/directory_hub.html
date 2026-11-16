@@ -104,7 +104,7 @@
                 <span><span class="material-symbols-outlined" aria-hidden="true">location_on</span>{{ c.city }}</span>
                 <a href="{{ c.website_url if c.website_url else 'https://' + c.domain }}" target="_blank" rel="noopener noreferrer" class="co-site"><span>{{ c.domain }}</span><span class="material-symbols-outlined" aria-hidden="true">open_in_new</span></a>
                 {% if c.industry_domain %}
-                <span class="pc-tag" style="padding:2px 7px;border-radius:6px;background:var(--surface-3);font-family:var(--font-mono);font-size:.66rem;text-transform:uppercase">{{ c.industry_domain }}</span>
+                <span class="pc-tag co-tag">{{ c.industry_domain }}</span>
                 {% endif %}
               </div>
             </div>
