@@ -114,27 +114,45 @@ def call_gemini_single_key(
     if response_format and response_format.get("type") == "json_object":
         gen_config["responseMimeType"] = "application/json"
 
-    native_payload = {
-        "contents": contents,
-        "generationConfig": gen_config
-    }
-    if system_text:
-        native_payload["systemInstruction"] = {"parts": [{"text": system_text}]}
+    # Long answers (resume reports, research) take longer than the 25 s short calls get.
+    request_timeout = 25.0 if not max_tokens or max_tokens <= 1000 else 75.0
 
     last_gem_err = None
     for target_m in models_to_try:
+        model_config = dict(gen_config)
+        if target_m == "gemini-3.5-flash":
+            # This model thinks before it answers, and the thinking counts against
+            # maxOutputTokens. Uncapped, it spent 1,889 of 3,200 tokens thinking on a resume
+            # and the JSON came back cut off (finishReason MAX_TOKENS). Capping thinking keeps
+            # the answer whole and roughly halves the time (measured 2026-11-16). Short
+            # requests get no thinking so a small budget cannot be used up by it.
+            model_config["thinkingConfig"] = {"thinkingBudget": 512 if (max_tokens or 0) >= 2000 else 0}
+        native_payload = {
+            "contents": contents,
+            "generationConfig": model_config
+        }
+        if system_text:
+            native_payload["systemInstruction"] = {"parts": [{"text": system_text}]}
         native_url = f"https://generativelanguage.googleapis.com/v1beta/models/{target_m}:generateContent?key={key}"
         try:
             if httpx:
-                with httpx.Client(timeout=25.0) as h_client:
+                with httpx.Client(timeout=request_timeout) as h_client:
                     r = h_client.post(native_url, json=native_payload)
             else:
-                r = requests.post(native_url, json=native_payload, timeout=25.0)
+                r = requests.post(native_url, json=native_payload, timeout=request_timeout)
 
             if r.status_code == 200:
                 data = r.json()
-                parts = data.get("candidates", [{}])[0].get("content", {}).get("parts", [])
+                candidate = (data.get("candidates") or [{}])[0]
+                parts = candidate.get("content", {}).get("parts", [])
                 text_content = "".join(p.get("text", "") for p in parts)
+                finish = candidate.get("finishReason")
+                # A 200 can still carry a cut-off or empty answer. Treat it as a failure so
+                # the next model (or key, or provider) gets a turn instead of the caller
+                # failing to parse half a JSON object.
+                if not text_content.strip() or finish == "MAX_TOKENS":
+                    last_gem_err = f"Gemini model {target_m} returned an incomplete answer (finishReason {finish}, {len(text_content)} chars)"
+                    continue
                 return AIResponse(text_content)
             elif r.status_code == 429:
                 raise RuntimeError(f"Gemini 429 Rate Limit ({key[:8]}...): {r.text}")
