@@ -192,3 +192,8 @@
 #admin-toast-container { position: fixed; top: 18px; left: 50%; translate: -50% 0; z-index: 9999; display: grid; gap: 10px; justify-items: center; width: min(94vw, 620px); pointer-events: none; }
 .pitch-meta { display: grid; gap: 6px; padding: 12px 14px; border-radius: var(--r-md); background: var(--surface-2); border: 1px solid var(--line); font-family: var(--font-mono); font-size: .78rem; color: var(--text-2); }
 .pitch-meta strong, .pitch-meta span.v { color: var(--text); }
+
+/* Review pass 3: Ban / Unban outlines. These classes sit inside a conditional in admin.js,
+   which gen_admin_utils.py does not pick up, so they are mapped here by hand. */
+.border-rose-500\/40 { border-color: color-mix(in srgb, var(--danger) 45%, transparent); }
+.border-emerald-500\/40 { border-color: color-mix(in srgb, var(--ok) 45%, transparent); }

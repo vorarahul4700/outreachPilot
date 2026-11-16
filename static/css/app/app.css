@@ -686,3 +686,6 @@ textarea.recessed-well { min-height: 220px; resize: vertical; line-height: 1.7; 
   .app-toolbar .toolbar-filters { flex: 0 0 auto; }
   .app-toolbar .toolbar-filters .custom-dropdown { flex: 0 0 auto; width: clamp(150px, 13vw, 200px); max-width: none; }
 }
+
+/* Review pass 3: on phones the status badge takes width from the name, so allow a third line */
+@media (max-width: 479px) { .ac-name h3, .ac-name h4 { -webkit-line-clamp: 3; font-size: 1.02rem; } }

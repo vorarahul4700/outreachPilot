@@ -118,3 +118,4 @@ Each phase ends with your review. I commit to the branch only after you approve 
 - Review pass 1: workspace counters show thousands separators (display only); stat card wording made plain; "/" focuses the search box on /app; app.js and admin.js now use the shared cache version so restyled code always reaches the browser.
 - Functional ideas from the review are in REDESIGN_PROPOSALS.md and are not built.
 - Review pass 2: /app search and filters sit on one line on wide screens with search taking the free space; pager numbers use separators (5,538); the company profile "At a glance" card now really stays in view while scrolling.
+- Review pass 3: Ban / Unban buttons in /admin users get their red / green outline (classes the utility generator missed); company names on /app cards can use three lines on phones so they are not cut short. /admin, /app, landing and company profile checked at 375 with no horizontal scroll.
