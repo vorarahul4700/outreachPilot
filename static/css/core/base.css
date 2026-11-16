@@ -24,6 +24,7 @@ body {
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
   overflow-x: hidden;
+  overflow-x: clip; /* clip, not hidden: hidden makes body a scroll box when html is locked, which unsticks the header */
   transition: background-color var(--t-slow) var(--ease), color var(--t-slow) var(--ease);
 }
 img, picture, video, canvas, svg { display: block; max-width: 100%; }

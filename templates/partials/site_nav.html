@@ -49,7 +49,7 @@
   {% if not subscription_kill_switch %}
   <a class="m-link" style="--i:3" href="{{ _p }}#pricing">Pricing <span>04</span></a>
   {% endif %}
-  <a class="m-link" style="--i:4" href="/directory">Directory <span>05</span></a>
+  <a class="m-link" style="--i:4" href="/directory">Directory <span>{{ "04" if subscription_kill_switch else "05" }}</span></a>
   <div class="m-cta">
     {% if _cta_href %}
     <a class="btn btn-primary btn-lg btn-block" href="{{ _cta_href }}">{{ _cta_label or "Open workspace" }}</a>
