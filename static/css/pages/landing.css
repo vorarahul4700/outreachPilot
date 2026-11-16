@@ -237,7 +237,7 @@ ol.pipeline { /* ol. beats the base ol[role="list"] reset, which zeroed this pad
 .cmp-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding-bottom: 16px; margin-bottom: 8px; border-bottom: 1px solid var(--line); }
 .cmp-head h3 { display: inline-flex; align-items: center; gap: 10px; }
 .logo-mark.sm { width: 26px; height: 26px; border-radius: 8px; }
-.logo-mark.sm svg { width: 14px; height: 14px; }
+.logo-mark.sm svg { width: 20px; height: 20px; }
 .cmp ul { list-style: none; padding: 0; display: grid; }
 .cmp li { display: flex; gap: 14px; padding: 14px 0; border-bottom: 1px solid var(--line); }
 .cmp li:last-child { border-bottom: 0; padding-bottom: 0; }
@@ -442,7 +442,7 @@ ol.pipeline { /* ol. beats the base ol[role="list"] reset, which zeroed this pad
 .final h2 { max-width: 24ch; text-wrap: balance; }
 .final .lead { margin-inline: auto; }
 .logo-mark.lg { width: 60px; height: 60px; border-radius: 18px; }
-.logo-mark.lg svg { width: 30px; height: 30px; }
+.logo-mark.lg svg { width: 46px; height: 46px; }
 @media (max-width: 479px) { .final .cluster .btn { width: 100%; } }
 
 /* ---------- Browse the directory ---------- */

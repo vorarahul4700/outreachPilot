@@ -58,6 +58,7 @@
       <button data-tab="overview" class="admin-tab-btn tab-btn active"><span class="material-symbols-outlined">monitoring</span><span>Overview & KPIs</span></button>
       <button data-tab="users" class="admin-tab-btn tab-btn"><span class="material-symbols-outlined">group</span><span>User Accounts</span><span id="badge-users-count" class="count">0</span></button>
       <button data-tab="companies" class="admin-tab-btn tab-btn"><span class="material-symbols-outlined">domain</span><span>Company Leads</span></button>
+      <button data-tab="categories" class="admin-tab-btn tab-btn"><span class="material-symbols-outlined">category</span><span>Categories</span><span id="badge-hidden-categories" class="count{% if not hidden_categories_count %} hidden{% endif %}" title="Categories hidden from users">{{ hidden_categories_count or 0 }} hidden</span></button>
       <button data-tab="pitches" class="admin-tab-btn tab-btn"><span class="material-symbols-outlined">send</span><span>Sent Pitches</span><span id="badge-pitches-count" class="count">0</span></button>
       <button data-tab="subscriptions" class="admin-tab-btn tab-btn"><span class="material-symbols-outlined">loyalty</span><span>Tiers & Plans</span></button>
       <button data-tab="github" class="admin-tab-btn tab-btn"><span class="material-symbols-outlined">integration_instructions</span><span>GitHub Actions</span></button>
@@ -302,6 +303,33 @@
             <div class="btns"><button id="invalid-btn-prev" type="button" disabled>Previous</button><button id="invalid-btn-next" type="button">Next</button></div>
           </div>
         </div>
+      </div>
+    </section>
+
+    <!-- ========== Categories (show / hide for users) ========== -->
+    <section id="tab-content-categories" class="admin-tab-panel hidden">
+      <div class="section-bar">
+        <div>
+          <h2>Category visibility</h2>
+          <p>Switch a category off to hide it, and every company in it, from the workspace, the public directory and search engines. Nothing is deleted: switch it back on and everything shows again.</p>
+        </div>
+        <div class="acts"><span id="catvis-summary" class="note-pill">Loading...</span></div>
+      </div>
+
+      <div class="filters-bar">
+        <div class="app-search"><span class="material-symbols-outlined">search</span><input type="text" id="catvis-search" placeholder="Search categories or industries..." aria-label="Search categories"></div>
+        <div class="f-right">
+          <div class="segmented" role="group" aria-label="Show categories">
+            <button type="button" class="catvis-filter" data-filter="all" aria-pressed="true">All</button>
+            <button type="button" class="catvis-filter" data-filter="shown" aria-pressed="false">Shown</button>
+            <button type="button" class="catvis-filter" data-filter="hidden" aria-pressed="false">Hidden</button>
+          </div>
+          <button id="btn-refresh-catvis" type="button" class="icon-btn" title="Refresh categories" aria-label="Refresh categories"><span class="material-symbols-outlined">refresh</span></button>
+        </div>
+      </div>
+
+      <div id="catvis-groups" class="stack" style="--stack:14px">
+        <div class="a-card catvis-empty">Loading categories...</div>
       </div>
     </section>
 
@@ -610,5 +638,6 @@
 <script src="/static/js/admin/controls.js?v={{ asset_v }}"></script>
 <script src="/static/js/admin/kill-switch.js?v={{ asset_v }}"></script>
 <script src="/static/js/admin/workflows.js?v={{ asset_v }}"></script>
+<script src="/static/js/admin/categories.js?v={{ asset_v }}"></script>
 <script src="/static/js/admin.js?v={{ asset_v }}"></script>
 {% endblock %}

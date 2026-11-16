@@ -86,7 +86,7 @@ from db import (
     get_db,
     init_db,
 )
-from enricher import deep_enrich_company, is_recruitment_email
+from enricher import is_recruitment_email
 from outreach import (
     dispatch_batch_outreach,
     generate_mailto_link,
@@ -129,33 +129,36 @@ def _prewarm_cache():
     try:
         db = SessionLocal()
         now = time.time()
-        counts_res = db.execute(text("""
-            SELECT 
-                COUNT(*) FILTER (WHERE is_invalid = FALSE) AS total_valid,
+        # Companies in categories hidden from users (admin > Categories) are not counted.
+        vis_sql, vis_params = seo_engine.visible_kw_sql(db)
+        vis_sql_c, _ = seo_engine.visible_kw_sql(db, prefix="c.")
+        counts_res = db.execute(text(f"""
+            SELECT
+                COUNT(*) FILTER (WHERE is_invalid = FALSE{vis_sql}) AS total_valid,
                 COUNT(*) FILTER (WHERE is_invalid = TRUE) AS invalid_count,
-                COUNT(*) FILTER (WHERE is_invalid = FALSE AND is_enriched = TRUE) AS enriched_count
+                COUNT(*) FILTER (WHERE is_invalid = FALSE AND is_enriched = TRUE{vis_sql}) AS enriched_count
             FROM companies
             WHERE domain NOT LIKE '%.local' AND domain LIKE '%.%';
-        """)).fetchone()
+        """), vis_params).fetchone()
 
         total_valid = (counts_res[0] if counts_res else 0) or 0
         invalid_count = (counts_res[1] if counts_res else 0) or 0
         enriched_count = (counts_res[2] if counts_res else 0) or 0
 
-        with_emails_count = db.execute(text("""
+        with_emails_count = db.execute(text(f"""
             SELECT COUNT(DISTINCT ce.company_id)
             FROM company_emails ce
             JOIN companies c ON c.id = ce.company_id
-            WHERE c.is_invalid = FALSE;
-        """)).scalar() or 0
+            WHERE c.is_invalid = FALSE{vis_sql_c};
+        """), vis_params).scalar() or 0
 
-        city_rows = db.execute(text("""
+        city_rows = db.execute(text(f"""
             SELECT initcap(trim(city)) AS norm_city, COUNT(*) AS count
-            FROM companies 
-            WHERE is_invalid = FALSE AND city IS NOT NULL AND trim(city) != ''
+            FROM companies
+            WHERE is_invalid = FALSE{vis_sql} AND city IS NOT NULL AND trim(city) != ''
             GROUP BY norm_city
             ORDER BY norm_city ASC;
-        """)).fetchall()
+        """), vis_params).fetchall()
 
         sorted_cities = [{"name": r[0], "count": r[1]} for r in city_rows if r[0]]
 
@@ -475,10 +478,6 @@ class ScrapeRequest(BaseModel):
     hl: str = "en"
 
 
-class BulkEnrichRequest(BaseModel):
-    company_ids: list[int]
-
-
 class PitchGenRequest(BaseModel):
     company_id: int
     target_role: str | None = ""
@@ -505,19 +504,6 @@ class DirectSendRequest(BaseModel):
 class DemoLoginRequest(BaseModel):
     as_admin: bool = False
     email: str | None = None
-
-
-class InvalidateCompanyRequest(BaseModel):
-    reason: str | None = "Excluded by Master Admin"
-
-
-class BulkInvalidateCompaniesRequest(BaseModel):
-    company_ids: list[int]
-    reason: str | None = "Excluded by Master Admin"
-
-
-class BulkRestoreCompaniesRequest(BaseModel):
-    company_ids: list[int]
 
 
 class UpdatePlanRequest(BaseModel):
@@ -707,7 +693,7 @@ def favicon():
 @app.api_route("/apple-touch-icon-precomposed.png", methods=["GET", "HEAD"], include_in_schema=False)
 def apple_touch_icon():
     return FileResponse(
-        "static/img/favicon.png",
+        "static/img/apple-touch-icon.png",
         media_type="image/png",
         headers={
             "Cache-Control": "public, max-age=604800, s-maxage=604800",
@@ -1927,6 +1913,9 @@ def get_companies_filters(
         t_cond = build_tech_condition(tech_terms)
         c_cond = build_city_condition(city_terms)
         st_cond = build_status_condition(status_val)
+        # Categories hidden from users (admin > Categories): leave their companies out of every count.
+        h_cond = seo_engine.visible_kw_clause(db)
+        h_sql, h_params = seo_engine.visible_kw_sql(db, prefix="c.")
 
         # --- FACET 1: Cities (scoped to domain, tech, status - NOT city itself) ---
         if tech_terms or domain_val or status_val != "all":
@@ -1935,6 +1924,8 @@ def get_companies_filters(
                 Company.city.isnot(None),
                 func.trim(Company.city) != ""
             )
+            if h_cond is not None:
+                q_cities = q_cities.filter(h_cond)
             if d_cond is not None:
                 q_cities = q_cities.filter(d_cond)
             if t_cond is not None:
@@ -1977,9 +1968,10 @@ def get_companies_filters(
                              ELSE '[]'::jsonb 
                          END
                      ) AS item
-                WHERE c.is_invalid = FALSE
+                WHERE c.is_invalid = FALSE{h_sql}
             """
-            params = {}
+            prof_sql = prof_sql.replace("{h_sql}", h_sql)
+            params = dict(h_params)
             if city_tuple:
                 prof_sql += " AND LOWER(c.city) IN :cities"
                 params["cities"] = city_tuple
@@ -2025,9 +2017,10 @@ def get_companies_filters(
                     END AS tech_name,
                     COUNT(DISTINCT c.id) AS cnt
                 FROM companies c
-                WHERE c.is_invalid = FALSE
+                WHERE c.is_invalid = FALSE{h_sql}
             """
-            kw_params = {}
+            kw_sql = kw_sql.replace("{h_sql}", h_sql)
+            kw_params = dict(h_params)
             if city_tuple:
                 kw_sql += " AND LOWER(c.city) IN :cities"
                 kw_params["cities"] = city_tuple
@@ -2050,13 +2043,31 @@ def get_companies_filters(
             # Global tech stacks
             tech_map = defaultdict(int)
             try:
-                tech_rows = db.execute(text("""
+                if h_sql:
+                    tech_rows = db.execute(text(f"""
+                        SELECT item, COUNT(*) AS count
+                        FROM company_profiles cp
+                        JOIN companies c ON c.id = cp.company_id,
+                             jsonb_array_elements_text(
+                                 CASE
+                                     WHEN jsonb_typeof(cp.tech_stack) = 'array' THEN cp.tech_stack
+                                     ELSE '[]'::jsonb
+                                 END
+                             ) AS item
+                        WHERE item IS NOT NULL AND trim(item) != ''
+                          AND c.is_invalid = FALSE{h_sql}
+                        GROUP BY item
+                        ORDER BY count DESC
+                        LIMIT 60;
+                    """), h_params).fetchall()
+                else:
+                    tech_rows = db.execute(text("""
                     SELECT item, COUNT(*) AS count
                     FROM company_profiles,
                          jsonb_array_elements_text(
-                             CASE 
-                                 WHEN jsonb_typeof(tech_stack) = 'array' THEN tech_stack 
-                                 ELSE '[]'::jsonb 
+                             CASE
+                                 WHEN jsonb_typeof(tech_stack) = 'array' THEN tech_stack
+                                 ELSE '[]'::jsonb
                              END
                          ) AS item
                     WHERE item IS NOT NULL AND trim(item) != ''
@@ -2095,6 +2106,8 @@ def get_companies_filters(
             q_dom = db.query(
                 Company.normalized_keyword, Company.search_keyword, func.count(Company.id)
             ).filter(Company.is_invalid.is_(False))
+            if h_cond is not None:
+                q_dom = q_dom.filter(h_cond)
             if c_cond is not None:
                 q_dom = q_dom.filter(c_cond)
             if t_cond is not None:
@@ -2126,6 +2139,8 @@ def get_companies_filters(
 
         # --- STATS: Total matching leads with ALL active filters applied ---
         q_total = db.query(func.count(Company.id)).filter(Company.is_invalid.is_(False))
+        if h_cond is not None:
+            q_total = q_total.filter(h_cond)
         if d_cond is not None:
             q_total = q_total.filter(d_cond)
         if c_cond is not None:
@@ -2264,6 +2279,8 @@ def get_companies(
             # invalid/excluded companies remain reachable via the dedicated "invalid"
             # view. This keeps the list total consistent with the "Total Companies" KPI.
             query = base_query.filter(Company.is_invalid.is_(False))
+            # Categories hidden from users (admin > Categories) never appear here.
+            query = seo_engine.apply_category_visibility(query, db)
 
         # 2. Metric / Status filter
         if status == "enriched":
@@ -2618,6 +2635,7 @@ def get_company_detail(company_id: int, request: Request, db: Session = Depends(
     query = db.query(Company).filter(Company.id == company_id)
     if not is_admin:
         query = query.filter(Company.is_invalid.is_(False))
+        query = seo_engine.apply_category_visibility(query, db)
     company = query.first()
     if not company:
         raise HTTPException(status_code=404, detail="Company not found or access denied.")
@@ -2908,218 +2926,8 @@ async def logout(request: Request, db: Session = Depends(get_db)):
     return resp
 
 
-@app.post("/api/companies/{company_id}/invalidate")
-async def invalidate_company(
-    company_id: int,
-    req_body: InvalidateCompanyRequest | None = None,
-    request: Request = None,
-    db: Session = Depends(get_db)
-):
-    user = get_current_user(db, request)
-    is_authorized = bool(user and config.is_master_admin(user.email))
-    if not is_authorized:
-        raise HTTPException(
-            status_code=403,
-            detail="Forbidden: Master Admin privileges required to exclude companies."
-        )
-
-    company = db.query(Company).filter(Company.id == company_id).first()
-    if not company:
-        raise HTTPException(status_code=404, detail="Company not found")
-
-    company.is_invalid = True
-    company.invalid_at = datetime.utcnow()
-    company.invalid_reason = (req_body.reason if req_body and req_body.reason else "Excluded by Admin")
-    db.commit()
-    invalidate_filter_cache()
-
-    return {
-        "success": True,
-        "message": f"'{company.name}' marked as invalid and excluded from user views.",
-        "company_id": company.id,
-        "is_invalid": True
-    }
-
-
-@app.post("/api/companies/{company_id}/restore")
-async def restore_company(
-    company_id: int,
-    request: Request = None,
-    db: Session = Depends(get_db)
-):
-    user = get_current_user(db, request)
-    is_authorized = bool(user and config.is_master_admin(user.email))
-    if not is_authorized:
-        raise HTTPException(
-            status_code=403,
-            detail="Forbidden: Master Admin privileges required to restore companies."
-        )
-
-    company = db.query(Company).filter(Company.id == company_id).first()
-    if not company:
-        raise HTTPException(status_code=404, detail="Company not found")
-
-    company.is_invalid = False
-    company.invalid_at = None
-    company.invalid_reason = None
-    db.commit()
-    invalidate_filter_cache()
-
-    return {
-        "success": True,
-        "message": f"'{company.name}' restored to active genuine leads.",
-        "company_id": company.id,
-        "is_invalid": False
-    }
-
-
-@app.post("/api/companies/bulk-invalidate")
-async def bulk_invalidate_companies(
-    req_body: BulkInvalidateCompaniesRequest,
-    request: Request = None,
-    db: Session = Depends(get_db)
-):
-    user = get_current_user(db, request)
-    is_authorized = bool(user and config.is_master_admin(user.email))
-    if not is_authorized:
-        raise HTTPException(
-            status_code=403,
-            detail="Forbidden: Master Admin privileges required to exclude companies."
-        )
-
-    if not req_body.company_ids:
-        return {"success": True, "count": 0, "message": "No companies selected."}
-
-    now = datetime.utcnow()
-    reason = req_body.reason or "Excluded by Admin"
-
-    updated = (
-        db.query(Company)
-        .filter(Company.id.in_(req_body.company_ids))
-        .update(
-            {
-                Company.is_invalid: True,
-                Company.invalid_at: now,
-                Company.invalid_reason: reason,
-            },
-            synchronize_session=False,
-        )
-    )
-    db.commit()
-    invalidate_filter_cache()
-
-    return {
-        "success": True,
-        "count": updated,
-        "message": f"Successfully marked {updated} companies as invalid and excluded from user views.",
-    }
-
-
-@app.post("/api/companies/bulk-restore")
-async def bulk_restore_companies(
-    req_body: BulkRestoreCompaniesRequest,
-    request: Request = None,
-    db: Session = Depends(get_db)
-):
-    user = get_current_user(db, request)
-    is_authorized = bool(user and config.is_master_admin(user.email))
-    if not is_authorized:
-        raise HTTPException(
-            status_code=403,
-            detail="Forbidden: Master Admin privileges required to restore companies."
-        )
-
-    if not req_body.company_ids:
-        return {"success": True, "count": 0, "message": "No companies selected."}
-
-    updated = (
-        db.query(Company)
-        .filter(Company.id.in_(req_body.company_ids))
-        .update(
-            {
-                Company.is_invalid: False,
-                Company.invalid_at: None,
-                Company.invalid_reason: None,
-            },
-            synchronize_session=False,
-        )
-    )
-    db.commit()
-    invalidate_filter_cache()
-
-    return {
-        "success": True,
-        "count": updated,
-        "message": f"Successfully restored {updated} companies to active genuine leads.",
-    }
-
-
-
-@app.post("/api/companies/{company_id}/enrich")
-async def enrich_single_company(
-    company_id: int,
-    force_refresh: bool = False,
-    request: Request = None,
-    db: Session = Depends(get_db)
-):
-    user = get_current_user(db, request)
-    if not user or not user.oauth_tokens:
-        raise HTTPException(
-            status_code=401,
-            detail="Authentication required. Please connect your Google account or log in to run Deep Enrichment."
-        )
-    if getattr(user, "is_banned", False):
-        raise HTTPException(
-            status_code=403,
-            detail=f"Account suspended: {user.ban_reason or 'Access denied by administrator.'}"
-        )
-
-    client_id = f"{user.id}_{request.client.host if request and request.client else 'unknown'}"
-    enforce_rate_limit(f"enrich_single_{client_id}", max_calls=20, window_seconds=60)
-
-    result = await deep_enrich_company(company_id=company_id, db=db, force_refresh=force_refresh)
-    invalidate_filter_cache()
-    return result
-
-
-@app.post("/api/companies/bulk-enrich")
-async def enrich_bulk_companies(
-    req: BulkEnrichRequest,
-    request: Request = None,
-    db: Session = Depends(get_db)
-):
-    user = get_current_user(db, request)
-    if not user or not user.oauth_tokens:
-        raise HTTPException(
-            status_code=401,
-            detail="Authentication required. Please connect your Google account or log in to run Deep Enrichment."
-        )
-    if getattr(user, "is_banned", False):
-        raise HTTPException(
-            status_code=403,
-            detail=f"Account suspended: {user.ban_reason or 'Access denied by administrator.'}"
-        )
-
-    client_id = f"{user.id}_{request.client.host if request and request.client else 'unknown'}"
-    enforce_rate_limit(f"bulk_enrich_{client_id}", max_calls=10, window_seconds=60)
-
-    # Cap maximum concurrent company batch size to prevent resource exhaustion
-    target_ids = req.company_ids[:50]
-    semaphore = asyncio.Semaphore(8)  # 8 concurrent enrichment workers
-
-    async def worker(cid: int):
-        async with semaphore:
-            worker_db = SessionLocal()
-            try:
-                return await deep_enrich_company(company_id=cid, db=worker_db, force_refresh=False)
-            except Exception as e:
-                return {"error": str(e), "success": False, "company_id": cid}
-            finally:
-                worker_db.close()
-
-    tasks = [worker(cid) for cid in target_ids]
-    results = await asyncio.gather(*tasks)
-    return {"total": len(target_ids), "results": results}
+# Company enrichment and exclusion are admin-only (see /api/admin/...); normal users
+# use AI only for resume analysis and personalized emails.
 
 
 # --- Stage 3: In-Memory Resume Ingestion & Parsing ---
@@ -4138,7 +3946,9 @@ def admin_dashboard_page(request: Request, db: Session = Depends(get_db)):
             "tagline": config.TAGLINE,
             "user": user,
             "is_master_admin": True,
-            "dev_mode": config.DEV_MODE
+            "dev_mode": config.DEV_MODE,
+            # Sidebar badge on the Categories tab (cached one-row read)
+            "hidden_categories_count": len(seo_engine.get_hidden_category_slugs(db)),
         }
     )
 
@@ -5601,6 +5411,81 @@ async def toggle_kill_switch_status(
             "restored. Each user's previously purchased/assigned plan is automatically in effect."
         )
     }
+
+
+# --- Category visibility (admin panel > Categories) ---
+# Switching a category off hides it and all of its companies from every
+# user-facing screen (see seo_engine.visible_kw_clause). Nothing is deleted.
+class CategoryVisibilityRequest(BaseModel):
+    slugs: list[str]
+    hidden: bool
+
+
+def _clear_category_dependent_caches() -> None:
+    """Drop every cache that could still show companies of a category that was just switched."""
+    seo_engine.clear_hidden_categories_cache()
+    seo_engine.clear_seo_cache()
+    _filter_cache["timestamp"] = 0.0
+    _filter_cache["data"] = None
+    _dynamic_filter_cache.clear()
+    invalidate_admin_metrics_cache()
+
+
+def _category_visibility_payload(categories: list[dict]) -> dict:
+    hidden = [c for c in categories if c["hidden"]]
+    return {
+        "categories": categories,
+        "total_categories": len(categories),
+        "hidden_categories": len(hidden),
+        "hidden_companies": sum(c["count"] for c in hidden),
+        "total_companies": sum(c["count"] for c in categories),
+    }
+
+
+@app.get("/api/admin/categories")
+def list_category_visibility(
+    admin: User = Depends(require_master_admin),
+    db: Session = Depends(get_db)
+):
+    """Every category with its company count and whether users can see it."""
+    return _category_visibility_payload(seo_engine.get_category_admin_overview(db))
+
+
+@app.post("/api/admin/categories/visibility")
+def set_category_visibility(
+    payload: CategoryVisibilityRequest,
+    admin: User = Depends(require_master_admin),
+    db: Session = Depends(get_db)
+):
+    """Show or hide one or more categories (and every company in them) for users."""
+    categories = seo_engine.get_category_admin_overview(db)
+    known = {c["slug"] for c in categories}
+    requested = {s.strip().lower() for s in payload.slugs if s and s.strip()}
+    unknown = requested - known
+    if not requested or unknown:
+        raise HTTPException(
+            status_code=400,
+            detail=("Unknown category: " + ", ".join(sorted(unknown))) if unknown else "No category given.",
+        )
+
+    current = seo_engine.get_hidden_category_slugs(db)
+    new_hidden = (current | requested) if payload.hidden else (current - requested)
+    new_hidden = seo_engine.set_hidden_categories(db, new_hidden)
+    _clear_category_dependent_caches()
+
+    for c in categories:
+        c["hidden"] = c["slug"] in new_hidden
+    data = _category_visibility_payload(categories)
+
+    changed = [c for c in categories if c["slug"] in requested]
+    affected = sum(c["count"] for c in changed)
+    label = changed[0]["name"] if len(changed) == 1 else f"{len(changed)} categories"
+    data["message"] = (
+        f"Hidden {label} ({affected:,} companies) from users."
+        if payload.hidden else
+        f"Showing {label} ({affected:,} companies) to users again."
+    )
+    return data
 
 
 

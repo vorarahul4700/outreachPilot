@@ -301,11 +301,13 @@
 .ac-mono.t1 { background: var(--surface-3); color: var(--text); border-color: var(--line-2); }
 .ac-mono.t2 { background: var(--text); color: var(--text-inverse); border-color: var(--text); }
 .ac-mono.t3 { background: var(--warn-soft); color: var(--warn-text); border-color: transparent; }
-.ac-name { display: flex; align-items: center; gap: 6px; min-width: 0; }
+/* flex-start, not center: the website link sits on the first line of the name, so it lands
+   in the same spot whether the name wraps to one line or two. */
+.ac-name { display: flex; align-items: flex-start; gap: 6px; min-width: 0; }
 .ac-name h3, .ac-name h4 { font-family: var(--font-display); font-weight: 400; font-size: 1.08rem; line-height: 1.25; color: var(--text); overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
 .ac-name .clickable { cursor: pointer; }
 .ac-name .clickable:hover { color: var(--accent-text); }
-.ac-name a { display: inline-grid; place-items: center; width: 24px; height: 24px; flex: none; border-radius: 7px; color: var(--text-3); }
+.ac-name a { display: inline-grid; place-items: center; width: 24px; height: 24px; flex: none; margin-top: -1px; border-radius: 7px; color: var(--text-3); }
 .ac-name a:hover { color: var(--accent-text); background: var(--surface-3); }
 .ac-name a .material-symbols-outlined { font-size: 15px; }
 .ac-sub { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin-top: 3px; font-family: var(--font-mono); font-size: .74rem; color: var(--text-3); min-width: 0; }
@@ -496,6 +498,7 @@ textarea.recessed-well { min-height: 220px; resize: vertical; line-height: 1.7; 
 .am-foot { display: flex; flex-direction: column; flex-wrap: wrap; gap: 10px; padding: 14px 22px; border-top: 1px solid var(--line); background: var(--surface-2); }
 @media (min-width: 640px) { .am-foot { flex-direction: row; align-items: center; justify-content: space-between; } }
 .am-foot .grp { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.am-foot .grp:only-child { margin-left: auto; }   /* a lone action group sits on the right */
 @media (max-width: 639px) { .am-foot .grp { width: 100%; } .am-foot .grp .btn { flex: 1; } }
 .am-close { flex: none; }
 .seg-tabs { display: flex; gap: 4px; padding: 4px; border-radius: var(--r-md); background: var(--surface-3); border: 1px solid var(--line); }

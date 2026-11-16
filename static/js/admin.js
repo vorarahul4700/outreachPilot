@@ -92,6 +92,7 @@ document.addEventListener("DOMContentLoaded", () => {
     overview: { title: "Overview", heading: "Telemetry & System Controls" },
     users: { title: "Users", heading: "User Accounts & Role Governance" },
     companies: { title: "Companies", heading: "Directory Pipeline & Quarantined Leads" },
+    categories: { title: "Categories", heading: "Category Visibility" },
     subscriptions: { title: "Subscriptions", heading: "Tier Quotas & Monetization Architecture" },
     pitches: { title: "Sent Pitches", heading: "Cold Outreach Pitches & Delivery Telemetry" },
     github: { title: "GitHub Actions", heading: "CI/CD Telemetry & Workflows" }
@@ -126,6 +127,7 @@ document.addEventListener("DOMContentLoaded", () => {
       loadActiveCompanies(1);
       loadInvalidCompanies(1);
     }
+    if (tabId === "categories") loadCategoryVisibility(showToast);
     if (tabId === "overview") loadKillSwitchStatus();
     if (tabId === "subscriptions") {
       loadTiers();

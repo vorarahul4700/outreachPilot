@@ -197,3 +197,17 @@
    which gen_admin_utils.py does not pick up, so they are mapped here by hand. */
 .border-rose-500\/40 { border-color: color-mix(in srgb, var(--danger) 45%, transparent); }
 .border-emerald-500\/40 { border-color: color-mix(in srgb, var(--ok) 45%, transparent); }
+
+/* ---------- Categories (show / hide for users) ---------- */
+.catvis-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding: 14px 16px; background: var(--surface-2); border-bottom: 1px solid var(--line); }
+.catvis-head b { font-size: .95rem; color: var(--text); }
+.catvis-head .meta { display: block; margin-top: 2px; font-family: var(--font-mono); font-size: .72rem; color: var(--text-3); }
+.catvis-head .acts { display: flex; flex-wrap: wrap; gap: 8px; }
+.catvis-table { min-width: 0; }
+.catvis-table td { padding: 10px 16px; }
+.catvis-table td.num, .catvis-table th.num { white-space: nowrap; width: 1%; }
+.catvis-table .catvis-name { font-weight: 600; margin-right: 8px; }
+.catvis-table tr.is-hidden .catvis-name, .catvis-table tr.is-hidden td.tnum { color: var(--text-3); }
+.catvis-table .switch { justify-content: flex-end; }
+.catvis-empty { padding: 28px 20px; text-align: center; color: var(--text-2); }
+.note-pill.is-warn { background: var(--warn-soft); color: var(--warn-text); }
