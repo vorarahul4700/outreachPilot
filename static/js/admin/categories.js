@@ -4,7 +4,8 @@
    profiles and sitemaps; nothing is deleted. Load before admin.js, which calls
    loadCategoryVisibility(showToast) when the tab opens. */
 
-const catvisState = { data: null, filter: "all", query: "", toast: null, bound: false, busy: false };
+// open: main categories the admin expanded. All start collapsed; a search opens every match.
+const catvisState = { data: null, filter: "all", query: "", toast: null, bound: false, busy: false, open: new Set() };
 
 function catvisEscape(value) {
   return String(value == null ? "" : value)
@@ -74,6 +75,15 @@ function bindCategoryVisibilityControls() {
 
   // Whole industry: confirm first, because it can hide thousands of companies.
   groups.addEventListener("click", (e) => {
+    const head = e.target.closest("[data-catvis-open]");
+    if (head) {
+      const key = head.getAttribute("data-catvis-open");
+      if (catvisState.open.has(key)) catvisState.open.delete(key); else catvisState.open.add(key);
+      const open = catvisState.open.has(key);
+      head.setAttribute("aria-expanded", open ? "true" : "false");
+      head.closest(".catvis-group")?.classList.toggle("is-collapsed", !open);
+      return;
+    }
     const btn = e.target.closest("[data-catvis-group]");
     if (!btn || !catvisState.data) return;
     const domain = btn.getAttribute("data-domain");
@@ -180,6 +190,7 @@ function renderCategoryVisibility() {
     const anyShown = all.some((c) => !c.hidden);
     const anyHidden = all.some((c) => c.hidden);
     const d = catvisEscape(domain);
+    const open = !!q || catvisState.open.has(domain);
     const body = list.map((c) => {
       const label = catvisEscape(c.name);
       return `
@@ -198,12 +209,13 @@ function renderCategoryVisibility() {
         </tr>`;
     }).join("");
     return `
-      <div class="a-table-wrap catvis-group">
+      <div class="a-table-wrap catvis-group${open ? "" : " is-collapsed"}">
         <div class="catvis-head">
-          <div>
-            <b>${d}</b>
-            <span class="meta">${shownCount} of ${all.length} shown, ${catvisFormat(companies)} companies</span>
-          </div>
+          <button type="button" class="catvis-open" data-catvis-open="${d}" aria-expanded="${open ? "true" : "false"}">
+            <span class="material-symbols-outlined chev" aria-hidden="true">expand_more</span>
+            <span><b>${d}</b>
+            <span class="meta">${shownCount} of ${all.length} shown, ${catvisFormat(companies)} companies</span></span>
+          </button>
           <div class="acts">
             ${anyShown ? `<button type="button" class="btn btn-secondary btn-sm" data-catvis-group="hide" data-domain="${d}">Hide all</button>` : ""}
             ${anyHidden ? `<button type="button" class="btn btn-secondary btn-sm" data-catvis-group="show" data-domain="${d}">Show all</button>` : ""}

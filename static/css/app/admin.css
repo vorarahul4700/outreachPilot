@@ -203,6 +203,12 @@
 .catvis-head b { font-size: .95rem; color: var(--text); }
 .catvis-head .meta { display: block; margin-top: 2px; font-family: var(--font-mono); font-size: .72rem; color: var(--text-3); }
 .catvis-head .acts { display: flex; flex-wrap: wrap; gap: 8px; }
+.catvis-open { display: flex; align-items: center; gap: 8px; flex: 1 1 220px; min-width: 0; padding: 0; border: 0; background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.catvis-open .chev { color: var(--text-3); transition: transform .15s ease; }
+.catvis-open:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 4px; }
+.catvis-group.is-collapsed .catvis-open .chev { transform: rotate(-90deg); }
+.catvis-group.is-collapsed .catvis-head { border-bottom: 0; }
+.catvis-group.is-collapsed .scroll { display: none; }
 .catvis-table { min-width: 0; }
 .catvis-table td { padding: 10px 16px; }
 .catvis-table td.num, .catvis-table th.num { white-space: nowrap; width: 1%; }
