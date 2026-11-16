@@ -264,3 +264,11 @@ h5, h6, .h5 { font-family: var(--font-body); font-weight: 700; line-height: var(
 .has-map .section.alt,
 .has-map .band,
 .has-map .site-footer { background: color-mix(in srgb, var(--bg-2) 62%, transparent); }
+
+/* Film grain, as in the reference: a faint tactile noise over public pages (not the /app or /admin workspaces) */
+body:not(.app-body):not(.admin-body)::after {
+  content: ""; position: fixed; inset: -50%; z-index: 200; pointer-events: none; opacity: .045;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+html.dark body:not(.app-body):not(.admin-body)::after { opacity: .035; }
+@media print { body::after { display: none !important; } }

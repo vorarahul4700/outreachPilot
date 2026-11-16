@@ -117,46 +117,49 @@
 }
 
 html.dark {
+  /* Dark theme follows the reference (var/temp/index.html): cool near-black layers,
+     translucent white hairlines, deep soft shadows. Only backgrounds, lines and text
+     change; the moss accent stays. text-3 is lifted from the reference's #717582 to pass AA. */
   color-scheme: dark;
-  --bg: #161711;
-  --bg-2: #1B1C15;
-  --surface: #1F2019;
-  --surface-2: #25261E;
-  --surface-3: #2C2D24;
-  --overlay: rgba(8, 8, 6, .66);
-  --glass: rgba(26, 27, 21, .82);
+  --bg: #07080B;
+  --bg-2: #0B0D12;
+  --surface: #101218;
+  --surface-2: #151821;
+  --surface-3: #1C202B;
+  --overlay: rgba(3, 4, 6, .72);
+  --glass: rgba(14, 16, 22, .74);
 
-  --line: #2F3027;
-  --line-2: #3C3D33;
-  --line-3: #6F6F64;
+  --line: rgba(255, 255, 255, .07);
+  --line-2: rgba(255, 255, 255, .12);
+  --line-3: rgba(255, 255, 255, .26);
 
-  --text: #ECEADF;
-  --text-2: #BDBBAE;
-  --text-3: #8F8E81;
-  --text-inverse: #161711;
+  --text: #F5F3EF;
+  --text-2: #A9ACB6;
+  --text-3: #868A95;
+  --text-inverse: #07080B;
 
-  --accent-soft: #2C3419;
-  --accent-line: #4A5629;
+  --accent-soft: rgba(150, 172, 92, .12);
+  --accent-line: rgba(150, 172, 92, .38);
   --accent-text: #A9BC72;
   --accent-ink: #CFDBAA;
 
-  --ok-soft: #233220;      --ok-text: #A6CB97;
-  --warn-soft: #362C14;    --warn-text: #E0C682;
-  --danger-soft: #3A1F1C;  --danger-text: #E8A69E;
-  --info-soft: #2A2B24;    --info-text: #C9C8BB;
+  --ok-soft: rgba(126, 186, 112, .12);     --ok-text: #A6CB97;
+  --warn-soft: rgba(224, 198, 130, .12);   --warn-text: #E0C682;
+  --danger-soft: rgba(232, 140, 130, .13); --danger-text: #E8A69E;
+  --info-soft: rgba(255, 255, 255, .06);   --info-text: #C9CBD2;
 
-  --dot: rgba(236, 234, 223, .09);
-  --map-bg: #1C1D16;
-  --map-road: rgba(236, 234, 223, .06);
-  --map-road-2: rgba(236, 234, 223, .11);
-  --map-water: #222A1E;
-  --map-park: #232A18;
+  --dot: rgba(255, 255, 255, .07);
+  --map-bg: #0D1016;
+  --map-road: rgba(255, 255, 255, .06);
+  --map-road-2: rgba(255, 255, 255, .1);
+  --map-water: rgba(150, 172, 92, .07);
+  --map-park: rgba(150, 172, 92, .06);
 
-  --shadow-xs: 0 1px 2px rgba(0, 0, 0, .3);
-  --shadow-sm: 0 2px 6px rgba(0, 0, 0, .3), 0 1px 2px rgba(0, 0, 0, .2);
-  --shadow-md: 0 12px 28px -16px rgba(0, 0, 0, .7), 0 2px 6px rgba(0, 0, 0, .25);
-  --shadow-lg: 0 30px 60px -30px rgba(0, 0, 0, .8), 0 6px 16px -8px rgba(0, 0, 0, .4);
-  --shadow-xl: 0 60px 120px -50px rgba(0, 0, 0, .9);
-  --shadow-btn: 0 6px 16px -8px rgba(0, 0, 0, .7), inset 0 1px 0 rgba(255, 255, 255, .1);
-  --focus-ring: 0 0 0 3px rgba(96, 112, 55, .55);
+  --shadow-xs: 0 1px 0 rgba(255, 255, 255, .03) inset, 0 1px 2px rgba(0, 0, 0, .5);
+  --shadow-sm: 0 1px 0 rgba(255, 255, 255, .04) inset, 0 4px 12px -4px rgba(0, 0, 0, .6);
+  --shadow-md: 0 1px 0 rgba(255, 255, 255, .04) inset, 0 20px 50px -24px rgba(0, 0, 0, .6);
+  --shadow-lg: 0 1px 0 rgba(255, 255, 255, .05) inset, 0 40px 90px -36px rgba(0, 0, 0, .8);
+  --shadow-xl: 0 60px 140px -40px rgba(0, 0, 0, .85);
+  --shadow-btn: 0 10px 26px -12px rgba(0, 0, 0, .8), inset 0 1px 0 rgba(255, 255, 255, .16);
+  --focus-ring: 0 0 0 3px rgba(150, 172, 92, .45);
 }
