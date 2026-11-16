@@ -214,14 +214,21 @@ ol.pipeline { /* ol. beats the base ol[role="list"] reset, which zeroed this pad
 .m-item .ico { color: var(--accent-text); }
 
 /* ---------- Why: manifesto + compare ---------- */
-.manifesto {
-  margin-top: 18px;
-  font-family: var(--font-display);
-  font-size: clamp(1.7rem, 1.05rem + 2.6vw, 3.3rem);
-  line-height: 1.18; letter-spacing: -.02em; color: var(--text);
-  max-width: none; text-wrap: balance;
+/* A large hook sentence, then the supporting lines at a readable size
+   (one five-line paragraph at headline size was too heavy to read). */
+.manifesto { margin-top: 18px; max-width: none; color: var(--text); }
+.manifesto .m-hook {
+  display: block; max-width: 22ch;
+  font-family: var(--font-display); font-size: var(--fs-h2);
+  line-height: 1.12; letter-spacing: -.02em; text-wrap: balance;
 }
-.manifesto .strike { text-decoration: line-through; text-decoration-color: var(--danger); text-decoration-thickness: 3px; color: var(--text-3); }
+.manifesto .m-body {
+  display: block; max-width: 58ch; margin-top: 16px;
+  font-size: clamp(1.08rem, 1rem + .45vw, 1.35rem); line-height: 1.55; color: var(--text-2);
+  text-wrap: pretty;
+}
+.manifesto .m-body .em { font-family: var(--font-display); color: var(--accent-text); white-space: nowrap; }
+.manifesto .strike { text-decoration: line-through; text-decoration-color: var(--danger); text-decoration-thickness: 2px; color: var(--text-3); }
 .compare { display: grid; gap: 16px; margin-top: clamp(40px, 5vw, 64px); }
 @media (min-width: 860px) { .compare { grid-template-columns: 1fr 1fr; } }
 .cmp { padding: 26px; border-radius: var(--r-xl); border: 1px solid var(--line); background: var(--surface); }
@@ -432,7 +439,7 @@ ol.pipeline { /* ol. beats the base ol[role="list"] reset, which zeroed this pad
 }
 .final > * { position: relative; }
 .final-bg { position: absolute; inset: 0; -webkit-mask-image: radial-gradient(ellipse at center, #000 20%, transparent 70%); mask-image: radial-gradient(ellipse at center, #000 20%, transparent 70%); }
-.final h2 { max-width: 18ch; }
+.final h2 { max-width: 24ch; text-wrap: balance; }
 .final .lead { margin-inline: auto; }
 .logo-mark.lg { width: 60px; height: 60px; border-radius: 18px; }
 .logo-mark.lg svg { width: 30px; height: 30px; }
