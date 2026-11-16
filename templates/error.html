@@ -1,156 +1,25 @@
-<!DOCTYPE html>
-<html class="dark" lang="en">
-<head>
-  <meta charset="UTF-8">
-  <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg">
-  <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
-  <link rel="shortcut icon" href="/static/favicon.ico">
-  <link rel="apple-touch-icon" sizes="180x180" href="/static/favicon.ico">
-  <script>
-    (function() {
-      try {
-        const saved = localStorage.getItem('pilot_theme');
-        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const theme = saved ? saved : 'light'; /* default: light */
-        if (theme === 'light') {
-          document.documentElement.classList.remove('dark');
-          document.documentElement.classList.add('light');
-        } else {
-          document.documentElement.classList.add('dark');
-          document.documentElement.classList.remove('light');
-        }
-      } catch (e) {}
-    })();
-  </script>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{{ status_code | default(404) }} - {{ title | default("Page Not Found") }} | {{ project_name | default("OutreachPilot") }}</title>
-  
-  <!-- High-Performance Self-Hosted Typography & SEO Font Preloading -->
-  <link rel="preload" href="/static/fonts/spacegrotesk-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="/static/fonts/dmsans-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="/static/css/fonts.css">
-  
-  <!-- Core Design System CSS -->
-  <link rel="stylesheet" href="/static/css/style.css?v=9.0">
-  <script src="https://cdn.tailwindcss.com/3.4.17?plugins=forms@0.5.10"></script>
-</head>
-<body class="bg-surface-container-lowest text-on-surface font-body-md antialiased min-h-screen flex flex-col justify-between selection:bg-primary-container selection:text-on-primary-container">
+{% extends "layouts/system.html" %}
 
-  <!-- Header Navigation Bar -->
-  <header class="w-full border-b border-outline-variant/30 bg-surface-container-low/70 backdrop-blur-md sticky top-0 z-50">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-      <a href="/app" class="flex items-center gap-2.5 group">
-        <div class="w-8 h-8 rounded-lg bg-primary-container flex items-center justify-center text-on-primary-container shadow-inner">
-          <span class="material-symbols-outlined text-[19px]">rocket_launch</span>
-        </div>
-        <span class="font-headline text-headline-sm font-bold text-on-surface tracking-tight group-hover:text-primary transition-colors">OutreachPilot</span>
-      </a>
+{% block title %}{{ status_code | default(404) }} - {{ title | default("Page Not Found") }} | {{ project_name | default("OutreachPilot") }}{% endblock %}
 
-      <div class="flex items-center gap-3">
-        <!-- Theme Toggle -->
-        <button id="btn-theme-toggle" type="button" aria-label="Toggle Light / Dark Mode" class="w-9 h-9 rounded-lg flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container border border-outline-variant/40 transition cursor-pointer" title="Toggle Light / Dark Mode">
-          <span id="theme-toggle-icon" class="material-symbols-outlined text-[19px]">light_mode</span>
-        </button>
+{% block system_mark %}
+<h1 class="sys-code">{{ status_code | default(404) }}<svg class="sys-pin" viewBox="0 0 24 30" aria-hidden="true"><path d="M12 29S2 19.7 2 12a10 10 0 0 1 20 0c0 7.7-10 17-10 17z" fill="currentColor"/><circle cx="12" cy="12" r="4" fill="var(--surface)"/></svg></h1>
+{% endblock %}
 
-        <a href="/app" class="btn-tactile-slate px-3.5 py-1.5 rounded-lg text-xs font-mono font-semibold flex items-center gap-1.5 cursor-pointer">
-          <span class="material-symbols-outlined text-[16px]">domain</span>
-          <span>Workspace</span>
-        </a>
-      </div>
-    </div>
-  </header>
+{% block system_title %}<h2 class="sys-title">{{ title | default("Something Went Wrong") }}</h2>{% endblock %}
 
-  <!-- Main Error Card (Artisanal Bento Workshop Style) -->
-  <main class="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-8">
-    <div class="w-full max-w-xl bg-surface-container-low border border-outline-variant/50 rounded-2xl p-6 sm:p-10 shadow-2xl relative overflow-hidden text-center space-y-6">
-      
-      <!-- Ambient Glow Behind Status Code -->
-      <div class="absolute -top-24 left-1/2 -translate-x-1/2 w-64 h-64 bg-primary/5 rounded-full blur-3xl pointer-events-none"></div>
+{% block system_message %}{{ message | default("The page or resource you requested could not be loaded. Please return to the overview or try again later.") }}{% endblock %}
 
-      <!-- Status Code & Title -->
-      <div class="space-y-2">
-        <h1 class="text-6xl sm:text-7xl font-mono font-bold tracking-tight text-on-surface">
-          {{ status_code | default(404) }}
-        </h1>
-        <h2 class="text-xl sm:text-2xl font-headline font-semibold text-on-surface">
-          {{ title | default("Something Went Wrong") }}
-        </h2>
-      </div>
+{% block system_extra %}
+{% if path %}
+<div class="sys-path"><span class="material-symbols-outlined" aria-hidden="true">link_off</span><span>{{ path }}</span></div>
+{% endif %}
+{% endblock %}
 
-      <!-- Descriptive Explanation -->
-      <p class="text-sm font-body text-on-surface-variant max-w-md mx-auto leading-relaxed">
-        {{ message | default("The page or resource you requested could not be loaded. Please return to the overview or try again later.") }}
-      </p>
+{% block system_actions %}
+<a href="/app" class="btn btn-primary"><span class="material-symbols-outlined" aria-hidden="true">rocket_launch</span><span>Launch Workspace</span></a>
+<a href="/" class="btn btn-secondary"><span class="material-symbols-outlined" aria-hidden="true">home</span><span>Home Overview</span></a>
+<button type="button" class="btn btn-ghost" onclick="window.history.length > 1 ? window.history.back() : window.location.href='/app'"><span class="material-symbols-outlined" aria-hidden="true">arrow_back</span><span>Go Back</span></button>
+{% endblock %}
 
-      {% if path %}
-      <!-- Path Inspector -->
-      <div class="bg-surface-container-lowest border border-outline-variant/40 rounded-lg p-2.5 max-w-md mx-auto text-left flex items-center gap-2">
-        <span class="material-symbols-outlined text-[16px] text-on-surface-variant shrink-0">link_off</span>
-        <span class="text-xs font-mono text-on-surface-variant truncate flex-1">{{ path }}</span>
-      </div>
-      {% endif %}
-
-      <!-- Action Buttons -->
-      <div class="pt-4 border-t border-outline-variant/30 flex flex-col sm:flex-row items-center justify-center gap-3">
-        <a href="/app" class="w-full sm:w-auto btn-card-pitch px-5 py-2.5 rounded-lg text-xs font-headline font-semibold flex items-center justify-center gap-2 cursor-pointer shadow-md">
-          <span class="material-symbols-outlined text-[17px]">rocket_launch</span>
-          <span>Launch Workspace</span>
-        </a>
-
-        <a href="/" class="w-full sm:w-auto btn-tactile-slate px-4 py-2.5 rounded-lg text-xs font-headline font-medium flex items-center justify-center gap-1.5 cursor-pointer">
-          <span class="material-symbols-outlined text-[17px]">home</span>
-          <span>Home Overview</span>
-        </a>
-
-        <button type="button" onclick="window.history.length > 1 ? window.history.back() : window.location.href='/app'" class="w-full sm:w-auto px-4 py-2.5 rounded-lg text-xs font-headline font-medium text-on-surface-variant hover:text-on-surface hover:bg-surface-container border border-outline-variant/40 transition flex items-center justify-center gap-1.5 cursor-pointer">
-          <span class="material-symbols-outlined text-[17px]">arrow_back</span>
-          <span>Go Back</span>
-        </button>
-      </div>
-
-    </div>
-  </main>
-
-  <!-- Clean Minimal Footer -->
-  <footer class="w-full py-4 text-center border-t border-outline-variant/20 text-xs font-mono text-on-surface-variant/60">
-    <div class="max-w-6xl mx-auto px-4 flex items-center justify-between">
-      <span>OutreachPilot B2B Platform</span>
-      <div class="flex items-center gap-4">
-        <a href="/terms" class="hover:text-on-surface transition">Terms</a>
-        <a href="/privacy" class="hover:text-on-surface transition">Privacy</a>
-        <a href="mailto:support@outreachpilot.in" class="hover:text-on-surface transition">Support</a>
-      </div>
-    </div>
-  </footer>
-
-  <!-- Theme Toggle Logic Script -->
-  <script>
-    const themeBtn = document.getElementById("btn-theme-toggle");
-    const themeIcon = document.getElementById("theme-toggle-icon");
-
-    function updateThemeIcon() {
-      const isDark = document.documentElement.classList.contains("dark");
-      if (themeIcon) {
-        themeIcon.textContent = isDark ? "light_mode" : "dark_mode";
-      }
-    }
-    updateThemeIcon();
-
-    if (themeBtn) {
-      themeBtn.addEventListener("click", () => {
-        const isDark = document.documentElement.classList.contains("dark");
-        if (isDark) {
-          document.documentElement.classList.remove("dark");
-          document.documentElement.classList.add("light");
-          localStorage.setItem("pilot_theme", "light");
-        } else {
-          document.documentElement.classList.add("dark");
-          document.documentElement.classList.remove("light");
-          localStorage.setItem("pilot_theme", "dark");
-        }
-        updateThemeIcon();
-      });
-    }
-  </script>
-</body>
-</html>
+{% block system_footer_text %}OutreachPilot B2B Platform{% endblock %}

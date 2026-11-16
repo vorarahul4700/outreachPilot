@@ -1,351 +1,194 @@
-<!DOCTYPE html>
-<html class="dark" lang="en">
-<head>
-  <meta charset="utf-8"/>
-  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-  <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg">
-  <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
-  <title>{{ company.name }}{% if company.city %} - {{ company.city }}{% endif %} | Company profile | OutreachPilot</title>
+{% extends "base.html" %}
+{% set page_css = ["directory.css"] %}
+{% set nav_cta_href = "/app?action=pitch&company_id=" ~ company.id ~ "&company_name=" ~ (company.name | urlencode) %}
+{% set nav_cta_label = "Write a pitch" %}
+
+{% block title %}{{ company.name }}{% if company.city %} - {{ company.city }}{% endif %} | Company profile | OutreachPilot{% endblock %}
+
+{% block meta %}
   <meta name="description" content="{{ meta_description }}"/>
   <link rel="canonical" href="{{ canonical_url }}"/>
-
-  <!-- Open Graph -->
   <meta property="og:type" content="business.business"/>
   <meta property="og:url" content="{{ canonical_url }}"/>
   <meta property="og:title" content="{{ company.name }}{% if company.city %} in {{ company.city }}{% endif %} | OutreachPilot"/>
   <meta property="og:description" content="{{ meta_description }}"/>
   <meta property="og:site_name" content="OutreachPilot"/>
-
-  <!-- Twitter -->
   <meta name="twitter:card" content="summary"/>
   <meta name="twitter:title" content="{{ company.name }}{% if company.city %} in {{ company.city }}{% endif %}"/>
   <meta name="twitter:description" content="{{ meta_description }}"/>
-
-  <!-- Typography -->
-  <link rel="preload" href="/static/fonts/spacegrotesk-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="/static/fonts/dmsans-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="/static/css/fonts.css">
-  <link rel="stylesheet" href="/static/css/style.css?v=9.0">
-  <script src="https://cdn.tailwindcss.com/3.4.17?plugins=forms@0.5.10"></script>
-
-  <script>
-    (function() {
-      try {
-        const saved = localStorage.getItem('pilot_theme');
-        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const theme = saved ? saved : 'light'; /* default: light */
-        if (theme === 'light') {
-          document.documentElement.classList.remove('dark');
-          document.documentElement.classList.add('light');
-        } else {
-          document.documentElement.classList.add('dark');
-          document.documentElement.classList.remove('light');
-        }
-      } catch (e) {}
-    })();
-  </script>
-
-  <script>
-    tailwind.config = {
-      darkMode: "class",
-      theme: {
-        extend: {
-          colors: {
-            "background": "rgb(var(--color-background) / <alpha-value>)",
-            "on-background": "rgb(var(--color-on-background) / <alpha-value>)",
-            "surface": "rgb(var(--color-surface) / <alpha-value>)",
-            "surface-container-lowest": "rgb(var(--color-surface-container-lowest) / <alpha-value>)",
-            "surface-container-low": "rgb(var(--color-surface-container-low) / <alpha-value>)",
-            "surface-container": "rgb(var(--color-surface-container) / <alpha-value>)",
-            "surface-container-high": "rgb(var(--color-surface-container-high) / <alpha-value>)",
-            "outline": "rgb(var(--color-outline) / <alpha-value>)",
-            "outline-variant": "rgb(var(--color-outline-variant) / <alpha-value>)",
-            "primary": "rgb(var(--color-primary) / <alpha-value>)",
-            "secondary": "rgb(var(--color-secondary) / <alpha-value>)",
-            "tertiary": "rgb(var(--color-tertiary) / <alpha-value>)",
-            "on-surface": "rgb(var(--color-on-surface) / <alpha-value>)",
-            "on-surface-variant": "rgb(var(--color-on-surface-variant) / <alpha-value>)"
-          },
-          fontFamily: {
-            display: ["Space Grotesk", "-apple-system", "sans-serif"],
-            sans: ["DM Sans", "-apple-system", "sans-serif"],
-            mono: ["JetBrains Mono", "monospace"]
-          }
-        }
-      }
-    };
-  </script>
-
-  <style>
-    .tnum { font-variant-numeric: tabular-nums; }
-    .bento-cell {
-      background-color: rgb(var(--color-surface-container-low));
-      border: 1px solid rgb(var(--color-outline));
-      border-radius: 0.75rem;
-      transition: all 0.2s ease;
-    }
-    .bento-cell:hover {
-      border-color: rgb(var(--color-outline-variant));
-    }
-    .btn-tactile-ecru {
-      background-color: #EFECE6;
-      color: #111317;
-      border: 1px solid #EFECE6;
-      font-weight: 600;
-      transition: all 0.15s ease;
-    }
-    .btn-tactile-ecru:hover {
-      background-color: #DFDCD5;
-      transform: translateY(-1px);
-    }
-    .card {
-      background-color: rgb(var(--color-surface-container-low));
-      border: 1px solid rgb(var(--color-outline));
-      border-radius: 1rem;
-    }
-    .section-title { font-family: "Space Grotesk", sans-serif; font-weight: 700; font-size: 1.05rem; color: rgb(var(--color-primary)); }
-    .facts dt { font-size: 0.75rem; color: rgb(var(--color-on-surface-variant)); }
-    .facts dd { font-size: 0.875rem; color: rgb(var(--color-on-surface)); overflow-wrap: anywhere; }
-    .dossier-rendered h2, .dossier-rendered h3 { font-family: "Space Grotesk", sans-serif; font-weight: 700; color: rgb(var(--color-primary)); margin-top: 1.25rem; }
-    .dossier-rendered p, .dossier-rendered li { font-size: 0.9rem; line-height: 1.65; color: rgb(var(--color-on-surface)); }
-  </style>
-
-  <!-- Schema.org JSON-LD Structured Data (Organization / LocalBusiness) -->
   <script type="application/ld+json">
   {{ json_ld_schema | safe }}
   </script>
-</head>
-<body class="bg-background text-on-background min-h-screen flex flex-col font-sans antialiased selection:bg-secondary/20 selection:text-secondary">
+{% endblock %}
 
-  <!-- NAVBAR -->
-  <header class="w-full border-b border-outline bg-background/90 backdrop-blur sticky top-0 z-40">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
-      <div class="flex items-center gap-4 sm:gap-6 shrink-0">
-        <a href="/" class="flex items-center gap-2 group shrink-0 whitespace-nowrap">
-          <div class="w-7 h-7 rounded-lg bg-surface-container-high border border-outline-variant flex items-center justify-center text-primary shrink-0">
-            <span class="material-symbols-outlined text-[17px]">rocket_launch</span>
-          </div>
-          <span class="font-display font-bold text-base tracking-tight text-primary whitespace-nowrap">Outreach<span class="text-secondary">Pilot</span></span>
-        </a>
-        <nav class="hidden md:flex items-center gap-4 text-xs font-mono text-on-surface-variant whitespace-nowrap shrink-0">
-          <a href="/directory" class="text-primary font-semibold border-b-2 border-secondary pb-0.5 whitespace-nowrap">Directory</a>
-          <a href="/#workflow" class="hover:text-primary transition-colors whitespace-nowrap">How it works</a>
-          <a href="/#capabilities" class="hover:text-primary transition-colors whitespace-nowrap">Features</a>
-        </nav>
-      </div>
+{% block body_class %}page-directory page-profile{% endblock %}
 
-      <div class="flex items-center gap-2.5 sm:gap-3 shrink-0 whitespace-nowrap">
-        <button id="btn-theme-toggle" type="button" aria-label="Toggle Theme" class="w-8 h-8 rounded-lg flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container border border-outline-variant/40 transition cursor-pointer shrink-0">
-          <span id="theme-toggle-icon" class="material-symbols-outlined text-[18px]">light_mode</span>
-        </button>
-        <a href="/app?action=pitch&company_id={{ company.id }}&company_name={{ company.name | urlencode }}" class="btn-tactile-ecru hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold whitespace-nowrap shrink-0">
-          <span>Write a pitch</span>
-          <span class="material-symbols-outlined text-[14px] shrink-0">arrow_forward</span>
-        </a>
-      </div>
-    </div>
-  </header>
+{% block content %}
+<div class="crumb-bar">
+  <div class="container">
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <ol>
+        <li><a href="/">Home</a></li>
+        <li aria-hidden="true" class="sep">/</li>
+        <li><a href="/directory">Directory</a></li>
+        {% if company.city %}
+        <li aria-hidden="true" class="sep">/</li>
+        <li><a href="/directory/city/{{ city_slug }}">{{ company.city }}</a></li>
+        {% endif %}
+        <li aria-hidden="true" class="sep">/</li>
+        <li aria-current="page">{{ company.name }}</li>
+      </ol>
+    </nav>
+  </div>
+</div>
 
-  <!-- BREADCRUMBS -->
-  <nav class="w-full border-b border-outline/60 bg-surface-container-lowest/40" aria-label="Breadcrumb">
-    <ol class="max-w-6xl mx-auto px-4 sm:px-6 py-2.5 text-xs text-on-surface-variant flex items-center gap-2 min-w-0">
-      <li><a href="/" class="hover:text-primary transition-colors">Home</a></li>
-      <li aria-hidden="true" class="text-outline-variant">/</li>
-      <li><a href="/directory" class="hover:text-primary transition-colors">Directory</a></li>
-      {% if company.city %}
-      <li aria-hidden="true" class="text-outline-variant">/</li>
-      <li><a href="/directory/city/{{ city_slug }}" class="hover:text-primary transition-colors">{{ company.city }}</a></li>
-      {% endif %}
-      <li aria-hidden="true" class="text-outline-variant">/</li>
-      <li class="text-primary font-medium truncate min-w-0" aria-current="page">{{ company.name }}</li>
-    </ol>
-  </nav>
+{% set p = company.profile %}
+{% set has_research = p.summary or p.services or p.tech_stack or p.hiring_signals or p.detailed_analysis %}
+{% set pitch_url = "/app?action=pitch&company_id=" ~ company.id ~ "&company_name=" ~ (company.name | urlencode) %}
 
-  {% set p = company.profile %}
-  {% set has_research = p.summary or p.services or p.tech_stack or p.hiring_signals or p.detailed_analysis %}
-  {% set pitch_url = "/app?action=pitch&company_id=" ~ company.id ~ "&company_name=" ~ (company.name | urlencode) %}
-
-  <main class="flex-grow w-full">
-    <!-- HERO -->
-    <section class="border-b border-outline bg-surface-container-lowest/40">
-      <div class="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-10 flex flex-col sm:flex-row sm:items-center gap-5">
-        <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl bg-surface-container-high border border-outline-variant flex items-center justify-center font-display font-bold text-xl text-primary shrink-0" aria-hidden="true">
-          {{ (company.name or "?")[:2] | upper }}
-        </div>
-        <div class="min-w-0 flex-1">
-          <h1 class="text-2xl sm:text-3xl font-display font-bold text-primary tracking-tight break-words">{{ company.name }}</h1>
-          <div class="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-sm text-on-surface-variant">
-            {% if company.category %}
-              {% if company.category_slug %}
-              <a href="/directory/category/{{ company.category_slug }}" class="inline-flex items-center rounded-full border border-outline-variant/60 bg-surface px-2.5 py-0.5 text-xs text-on-surface hover:border-primary hover:text-primary transition-colors">{{ company.category }}</a>
-              {% else %}
-              <span class="inline-flex items-center rounded-full border border-outline-variant/60 bg-surface px-2.5 py-0.5 text-xs text-on-surface">{{ company.category }}</span>
-              {% endif %}
-            {% endif %}
-            {% if company.city %}
-            <span class="inline-flex items-center gap-1"><span class="material-symbols-outlined text-[16px]" aria-hidden="true">location_on</span>{{ company.city }}, India</span>
-            {% endif %}
-            {% if company.rating %}
-            <span class="inline-flex items-center gap-1 tnum"><span class="material-symbols-outlined text-[16px] text-secondary" aria-hidden="true">star</span>{{ "%.1f"|format(company.rating) }}{% if company.reviews_count %} <span class="text-xs">({{ "{:,}".format(company.reviews_count) }} Google reviews)</span>{% endif %}</span>
-            {% endif %}
-          </div>
-        </div>
-        <div class="flex flex-wrap gap-2 shrink-0">
-          <a href="{{ pitch_url }}" class="btn-tactile-ecru inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm">
-            <span class="material-symbols-outlined text-[16px]" aria-hidden="true">edit_note</span><span>Write a pitch</span>
-          </a>
-          {% if company.website_url %}
-          <a href="{{ company.website_url }}" target="_blank" rel="nofollow noopener noreferrer" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm border border-outline-variant text-on-surface hover:border-primary hover:text-primary transition-colors">
-            <span>Visit website</span><span class="material-symbols-outlined text-[15px]" aria-hidden="true">open_in_new</span>
-          </a>
-          {% endif %}
-        </div>
-      </div>
-    </section>
-
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 py-8 sm:py-10 grid grid-cols-1 lg:grid-cols-[1.618fr_1fr] gap-6 lg:gap-8 items-start">
-
-      <!-- MAIN COLUMN -->
-      <div class="space-y-6 min-w-0">
-        {% if has_research %}
-          {% if p.summary %}
-          <section class="card p-6" aria-labelledby="about-h">
-            <h2 id="about-h" class="section-title">About {{ company.name }}</h2>
-            <p class="mt-3 text-[0.95rem] leading-relaxed text-on-surface">{{ p.summary }}</p>
-            {% if p.industry %}<p class="mt-3 text-sm text-on-surface-variant">Industry: <span class="text-on-surface">{{ p.industry }}</span></p>{% endif %}
-          </section>
-          {% endif %}
-
-          {% if p.services %}
-          <section class="card p-6" aria-labelledby="services-h">
-            <h2 id="services-h" class="section-title">What they do</h2>
-            <ul class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2" role="list">
-              {% for s in p.services %}
-              <li class="flex items-start gap-2 text-sm text-on-surface"><span class="material-symbols-outlined text-[16px] text-secondary mt-0.5" aria-hidden="true">check</span><span>{{ s }}</span></li>
-              {% endfor %}
-            </ul>
-          </section>
-          {% endif %}
-
-          {% if p.tech_stack %}
-          <section class="card p-6" aria-labelledby="tech-h">
-            <h2 id="tech-h" class="section-title">Technology</h2>
-            <p class="mt-1 text-sm text-on-surface-variant">Found on {{ company.domain or "their website" }}.</p>
-            <ul class="mt-4 flex flex-wrap gap-2" role="list">
-              {% for tech in p.tech_stack %}
-              <li class="px-3 py-1 rounded-full text-sm bg-surface border border-outline-variant/60 text-on-surface">{{ tech }}</li>
-              {% endfor %}
-            </ul>
-          </section>
-          {% endif %}
-
-          {% if p.hiring_signals %}
-          <section class="card p-6" aria-labelledby="hiring-h">
-            <h2 id="hiring-h" class="section-title">Hiring and team</h2>
-            <p class="mt-3 text-sm leading-relaxed text-on-surface">{{ p.hiring_signals }}</p>
-          </section>
-          {% endif %}
-
-          {% if p.detailed_analysis %}
-          <section class="card p-6" aria-labelledby="report-h">
-            <h2 id="report-h" class="section-title">Full research report</h2>
-            {% if p.detailed_analysis_html %}
-            <div class="dossier-rendered mt-2 space-y-3">{{ p.detailed_analysis_html | safe }}</div>
+<section class="profile-hero">
+  <div class="container">
+    <div class="profile-card reveal">
+      <div class="profile-mono" aria-hidden="true">{{ (company.name or "?")[:2] | upper }}</div>
+      <div class="profile-id">
+        <h1>{{ company.name }}</h1>
+        <div class="profile-tags">
+          {% if company.category %}
+            {% if company.category_slug %}
+            <a class="chip" href="/directory/category/{{ company.category_slug }}"><span class="material-symbols-outlined" aria-hidden="true">category</span>{{ company.category }}</a>
             {% else %}
-            <div class="mt-3 text-sm leading-relaxed text-on-surface whitespace-pre-line">{{ p.detailed_analysis }}</div>
+            <span class="chip"><span class="material-symbols-outlined" aria-hidden="true">category</span>{{ company.category }}</span>
             {% endif %}
-          </section>
           {% endif %}
-        {% else %}
-          <section class="card p-6 sm:p-8" aria-labelledby="empty-h">
-            <span class="material-symbols-outlined text-[28px] text-on-surface-variant" aria-hidden="true">travel_explore</span>
-            <h2 id="empty-h" class="section-title mt-2">Not researched yet</h2>
-            <p class="mt-2 text-sm leading-relaxed text-on-surface-variant max-w-prose">
-              We have not read this company's website yet, so there is no summary, service list or tech stack here.
-              The details on this page come from its public Google listing. When you write a pitch, OutreachPilot researches the company first.
-            </p>
-            <a href="{{ pitch_url }}" class="btn-tactile-ecru mt-5 inline-flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm">
-              <span class="material-symbols-outlined text-[16px]" aria-hidden="true">edit_note</span><span>Research and write a pitch</span>
-            </a>
-          </section>
+          {% if company.city %}
+          <span class="chip"><span class="material-symbols-outlined" aria-hidden="true">location_on</span>{{ company.city }}, India</span>
+          {% endif %}
+          {% if company.rating %}
+          <span class="chip"><span class="material-symbols-outlined star" aria-hidden="true">star</span>{{ "%.1f"|format(company.rating) }}{% if company.reviews_count %} <em>({{ "{:,}".format(company.reviews_count) }} Google reviews)</em>{% endif %}</span>
+          {% endif %}
+        </div>
+      </div>
+      <div class="profile-cta">
+        <a href="{{ pitch_url }}" class="btn btn-primary"><span class="material-symbols-outlined" aria-hidden="true">edit_note</span><span>Write a pitch</span></a>
+        {% if company.website_url %}
+        <a href="{{ company.website_url }}" target="_blank" rel="nofollow noopener noreferrer" class="btn btn-secondary"><span>Visit website</span><span class="material-symbols-outlined" aria-hidden="true">open_in_new</span></a>
         {% endif %}
       </div>
+    </div>
+  </div>
+</section>
 
-      <!-- AT A GLANCE -->
-      <aside class="lg:sticky lg:top-20 space-y-4" aria-labelledby="glance-h">
-        <section class="card p-5">
-          <h2 id="glance-h" class="section-title">At a glance</h2>
-          <dl class="facts mt-4 space-y-3.5">
-            {% if company.website_url %}
-            <div><dt>Website</dt><dd><a href="{{ company.website_url }}" target="_blank" rel="nofollow noopener noreferrer" class="hover:text-primary underline decoration-outline-variant underline-offset-2">{{ company.domain or company.website_url }}</a></dd></div>
-            {% endif %}
-            {% if company.phone %}
-            <div><dt>Phone</dt><dd><a href="tel:{{ company.phone | replace(' ', '') }}" class="hover:text-primary tnum">{{ company.phone }}</a></dd></div>
-            {% endif %}
-            {% if company.address %}
-            <div><dt>Address</dt><dd>{{ company.address }}{% if company.location_url %} <a href="{{ company.location_url }}" target="_blank" rel="nofollow noopener noreferrer" class="whitespace-nowrap text-xs text-on-surface-variant hover:text-primary underline underline-offset-2">Open map</a>{% endif %}</dd></div>
-            {% elif company.location_url %}
-            <div><dt>Location</dt><dd><a href="{{ company.location_url }}" target="_blank" rel="nofollow noopener noreferrer" class="hover:text-primary underline underline-offset-2">Open map</a></dd></div>
-            {% endif %}
-            <div><dt>Google rating</dt><dd class="tnum">{% if company.rating %}{{ "%.1f"|format(company.rating) }} out of 5{% if company.reviews_count %}, {{ "{:,}".format(company.reviews_count) }} reviews{% endif %}{% else %}No rating yet{% endif %}</dd></div>
-            <div><dt>Contact emails</dt><dd>{% if company.emails_count %}{{ company.emails_count }} found{% else %}None found yet{% endif %}</dd></div>
-            <div><dt>Website research</dt><dd>{% if has_research %}Done{% else %}Not yet{% endif %}</dd></div>
-          </dl>
-          <a href="{{ pitch_url }}" class="btn-tactile-ecru mt-5 w-full inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-lg text-sm">
-            <span class="material-symbols-outlined text-[16px]" aria-hidden="true">edit_note</span><span>Write a pitch</span>
-          </a>
+<section class="section tight" style="padding-top:0">
+  <div class="container profile-layout">
+    <div class="profile-main">
+      {% if has_research %}
+        {% if p.summary %}
+        <section class="p-block reveal" aria-labelledby="about-h">
+          <div class="p-head"><span class="material-symbols-outlined" aria-hidden="true">info</span><h2 id="about-h">About {{ company.name }}</h2></div>
+          <p>{{ p.summary }}</p>
+          {% if p.industry %}<p>Industry: <span class="strong">{{ p.industry }}</span></p>{% endif %}
         </section>
-      </aside>
+        {% endif %}
+
+        {% if p.services %}
+        <section class="p-block reveal" aria-labelledby="services-h">
+          <div class="p-head"><span class="material-symbols-outlined" aria-hidden="true">handyman</span><h2 id="services-h">What they do</h2></div>
+          <ul class="svc-list" role="list">
+            {% for s in p.services %}
+            <li><span class="material-symbols-outlined" aria-hidden="true">check</span><span>{{ s }}</span></li>
+            {% endfor %}
+          </ul>
+        </section>
+        {% endif %}
+
+        {% if p.tech_stack %}
+        <section class="p-block reveal" aria-labelledby="tech-h">
+          <div class="p-head"><span class="material-symbols-outlined" aria-hidden="true">memory</span><h2 id="tech-h">Technology</h2></div>
+          <p>Found on {{ company.domain or "their website" }}.</p>
+          <ul class="tech-list" role="list">
+            {% for tech in p.tech_stack %}
+            <li>{{ tech }}</li>
+            {% endfor %}
+          </ul>
+        </section>
+        {% endif %}
+
+        {% if p.hiring_signals %}
+        <section class="p-block reveal" aria-labelledby="hiring-h">
+          <div class="p-head"><span class="material-symbols-outlined" aria-hidden="true">badge</span><h2 id="hiring-h">Hiring and team</h2></div>
+          <p>{{ p.hiring_signals }}</p>
+        </section>
+        {% endif %}
+
+        {% if p.detailed_analysis %}
+        <section class="p-block reveal" aria-labelledby="report-h">
+          <div class="p-head"><span class="material-symbols-outlined" aria-hidden="true">description</span><h2 id="report-h">Full research report</h2></div>
+          {% if p.detailed_analysis_html %}
+          <div class="dossier-rendered">{{ p.detailed_analysis_html | safe }}</div>
+          {% else %}
+          <div class="dossier-plain">{{ p.detailed_analysis }}</div>
+          {% endif %}
+        </section>
+        {% endif %}
+      {% else %}
+        <section class="p-block empty-research reveal" aria-labelledby="empty-h">
+          <span class="icon-tile"><span class="material-symbols-outlined" aria-hidden="true">travel_explore</span></span>
+          <h2 id="empty-h">Not researched yet</h2>
+          <p>
+            We have not read this company's website yet, so there is no summary, service list or tech stack here.
+            The details on this page come from its public Google listing. When you write a pitch, OutreachPilot researches the company first.
+          </p>
+          <a href="{{ pitch_url }}" class="btn btn-primary"><span class="material-symbols-outlined" aria-hidden="true">edit_note</span><span>Research and write a pitch</span></a>
+        </section>
+      {% endif %}
     </div>
 
-    {% if nearby_companies %}
-    <section class="max-w-6xl mx-auto px-4 sm:px-6 pb-12" aria-labelledby="nearby-h">
-      <div class="flex items-end justify-between gap-3">
-        <h2 id="nearby-h" class="section-title">More companies in {{ company.city }}</h2>
-        {% if city_slug %}<a href="/directory/city/{{ city_slug }}" class="text-sm text-primary hover:text-secondary whitespace-nowrap">See all</a>{% endif %}
-      </div>
-      <ul class="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-3" role="list">
-        {% for n in nearby_companies %}
-        <li>
-          <a href="/company/{{ n.slug }}" class="card p-4 flex items-center gap-3 hover:border-primary transition-colors h-full">
-            <span class="w-9 h-9 rounded-xl bg-surface-container-high border border-outline-variant flex items-center justify-center font-display font-bold text-xs text-primary shrink-0" aria-hidden="true">{{ (n.name or "?")[:2] | upper }}</span>
-            <span class="min-w-0">
-              <span class="block font-display font-semibold text-sm text-primary truncate">{{ n.name }}</span>
-              <span class="block text-xs text-on-surface-variant truncate">{% if n.rating %}{{ "%.1f"|format(n.rating) }} on Google{% endif %}{% if n.rating and n.domain %}, {% endif %}{{ n.domain or "" }}</span>
-            </span>
-          </a>
-        </li>
-        {% endfor %}
-      </ul>
-    </section>
-    {% endif %}
-  </main>
+    <aside aria-labelledby="glance-h">
+      <section class="glance-card reveal">
+        <h2 id="glance-h">At a glance</h2>
+        <dl class="facts">
+          {% if company.website_url %}
+          <div><dt>Website</dt><dd><a href="{{ company.website_url }}" target="_blank" rel="nofollow noopener noreferrer">{{ company.domain or company.website_url }}</a></dd></div>
+          {% endif %}
+          {% if company.phone %}
+          <div><dt>Phone</dt><dd><a href="tel:{{ company.phone | replace(' ', '') }}">{{ company.phone }}</a></dd></div>
+          {% endif %}
+          {% if company.address %}
+          <div><dt>Address</dt><dd>{{ company.address }}{% if company.location_url %} <a href="{{ company.location_url }}" target="_blank" rel="nofollow noopener noreferrer">Open map</a>{% endif %}</dd></div>
+          {% elif company.location_url %}
+          <div><dt>Location</dt><dd><a href="{{ company.location_url }}" target="_blank" rel="nofollow noopener noreferrer">Open map</a></dd></div>
+          {% endif %}
+          <div><dt>Google rating</dt><dd>{% if company.rating %}{{ "%.1f"|format(company.rating) }} out of 5{% if company.reviews_count %}, {{ "{:,}".format(company.reviews_count) }} reviews{% endif %}{% else %}No rating yet{% endif %}</dd></div>
+          <div><dt>Contact emails</dt><dd>{% if company.emails_count %}{{ company.emails_count }} found{% else %}None found yet{% endif %}</dd></div>
+          <div><dt>Website research</dt><dd>{% if has_research %}Done{% else %}Not yet{% endif %}</dd></div>
+        </dl>
+        <a href="{{ pitch_url }}" class="btn btn-primary btn-block"><span class="material-symbols-outlined" aria-hidden="true">edit_note</span><span>Write a pitch</span></a>
+      </section>
+    </aside>
+  </div>
+</section>
 
-  <!-- FOOTER -->
-  <footer class="w-full border-t border-outline bg-background py-8 text-xs text-on-surface-variant">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-      <div>&copy; 2026 OutreachPilot</div>
-      <div class="flex items-center gap-4">
-        <a href="/directory" class="hover:text-primary transition-colors">Directory</a>
-        {% if city_slug %}<a href="/directory/city/{{ city_slug }}" class="hover:text-primary transition-colors">{{ company.city }}</a>{% endif %}
-        <a href="/llms.txt" class="hover:text-primary transition-colors">llms.txt</a>
-        <a href="/sitemap.xml" class="hover:text-primary transition-colors">sitemap.xml</a>
-      </div>
+{% if nearby_companies %}
+<section class="section tight" aria-labelledby="nearby-h" style="padding-top:0">
+  <div class="container">
+    <div class="dir-head">
+      <h2 id="nearby-h">More companies in {{ company.city }}</h2>
+      {% if city_slug %}<a href="/directory/city/{{ city_slug }}" class="btn btn-text"><span>See all</span><svg class="ico ico-sm arrow" aria-hidden="true"><use href="#i-arrow"/></svg></a>{% endif %}
     </div>
-  </footer>
-
-  <script>
-    function toggleTheme() {
-      const isLight = document.documentElement.classList.contains("light");
-      const next = isLight ? "dark" : "light";
-      document.documentElement.classList.toggle("dark", next === "dark");
-      document.documentElement.classList.toggle("light", next === "light");
-      try { localStorage.setItem("pilot_theme", next); } catch (_) {}
-      const icon = document.getElementById("theme-toggle-icon");
-      if (icon) icon.textContent = next === "light" ? "dark_mode" : "light_mode";
-    }
-    document.getElementById("btn-theme-toggle")?.addEventListener("click", toggleTheme);
-  </script>
-</body>
-</html>
-
+    <ul class="nearby-list reveal-stagger" role="list">
+      {% for n in nearby_companies %}
+      <li>
+        <a href="/company/{{ n.slug }}" class="nearby-link">
+          <span class="co-mono" aria-hidden="true">{{ (n.name or "?")[:2] | upper }}</span>
+          <span class="grow">
+            <span class="t">{{ n.name }}</span>
+            <span class="s">{% if n.rating %}{{ "%.1f"|format(n.rating) }} on Google{% endif %}{% if n.rating and n.domain %}, {% endif %}{{ n.domain or "" }}</span>
+          </span>
+        </a>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+</section>
+{% endif %}
+{% endblock %}

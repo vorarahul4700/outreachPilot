@@ -1,0 +1,107 @@
+/* =========================================================
+   App utility vocabulary
+   A small, fixed set of helpers used by markup that app.js builds,
+   plus every state class app.js toggles (hidden, opacity-0, ring-2,
+   translate-x-full...). This replaces the Tailwind runtime on /app.
+   Colors map to Field Guide tokens, so dark mode stays the same design.
+   ========================================================= */
+
+/* ---- Display ---- */
+.hidden { display: none !important; }
+.flex { display: flex; }
+.inline-flex { display: inline-flex; }
+.grid { display: grid; }
+.block { display: block; }
+@media (min-width: 640px) {
+  .sm\:hidden { display: none !important; }
+  .sm\:flex { display: flex !important; }
+  .sm\:inline { display: inline !important; }
+}
+@media (max-width: 639px) { .hidden-xs { display: none !important; } }
+
+/* ---- Flex helpers ---- */
+.flex-col { flex-direction: column; }
+.flex-wrap { flex-wrap: wrap; }
+.items-center { align-items: center; }
+.items-start { align-items: flex-start; }
+.justify-between { justify-content: space-between; }
+.justify-center { justify-content: center; }
+.justify-end { justify-content: flex-end; }
+.flex-1 { flex: 1 1 0%; }
+.shrink-0 { flex-shrink: 0; }
+.min-w-0 { min-width: 0; }
+.ml-auto { margin-left: auto; }
+.w-full { width: 100%; }
+.gap-1 { gap: 4px; } .gap-1\.5 { gap: 6px; } .gap-2 { gap: 8px; } .gap-3 { gap: 12px; }
+.space-x-0\.5 > * + * { margin-left: 2px; }
+.space-x-1 > * + * { margin-left: 4px; }
+.space-x-1\.5 > * + * { margin-left: 6px; }
+.space-x-2 > * + * { margin-left: 8px; }
+.space-y-3 > * + * { margin-top: 12px; }
+.col-span-full { grid-column: 1 / -1; }
+
+/* ---- Text helpers ---- */
+.truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.break-all { word-break: break-all; }
+.break-words { overflow-wrap: anywhere; }
+.font-mono { font-family: var(--font-mono); }
+.font-semibold { font-weight: 600; }
+.font-medium { font-weight: 500; }
+.font-bold { font-weight: 700; }
+.italic { font-style: italic; }
+.text-center { text-align: center; }
+.text-xs { font-size: .78rem; }
+.text-sm { font-size: .875rem; }
+.tabular-nums, .tnum { font-variant-numeric: tabular-nums; }
+.line-clamp-2 { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.line-clamp-3 { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* ---- Field Guide color bridge for small inline accents set by app.js ---- */
+.text-on-surface, .text-slate-200 { color: var(--text); }
+.text-on-surface-variant { color: var(--text-2); }
+.text-outline, .text-slate-500 { color: var(--text-3); }
+.text-primary, .text-secondary { color: var(--accent-text); }
+.text-tertiary { color: var(--warn-text); }
+.text-error { color: var(--danger-text); }
+.text-emerald-400, .text-\[\#86B29B\] { color: var(--ok); }
+.text-amber-300, .text-amber-400, .text-amber-500 { color: var(--warn); }
+.fill-amber-400 { fill: var(--warn); }
+
+/* ---- Lucide icon sizes ---- */
+.w-2\.5 { width: 10px; } .h-2\.5 { height: 10px; }
+.w-3 { width: 12px; } .h-3 { height: 12px; }
+.w-3\.5 { width: 14px; } .h-3\.5 { height: 14px; }
+.w-4 { width: 16px; } .h-4 { height: 16px; }
+.w-5 { width: 20px; } .h-5 { height: 20px; }
+.w-6 { width: 24px; } .h-6 { height: 24px; }
+i[data-lucide], svg.lucide { flex-shrink: 0; }
+
+/* ---- Motion ---- */
+.animate-spin { animation: spin 1s linear infinite; }
+.animate-pulse { animation: pulse-dot 1.8s var(--ease-in-out) infinite; }
+
+/* ---- State classes toggled by app.js ----
+   Individual transform properties (translate, scale) so they combine
+   without overwriting each other. */
+.opacity-0 { opacity: 0 !important; }
+.opacity-50 { opacity: .5; }
+.opacity-80 { opacity: .86; }
+.opacity-100 { opacity: 1 !important; }
+.pointer-events-none { pointer-events: none !important; }
+.pointer-events-auto { pointer-events: auto !important; }
+.translate-x-full { translate: 100% 0; }
+.-translate-y-4 { translate: 0 -14px; }
+.translate-y-0 { translate: 0 0; }
+.scale-95 { scale: .96; }
+.scale-100 { scale: 1; }
+.ring-2 { box-shadow: 0 0 0 3px var(--accent-soft) !important; }
+.ring-primary { box-shadow: 0 0 0 2px var(--accent) !important; }
+.border-primary { border-color: var(--accent) !important; }
+.input-warning-highlight { border-color: var(--warn) !important; box-shadow: 0 0 0 3px var(--warn-soft) !important; }
+
+/* ---- Overlay hooks used by scroll-lock.js (any visible .fixed.inset-0 locks the page) ---- */
+.fixed { position: fixed; }
+.inset-0 { inset: 0; }
+html.scroll-locked, html.scroll-locked body { overflow: hidden !important; overscroll-behavior: none; }
+html.scroll-locked body { padding-right: var(--scroll-lock-gap, 0px); }
+.fixed.inset-0, .fixed.inset-0 .am-body, .fixed.inset-0 #audit-logs { overscroll-behavior: contain; }

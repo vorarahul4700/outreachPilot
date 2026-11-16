@@ -1,1562 +1,900 @@
-<!DOCTYPE html>
-<html class="dark" lang="en">
-<head>
-  <meta charset="UTF-8">
-  <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg">
-  <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
-  <link rel="shortcut icon" href="/static/favicon.ico">
-  <link rel="apple-touch-icon" sizes="180x180" href="/static/favicon.ico">
-  <script>
-    (function() {
-      try {
-        const saved = localStorage.getItem('pilot_theme');
-        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const theme = saved ? saved : 'light'; /* default: light */
-        if (theme === 'light') {
-          document.documentElement.classList.remove('dark');
-          document.documentElement.classList.add('light');
-        } else {
-          document.documentElement.classList.add('dark');
-          document.documentElement.classList.remove('light');
-        }
-      } catch (e) {}
-    })();
-  </script>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+{% extends "base.html" %}
+{% set skip_site_js = True %}
+{% set page_css = [] %}
+
+{% block title %}{{ project_name }} - {{ tagline }}{% endblock %}
+
+{% block meta %}
   <meta name="description" content="OutreachPilot: Direct company discovery, tech stack intelligence, and automated cold email outreach for job opportunities.">
-  <meta name="theme-color" content="#111319">
-  <title>{{ project_name }} - {{ tagline }}</title>
-  
-  <!-- High-Performance Self-Hosted Typography & SEO Font Preloading (Fast LCP & Zero CLS) -->
-  <link rel="preload" href="/static/fonts/spacegrotesk-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="/static/fonts/dmsans-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="/static/css/fonts.css">
-  
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com/3.4.17?plugins=forms@0.5.10,container-queries@0.1.1"></script>
-  <script id="tailwind-config">
-    tailwind.config = {
-      darkMode: "class",
-      theme: {
-        extend: {
-          colors: {
-            "background": "rgb(var(--color-background) / <alpha-value>)",
-            "on-background": "rgb(var(--color-on-background) / <alpha-value>)",
-            "surface": "rgb(var(--color-surface) / <alpha-value>)",
-            "surface-dim": "rgb(var(--color-surface-dim) / <alpha-value>)",
-            "surface-bright": "rgb(var(--color-surface-bright) / <alpha-value>)",
-            "surface-container-lowest": "rgb(var(--color-surface-container-lowest) / <alpha-value>)",
-            "surface-container-low": "rgb(var(--color-surface-container-low) / <alpha-value>)",
-            "surface-container": "rgb(var(--color-surface-container) / <alpha-value>)",
-            "surface-container-high": "rgb(var(--color-surface-container-high) / <alpha-value>)",
-            "surface-container-highest": "rgb(var(--color-surface-container-highest) / <alpha-value>)",
-            "surface-variant": "rgb(var(--color-surface-variant) / <alpha-value>)",
-            "on-surface": "rgb(var(--color-on-surface) / <alpha-value>)",
-            "on-surface-variant": "rgb(var(--color-on-surface-variant) / <alpha-value>)",
-            "outline": "rgb(var(--color-outline) / <alpha-value>)",
-            "outline-variant": "rgb(var(--color-outline-variant) / <alpha-value>)",
-            "primary": "rgb(var(--color-primary) / <alpha-value>)",
-            "primary-container": "rgb(var(--color-primary-container) / <alpha-value>)",
-            "on-primary": "rgb(var(--color-on-primary) / <alpha-value>)",
-            "on-primary-container": "rgb(var(--color-on-primary-container) / <alpha-value>)",
-            "primary-fixed": "rgb(var(--color-primary) / <alpha-value>)",
-            "primary-fixed-dim": "rgb(var(--color-primary-container) / <alpha-value>)",
-            "inverse-primary": "rgb(var(--color-on-primary) / <alpha-value>)",
-            "surface-tint": "rgb(var(--color-primary) / <alpha-value>)",
-            "secondary": "rgb(var(--color-secondary) / <alpha-value>)",
-            "secondary-container": "rgb(var(--color-secondary-container) / <alpha-value>)",
-            "on-secondary": "rgb(var(--color-on-secondary) / <alpha-value>)",
-            "on-secondary-container": "rgb(var(--color-on-surface) / <alpha-value>)",
-            "secondary-fixed": "rgb(var(--color-secondary) / <alpha-value>)",
-            "secondary-fixed-dim": "rgb(var(--color-secondary-container) / <alpha-value>)",
-            "tertiary": "rgb(var(--color-tertiary) / <alpha-value>)",
-            "tertiary-container": "rgb(var(--color-tertiary-container) / <alpha-value>)",
-            "on-tertiary": "rgb(var(--color-on-tertiary) / <alpha-value>)",
-            "on-tertiary-container": "rgb(var(--color-on-surface) / <alpha-value>)",
-            "error": "rgb(var(--color-error) / <alpha-value>)",
-            "error-container": "rgb(var(--color-error) / 0.15)",
-            "on-error": "#FFFFFF",
-            "on-error-container": "rgb(var(--color-error) / <alpha-value>)"
-          },
-          fontFamily: {
-            "headline": ["Space Grotesk", "sans-serif"],
-            "caption": ["JetBrains Mono", "monospace"],
-            "body-md": ["DM Sans", "Inter", "sans-serif"],
-            "headline-md": ["Space Grotesk", "sans-serif"],
-            "label-sm": ["JetBrains Mono", "monospace"],
-            "headline-lg": ["Space Grotesk", "sans-serif"],
-            "headline-xl": ["Space Grotesk", "sans-serif"],
-            "body-sm": ["DM Sans", "Inter", "sans-serif"],
-            "headline-xl-mobile": ["Space Grotesk", "sans-serif"],
-            "metric-num": ["Space Grotesk", "sans-serif"],
-            "headline-sm": ["Space Grotesk", "sans-serif"],
-            "label-md": ["JetBrains Mono", "monospace"],
-            "body-lg": ["DM Sans", "Inter", "sans-serif"]
-          },
-          fontSize: {
-            "caption": ["11px", { "lineHeight": "14px", "letterSpacing": "0.04em", "fontWeight": "500" }],
-            "body-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0em", "fontWeight": "400" }],
-            "headline-md": ["20px", { "lineHeight": "26px", "letterSpacing": "-0.015em", "fontWeight": "600" }],
-            "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.06em", "fontWeight": "600" }],
-            "headline-lg": ["26px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
-            "headline-xl": ["40px", { "lineHeight": "44px", "letterSpacing": "-0.03em", "fontWeight": "600" }],
-            "body-sm": ["13px", { "lineHeight": "18px", "letterSpacing": "0em", "fontWeight": "400" }],
-            "headline-xl-mobile": ["26px", { "lineHeight": "32px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
-            "metric-num": ["33px", { "lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
-            "headline-sm": ["16px", { "lineHeight": "22px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
-            "label-md": ["12px", { "lineHeight": "16px", "letterSpacing": "0.04em", "fontWeight": "500" }],
-            "body-lg": ["16px", { "lineHeight": "24px", "letterSpacing": "-0.005em", "fontWeight": "400" }]
-          }
-        }
-      }
-    };
-  </script>
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-  <link rel="stylesheet" href="/static/css/style.css?v=9.0">
-</head>
-<body class="bg-surface text-on-surface font-body-md antialiased min-h-screen flex selection:bg-primary-container selection:text-on-primary-container overflow-x-hidden">
+{% endblock %}
 
-  <!-- Mobile Drawer Overlay Backdrop -->
-  <div id="mobile-sidebar-overlay" class="hidden fixed inset-0 z-30 bg-black/60 backdrop-blur-sm md:hidden"></div>
+{% block head_extra %}
+  <link rel="stylesheet" href="/static/css/app/app-utils.css?v={{ asset_v }}">
+  <link rel="stylesheet" href="/static/css/app/app.css?v={{ asset_v }}">
+  <script src="https://unpkg.com/lucide@1.73.0/dist/umd/lucide.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked@15.0.12/marked.min.js"></script>
+{% endblock %}
 
-  <!-- ========================================== -->
-  <!-- LEFT SIDEBAR NAVIGATION (STITCH EXACT)     -->
-  <!-- ========================================== -->
-  <aside id="app-sidebar" class="fixed top-0 left-0 h-screen h-[100dvh] w-60 z-40 bg-surface-container-low border-r border-outline-variant/30 flex flex-col overflow-y-auto overscroll-contain transition-transform duration-200 -translate-x-full md:translate-x-0">
-    <div class="p-4 flex flex-col gap-6">
-      
-      <!-- Brand Header (Redirects to Home) -->
-      <div class="flex items-center justify-between px-2 pt-1">
-        <a href="/" class="flex items-center gap-3 hover:opacity-85 transition cursor-pointer" title="{{ project_name }} - Home">
-          <div class="w-8 h-8 rounded-lg bg-primary-container flex items-center justify-center text-on-primary-container shadow-inner shrink-0">
-            <span class="material-symbols-outlined text-[20px]" data-icon="rocket_launch">rocket_launch</span>
-          </div>
-          <div class="flex flex-col sidebar-text">
-            <div class="flex items-center gap-2">
-              <span class="text-headline-sm font-headline-sm font-bold text-on-surface tracking-tight">{{ project_name }}</span>
-            </div>
-          </div>
-        </a>
-        <div class="flex items-center gap-1.5 sidebar-full-only">
-          <!-- Dark / Light Theme Toggle Button (Sun / Moon icon only - Desktop only in sidebar, mobile top bar has its own) -->
-          <button id="btn-theme-toggle" type="button" aria-label="Toggle Light / Dark Mode" class="hidden md:flex w-8 h-8 rounded-lg items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container border border-outline-variant/40 transition cursor-pointer" title="Toggle Light / Dark Mode">
-            <span id="theme-toggle-icon" class="material-symbols-outlined text-[19px]">light_mode</span>
-          </button>
-          <button id="btn-close-sidebar-mobile" class="md:hidden text-on-surface-variant hover:text-on-surface p-1 rounded" title="Close Menu">
-            <span class="material-symbols-outlined text-[20px]">close</span>
-          </button>
-        </div>
+{% block body_class %}app-body{% endblock %}
+{% block nav %}{% endblock %}
+{% block footer %}{% endblock %}
+
+{% block content %}
+{#- The workspace lives outside the public site shell: sidebar + main area. -#}
+<div id="mobile-sidebar-overlay" class="fixed inset-0"></div>
+
+<!-- ===================== Sidebar ===================== -->
+<aside id="app-sidebar" aria-label="Workspace navigation">
+  <div class="sb-inner">
+    <div class="sb-brand">
+      <a href="/" class="logo" title="{{ project_name }} - Home">
+        <span class="logo-mark"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#logo-plane"/></svg></span>
+        <span class="logo-word sidebar-text">{{ project_name }}</span>
+      </a>
+      <div class="flex items-center gap-1.5 sidebar-full-only">
+        <button id="btn-theme-toggle" type="button" aria-label="Toggle Light / Dark Mode" class="icon-btn sm hidden-xs" title="Toggle Light / Dark Mode">
+          <span id="theme-toggle-icon" class="material-symbols-outlined">light_mode</span>
+        </button>
+        <button id="btn-close-sidebar-mobile" type="button" class="icon-btn sm bare sm:hidden" title="Close Menu" aria-label="Close menu">
+          <span class="material-symbols-outlined">close</span>
+        </button>
       </div>
+    </div>
 
-      <!-- Main Navigation Cluster -->
-      <nav class="flex flex-col gap-1">
-        <!-- Tab 1: Companies (Active) -->
-        <button id="tab-companies" class="tab-btn sidebar-nav-item active flex items-center gap-3 px-3 py-2 rounded-lg bg-surface-container-highest/60 text-primary font-medium transition-all duration-150 ease-in-out cursor-pointer text-left w-full" title="Companies Directory">
-          <span class="material-symbols-outlined text-[18px] shrink-0" data-icon="domain">domain</span>
-          <span class="text-label-md font-label-md sidebar-text">Companies</span>
-          <span class="active-dot ml-auto w-1.5 h-1.5 rounded-full bg-primary sidebar-badge"></span>
-        </button>
+    <span class="sb-section-label">Workspace</span>
+    <nav class="sb-nav">
+      <button id="tab-companies" class="tab-btn sidebar-nav-item active" title="Companies Directory">
+        <span class="material-symbols-outlined" data-icon="domain">domain</span>
+        <span class="sidebar-text">Companies</span>
+        <span class="active-dot sidebar-badge"></span>
+      </button>
+      <button id="tab-resume" class="tab-btn sidebar-nav-item" title="Candidate Profile & Resume">
+        <span class="material-symbols-outlined" data-icon="account_circle">account_circle</span>
+        <span class="sidebar-text">Candidate Profile</span>
+        <span class="active-dot hidden sidebar-badge"></span>
+      </button>
+      <button id="tab-outreach" class="tab-btn sidebar-nav-item" title="Outreach Hub">
+        <span class="material-symbols-outlined" data-icon="send">send</span>
+        <span class="sidebar-text">Outreach Hub</span>
+        <span class="active-dot hidden sidebar-badge"></span>
+      </button>
+      <a href="/admin" id="nav-admin-link" class="{% if not is_master_admin %}hidden{% endif %} sb-link is-admin" title="Master Admin Dashboard">
+        <span class="material-symbols-outlined">admin_panel_settings</span>
+        <span class="sidebar-text">Admin Panel</span>
+        <span class="tag sidebar-badge">MASTER</span>
+      </a>
+    </nav>
 
-        <!-- Tab 2: Candidate Profile (Inactive) -->
-        <button id="tab-resume" class="tab-btn sidebar-nav-item flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all duration-150 ease-in-out cursor-pointer text-left w-full" title="Candidate Profile & Resume">
-          <span class="material-symbols-outlined text-[18px] shrink-0" data-icon="account_circle">account_circle</span>
-          <span class="text-label-md font-label-md sidebar-text">Candidate Profile</span>
-          <span class="active-dot hidden ml-auto w-1.5 h-1.5 rounded-full bg-primary sidebar-badge"></span>
-        </button>
-
-        <!-- Tab 3: Outreach Hub (Inactive) -->
-        <button id="tab-outreach" class="tab-btn sidebar-nav-item flex items-center gap-3 px-3 py-2 rounded-lg text-on-surface-variant hover:text-on-surface hover:bg-surface-container transition-all duration-150 ease-in-out cursor-pointer text-left w-full" title="Outreach Hub">
-          <span class="material-symbols-outlined text-[18px] shrink-0" data-icon="send">send</span>
-          <span class="text-label-md font-label-md sidebar-text">Outreach Hub</span>
-          <span class="active-dot hidden ml-auto w-1.5 h-1.5 rounded-full bg-primary sidebar-badge"></span>
-        </button>
-
-        <!-- Admin Panel Link (Master Admins Only) -->
-        <a href="/admin" id="nav-admin-link" class="{% if not is_master_admin %}hidden{% endif %} flex items-center gap-3 px-3 py-2 rounded-lg bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 border border-amber-500/30 font-medium transition cursor-pointer text-left w-full mt-2" title="Master Admin Dashboard">
-          <span class="material-symbols-outlined text-[18px] shrink-0">admin_panel_settings</span>
-          <span class="text-label-md font-label-md sidebar-text font-bold">Admin Panel</span>
-          <span class="ml-auto px-1.5 py-0.5 rounded text-[10px] font-bold bg-amber-500 text-black">MASTER</span>
-        </a>
-
-      </nav>
-
-      <!-- Account: sign-in / signed-in user, plan and quota.
-           Sits under the navigation (not pinned to the bottom) so mobile browser
-           toolbars can never cover it. -->
-      <div class="sidebar-full-only pt-4 border-t border-outline-variant/30 flex flex-col gap-3">
+    <div class="sb-account sidebar-full-only">
       {% if dev_mode %}
-      <div class="px-2.5 py-1.5 rounded-lg bg-surface-container border border-outline-variant/40 text-on-surface-variant text-caption flex items-center justify-between">
-        <span class="flex items-center gap-1.5 text-secondary">
-          <span class="w-1.5 h-1.5 rounded-full bg-secondary animate-pulse"></span>
-          Dev Sandbox
-        </span>
-        <button id="btn-sidebar-admin-login" type="button" class="text-primary hover:underline text-[10px] cursor-pointer" title="Switch to Admin">Switch</button>
+      <div class="sb-dev">
+        <span class="flex items-center gap-1.5"><span class="dot dot-live"></span>Dev Sandbox</span>
+        <button id="btn-sidebar-admin-login" type="button" title="Switch to Admin">Switch</button>
       </div>
       {% endif %}
 
       {% if not subscription_kill_switch %}
-      <!-- Sidebar Subscription & Quota Status Card (Clickable to open modal) -->
-      <div id="sidebar-quota-card" class="p-2.5 rounded-xl bg-surface-container border border-outline-variant/30 flex flex-col gap-2 cursor-pointer hover:border-primary/50 transition group select-none" title="View Subscription Details & Daily Quota">
-        <div class="flex items-center justify-between gap-2 min-w-0">
-          <span id="sidebar-tier-badge" class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-primary/10 text-primary border border-primary/20 shrink-0 truncate max-w-[130px]" title="Role &amp; Plan">
+      <div id="sidebar-quota-card" class="quota-card" title="View Subscription Details & Daily Quota">
+        <div class="quota-top">
+          <span id="sidebar-tier-badge" class="tier-badge" title="Role &amp; Plan">
             {{ user_subscription_tier_name if user_subscription_tier_name else "Free Starter" }}
           </span>
-          <span class="text-[11px] text-on-surface-variant font-mono shrink-0 whitespace-nowrap text-right">
-            <strong id="sidebar-quota-remaining" class="text-on-surface">{{ user_remaining if user_remaining is defined else 10 }}</strong> / <span id="sidebar-quota-total">{{ user_daily_limit if user_daily_limit is defined else 10 }}</span> left
-          </span>
+          <span class="quota-num"><strong id="sidebar-quota-remaining">{{ user_remaining if user_remaining is defined else 10 }}</strong> / <span id="sidebar-quota-total">{{ user_daily_limit if user_daily_limit is defined else 10 }}</span> left</span>
         </div>
-        <!-- Mini Progress Bar -->
-        <div class="w-full h-1.5 bg-surface-container-highest rounded-full overflow-hidden">
-          <div id="sidebar-quota-progress" class="h-full bg-primary rounded-full transition-all duration-300" style="width: 100%;"></div>
-        </div>
-        <div class="flex items-center justify-between text-[10px] text-on-surface-variant group-hover:text-primary transition-colors">
-          <span>Manage Subscription &amp; Quota</span>
-          <span class="material-symbols-outlined text-[13px]">chevron_right</span>
-        </div>
+        <div class="meter-sm"><div id="sidebar-quota-progress" style="width: 100%;"></div></div>
+        <div class="quota-link"><span>Manage plan and daily quota</span><span class="material-symbols-outlined" aria-hidden="true">chevron_right</span></div>
       </div>
       {% endif %}
 
-      <!-- State 1: Logged In (Only shown when authenticated) -->
-      <div id="auth-box-logged-in" class="{% if not is_logged_in %}hidden{% endif %} flex items-center justify-between px-2">
-        <div class="flex items-center gap-2.5 min-w-0">
-          <div id="user-avatar-initials" class="w-8 h-8 rounded-full bg-surface-container-highest border border-outline-variant/40 flex items-center justify-center text-label-md font-label-md text-on-surface font-semibold shrink-0">
+      <div id="auth-box-logged-in" class="{% if not is_logged_in %}hidden{% endif %} sb-user">
+        <div class="who">
+          <div id="user-avatar-initials" class="avatar avatar-sm avatar-round">
             {{ (user.name[:2] if user.name else user.email[:2])|upper if user else "U" }}
           </div>
-          <div class="flex flex-col min-w-0">
-            <span class="text-label-md font-label-md text-on-surface truncate" id="user-display-email">{{ user.email if user and is_logged_in else "" }}</span>
-            <div class="flex items-center gap-1.5">
-              <span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
-              <span class="text-caption font-caption text-secondary">Google Connected</span>
-              {% if subscription_kill_switch and not is_master_admin %}
-              <span class="text-[9px] font-mono px-1.5 py-0.2 rounded bg-amber-500/15 text-amber-500 border border-amber-500/30">TEMP USER</span>
-              {% endif %}
-            </div>
-          </div>
-        </div>
-        <button id="btn-logout" class="text-on-surface-variant hover:text-error transition-colors p-1 rounded cursor-pointer shrink-0" title="Disconnect / Sign Out">
-          <span class="material-symbols-outlined text-[18px]" data-icon="logout">logout</span>
-        </button>
-      </div>
-
-      <!-- State 2: Logged Out / Guest Mode -->
-      <div id="auth-box-logged-out" class="{% if is_logged_in %}hidden{% endif %} flex flex-col gap-2 px-1">
-        <div class="flex items-center justify-between">
-          <div class="flex items-center gap-2 min-w-0">
-            <div class="w-7 h-7 rounded-full bg-surface-container-highest border border-outline-variant/30 flex items-center justify-center text-on-surface-variant shrink-0">
-              <span class="material-symbols-outlined text-[16px]">person_outline</span>
-            </div>
-            <div class="flex flex-col min-w-0">
-              <span class="text-label-sm font-label-sm text-on-surface-variant font-medium">Guest Mode</span>
-              <span class="text-[10px] font-caption text-outline">Sign in to enable AI</span>
-            </div>
-          </div>
-          <span class="w-1.5 h-1.5 rounded-full bg-amber-500/70" title="Not connected"></span>
-        </div>
-        <a href="/auth/google/login" id="btn-sidebar-google-login" class="btn-tactile-slate w-full py-2 px-3 rounded-lg font-medium text-caption flex items-center justify-center gap-1.5 shadow-sm transition cursor-pointer text-on-surface">
-          <span class="material-symbols-outlined text-[15px]">login</span>
-          <span>Sign In with Google</span>
-        </a>
-      </div>
-      </div>
-
-      <!-- Compact profile icon when sidebar is collapsed -->
-      <div class="sidebar-icon-only hidden pt-3 border-t border-outline-variant/30 items-center justify-center">
-        <span class="material-symbols-outlined text-on-surface-variant text-[20px]" title="Account / Profile">account_circle</span>
-      </div>
-    </div>
-  </aside>
-
-  <!-- ========================================== -->
-  <!-- MAIN WORKSPACE                             -->
-  <main id="main-content-wrap" class="flex-1 ml-0 md:ml-60 min-h-screen bg-surface-container-lowest p-3.5 sm:p-6 lg:p-8 pb-16 sm:pb-24 w-full min-w-0 overflow-x-hidden">
-    
-    <!-- Mobile Hamburger Toggle Bar -->
-    <div class="md:hidden flex items-center justify-between pb-4 mb-4 border-b border-outline-variant/30">
-      <div class="flex items-center gap-2">
-        <button id="btn-mobile-sidebar" type="button" aria-label="Open Navigation Menu" class="p-1.5 rounded-lg bg-surface-container text-on-surface border border-outline-variant/40 cursor-pointer">
-          <span class="material-symbols-outlined text-[20px]">menu</span>
-        </button>
-        <a href="/" class="font-bold text-headline-sm text-on-surface hover:opacity-85 transition" title="{{ project_name }} - Home">{{ project_name }}</a>
-      </div>
-      <div class="flex items-center gap-2">
-        <!-- Sun / Moon Theme Toggle on Mobile -->
-        <button id="btn-theme-toggle-mobile" type="button" aria-label="Toggle Light / Dark Mode" class="p-1.5 rounded-lg bg-surface-container text-on-surface-variant hover:text-on-surface border border-outline-variant/40 cursor-pointer flex items-center justify-center" title="Toggle Light / Dark Mode">
-          <span class="theme-toggle-icon-mobile material-symbols-outlined text-[19px]">light_mode</span>
-        </button>
-        <button id="btn-quick-refresh" type="button" class="p-1.5 rounded-lg bg-surface-container text-on-surface-variant hover:text-on-surface border border-outline-variant/40 cursor-pointer" title="Refresh directory data">
-          <span class="material-symbols-outlined text-[18px]">refresh</span>
-        </button>
-      </div>
-    </div>
-
-      <!-- ========================================== -->
-      <!-- TAB 1: ALL COMPANIES DIRECTORY (STITCH UI) -->
-      <!-- ========================================== -->
-      <section id="section-companies" class="tab-section space-y-6">
-        
-        <!-- Top Header & Primary Action (Artisanal Studio Workshop) -->
-        <header class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div>
-            <h1 class="text-headline-xl font-headline-xl text-on-surface font-bold tracking-tight">Companies</h1>
-            <p id="header-leads-subtitle" class="text-body-md font-body-md text-on-surface-variant mt-1">Browse, research, and reach out to <span id="header-leads-counter" class="tabular-nums"></span> verified businesses.</p>
-          </div>
-          <div class="flex flex-wrap items-center gap-2.5 sm:gap-3">
-            {% if not subscription_kill_switch %}
-            <!-- Header Subscription & Daily Quota Widget (Click to open modal) -->
-            <div id="header-quota-widget" class="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-surface-container border border-outline-variant/40 shadow-sm cursor-pointer hover:border-primary/60 transition group select-none" title="Click to view subscription plan details and daily quota limits">
-              <div class="flex items-center gap-1.5">
-                <span class="material-symbols-outlined text-primary text-[18px]">verified_user</span>
-                <span id="user-header-tier-badge" class="px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wider bg-primary/10 text-primary border border-primary/20 shrink-0 whitespace-nowrap">
-                  {{ user_subscription_tier_name if user_subscription_tier_name else "Free Starter" }}
-                </span>
-              </div>
-              <div class="h-4 w-px bg-outline-variant/40"></div>
-              <div class="flex items-center gap-2">
-                <span class="text-xs font-mono text-on-surface-variant">
-                  Daily Quota: <strong id="user-header-quota-remaining" class="text-on-surface">{{ user_remaining if user_remaining is defined else 10 }}</strong> / <span id="user-header-quota-total">{{ user_daily_limit if user_daily_limit is defined else 10 }}</span> left
-                </span>
-                <div class="w-14 h-1.5 bg-surface-container-highest rounded-full overflow-hidden hidden sm:block">
-                  <div id="user-header-quota-bar" class="h-full bg-primary rounded-full transition-all duration-300" style="width: 100%;"></div>
-                </div>
-              </div>
-              <span class="material-symbols-outlined text-[16px] text-on-surface-variant group-hover:text-primary transition-colors">expand_more</span>
-            </div>
-            {% endif %}
-
-            <button id="btn-header-refresh" type="button" class="btn-tactile-slate flex items-center gap-2 px-3.5 py-2 rounded text-label-md font-label-md font-semibold transition-colors cursor-pointer" title="Refresh Directory">
-              <span class="material-symbols-outlined text-[18px]">refresh</span>
-              <span>Refresh</span>
-            </button>
-          </div>
-        </header>
-
-        <!-- Quick Stats Metric Cards (2x2 on mobile, 4-col on desktop) -->
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-          <!-- Stat 1: Total Prospects -->
-          <div id="stat-card-all" class="bg-surface-container-low border border-outline-variant/30 rounded-xl p-3.5 sm:p-5 min-h-[122px] flex flex-col justify-between hover:border-outline-variant/60 transition-colors cursor-pointer">
-            <div class="flex items-center justify-between text-on-surface-variant mb-2">
-              <span class="text-label-sm font-label-sm">Total Companies</span>
-              <span class="material-symbols-outlined text-[18px] text-primary">domain</span>
-            </div>
-            <div class="flex items-baseline gap-2">
-              <span id="companies-total-count" class="text-metric-num font-metric-num text-on-surface font-semibold tabular-nums">0</span>
-            </div>
-            <p id="stat-all-subtext" class="text-caption font-caption text-on-surface-variant mt-2 font-mono text-[11px] leading-snug">Verified businesses</p>
-          </div>
-
-          <!-- Stat 2: Enriched Emails -->
-          <div id="stat-card-emails" class="bg-surface-container-low border border-outline-variant/30 rounded-xl p-3.5 sm:p-5 min-h-[122px] flex flex-col justify-between hover:border-outline-variant/60 transition-colors cursor-pointer">
-            <div class="flex items-center justify-between text-on-surface-variant mb-2">
-              <span class="text-label-sm font-label-sm">Verified Emails</span>
-              <span class="material-symbols-outlined text-[18px] text-secondary">verified</span>
-            </div>
-            <div class="flex items-baseline gap-2">
-              <span id="stat-emails-count" class="text-metric-num font-metric-num text-on-surface font-semibold tabular-nums">0</span>
-              <span class="text-caption font-caption text-on-surface-variant font-mono">/ <span id="stat-emails-total">0</span></span>
-            </div>
-            <p id="stat-yield-text" class="text-caption font-caption text-on-surface-variant mt-2 font-mono text-[11px] leading-snug">0% have email</p>
-          </div>
-
-          <!-- Stat 3: AI Researched -->
-          <div id="stat-card-enriched" class="bg-surface-container-low border border-outline-variant/30 rounded-xl p-3.5 sm:p-5 min-h-[122px] flex flex-col justify-between hover:border-outline-variant/60 transition-colors cursor-pointer">
-            <div class="flex items-center justify-between text-on-surface-variant mb-2">
-              <span class="text-label-sm font-label-sm">Researched by AI</span>
-              <span class="material-symbols-outlined text-[18px] text-tertiary">auto_awesome</span>
-            </div>
-            <div class="flex items-baseline gap-2">
-              <span id="stat-enriched-count" class="text-metric-num font-metric-num text-on-surface font-semibold tabular-nums">0</span>
-              <span id="stat-enriched-badge" class="text-caption font-caption text-secondary px-1.5 py-0.5 rounded bg-secondary/10 font-mono text-[11px]">0 Active</span>
-            </div>
-            <p class="text-caption font-caption text-on-surface-variant mt-2 font-mono text-[11px] leading-snug">Ready to reach out</p>
-          </div>
-
-          <!-- Stat 4: Pitched -->
-          <div id="stat-card-contacted" class="bg-surface-container-low border border-outline-variant/30 rounded-xl p-3.5 sm:p-5 min-h-[122px] flex flex-col justify-between hover:border-outline-variant/60 transition-colors cursor-pointer" title="Click to view sent pitches (requires sign-in)">
-            <div class="flex items-center justify-between text-on-surface-variant mb-2">
-              <span class="text-label-sm font-label-sm">Emails Sent</span>
-              <span class="material-symbols-outlined text-[18px] text-primary">send</span>
-            </div>
-            <div class="flex items-baseline gap-2">
-              <span id="stat-contacted-count" class="text-metric-num font-metric-num text-on-surface font-semibold tabular-nums">0</span>
-              <span id="stat-contacted-badge" class="text-caption font-caption text-outline px-1.5 py-0.5 rounded bg-surface-container-highest font-mono text-[11px]">Sign in</span>
-            </div>
-            <p id="stat-contacted-text" class="text-caption font-caption text-on-surface-variant mt-2 font-mono text-[11px] leading-snug">Sign in to track sent emails</p>
-          </div>
-        </div>
-
-        <!-- Industry Domain Quick-Filter Bar -->
-        <div class="flex items-center gap-1.5 overflow-x-auto pb-1 custom-scrollbar text-xs font-mono" id="companies-domain-filter-pills" role="tablist" aria-label="Filter companies by industry domain">
-          <button type="button" class="domain-filter-pill active px-3 py-1.5 rounded-lg border border-secondary bg-secondary/15 text-primary whitespace-nowrap cursor-pointer transition flex items-center gap-1.5 font-semibold" data-domain="all">
-            <span class="material-symbols-outlined text-[15px] text-secondary">apps</span>
-            <span>All Domains</span>
-            <span class="text-[10px] text-on-surface-variant font-normal tnum" id="domain-count-all">({% if domains %}{{ domains|sum(attribute='count') }}{% else %}55,119{% endif %})</span>
-          </button>
-          <button type="button" class="domain-filter-pill px-3 py-1.5 rounded-lg border border-outline-variant/40 bg-surface-container text-on-surface-variant hover:text-primary hover:border-secondary/50 whitespace-nowrap cursor-pointer transition flex items-center gap-1.5" data-domain="it">
-            <span class="inline-block w-2 h-2 rounded-full bg-blue-400"></span>
-            <span>IT &amp; Software</span>
-            <span class="text-[10px] text-on-surface-variant font-normal tnum" id="domain-count-it">({% for d in domains if d.code == 'it' %}{{ d.count }}{% else %}35,938{% endfor %})</span>
-          </button>
-          <button type="button" class="domain-filter-pill px-3 py-1.5 rounded-lg border border-outline-variant/40 bg-surface-container text-on-surface-variant hover:text-primary hover:border-secondary/50 whitespace-nowrap cursor-pointer transition flex items-center gap-1.5" data-domain="sales">
-            <span class="inline-block w-2 h-2 rounded-full bg-amber-400"></span>
-            <span>Sales &amp; BPO</span>
-            <span class="text-[10px] text-on-surface-variant font-normal tnum" id="domain-count-sales">({% for d in domains if d.code == 'sales' %}{{ d.count }}{% else %}2,386{% endfor %})</span>
-          </button>
-          <button type="button" class="domain-filter-pill px-3 py-1.5 rounded-lg border border-outline-variant/40 bg-surface-container text-on-surface-variant hover:text-primary hover:border-secondary/50 whitespace-nowrap cursor-pointer transition flex items-center gap-1.5" data-domain="marketing">
-            <span class="inline-block w-2 h-2 rounded-full bg-purple-400"></span>
-            <span>Marketing &amp; PR</span>
-            <span class="text-[10px] text-on-surface-variant font-normal tnum" id="domain-count-marketing">({% for d in domains if d.code == 'marketing' %}{{ d.count }}{% else %}16,795{% endfor %})</span>
-          </button>
-          <button type="button" class="domain-filter-pill px-3 py-1.5 rounded-lg border border-outline-variant/40 bg-surface-container text-on-surface-variant hover:text-primary hover:border-secondary/50 whitespace-nowrap cursor-pointer transition flex items-center gap-1.5" data-domain="pharma">
-            <span class="inline-block w-2 h-2 rounded-full bg-emerald-400"></span>
-            <span>Pharma &amp; Healthcare</span>
-            <span class="text-[10px] text-on-surface-variant font-normal tnum" id="domain-count-pharma">({% for d in domains if d.code == 'pharma' %}{{ d.count }}{% else %}0{% endfor %})</span>
-          </button>
-          <button type="button" class="domain-filter-pill px-3 py-1.5 rounded-lg border border-outline-variant/40 bg-surface-container text-on-surface-variant hover:text-primary hover:border-secondary/50 whitespace-nowrap cursor-pointer transition flex items-center gap-1.5" data-domain="finance">
-            <span class="inline-block w-2 h-2 rounded-full bg-emerald-600"></span>
-            <span>Finance &amp; Legal</span>
-            <span class="text-[10px] text-on-surface-variant font-normal tnum" id="domain-count-finance">({% for d in domains if d.code == 'finance' %}{{ d.count }}{% else %}0{% endfor %})</span>
-          </button>
-          <button type="button" class="domain-filter-pill px-3 py-1.5 rounded-lg border border-outline-variant/40 bg-surface-container text-on-surface-variant hover:text-primary hover:border-secondary/50 whitespace-nowrap cursor-pointer transition flex items-center gap-1.5" data-domain="manufacturing">
-            <span class="inline-block w-2 h-2 rounded-full bg-orange-400"></span>
-            <span>Manufacturing</span>
-            <span class="text-[10px] text-on-surface-variant font-normal tnum" id="domain-count-manufacturing">({% for d in domains if d.code == 'manufacturing' %}{{ d.count }}{% else %}0{% endfor %})</span>
-          </button>
-          <button type="button" class="domain-filter-pill px-3 py-1.5 rounded-lg border border-outline-variant/40 bg-surface-container text-on-surface-variant hover:text-primary hover:border-secondary/50 whitespace-nowrap cursor-pointer transition flex items-center gap-1.5" data-domain="realestate">
-            <span class="inline-block w-2 h-2 rounded-full bg-teal-400"></span>
-            <span>Real Estate</span>
-            <span class="text-[10px] text-on-surface-variant font-normal tnum" id="domain-count-realestate">({% for d in domains if d.code == 'realestate' %}{{ d.count }}{% else %}0{% endfor %})</span>
-          </button>
-          <button type="button" class="domain-filter-pill px-3 py-1.5 rounded-lg border border-outline-variant/40 bg-surface-container text-on-surface-variant hover:text-primary hover:border-secondary/50 whitespace-nowrap cursor-pointer transition flex items-center gap-1.5" data-domain="hr">
-            <span class="inline-block w-2 h-2 rounded-full bg-pink-400"></span>
-            <span>HR &amp; Staffing</span>
-            <span class="text-[10px] text-on-surface-variant font-normal tnum" id="domain-count-hr">({% for d in domains if d.code == 'hr' %}{{ d.count }}{% else %}0{% endfor %})</span>
-          </button>
-        </div>
-
-        <!-- Filter & Search Bar Section (Streamlined, Responsive Grid, No Overlapping) -->
-        <section class="bg-surface-container-low border border-outline-variant/30 rounded-xl p-2.5 sm:p-3 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-2.5 sm:gap-3">
-          <!-- Left: Search Input -->
-          <div class="relative w-full lg:max-w-sm flex items-center">
-            <span class="material-symbols-outlined absolute left-3.5 text-on-surface-variant text-[18px] pointer-events-none">search</span>
-            <input id="filter-search" class="w-full h-10 pl-10 pr-4 text-body-sm font-body-sm text-on-surface placeholder:text-on-surface-variant/70 focus:outline-none rounded-lg bg-surface-container-lowest border border-outline-variant/30 focus:border-outline-variant/70 transition" placeholder="Search by name, tech stack, domain, or location..." type="text"/>
-          </div>
-
-          <!-- Right Sub-Bar: Dynamic Tech Stack, City, Reset & Refresh -->
-          <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full lg:w-auto">
-            <div class="grid grid-cols-2 gap-2 w-full sm:flex sm:items-center sm:w-auto">
-              <!-- Tech Stack Filter -->
-              <div class="custom-dropdown relative w-full sm:w-[170px]" id="dropdown-filter-tech">
-                <input type="hidden" id="filter-tech-select" value="">
-                <button type="button" class="custom-dropdown-btn" aria-haspopup="listbox" aria-expanded="false" title="Filter by Identified Tech Stack">
-                  <span class="custom-dropdown-label truncate">Tech Stack (All)</span>
-                  <span class="material-symbols-outlined text-[16px] text-on-surface-variant dropdown-chevron">expand_more</span>
-                </button>
-                <div class="custom-dropdown-menu">
-                  <div class="custom-dropdown-search-wrap">
-                    <span class="material-symbols-outlined text-[15px] text-on-surface-variant absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">search</span>
-                    <input type="text" class="custom-dropdown-search" placeholder="Search stack..." autocomplete="off">
-                  </div>
-                  <div class="custom-dropdown-list custom-scrollbar" role="listbox"></div>
-                </div>
-              </div>
-
-              <!-- Dynamic City Dropdown -->
-              <div class="custom-dropdown relative w-full sm:w-[140px]" id="dropdown-filter-city">
-                <input type="hidden" id="filter-city-select" value="">
-                <button type="button" class="custom-dropdown-btn" aria-haspopup="listbox" aria-expanded="false" title="Filter by City">
-                  <span class="custom-dropdown-label truncate">All Cities</span>
-                  <span class="material-symbols-outlined text-[16px] text-on-surface-variant dropdown-chevron">expand_more</span>
-                </button>
-                <div class="custom-dropdown-menu align-right">
-                  <div class="custom-dropdown-search-wrap">
-                    <span class="material-symbols-outlined text-[15px] text-on-surface-variant absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">search</span>
-                    <input type="text" class="custom-dropdown-search" placeholder="Search city..." autocomplete="off">
-                  </div>
-                  <div class="custom-dropdown-list custom-scrollbar" role="listbox"></div>
-                </div>
-              </div>
-            </div>
-
-            <div class="flex items-center gap-2 justify-end sm:justify-start shrink-0">
-              <!-- Reset Filters Button -->
-              <button id="btn-reset-filters" type="button" class="btn-tactile-slate h-10 px-3 rounded-lg text-xs font-mono flex items-center justify-center gap-1.5 text-on-surface-variant hover:text-on-surface cursor-pointer flex-1 sm:flex-initial" title="Reset all search &amp; filter selections">
-                <span class="material-symbols-outlined text-[16px]">restart_alt</span>
-                <span>Reset</span>
-              </button>
-
-              <!-- Refresh Button -->
-              <button id="btn-quick-refresh-btn" type="button" class="h-10 px-2.5 rounded-lg bg-surface-container border border-outline-variant/40 text-on-surface-variant hover:text-on-surface cursor-pointer shrink-0 flex items-center justify-center" title="Refresh list">
-                <span class="material-symbols-outlined text-[18px]">refresh</span>
-              </button>
-            </div>
-          </div>
-        </section>
-
-        <!-- Directory Pagination Controls (Positioned directly above cards grid for immediate access) -->
-        <div id="companies-pagination" class="hidden bg-surface-container-low border border-outline-variant/30 rounded-xl px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm">
-          <div class="flex items-center space-x-2 text-caption text-on-surface-variant">
-            <span>Showing <strong id="companies-page-range" class="text-on-surface font-semibold">0-0</strong> of <strong id="companies-page-total" class="text-on-surface font-semibold">0</strong> leads</span>
-          </div>
-          <div class="flex items-center space-x-2 sm:space-x-3 flex-wrap justify-center">
-            <div class="flex items-center gap-2 text-caption text-on-surface-variant">
-              <span class="hidden sm:inline font-mono text-[11px]">Per page:</span>
-              <div class="custom-dropdown dropdown-compact relative" id="dropdown-companies-per-page">
-                <input type="hidden" id="companies-per-page" value="24">
-                <button type="button" class="custom-dropdown-btn" aria-haspopup="listbox" aria-expanded="false" title="Leads per page">
-                  <span class="custom-dropdown-label">24</span>
-                  <span class="material-symbols-outlined dropdown-chevron text-[15px]">expand_more</span>
-                </button>
-                <div class="custom-dropdown-menu align-right">
-                  <div class="custom-dropdown-list custom-scrollbar" role="listbox"></div>
-                </div>
-              </div>
-            </div>
-            <div id="companies-page-buttons" class="flex items-center space-x-1"></div>
-          </div>
-        </div>
-
-        <!-- 3-Column Company Cards Grid (Stitch Exact) -->
-        <div id="companies-container" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-          <!-- Initial Preload Skeletons (Theme-Adaptive) -->
-          <div class="skeleton-shimmer bg-surface-container-low border border-outline-variant/30 rounded-xl p-5 flex flex-col justify-between min-h-[220px]">
-            <div class="space-y-3.5">
-              <div class="flex items-start gap-3">
-                <div class="w-9 h-9 rounded-md bg-surface-container-highest shrink-0"></div>
-                <div class="space-y-2 flex-1 min-w-0">
-                  <div class="h-4 bg-surface-container-highest rounded w-3/4"></div>
-                  <div class="h-3 bg-surface-container rounded w-1/2"></div>
-                </div>
-              </div>
-              <div class="space-y-1.5 pt-1">
-                <div class="h-3 bg-surface-container rounded w-full"></div>
-                <div class="h-3 bg-surface-container rounded w-4/5"></div>
-              </div>
-              <div class="flex gap-1.5 pt-2">
-                <div class="h-5 bg-surface-container-highest rounded w-16"></div>
-                <div class="h-5 bg-surface-container-highest rounded w-20"></div>
-                <div class="h-5 bg-surface-container-highest rounded w-14"></div>
-              </div>
-            </div>
-            <div class="pt-3.5 border-t border-outline-variant/30 flex gap-2 mt-4">
-              <div class="h-8 bg-surface-container-highest rounded w-1/2"></div>
-              <div class="h-8 bg-surface-container-highest rounded w-1/2"></div>
-            </div>
-          </div>
-          <div class="skeleton-shimmer bg-surface-container-low border border-outline-variant/30 rounded-xl p-5 flex flex-col justify-between min-h-[220px]">
-            <div class="space-y-3.5">
-              <div class="flex items-start gap-3">
-                <div class="w-9 h-9 rounded-md bg-surface-container-highest shrink-0"></div>
-                <div class="space-y-2 flex-1 min-w-0">
-                  <div class="h-4 bg-surface-container-highest rounded w-3/4"></div>
-                  <div class="h-3 bg-surface-container rounded w-1/2"></div>
-                </div>
-              </div>
-              <div class="space-y-1.5 pt-1">
-                <div class="h-3 bg-surface-container rounded w-full"></div>
-                <div class="h-3 bg-surface-container rounded w-4/5"></div>
-              </div>
-              <div class="flex gap-1.5 pt-2">
-                <div class="h-5 bg-surface-container-highest rounded w-16"></div>
-                <div class="h-5 bg-surface-container-highest rounded w-20"></div>
-                <div class="h-5 bg-surface-container-highest rounded w-14"></div>
-              </div>
-            </div>
-            <div class="pt-3.5 border-t border-outline-variant/30 flex gap-2 mt-4">
-              <div class="h-8 bg-surface-container-highest rounded w-1/2"></div>
-              <div class="h-8 bg-surface-container-highest rounded w-1/2"></div>
-            </div>
-          </div>
-          <div class="skeleton-shimmer bg-surface-container-low border border-outline-variant/30 rounded-xl p-5 flex flex-col justify-between min-h-[220px]">
-            <div class="space-y-3.5">
-              <div class="flex items-start gap-3">
-                <div class="w-9 h-9 rounded-md bg-surface-container-highest shrink-0"></div>
-                <div class="space-y-2 flex-1 min-w-0">
-                  <div class="h-4 bg-surface-container-highest rounded w-3/4"></div>
-                  <div class="h-3 bg-surface-container rounded w-1/2"></div>
-                </div>
-              </div>
-              <div class="space-y-1.5 pt-1">
-                <div class="h-3 bg-surface-container rounded w-full"></div>
-                <div class="h-3 bg-surface-container rounded w-4/5"></div>
-              </div>
-              <div class="flex gap-1.5 pt-2">
-                <div class="h-5 bg-surface-container-highest rounded w-16"></div>
-                <div class="h-5 bg-surface-container-highest rounded w-20"></div>
-                <div class="h-5 bg-surface-container-highest rounded w-14"></div>
-              </div>
-            </div>
-            <div class="pt-3.5 border-t border-outline-variant/30 flex gap-2 mt-4">
-              <div class="h-8 bg-surface-container-highest rounded w-1/2"></div>
-              <div class="h-8 bg-surface-container-highest rounded w-1/2"></div>
-            </div>
-          </div>
-          <div class="skeleton-shimmer bg-surface-container-low border border-outline-variant/30 rounded-xl p-5 flex flex-col justify-between min-h-[220px] hidden md:flex">
-            <div class="space-y-3.5">
-              <div class="flex items-start gap-3">
-                <div class="w-9 h-9 rounded-md bg-surface-container-highest shrink-0"></div>
-                <div class="space-y-2 flex-1 min-w-0">
-                  <div class="h-4 bg-surface-container-highest rounded w-3/4"></div>
-                  <div class="h-3 bg-surface-container rounded w-1/2"></div>
-                </div>
-              </div>
-              <div class="space-y-1.5 pt-1">
-                <div class="h-3 bg-surface-container rounded w-full"></div>
-                <div class="h-3 bg-surface-container rounded w-4/5"></div>
-              </div>
-              <div class="flex gap-1.5 pt-2">
-                <div class="h-5 bg-surface-container-highest rounded w-16"></div>
-                <div class="h-5 bg-surface-container-highest rounded w-20"></div>
-                <div class="h-5 bg-surface-container-highest rounded w-14"></div>
-              </div>
-            </div>
-            <div class="pt-3.5 border-t border-outline-variant/30 flex gap-2 mt-4">
-              <div class="h-8 bg-surface-container-highest rounded w-1/2"></div>
-              <div class="h-8 bg-surface-container-highest rounded w-1/2"></div>
-            </div>
-          </div>
-          <div class="skeleton-shimmer bg-surface-container-low border border-outline-variant/30 rounded-xl p-5 flex flex-col justify-between min-h-[220px] hidden md:flex">
-            <div class="space-y-3.5">
-              <div class="flex items-start gap-3">
-                <div class="w-9 h-9 rounded-md bg-surface-container-highest shrink-0"></div>
-                <div class="space-y-2 flex-1 min-w-0">
-                  <div class="h-4 bg-surface-container-highest rounded w-3/4"></div>
-                  <div class="h-3 bg-surface-container rounded w-1/2"></div>
-                </div>
-              </div>
-              <div class="space-y-1.5 pt-1">
-                <div class="h-3 bg-surface-container rounded w-full"></div>
-                <div class="h-3 bg-surface-container rounded w-4/5"></div>
-              </div>
-              <div class="flex gap-1.5 pt-2">
-                <div class="h-5 bg-surface-container-highest rounded w-16"></div>
-                <div class="h-5 bg-surface-container-highest rounded w-20"></div>
-                <div class="h-5 bg-surface-container-highest rounded w-14"></div>
-              </div>
-            </div>
-            <div class="pt-3.5 border-t border-outline-variant/30 flex gap-2 mt-4">
-              <div class="h-8 bg-surface-container-highest rounded w-1/2"></div>
-              <div class="h-8 bg-surface-container-highest rounded w-1/2"></div>
-            </div>
-          </div>
-          <div class="skeleton-shimmer bg-surface-container-low border border-outline-variant/30 rounded-xl p-5 flex flex-col justify-between min-h-[220px] hidden xl:flex">
-            <div class="space-y-3.5">
-              <div class="flex items-start gap-3">
-                <div class="w-9 h-9 rounded-md bg-surface-container-highest shrink-0"></div>
-                <div class="space-y-2 flex-1 min-w-0">
-                  <div class="h-4 bg-surface-container-highest rounded w-3/4"></div>
-                  <div class="h-3 bg-surface-container rounded w-1/2"></div>
-                </div>
-              </div>
-              <div class="space-y-1.5 pt-1">
-                <div class="h-3 bg-surface-container rounded w-full"></div>
-                <div class="h-3 bg-surface-container rounded w-4/5"></div>
-              </div>
-              <div class="flex gap-1.5 pt-2">
-                <div class="h-5 bg-surface-container-highest rounded w-16"></div>
-                <div class="h-5 bg-surface-container-highest rounded w-20"></div>
-                <div class="h-5 bg-surface-container-highest rounded w-14"></div>
-              </div>
-            </div>
-            <div class="pt-3.5 border-t border-outline-variant/30 flex gap-2 mt-4">
-              <div class="h-8 bg-surface-container-highest rounded w-1/2"></div>
-              <div class="h-8 bg-surface-container-highest rounded w-1/2"></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Bottom Directory Pagination Controls -->
-        <div id="companies-pagination-bottom" class="hidden bg-surface-container-low border border-outline-variant/30 rounded-xl px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm mt-5">
-          <div class="flex items-center space-x-2 text-caption text-on-surface-variant">
-            <span>Showing <strong id="companies-page-range-bottom" class="text-on-surface font-semibold">0-0</strong> of <strong id="companies-page-total-bottom" class="text-on-surface font-semibold">0</strong> leads</span>
-          </div>
-          <div id="companies-page-buttons-bottom" class="flex items-center space-x-1"></div>
-        </div>
-      </section>
-
-    <!-- ========================================== -->
-    <!-- TAB 3: CANDIDATE PROFILE & RESUME INGESTION -->
-    <!-- ========================================== -->
-    <section id="section-resume" class="tab-section hidden space-y-6">
-      <!-- Golden-ratio split: input 38.2% / extracted-skills results 61.8% -->
-      <div class="grid grid-cols-1 lg:grid-cols-[1fr_1.618fr] gap-6">
-
-        <!-- Upload Card -->
-        <div class="bg-surface-container-low border border-outline-variant/30 rounded-xl p-5 sm:p-6 shadow-sm space-y-5 relative overflow-hidden">
-          <div>
-            <h2 class="text-headline-sm font-headline-sm text-on-surface font-semibold flex items-center gap-2">
-              <span class="material-symbols-outlined text-[20px] text-primary">upload_file</span>
-              <span>Upload Your Resume or Profile</span>
-            </h2>
-            <p class="text-body-sm font-body-sm text-on-surface-variant mt-1">Our AI extracts your key skills and achievements so your emails speak directly to your strengths. Your file is kept private.</p>
-          </div>
-
-          <form id="resume-form" class="space-y-4">
-            <div>
-              <label for="input-target-role" class="block text-label-sm font-label-sm text-on-surface-variant mb-1.5 flex items-center justify-between">
-                <span>Target Job Role</span>
-                <span class="text-amber-700 dark:text-amber-400 font-mono text-[10px] tracking-wider uppercase px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-600/30 dark:border-amber-500/25 font-semibold">Required</span>
-              </label>
-              <input type="text" id="input-target-role" required placeholder="e.g. Senior Full-Stack Engineer" value="" class="w-full recessed-well px-3.5 py-2 text-body-sm font-body-sm text-on-surface placeholder:text-outline focus:outline-none focus:border-primary-container transition">
-            </div>
-
-            <div>
-              <label class="block text-label-sm font-label-sm text-on-surface-variant mb-1.5 flex items-center justify-between">
-                <span>Resume File (PDF or Plain Text)</span>
-                <span class="text-amber-700 dark:text-amber-400 font-mono text-[10px] tracking-wider uppercase px-1.5 py-0.5 rounded bg-amber-500/10 border border-amber-600/30 dark:border-amber-500/25 font-semibold">Required (File or Link)</span>
-              </label>
-              <div class="border-2 border-dashed border-outline-variant/40 hover:border-primary-container/80 rounded-xl p-6 text-center cursor-pointer bg-surface-container-lowest hover:bg-surface-container/60 transition group" id="dropzone">
-                <input type="file" id="input-resume-file" accept=".pdf,.txt,.docx" class="hidden">
-                <div class="mb-2 flex items-center justify-center">
-                  <div class="w-10 h-10 rounded-lg bg-surface-container-highest border border-outline-variant/30 flex items-center justify-center text-primary group-hover:scale-105 transition">
-                    <span class="material-symbols-outlined text-[22px]">cloud_upload</span>
-                  </div>
-                </div>
-                <p class="text-label-md font-label-md text-on-surface font-medium" id="file-label">Click to select or drag & drop resume file</p>
-                <p class="text-caption font-caption text-outline mt-0.5">Supports PDF and TXT</p>
-              </div>
-            </div>
-
-            <div>
-              <label class="block text-label-sm font-label-sm text-on-surface-variant mb-1.5 flex items-center justify-between">
-                <span>Resume / Portfolio Link (Optional)</span>
-                <span class="text-caption font-caption text-primary font-mono">Auto-included in emails</span>
-              </label>
-              <div class="relative">
-                <span class="material-symbols-outlined text-[16px] text-outline absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">link</span>
-                <input type="url" id="input-resume-link" placeholder="https://drive.google.com/... or personal portfolio" class="w-full recessed-well pr-3.5 py-2 text-body-sm font-body-sm text-on-surface placeholder:text-outline focus:outline-none focus:border-primary-container transition" style="padding-left: 2.25rem !important;">
-              </div>
-              <p class="text-caption font-caption text-outline mt-1">Google Drive, Notion, or personal portfolio link. Automatically included in your outreach emails.</p>
-            </div>
-
-            <button type="submit" id="btn-parse-resume" class="w-full btn-tactile-ecru font-label-md text-label-md font-semibold py-2.5 px-4 rounded transition-colors flex items-center justify-center gap-2 shadow-sm cursor-pointer">
-              <span class="material-symbols-outlined text-[18px]">auto_awesome</span>
-              <span>Read My Skills with AI</span>
-            </button>
-          </form>
-        </div>
-
-        <!-- AI Parsed Profile Summary Card (golden 61.8% primary) -->
-        <div class="bg-surface-container-low border border-outline-variant/30 rounded-xl p-5 sm:p-6 shadow-sm space-y-5 relative overflow-hidden">
-          <div class="flex items-center justify-between flex-wrap gap-2">
-            <h2 class="text-headline-sm font-headline-sm text-on-surface font-semibold flex items-center gap-2">
-              <span class="material-symbols-outlined text-[20px] text-primary">psychology</span>
-              <span>Your Extracted Skills &amp; Strengths</span>
-            </h2>
-            <div class="flex items-center gap-2">
-              <span id="profile-archetype-badge" class="text-caption font-caption px-2.5 py-0.5 rounded-full bg-primary/10 text-primary border border-primary/20 font-medium hidden">
-                Archetype
-              </span>
-              <span class="text-caption font-caption px-2.5 py-0.5 rounded-full bg-secondary/10 text-secondary border border-secondary/20 flex items-center gap-1 font-medium">
-                <span class="material-symbols-outlined text-[13px]">check_circle</span>
-                <span>Active Profile</span>
-              </span>
-            </div>
-          </div>
-
-          <div id="profile-display" class="space-y-4 text-body-sm font-body-sm">
-            <div class="bg-surface-container-lowest border border-outline-variant/30 rounded-xl p-4">
-              <span class="text-label-sm font-label-sm text-on-surface-variant block mb-1 font-medium">Professional Summary:</span>
-              <p id="profile-pitch" class="text-on-surface leading-relaxed">Upload your resume to see your career highlights, key skills, and a ready-to-use introduction.</p>
-            </div>
-
-            <div>
-              <span class="text-label-sm font-label-sm text-on-surface-variant block mb-2 font-medium">Extracted Core Skills:</span>
-              <div id="profile-skills" class="flex flex-wrap gap-1.5">
-                <span class="text-caption font-caption text-on-surface-variant italic">No skills extracted yet. Upload a resume to extract skills.</span>
-              </div>
-            </div>
-
-            <div>
-              <span class="text-label-sm font-label-sm text-on-surface-variant block mb-2 font-medium">Career Achievements & Highlights:</span>
-              <ul id="profile-achievements" class="space-y-1.5 text-on-surface-variant list-disc list-inside">
-                <li class="list-none text-caption font-caption text-on-surface-variant italic">No achievements extracted yet.</li>
-              </ul>
-            </div>
-
-            <div id="profile-roles-section" class="hidden">
-              <span class="text-label-sm font-label-sm text-on-surface-variant block mb-1.5 font-medium">Best-Fit Roles:</span>
-              <div id="profile-best-fit-roles" class="flex flex-wrap gap-1.5"></div>
-            </div>
-
-            <div id="profile-ats-section" class="hidden">
-              <span class="text-label-sm font-label-sm text-on-surface-variant block mb-1.5 font-medium">ATS Keyword Signals:</span>
-              <div id="profile-ats-keywords" class="flex flex-wrap gap-1 max-h-24 overflow-y-auto p-2 rounded-lg bg-surface-container-lowest border border-outline-variant/30 text-caption font-mono"></div>
-            </div>
-
-            <div>
-              <div class="flex items-center justify-between mb-2">
-                <span class="text-label-sm font-label-sm text-on-surface font-medium flex items-center gap-1.5">
-                  <span class="material-symbols-outlined text-[16px] text-primary">description</span>
-                  <span>Deep Recruiter Evaluation & Candidate Dossier:</span>
-                </span>
-                <button id="btn-copy-profile-analysis" type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-label-sm font-label-sm font-medium bg-surface-container hover:bg-surface-container-high text-on-surface rounded-lg border border-outline-variant/40 transition cursor-pointer" title="Copy analyzed dossier">
-                  <span class="material-symbols-outlined text-[15px] text-primary">content_copy</span>
-                  <span id="copy-profile-analysis-text">Copy Analysis</span>
-                </button>
-              </div>
-              <div id="profile-detailed-analysis" class="text-on-surface leading-relaxed max-h-96 overflow-y-auto font-sans text-body-sm bg-surface-container-lowest p-4 rounded-xl border border-outline-variant/30 shadow-inner markdown-content">
-                Upload your resume above to generate a detailed career assessment, technical evaluation, and personalized introduction.
-              </div>
-            </div>
-          </div>
-        </div>
-
-      </div>
-    </section>
-
-    <!-- ========================================== -->
-    <!-- TAB 3: OUTREACH HUB & AUDIT COMMAND CENTER -->
-    <!-- ========================================== -->
-    <!-- ========================================== -->
-    <!-- TAB 3: OUTREACH HUB & AUDIT COMMAND CENTER -->
-    <!-- ========================================== -->
-    <section id="section-outreach" class="tab-section hidden space-y-6">
-      
-      <!-- Top Action Bar (Studio Workshop Header) -->
-      <header class="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <h1 class="text-headline-xl font-headline-xl text-on-surface font-bold tracking-tight">Email &amp; Outreach Center</h1>
-          <p class="text-body-md font-body-md text-on-surface-variant mt-1">Review personalized emails, send them directly with your Gmail, and see who you've contacted.</p>
-        </div>
-        <div class="flex items-center gap-2.5 flex-wrap">
-          <button id="btn-toggle-activity" type="button" class="btn-tactile-slate px-3.5 py-2 rounded text-label-sm font-label-sm font-medium transition flex items-center gap-2 cursor-pointer" title="Toggle Live Activity & Sent History Feed">
-            <span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
-            <span>Activity Log</span>
-          </button>
-          <button id="btn-gen-all-pitches" type="button" class="btn-tactile-ecru px-4 py-2 rounded font-label-md text-label-md font-semibold transition-colors flex items-center justify-center gap-1.5 shadow-sm cursor-pointer" title="Generate personalized emails for selected companies">
-            <span class="material-symbols-outlined text-[18px]">auto_awesome</span>
-            <span id="btn-gen-all-pitches-text">Prepare Emails</span>
-          </button>
-          <button id="btn-send-all-outreach" type="button" class="btn-tactile-slate hover:border-primary/60 text-on-surface px-4 py-2 rounded font-label-md text-label-md font-semibold transition-colors flex items-center justify-center gap-1.5 shadow-sm cursor-pointer" title="Send cold emails to selected companies with discovered email addresses">
-            <span class="material-symbols-outlined text-[18px] text-primary">send</span>
-            <span id="btn-send-all-outreach-text">Send Emails</span>
-          </button>
-        </div>
-      </header>
-
-      <!-- Quick Metrics Strip (Bento Cassettes) -->
-      <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <div id="outreach-stat-all" class="bg-surface-container-low border border-outline-variant/30 hover:border-outline-variant/60 rounded-xl p-4 sm:p-5 space-y-1.5 transition-colors cursor-pointer">
-          <span class="text-label-sm font-label-sm text-on-surface-variant block whitespace-nowrap">Outreach Queue</span>
-          <div class="flex items-baseline gap-2">
-            <span id="outreach-count-total" class="text-metric-num font-metric-num text-on-surface font-semibold tracking-tight tabular-nums">0</span>
-            <span class="text-caption font-caption text-on-surface-variant font-mono">Queue</span>
-          </div>
-        </div>
-
-        <div id="outreach-stat-emails" class="bg-surface-container-low border border-outline-variant/30 hover:border-outline-variant/60 rounded-xl p-4 sm:p-5 space-y-1.5 transition-colors cursor-pointer">
-          <span class="text-label-sm font-label-sm text-on-surface-variant block whitespace-nowrap">Verified Emails</span>
-          <div class="flex items-baseline gap-2">
-            <span id="outreach-count-emails" class="text-metric-num font-metric-num text-secondary font-semibold tracking-tight tabular-nums">0</span>
-            <span class="text-caption font-caption text-secondary/80 font-mono">Direct</span>
-          </div>
-        </div>
-
-        <div id="outreach-stat-ready" class="bg-surface-container-low border border-outline-variant/30 hover:border-outline-variant/60 rounded-xl p-4 sm:p-5 space-y-1.5 transition-colors cursor-pointer">
-          <span class="text-label-sm font-label-sm text-on-surface-variant block whitespace-nowrap">Ready to Send</span>
-          <div class="flex items-baseline gap-2">
-            <span id="outreach-count-ready" class="text-metric-num font-metric-num text-primary font-semibold tracking-tight tabular-nums">0</span>
-            <span class="text-caption font-caption text-on-surface-variant font-mono">Pending</span>
-          </div>
-        </div>
-
-        <div id="outreach-stat-sent" class="bg-surface-container-low border border-outline-variant/30 hover:border-outline-variant/60 rounded-xl p-4 sm:p-5 space-y-1.5 transition-colors cursor-pointer">
-          <span class="text-label-sm font-label-sm text-on-surface-variant block whitespace-nowrap">Emails Sent</span>
-          <div class="flex items-baseline gap-2">
-            <span id="outreach-count-sent" class="text-metric-num font-metric-num text-secondary font-semibold tracking-tight tabular-nums">0</span>
-            <span class="text-caption font-caption text-on-surface-variant font-mono">Contacted</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Hardware Attachment Bay: Session Resume Attachment Cassette -->
-      <div class="bg-surface-container-low border border-outline-variant/30 rounded-xl p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-sm">
-        <div class="flex items-center gap-3.5 min-w-0">
-          <div class="w-10 h-10 rounded-lg bg-surface-container-highest border border-outline-variant/30 flex items-center justify-center text-primary shrink-0 shadow-sm">
-            <span class="material-symbols-outlined text-[20px]">attach_file</span>
-          </div>
-          <div class="min-w-0 space-y-0.5">
-            <div class="flex items-center gap-2">
-              <span class="text-label-md font-label-md font-semibold text-on-surface">Resume Attachment (Optional)</span>
-              <span class="text-caption font-caption bg-secondary/10 text-secondary border border-secondary/20 px-2 py-0.5 rounded-full font-mono text-[10px]">Session Storage</span>
-            </div>
-            <p id="outreach-resume-status" class="text-caption font-caption text-on-surface-variant truncate">
-              No resume selected. Choose a PDF file if you wish to attach your resume to outgoing emails.
-            </p>
-          </div>
-        </div>
-
-        <div class="flex items-center gap-2.5 shrink-0 flex-wrap">
-          <!-- Hidden File Input -->
-          <input type="file" id="outreach-resume-file" accept=".pdf,.doc,.docx" class="hidden">
-
-          <!-- Choose File Button -->
-          <button type="button" id="btn-choose-outreach-resume" class="btn-tactile-slate px-3.5 py-2 rounded text-label-sm font-label-sm font-medium transition-colors flex items-center gap-1.5 cursor-pointer">
-            <span class="material-symbols-outlined text-[16px] text-primary">upload_file</span>
-            <span id="btn-choose-resume-text">Choose Resume File</span>
-          </button>
-
-          <!-- Remove File Button (hidden by default) -->
-          <button type="button" id="btn-remove-outreach-resume" class="hidden p-2 rounded-lg bg-error/10 hover:bg-error/20 text-error border border-error/20 transition cursor-pointer" title="Remove selected session resume">
-            <span class="material-symbols-outlined text-[16px]">delete</span>
-          </button>
-
-          <div class="h-6 w-px bg-outline-variant/30 hidden sm:block"></div>
-
-          <!-- Attach in Email Slider Toggle -->
-          <label class="toggle-switch flex items-center gap-2.5 bg-surface-container-lowest px-3 py-2 rounded-lg border border-outline-variant/30 hover:border-outline-variant/60 transition cursor-pointer" title="Toggle resume attachment in outgoing email">
-            <input type="checkbox" id="toggle-attach-resume">
-            <span class="toggle-slider"></span>
-            <span class="text-label-sm font-label-sm font-medium text-on-surface whitespace-nowrap">Attach in outgoing Gmail</span>
-          </label>
-        </div>
-      </div>
-
-      <!-- Filter & Search Toolbar (Responsive Grid, Fluid Dropdowns, No Overlapping) -->
-      <section class="bg-surface-container-low border border-outline-variant/30 rounded-xl p-2.5 sm:p-3 flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-2.5 sm:gap-3">
-        <!-- Left Group: Search Input -->
-        <div class="relative w-full lg:max-w-sm flex items-center">
-          <span class="material-symbols-outlined absolute left-3.5 text-on-surface-variant text-[18px] pointer-events-none">search</span>
-          <input type="text" id="outreach-search-input" placeholder="Search by company name, email, tech stack, or domain..." class="w-full h-10 pl-10 pr-4 text-body-sm font-body-sm text-on-surface placeholder:text-on-surface-variant/70 focus:outline-none rounded-lg bg-surface-container-lowest border border-outline-variant/30 focus:border-outline-variant/70 transition">
-        </div>
-
-        <!-- Right Group: Dynamic Tech Stack, City, Reset & View Switcher -->
-        <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full lg:w-auto">
-          <div class="grid grid-cols-2 gap-2 w-full sm:flex sm:items-center sm:w-auto">
-            <!-- Tech Stack Filter -->
-            <div class="custom-dropdown relative w-full sm:w-[170px]" id="dropdown-outreach-tech">
-              <input type="hidden" id="outreach-tech-select" value="">
-              <button type="button" class="custom-dropdown-btn" aria-haspopup="listbox" aria-expanded="false" title="Filter by Identified Tech Stack">
-                <span class="custom-dropdown-label truncate">Tech Stack (All)</span>
-                <span class="material-symbols-outlined text-[16px] text-on-surface-variant dropdown-chevron">expand_more</span>
-              </button>
-              <div class="custom-dropdown-menu">
-                <div class="custom-dropdown-search-wrap">
-                  <span class="material-symbols-outlined text-[15px] text-on-surface-variant absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">search</span>
-                  <input type="text" class="custom-dropdown-search" placeholder="Search stack..." autocomplete="off">
-                </div>
-                <div class="custom-dropdown-list custom-scrollbar" role="listbox"></div>
-              </div>
-            </div>
-
-            <!-- City Filter -->
-            <div class="custom-dropdown relative w-full sm:w-[140px]" id="dropdown-outreach-city">
-              <input type="hidden" id="outreach-city-select" value="">
-              <button type="button" class="custom-dropdown-btn" aria-haspopup="listbox" aria-expanded="false" title="Filter by City">
-                <span class="custom-dropdown-label truncate">All Cities</span>
-                <span class="material-symbols-outlined text-[16px] text-on-surface-variant dropdown-chevron">expand_more</span>
-              </button>
-              <div class="custom-dropdown-menu align-right">
-                <div class="custom-dropdown-search-wrap">
-                  <span class="material-symbols-outlined text-[15px] text-on-surface-variant absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none">search</span>
-                  <input type="text" class="custom-dropdown-search" placeholder="Search city..." autocomplete="off">
-                </div>
-                <div class="custom-dropdown-list custom-scrollbar" role="listbox"></div>
-              </div>
-            </div>
-          </div>
-
-          <div class="flex items-center gap-2 justify-end sm:justify-start shrink-0">
-            <button id="btn-outreach-reset" type="button" class="btn-tactile-slate h-10 px-3 rounded-lg text-xs font-mono flex items-center justify-center gap-1.5 text-on-surface-variant hover:text-on-surface cursor-pointer flex-1 sm:flex-initial" title="Reset outreach filters">
-              <span class="material-symbols-outlined text-[16px]">restart_alt</span>
-              <span>Reset</span>
-            </button>
-
-            <!-- View Mode Toggle: Grid Cards vs Compact Stream -->
-            <div class="flex items-center bg-surface-container-lowest border border-outline-variant/30 rounded-lg p-0.5 shrink-0">
-              <button id="btn-outreach-view-grid" type="button" class="h-9 px-2.5 rounded-md text-xs font-mono flex items-center gap-1 bg-surface-container-highest text-on-surface cursor-pointer transition" title="Cards View">
-                <span class="material-symbols-outlined text-[16px]">grid_view</span>
-              </button>
-              <button id="btn-outreach-view-list" type="button" class="h-9 px-2.5 rounded-md text-xs font-mono flex items-center gap-1 text-on-surface-variant hover:text-on-surface cursor-pointer transition" title="Compact List View">
-                <span class="material-symbols-outlined text-[16px]">view_agenda</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- Outreach Pipeline Pagination & Multi-Selection Controls -->
-      <div id="outreach-pagination" class="hidden bg-surface-container-low border border-outline-variant/30 rounded-xl px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm">
-        <div class="flex items-center gap-3 sm:gap-4 flex-wrap">
-          <div class="flex items-center space-x-2 text-caption font-caption text-on-surface-variant">
-            <span>Showing <strong id="outreach-page-range" class="text-on-surface font-semibold">0-0</strong> of <strong id="outreach-page-total" class="text-on-surface font-semibold">0</strong> targets</span>
-          </div>
-          <div class="h-4 w-px bg-outline-variant/30 hidden sm:block"></div>
-          <!-- Multi-Select Controller -->
-          <div class="flex items-center gap-2.5 flex-wrap">
-            <label class="flex items-center gap-2 cursor-pointer select-none" title="Select all targets on this page">
-              <input type="checkbox" id="outreach-select-all" class="w-4 h-4 rounded border-outline-variant/60 bg-surface-container-lowest text-primary focus:ring-0 cursor-pointer transition">
-              <span class="text-caption font-medium text-on-surface" id="outreach-select-all-label">Select Page</span>
-            </label>
-            <span id="outreach-selected-badge" class="hidden px-2.5 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/30 text-[11px] font-mono font-semibold">
-              <span id="outreach-selected-count">0</span> selected
+          <div class="min-w-0">
+            <span class="email block" id="user-display-email">{{ user.email if user and is_logged_in else "" }}</span>
+            <span class="status"><span class="dot dot-ok"></span>Google Connected
+              {% if subscription_kill_switch and not is_master_admin %}<span class="temp-tag">TEMP USER</span>{% endif %}
             </span>
-            <button type="button" id="btn-outreach-clear-selection" class="hidden text-[11px] font-mono text-on-surface-variant hover:text-error transition cursor-pointer">
-              Clear
-            </button>
           </div>
         </div>
-
-        <div class="flex items-center space-x-2 sm:space-x-3 flex-wrap justify-center">
-          <div class="flex items-center gap-2 text-caption font-caption text-on-surface-variant">
-            <span class="hidden sm:inline font-mono text-[11px]">Per page:</span>
-            <div class="custom-dropdown dropdown-compact relative" id="dropdown-outreach-per-page">
-              <input type="hidden" id="outreach-per-page" value="24">
-              <button type="button" class="custom-dropdown-btn" aria-haspopup="listbox" aria-expanded="false" title="Targets per page">
-                <span class="custom-dropdown-label">24</span>
-                <span class="material-symbols-outlined dropdown-chevron text-[15px]">expand_more</span>
-              </button>
-              <div class="custom-dropdown-menu align-right">
-                <div class="custom-dropdown-list custom-scrollbar" role="listbox"></div>
-              </div>
-            </div>
-          </div>
-
-          <div id="outreach-page-buttons" class="flex items-center space-x-1">
-            <!-- Populated dynamically by app.js -->
-          </div>
-        </div>
+        <button id="btn-logout" type="button" class="icon-btn sm bare" title="Disconnect / Sign Out" aria-label="Sign out">
+          <span class="material-symbols-outlined" data-icon="logout">logout</span>
+        </button>
       </div>
 
-      <!-- Main Outreach Prospects Container (Grid by default, switches dynamically) -->
-      <div id="pitches-container" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
-        <!-- Rendered dynamically by app.js -->
+      <div id="auth-box-logged-out" class="{% if is_logged_in %}hidden{% endif %} sb-guest">
+        <div class="who">
+          <span class="avatar avatar-sm avatar-round"><span class="material-symbols-outlined" aria-hidden="true">person_outline</span></span>
+          <div><b>Guest mode</b><span>Sign in to use AI and send emails</span></div>
+        </div>
+        <a href="/auth/google/login" id="btn-sidebar-google-login" class="btn btn-google btn-sm btn-block"><svg class="g-logo" aria-hidden="true"><use href="#i-google"/></svg><span>Sign In with Google</span></a>
       </div>
-
-      <!-- Bottom Outreach Pagination Controls -->
-      <div id="outreach-pagination-bottom" class="hidden bg-surface-container-low border border-outline-variant/30 rounded-xl px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm mt-5">
-        <div class="flex items-center space-x-2 text-caption font-caption text-on-surface-variant">
-          <span>Showing <strong id="outreach-page-range-bottom" class="text-on-surface font-semibold">0-0</strong> of <strong id="outreach-page-total-bottom" class="text-on-surface font-semibold">0</strong> targets</span>
-        </div>
-        <div id="outreach-page-buttons-bottom" class="flex items-center space-x-1"></div>
-      </div>
-    </section>
-
-    <!-- OUTREACH ACTIVITY SLIDE-OVER DRAWER (Theme-adaptive design system) -->
-    <div id="outreach-activity-drawer-root" class="fixed inset-0 z-[120] pointer-events-none overflow-hidden">
-      <!-- Backdrop -->
-      <div id="outreach-activity-backdrop" class="fixed inset-0 bg-black/60 backdrop-blur-sm opacity-0 transition-opacity duration-300 pointer-events-none"></div>
-
-      <!-- Slide Drawer Container -->
-      <aside id="outreach-activity-drawer" class="fixed right-0 top-0 bottom-0 w-full max-w-md bg-surface-container-low border-l border-outline-variant/40 shadow-2xl p-5 sm:p-6 flex flex-col justify-between translate-x-full transition-transform duration-300 ease-in-out pointer-events-auto z-10">
-        <div>
-          <!-- Header -->
-          <div class="flex items-center justify-between pb-4 border-b border-outline-variant/30">
-            <div class="flex items-center gap-2.5">
-              <div class="w-8 h-8 rounded-lg bg-surface-container border border-outline-variant/40 flex items-center justify-center text-secondary shadow-sm">
-                <span class="material-symbols-outlined text-[18px]">history</span>
-              </div>
-              <div>
-                <h3 class="font-headline font-semibold text-sm text-on-surface flex items-center gap-2">
-                  <span>Outreach Activity Stream</span>
-                  <span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span>
-                </h3>
-                <span class="text-caption font-mono text-on-surface-variant">Real-time campaign telemetry</span>
-              </div>
-            </div>
-            <button id="btn-close-activity" type="button" class="text-on-surface-variant hover:text-on-surface p-1.5 rounded-lg hover:bg-surface-container transition cursor-pointer" title="Close activity stream">
-              <span class="material-symbols-outlined text-[20px]">close</span>
-            </button>
-          </div>
-
-          <!-- Audit Logs Scroll Area -->
-          <div class="pt-4 space-y-3">
-            <div class="flex items-center justify-between text-caption font-mono text-outline">
-              <span>DISPATCHED CAMPAIGNS</span>
-              <span class="text-secondary font-medium">GMAIL SYNC ACTIVE</span>
-            </div>
-            <div id="audit-logs" class="space-y-2.5 max-h-[calc(100vh-14rem)] overflow-y-auto pr-1 select-text">
-              <p class="text-outline italic text-xs py-4 text-center">No emails sent yet today.</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Footer -->
-        <div class="pt-4 border-t border-outline-variant/30 text-caption font-mono text-outline flex items-center justify-between">
-          <span>OutreachPilot Telemetry</span>
-          <span>Google OAuth 2.0</span>
-        </div>
-      </aside>
     </div>
-  </main>
-  </div> <!-- /main-content-wrap -->
 
-  <!-- COMPANY DETAILS MODAL -->
-  <div id="company-modal" class="fixed inset-0 z-[100] bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
-    <div class="relative bg-surface-container-low border border-outline-variant/30 rounded-2xl max-w-2xl w-full shadow-2xl max-h-[90vh] sm:max-h-[84vh] flex flex-col my-auto overflow-hidden">
-      
-      <!-- Modal Header (Sticky Pin) -->
-      <div class="px-5 py-4 border-b border-outline-variant/20 bg-surface-container-lowest/95 backdrop-blur-md shrink-0 space-y-2.5">
-        <div class="flex items-start justify-between gap-3">
-          <div class="min-w-0 space-y-1">
-            <div class="flex items-center space-x-2 flex-wrap gap-y-1">
-              <h3 class="text-base sm:text-lg font-bold text-on-surface break-words min-w-0" id="cmodal-name">Company Name</h3>
-              <span id="cmodal-badge"></span>
-            </div>
-            <div class="flex items-center space-x-3 text-caption font-caption text-on-surface-variant flex-wrap gap-y-1">
-              <a id="cmodal-website" href="#" target="_blank" rel="noopener noreferrer" class="font-mono text-primary hover:underline flex items-center gap-1 max-w-full break-all">
-                <span class="material-symbols-outlined text-[14px]">language</span>
-                <span id="cmodal-domain" class="break-all">domain.com</span>
-                <span class="material-symbols-outlined text-[12px] opacity-70">open_in_new</span>
-              </a>
-              <span id="cmodal-rating" class="text-tertiary font-semibold flex items-center gap-1 shrink-0 font-mono">
-                <span class="material-symbols-outlined text-[14px] text-tertiary">star</span>
-                <span>4.8 (12 reviews)</span>
-              </span>
-            </div>
-          </div>
-          <button id="cmodal-close" type="button" aria-label="Close dialog" class="p-1.5 rounded-lg text-outline hover:text-on-surface hover:bg-surface-container transition cursor-pointer shrink-0">
-            <span class="material-symbols-outlined text-[20px]">close</span>
-          </button>
-        </div>
+    <div class="sidebar-icon-only">
+      <span class="material-symbols-outlined subtle" title="Account / Profile">account_circle</span>
+    </div>
 
-        <!-- Segmented Tab Navigation inside Modal -->
-        <div class="flex items-center space-x-1 bg-surface-container-lowest p-1 rounded-xl border border-outline-variant/30 text-caption font-semibold font-mono">
-          <button type="button" id="cmodal-tab-btn-overview" class="cmodal-tab-btn active flex-1 py-1.5 px-3 rounded-lg text-center transition flex items-center justify-center gap-1.5 cursor-pointer bg-surface-container-highest text-on-surface shadow-sm">
-            <span class="material-symbols-outlined text-[15px]">apartment</span>
-            <span>Overview & Contacts</span>
-          </button>
-          <button type="button" id="cmodal-tab-btn-ai" class="cmodal-tab-btn flex-1 py-1.5 px-3 rounded-lg text-center transition flex items-center justify-center gap-1.5 cursor-pointer text-on-surface-variant hover:text-on-surface hover:bg-surface-container">
-            <span class="material-symbols-outlined text-[15px] text-tertiary">auto_awesome</span>
-            <span>AI Intel & Report</span>
-          </button>
-        </div>
-      </div>
+    <div class="sb-foot-art sidebar-full-only">
+      <b>Tip.</b> Add your resume in Candidate Profile first so every email uses your real skills.
+    </div>
+  </div>
+</aside>
 
-      <!-- Scrollable Modal Body -->
-      <div class="overflow-y-auto flex-1 p-5 space-y-4">
-        
-        <!-- PANEL 1: Overview & Contacts -->
-        <div id="cmodal-panel-overview" class="space-y-4">
-          <!-- Contact & Location Grid -->
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-body-sm">
-            <div class="recessed-well p-3.5 space-y-1">
-              <span class="text-outline font-medium uppercase text-[10px] tracking-wider flex items-center gap-1 font-mono">
-                <span class="material-symbols-outlined text-[14px]">call</span>
-                <span>Direct Phone</span>
-              </span>
-              <p id="cmodal-phone" class="text-on-surface font-mono">N/A</p>
-            </div>
-            <div class="recessed-well p-3.5 space-y-1 min-w-0">
-              <span class="text-outline font-medium uppercase text-[10px] tracking-wider flex items-center gap-1 font-mono">
-                <span class="material-symbols-outlined text-[14px]">location_on</span>
-                <span>Location (Google Maps)</span>
-              </span>
-              <div id="cmodal-location-container" class="break-words">
-                <a id="cmodal-location-link" href="#" target="_blank" rel="noopener noreferrer" class="text-primary hover:underline flex items-start gap-1 font-medium break-words font-mono text-[12px]" title="Open in Google Maps">
-                  <span class="material-symbols-outlined text-[14px] shrink-0 text-primary mt-0.5">open_in_new</span>
-                  <span id="cmodal-address" class="break-words">N/A</span>
-                </a>
-              </div>
-            </div>
-          </div>
-
-          <!-- Discovered Emails Section -->
-          <div class="space-y-2">
-            <div class="flex items-center justify-between">
-              <h4 class="text-label-sm font-semibold uppercase tracking-wider text-on-surface-variant flex items-center gap-1.5 font-mono text-[11px]">
-                <span class="material-symbols-outlined text-[16px] text-secondary">mail</span>
-                <span>Discovered Contact & HR Emails</span>
-              </h4>
-              <span id="cmodal-emails-count" class="text-caption text-secondary font-mono bg-secondary/10 px-2 py-0.5 rounded border border-secondary/20">0 emails</span>
-            </div>
-            <div id="cmodal-emails-container" class="recessed-well p-3 flex flex-wrap gap-2 text-caption font-mono">
-              <span class="text-outline italic">No emails found yet. Click "Enrich with AI" below to discover contacts.</span>
-            </div>
-          </div>
-
-          <!-- Executive Summary & Vibe -->
-          <div class="recessed-well p-4 space-y-3 text-body-sm">
-            <div>
-              <span class="text-on-surface font-semibold block mb-1">Company Executive Overview:</span>
-              <p id="cmodal-summary" class="text-on-surface-variant leading-relaxed">Not enriched yet. Click "Enrich with AI" below to analyze company details and tech stack.</p>
-            </div>
-
-            <div class="grid grid-cols-2 gap-3 pt-2.5 border-t border-outline-variant/20 font-mono text-[11px]">
-              <div>
-                <span class="text-outline text-[10px] uppercase font-semibold block">Industry</span>
-                <p id="cmodal-industry" class="text-on-surface font-medium mt-0.5">Technology</p>
-              </div>
-              <div>
-                <span class="text-outline text-[10px] uppercase font-semibold block">Tone / Vibe</span>
-                <p id="cmodal-tone" class="text-on-surface font-medium mt-0.5">Professional</p>
-              </div>
-            </div>
-
-            <div class="pt-2.5 border-t border-outline-variant/20">
-              <span class="text-on-surface font-semibold block mb-1.5 text-[12px]">Identified Tech Stack:</span>
-              <div id="cmodal-techstack" class="flex flex-wrap gap-1.5 font-mono text-[11px]">
-                <span class="text-outline italic text-caption">Analyze with AI to detect company technologies.</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- PANEL 2: AI Intelligence & Deep Technical Report -->
-        <div id="cmodal-panel-ai" class="space-y-3 hidden">
-          <div class="recessed-well p-4 space-y-3 text-body-sm">
-            <div class="flex items-center justify-between border-b border-outline-variant/20 pb-2">
-              <div class="flex items-center gap-1.5 text-on-surface font-semibold">
-                <span class="material-symbols-outlined text-[16px] text-primary">description</span>
-                <span>Technical Intelligence Report</span>
-              </div>
-              <button type="button" id="cmodal-btn-copy-report" class="btn-tactile-slate px-2.5 py-1 rounded text-caption font-medium transition flex items-center gap-1 cursor-pointer font-mono">
-                <span class="material-symbols-outlined text-[14px]">content_copy</span>
-                <span>Copy</span>
-              </button>
-            </div>
-            <div id="cmodal-detailed-analysis" class="text-on-surface-variant leading-relaxed max-h-[380px] overflow-y-auto font-sans text-body-sm bg-surface-container-lowest p-4 rounded-xl border border-outline-variant/30 markdown-content shadow-inner">
-              Not enriched yet. Click "Enrich with AI" below to generate a detailed intelligence report.
-            </div>
-          </div>
-        </div>
-
-      </div>
-
-      <!-- Modal Footer Actions (Sticky Pin) -->
-      <div class="px-5 py-3.5 border-t border-outline-variant/20 bg-surface-container-lowest/95 backdrop-blur-md flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 shrink-0">
-        <div class="flex items-center space-x-2 w-full sm:w-auto">
-          <button id="cmodal-btn-enrich" type="button" class="btn-tactile-slate flex-1 sm:flex-initial px-4 py-2 rounded text-label-sm font-label-sm font-semibold transition flex items-center justify-center gap-1.5 cursor-pointer">
-            <span class="material-symbols-outlined text-[16px] text-tertiary">auto_awesome</span>
-            <span>Enrich with AI</span>
-          </button>
-          <button id="cmodal-btn-admin-action" type="button" class="hidden px-3.5 py-2 rounded text-label-sm font-label-sm font-semibold transition flex items-center gap-1.5 cursor-pointer">
-            <span class="material-symbols-outlined text-[16px]">shield</span>
-            <span id="cmodal-admin-action-text">Mark as Invalid</span>
-          </button>
-        </div>
-
-        <div class="flex items-center space-x-2 w-full sm:w-auto justify-end">
-          <button id="cmodal-btn-cancel" type="button" class="btn-tactile-slate px-3.5 py-2 rounded text-label-sm font-label-sm transition cursor-pointer">
-            Close
-          </button>
-          <button id="cmodal-btn-pitch" type="button" class="btn-tactile-ecru flex-1 sm:flex-initial px-4 py-2 font-semibold rounded text-label-sm font-label-sm transition flex items-center justify-center gap-1.5 cursor-pointer">
-            <span class="material-symbols-outlined text-[16px]">send</span>
-            <span>Write Outreach Email</span>
-          </button>
-        </div>
-      </div>
-
+<!-- ===================== Main workspace ===================== -->
+<div id="main-content-wrap">
+  <div class="mobile-bar">
+    <div class="left">
+      <button id="btn-mobile-sidebar" type="button" aria-label="Open Navigation Menu" class="icon-btn sm">
+        <span class="material-symbols-outlined">menu</span>
+      </button>
+      <a href="/" class="logo" title="{{ project_name }} - Home"><span class="logo-word">{{ project_name }}</span></a>
+    </div>
+    <div class="right">
+      <button id="btn-theme-toggle-mobile" type="button" aria-label="Toggle Light / Dark Mode" class="icon-btn sm" title="Toggle Light / Dark Mode">
+        <span class="theme-toggle-icon-mobile material-symbols-outlined">light_mode</span>
+      </button>
+      <button id="btn-quick-refresh" type="button" class="icon-btn sm" title="Refresh directory data" aria-label="Refresh">
+        <span class="material-symbols-outlined">refresh</span>
+      </button>
     </div>
   </div>
 
-  <!-- PITCH PREVIEW & EDIT MODAL (Artisanal Inspection Bay) -->
-  <div id="pitch-modal" class="fixed inset-0 z-[100] w-screen h-screen bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4 overflow-hidden">
-    <div class="relative bg-surface-container-low border border-outline-variant/30 rounded-2xl max-w-2xl w-full p-5 sm:p-6 space-y-3.5 shadow-2xl my-auto max-h-[92vh] overflow-y-auto">
-      <div class="flex items-center justify-between border-b border-outline-variant/20 pb-3">
-        <div>
-          <h3 class="text-base font-bold text-on-surface" id="modal-company-name">Personalized Outreach Email</h3>
-          <p class="text-caption font-caption text-on-surface-variant font-mono">Recipient: <span id="modal-target-email" class="text-secondary font-semibold">hr@company.com</span></p>
+  <div class="app-inner">
+
+  <!-- ===================== Tab 1: Companies ===================== -->
+  <section id="section-companies" class="tab-section">
+    <header class="app-head">
+      <div>
+        <span class="eyebrow">Directory</span>
+        <h1>Companies</h1>
+        <p id="header-leads-subtitle">Browse, research, and reach out to <span id="header-leads-counter" class="tabular-nums"></span> verified businesses.</p>
+      </div>
+      <div class="head-actions">
+        {% if not subscription_kill_switch %}
+        <div id="header-quota-widget" class="quota-pill" title="Click to view subscription plan details and daily quota limits">
+          <span id="user-header-tier-badge" class="tier-badge">
+            {{ user_subscription_tier_name if user_subscription_tier_name else "Free Starter" }}
+          </span>
+          <span class="q">Daily quota <strong id="user-header-quota-remaining">{{ user_remaining if user_remaining is defined else 10 }}</strong> / <span id="user-header-quota-total">{{ user_daily_limit if user_daily_limit is defined else 10 }}</span> left</span>
+          <div class="meter-sm hidden-xs"><div id="user-header-quota-bar" style="width: 100%;"></div></div>
+          <span class="material-symbols-outlined" aria-hidden="true">expand_more</span>
+        </div>
+        {% endif %}
+        <button id="btn-header-refresh" type="button" class="btn btn-secondary" title="Refresh Directory">
+          <span class="material-symbols-outlined">refresh</span><span>Refresh</span>
+        </button>
+      </div>
+    </header>
+
+    <div class="stat-grid">
+      <div id="stat-card-all" class="app-stat">
+        <div class="top"><span>Total Companies</span><span class="material-symbols-outlined">domain</span></div>
+        <div class="num"><span id="companies-total-count" class="tabular-nums">0</span></div>
+        <p id="stat-all-subtext" class="sub">Verified businesses</p>
+      </div>
+      <div id="stat-card-emails" class="app-stat">
+        <div class="top"><span>Verified Emails</span><span class="material-symbols-outlined">verified</span></div>
+        <div class="num"><span id="stat-emails-count" class="tabular-nums">0</span><span class="of">/ <span id="stat-emails-total">0</span></span></div>
+        <p id="stat-yield-text" class="sub">0% have an email</p>
+      </div>
+      <div id="stat-card-enriched" class="app-stat">
+        <div class="top"><span>Researched by AI</span><span class="material-symbols-outlined">auto_awesome</span></div>
+        <div class="num"><span id="stat-enriched-count" class="tabular-nums">0</span><span id="stat-enriched-badge" class="mini-badge accent">0 Active</span></div>
+        <p class="sub">Ready to reach out</p>
+      </div>
+      <div id="stat-card-contacted" class="app-stat" title="Click to view sent pitches (requires sign-in)">
+        <div class="top"><span>Emails Sent</span><span class="material-symbols-outlined">send</span></div>
+        <div class="num"><span id="stat-contacted-count" class="tabular-nums">0</span><span id="stat-contacted-badge" class="mini-badge">Sign in</span></div>
+        <p id="stat-contacted-text" class="sub">Sign in to track sent emails</p>
+      </div>
+    </div>
+
+    <div class="pill-row" id="companies-domain-filter-pills" role="tablist" aria-label="Filter companies by industry domain">
+      <button type="button" class="domain-filter-pill active" data-domain="all"><span class="material-symbols-outlined">apps</span><span>All Domains</span><span class="n tnum" id="domain-count-all">{% if domains %}({{ domains|sum(attribute='count') }}){% endif %}</span></button>
+      <button type="button" class="domain-filter-pill" data-domain="it"><span class="material-symbols-outlined">computer</span><span>IT &amp; Software</span><span class="n tnum" id="domain-count-it">({% for d in domains if d.code == 'it' %}{{ d.count }}{% else %}0{% endfor %})</span></button>
+      <button type="button" class="domain-filter-pill" data-domain="sales"><span class="material-symbols-outlined">support_agent</span><span>Sales &amp; BPO</span><span class="n tnum" id="domain-count-sales">({% for d in domains if d.code == 'sales' %}{{ d.count }}{% else %}0{% endfor %})</span></button>
+      <button type="button" class="domain-filter-pill" data-domain="marketing"><span class="material-symbols-outlined">campaign</span><span>Marketing &amp; PR</span><span class="n tnum" id="domain-count-marketing">({% for d in domains if d.code == 'marketing' %}{{ d.count }}{% else %}0{% endfor %})</span></button>
+      <button type="button" class="domain-filter-pill" data-domain="pharma"><span class="material-symbols-outlined">medication</span><span>Pharma &amp; Healthcare</span><span class="n tnum" id="domain-count-pharma">({% for d in domains if d.code == 'pharma' %}{{ d.count }}{% else %}0{% endfor %})</span></button>
+      <button type="button" class="domain-filter-pill" data-domain="finance"><span class="material-symbols-outlined">account_balance</span><span>Finance &amp; Legal</span><span class="n tnum" id="domain-count-finance">({% for d in domains if d.code == 'finance' %}{{ d.count }}{% else %}0{% endfor %})</span></button>
+      <button type="button" class="domain-filter-pill" data-domain="manufacturing"><span class="material-symbols-outlined">precision_manufacturing</span><span>Manufacturing</span><span class="n tnum" id="domain-count-manufacturing">({% for d in domains if d.code == 'manufacturing' %}{{ d.count }}{% else %}0{% endfor %})</span></button>
+      <button type="button" class="domain-filter-pill" data-domain="realestate"><span class="material-symbols-outlined">apartment</span><span>Real Estate</span><span class="n tnum" id="domain-count-realestate">({% for d in domains if d.code == 'realestate' %}{{ d.count }}{% else %}0{% endfor %})</span></button>
+      <button type="button" class="domain-filter-pill" data-domain="hr"><span class="material-symbols-outlined">groups</span><span>HR &amp; Staffing</span><span class="n tnum" id="domain-count-hr">({% for d in domains if d.code == 'hr' %}{{ d.count }}{% else %}0{% endfor %})</span></button>
+    </div>
+
+    <section class="app-toolbar" aria-label="Search and filters">
+      <div class="app-search">
+        <span class="material-symbols-outlined" aria-hidden="true">search</span>
+        <input id="filter-search" placeholder="Search by name, tech stack, domain, or location..." type="text" aria-label="Search companies"/>
+        <kbd class="kbd app-search-kbd" aria-hidden="true">/</kbd>
+      </div>
+      <div class="toolbar-right">
+        <div class="toolbar-filters">
+          <div class="custom-dropdown" id="dropdown-filter-tech">
+            <input type="hidden" id="filter-tech-select" value="">
+            <button type="button" class="custom-dropdown-btn" aria-haspopup="listbox" aria-expanded="false" title="Filter by Identified Tech Stack">
+              <span class="custom-dropdown-label">Tech Stack (All)</span>
+              <span class="material-symbols-outlined dropdown-chevron">expand_more</span>
+            </button>
+            <div class="custom-dropdown-menu">
+              <div class="custom-dropdown-search-wrap"><span class="material-symbols-outlined">search</span><input type="text" class="custom-dropdown-search" placeholder="Search stack..." autocomplete="off"></div>
+              <div class="custom-dropdown-list" role="listbox"></div>
+            </div>
+          </div>
+          <div class="custom-dropdown" id="dropdown-filter-city">
+            <input type="hidden" id="filter-city-select" value="">
+            <button type="button" class="custom-dropdown-btn" aria-haspopup="listbox" aria-expanded="false" title="Filter by City">
+              <span class="custom-dropdown-label">All Cities</span>
+              <span class="material-symbols-outlined dropdown-chevron">expand_more</span>
+            </button>
+            <div class="custom-dropdown-menu align-right">
+              <div class="custom-dropdown-search-wrap"><span class="material-symbols-outlined">search</span><input type="text" class="custom-dropdown-search" placeholder="Search city..." autocomplete="off"></div>
+              <div class="custom-dropdown-list" role="listbox"></div>
+            </div>
+          </div>
+        </div>
+        <div class="toolbar-btns">
+          <button id="btn-reset-filters" type="button" class="btn btn-secondary btn-square" title="Reset all search &amp; filter selections">
+            <span class="material-symbols-outlined">restart_alt</span><span>Reset</span>
+          </button>
+          <button id="btn-quick-refresh-btn" type="button" class="icon-btn" title="Refresh list" aria-label="Refresh list">
+            <span class="material-symbols-outlined">refresh</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <div id="companies-pagination" class="hidden pager-bar">
+      <div class="pager-left"><span>Showing <strong id="companies-page-range">0-0</strong> of <strong id="companies-page-total">0</strong> leads</span></div>
+      <div class="pager-right">
+        <span class="pager-label hidden-xs">Per page</span>
+        <div class="custom-dropdown dropdown-compact" id="dropdown-companies-per-page">
+          <input type="hidden" id="companies-per-page" value="24">
+          <button type="button" class="custom-dropdown-btn" aria-haspopup="listbox" aria-expanded="false" title="Leads per page">
+            <span class="custom-dropdown-label">24</span>
+            <span class="material-symbols-outlined dropdown-chevron">expand_more</span>
+          </button>
+          <div class="custom-dropdown-menu align-right"><div class="custom-dropdown-list" role="listbox"></div></div>
+        </div>
+        <div id="companies-page-buttons" class="flex items-center gap-1"></div>
+      </div>
+    </div>
+
+    <div id="companies-container" class="card-grid">
+      {% for i in range(6) %}
+      <div class="skeleton-shimmer sk-card{% if i >= 3 and i < 5 %} sk-md{% elif i == 5 %} sk-xl{% endif %}" aria-hidden="true">
+        <div class="sk-row"><span class="sk" style="width:42px;height:42px;border-radius:13px"></span><span class="sk-col"><span class="sk" style="height:16px;width:70%"></span><span class="sk" style="height:11px;width:45%"></span></span></div>
+        <div class="sk-col"><span class="sk" style="height:11px"></span><span class="sk" style="height:11px;width:80%"></span></div>
+        <div class="flex gap-1.5"><span class="sk" style="height:24px;width:64px;border-radius:99px"></span><span class="sk" style="height:24px;width:80px;border-radius:99px"></span><span class="sk" style="height:24px;width:56px;border-radius:99px"></span></div>
+        <div class="flex gap-2"><span class="sk" style="height:36px;flex:1;border-radius:99px"></span><span class="sk" style="height:36px;flex:1;border-radius:99px"></span></div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div id="companies-pagination-bottom" class="hidden pager-bar">
+      <div class="pager-left"><span>Showing <strong id="companies-page-range-bottom">0-0</strong> of <strong id="companies-page-total-bottom">0</strong> leads</span></div>
+      <div id="companies-page-buttons-bottom" class="flex items-center gap-1"></div>
+    </div>
+  </section>
+
+  <!-- ===================== Tab 2: Candidate profile ===================== -->
+  <section id="section-resume" class="tab-section hidden">
+    <header class="app-head">
+      <div>
+        <span class="eyebrow">Your profile</span>
+        <h1>Candidate profile</h1>
+        <p>Your resume shapes every email. Add it once and OutreachPilot writes to each company with your real skills.</p>
+      </div>
+    </header>
+
+    <div class="profile-split">
+      <div class="app-panel">
+        <div class="app-panel-head">
+          <div>
+            <h2><span class="material-symbols-outlined">upload_file</span><span>Upload Your Resume or Profile</span></h2>
+            <p>Our AI extracts your key skills and achievements so your emails speak directly to your strengths. Your file is kept private.</p>
+          </div>
+        </div>
+
+        <form id="resume-form" class="stack" style="--stack:16px">
+          <div class="field-row">
+            <label for="input-target-role"><span>Target Job Role</span><span class="req-tag">Required</span></label>
+            <input type="text" id="input-target-role" required placeholder="e.g. Senior Full-Stack Engineer" value="" class="recessed-well">
+          </div>
+
+          <div class="field-row">
+            <div class="field-label-row"><span>Resume File (PDF or Plain Text)</span><span class="req-tag">Required (File or Link)</span></div>
+            <div id="dropzone">
+              <input type="file" id="input-resume-file" accept=".pdf,.txt,.docx" class="hidden">
+              <span class="ic"><span class="material-symbols-outlined">cloud_upload</span></span>
+              <p class="t" id="file-label">Click to select or drag & drop resume file</p>
+              <p class="s">Supports PDF and TXT</p>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field-label-row"><span>Resume / Portfolio Link (Optional)</span><span class="hint-tag">Auto-included in emails</span></div>
+            <div class="input-icon">
+              <span class="material-symbols-outlined">link</span>
+              <input type="url" id="input-resume-link" placeholder="https://drive.google.com/... or personal portfolio" class="recessed-well">
+            </div>
+            <p class="app-field-hint">Google Drive, Notion, or personal portfolio link. Automatically included in your outreach emails.</p>
+          </div>
+
+          <button type="submit" id="btn-parse-resume" class="btn btn-primary btn-lg btn-block">
+            <span class="material-symbols-outlined">auto_awesome</span><span>Read My Skills with AI</span>
+          </button>
+        </form>
+      </div>
+
+      <div class="app-panel">
+        <div class="app-panel-head">
+          <h2><span class="material-symbols-outlined">psychology</span><span>Your Extracted Skills &amp; Strengths</span></h2>
+          <div class="flex items-center gap-2">
+            <span id="profile-archetype-badge" class="badge badge-accent hidden">Archetype</span>
+            <span class="badge badge-ok"><span class="material-symbols-outlined">check_circle</span>Active Profile</span>
+          </div>
+        </div>
+
+        <div id="profile-display" class="stack" style="--stack:18px">
+          <div class="sub-block">
+            <span class="sub-label">Professional summary</span>
+            <p id="profile-pitch" class="quote-well">Upload your resume to see your career highlights, key skills, and a ready-to-use introduction.</p>
+          </div>
+          <div class="sub-block">
+            <span class="sub-label">Extracted core skills</span>
+            <div id="profile-skills" class="chip-wrap">
+              <span class="muted-note">No skills extracted yet. Upload a resume to extract skills.</span>
+            </div>
+          </div>
+          <div class="sub-block">
+            <span class="sub-label">Career achievements and highlights</span>
+            <ul id="profile-achievements">
+              <li class="muted-note" style="list-style:none;margin-left:-1.2em">No achievements extracted yet.</li>
+            </ul>
+          </div>
+          <div id="profile-roles-section" class="hidden sub-block">
+            <span class="sub-label">Best-fit roles</span>
+            <div id="profile-best-fit-roles" class="chip-wrap"></div>
+          </div>
+          <div id="profile-ats-section" class="hidden sub-block">
+            <span class="sub-label">ATS keyword signals</span>
+            <div id="profile-ats-keywords" class="chip-wrap kw-box"></div>
+          </div>
+          <div class="sub-block">
+            <div class="spread">
+              <span class="sub-label">Recruiter evaluation and candidate dossier</span>
+              <button id="btn-copy-profile-analysis" type="button" class="btn btn-secondary btn-xs" title="Copy analyzed dossier">
+                <span class="material-symbols-outlined">content_copy</span><span id="copy-profile-analysis-text">Copy Analysis</span>
+              </button>
+            </div>
+            <div id="profile-detailed-analysis" class="dossier-box markdown-content">
+              Upload your resume above to generate a detailed career assessment, technical evaluation, and personalized introduction.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== Tab 3: Outreach hub ===================== -->
+  <section id="section-outreach" class="tab-section hidden">
+    <header class="app-head">
+      <div>
+        <span class="eyebrow">Outreach</span>
+        <h1>Email &amp; Outreach Center</h1>
+        <p>Review personalized emails, send them directly with your Gmail, and see who you've contacted.</p>
+      </div>
+      <div class="head-actions">
+        <button id="btn-toggle-activity" type="button" class="btn btn-secondary" title="Toggle Live Activity & Sent History Feed">
+          <span class="dot dot-live"></span><span>Activity Log</span>
+        </button>
+        <button id="btn-gen-all-pitches" type="button" class="btn btn-secondary" title="Generate personalized emails for selected companies">
+          <span class="material-symbols-outlined">auto_awesome</span><span id="btn-gen-all-pitches-text">Prepare Emails</span>
+        </button>
+        <button id="btn-send-all-outreach" type="button" class="btn btn-primary" title="Send cold emails to selected companies with discovered email addresses">
+          <span class="material-symbols-outlined">send</span><span id="btn-send-all-outreach-text">Send Emails</span>
+        </button>
+      </div>
+    </header>
+
+    <div class="stat-grid">
+      <div id="outreach-stat-all" class="app-stat">
+        <div class="top"><span>Outreach Queue</span><span class="material-symbols-outlined">inbox</span></div>
+        <div class="num"><span id="outreach-count-total" class="tabular-nums">0</span><span class="of">Queue</span></div>
+      </div>
+      <div id="outreach-stat-emails" class="app-stat">
+        <div class="top"><span>Verified Emails</span><span class="material-symbols-outlined">alternate_email</span></div>
+        <div class="num"><span id="outreach-count-emails" class="tabular-nums">0</span><span class="of">Direct</span></div>
+      </div>
+      <div id="outreach-stat-ready" class="app-stat">
+        <div class="top"><span>Ready to Send</span><span class="material-symbols-outlined">edit_note</span></div>
+        <div class="num"><span id="outreach-count-ready" class="tabular-nums">0</span><span class="of">Pending</span></div>
+      </div>
+      <div id="outreach-stat-sent" class="app-stat">
+        <div class="top"><span>Emails Sent</span><span class="material-symbols-outlined">mark_email_read</span></div>
+        <div class="num"><span id="outreach-count-sent" class="tabular-nums">0</span><span class="of">Contacted</span></div>
+      </div>
+    </div>
+
+    <div class="attach-bay">
+      <div class="l">
+        <span class="ic"><span class="material-symbols-outlined">attach_file</span></span>
+        <div class="min-w-0">
+          <div class="t"><span>Resume Attachment (Optional)</span><span class="badge badge-outline">Session Storage</span></div>
+          <p id="outreach-resume-status">No resume selected. Choose a PDF file if you wish to attach your resume to outgoing emails.</p>
+        </div>
+      </div>
+      <div class="r">
+        <input type="file" id="outreach-resume-file" accept=".pdf,.doc,.docx" class="hidden">
+        <button type="button" id="btn-choose-outreach-resume" class="btn btn-secondary">
+          <span class="material-symbols-outlined">upload_file</span><span id="btn-choose-resume-text">Choose Resume File</span>
+        </button>
+        <button type="button" id="btn-remove-outreach-resume" class="hidden icon-btn btn-danger-soft" title="Remove selected session resume" aria-label="Remove resume">
+          <span class="material-symbols-outlined">delete</span>
+        </button>
+        <label class="toggle-switch" title="Toggle resume attachment in outgoing email">
+          <input type="checkbox" id="toggle-attach-resume">
+          <span class="toggle-slider"></span>
+          <span>Attach in outgoing Gmail</span>
+        </label>
+      </div>
+    </div>
+
+    <section class="app-toolbar" aria-label="Search and filters">
+      <div class="app-search">
+        <span class="material-symbols-outlined" aria-hidden="true">search</span>
+        <input type="text" id="outreach-search-input" placeholder="Search by company name, email, tech stack, or domain..." aria-label="Search outreach">
+        <kbd class="kbd app-search-kbd" aria-hidden="true">/</kbd>
+      </div>
+      <div class="toolbar-right">
+        <div class="toolbar-filters">
+          <div class="custom-dropdown" id="dropdown-outreach-tech">
+            <input type="hidden" id="outreach-tech-select" value="">
+            <button type="button" class="custom-dropdown-btn" aria-haspopup="listbox" aria-expanded="false" title="Filter by Identified Tech Stack">
+              <span class="custom-dropdown-label">Tech Stack (All)</span>
+              <span class="material-symbols-outlined dropdown-chevron">expand_more</span>
+            </button>
+            <div class="custom-dropdown-menu">
+              <div class="custom-dropdown-search-wrap"><span class="material-symbols-outlined">search</span><input type="text" class="custom-dropdown-search" placeholder="Search stack..." autocomplete="off"></div>
+              <div class="custom-dropdown-list" role="listbox"></div>
+            </div>
+          </div>
+          <div class="custom-dropdown" id="dropdown-outreach-city">
+            <input type="hidden" id="outreach-city-select" value="">
+            <button type="button" class="custom-dropdown-btn" aria-haspopup="listbox" aria-expanded="false" title="Filter by City">
+              <span class="custom-dropdown-label">All Cities</span>
+              <span class="material-symbols-outlined dropdown-chevron">expand_more</span>
+            </button>
+            <div class="custom-dropdown-menu align-right">
+              <div class="custom-dropdown-search-wrap"><span class="material-symbols-outlined">search</span><input type="text" class="custom-dropdown-search" placeholder="Search city..." autocomplete="off"></div>
+              <div class="custom-dropdown-list" role="listbox"></div>
+            </div>
+          </div>
+        </div>
+        <div class="toolbar-btns">
+          <button id="btn-outreach-reset" type="button" class="btn btn-secondary btn-square" title="Reset outreach filters">
+            <span class="material-symbols-outlined">restart_alt</span><span>Reset</span>
+          </button>
+          <div class="view-switch">
+            <button id="btn-outreach-view-grid" type="button" class="bg-surface-container-highest" title="Cards View" aria-label="Cards view"><span class="material-symbols-outlined">grid_view</span></button>
+            <button id="btn-outreach-view-list" type="button" title="Compact List View" aria-label="List view"><span class="material-symbols-outlined">view_agenda</span></button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div id="outreach-pagination" class="hidden pager-bar">
+      <div class="pager-left">
+        <span>Showing <strong id="outreach-page-range">0-0</strong> of <strong id="outreach-page-total">0</strong> targets</span>
+        <span class="vsep hidden-xs"></span>
+        <div class="select-ctl">
+          <label title="Select all targets on this page">
+            <input type="checkbox" id="outreach-select-all">
+            <span id="outreach-select-all-label">Select Page</span>
+          </label>
+          <span id="outreach-selected-badge" class="hidden sel-badge"><span id="outreach-selected-count">0</span>&nbsp;selected</span>
+          <button type="button" id="btn-outreach-clear-selection" class="hidden sel-clear">Clear</button>
+        </div>
+      </div>
+      <div class="pager-right">
+        <span class="pager-label hidden-xs">Per page</span>
+        <div class="custom-dropdown dropdown-compact" id="dropdown-outreach-per-page">
+          <input type="hidden" id="outreach-per-page" value="24">
+          <button type="button" class="custom-dropdown-btn" aria-haspopup="listbox" aria-expanded="false" title="Targets per page">
+            <span class="custom-dropdown-label">24</span>
+            <span class="material-symbols-outlined dropdown-chevron">expand_more</span>
+          </button>
+          <div class="custom-dropdown-menu align-right"><div class="custom-dropdown-list" role="listbox"></div></div>
+        </div>
+        <div id="outreach-page-buttons" class="flex items-center gap-1"></div>
+      </div>
+    </div>
+
+    <div id="pitches-container" class="card-grid"></div>
+
+    <div id="outreach-pagination-bottom" class="hidden pager-bar">
+      <div class="pager-left"><span>Showing <strong id="outreach-page-range-bottom">0-0</strong> of <strong id="outreach-page-total-bottom">0</strong> targets</span></div>
+      <div id="outreach-page-buttons-bottom" class="flex items-center gap-1"></div>
+    </div>
+  </section>
+
+  </div>
+</div>
+
+<!-- ===================== Activity drawer ===================== -->
+<div id="outreach-activity-drawer-root" class="fixed inset-0 pointer-events-none">
+  <div id="outreach-activity-backdrop" class="fixed inset-0 opacity-0 pointer-events-none"></div>
+  <aside id="outreach-activity-drawer" class="translate-x-full" aria-label="Outreach activity">
+    <div>
+      <div class="drawer-head">
+        <div class="l">
+          <span class="ic"><span class="material-symbols-outlined">history</span></span>
+          <div>
+            <h3>Outreach Activity Stream <span class="dot dot-live"></span></h3>
+            <small>Emails you have sent from your Gmail</small>
+          </div>
+        </div>
+        <button id="btn-close-activity" type="button" class="icon-btn sm bare" title="Close activity stream" aria-label="Close">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <div class="drawer-meta"><span>Sent emails</span><span class="on">Gmail connected</span></div>
+      <div id="audit-logs">
+        <p class="log-empty">No emails sent yet today.</p>
+      </div>
+    </div>
+    <div class="drawer-foot"><span>OutreachPilot</span><span>Google sign-in</span></div>
+  </aside>
+</div>
+
+<!-- ===================== Company details modal ===================== -->
+<div id="company-modal" class="app-modal fixed inset-0 hidden">
+  <div class="am-card">
+    <div class="am-head">
+      <div class="am-title-row">
+        <div class="min-w-0">
+          <div class="flex items-center gap-2 flex-wrap">
+            <h3 id="cmodal-name">Company Name</h3>
+            <span id="cmodal-badge"></span>
+          </div>
+          <div class="am-sub">
+            <a id="cmodal-website" href="#" target="_blank" rel="noopener noreferrer">
+              <span class="material-symbols-outlined">language</span><span id="cmodal-domain" class="break-all">domain.com</span><span class="material-symbols-outlined">open_in_new</span>
+            </a>
+            <span id="cmodal-rating" class="inline-flex items-center gap-1"><span class="material-symbols-outlined">star</span><span>4.8 (12 reviews)</span></span>
+          </div>
+        </div>
+        <button id="cmodal-close" type="button" aria-label="Close dialog" class="icon-btn sm bare am-close">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+      </div>
+      <div class="seg-tabs">
+        <button type="button" id="cmodal-tab-btn-overview" class="cmodal-tab-btn active"><span class="material-symbols-outlined">apartment</span><span>Overview & Contacts</span></button>
+        <button type="button" id="cmodal-tab-btn-ai" class="cmodal-tab-btn"><span class="material-symbols-outlined">auto_awesome</span><span>AI Intel & Report</span></button>
+      </div>
+    </div>
+
+    <div class="am-body">
+      <div id="cmodal-panel-overview" class="stack" style="--stack:14px">
+        <div class="info-grid">
+          <div class="info-cell">
+            <span class="k"><span class="material-symbols-outlined">call</span>Direct Phone</span>
+            <p id="cmodal-phone" class="v">N/A</p>
+          </div>
+          <div class="info-cell">
+            <span class="k"><span class="material-symbols-outlined">location_on</span>Location (Google Maps)</span>
+            <div id="cmodal-location-container">
+              <a id="cmodal-location-link" href="#" target="_blank" rel="noopener noreferrer" class="v" title="Open in Google Maps">
+                <span class="material-symbols-outlined">open_in_new</span><span id="cmodal-address">N/A</span>
+              </a>
+            </div>
+          </div>
+        </div>
+
+        <div class="stack" style="--stack:8px">
+          <div class="sec-head">
+            <h4><span class="material-symbols-outlined">mail</span><span>Discovered Contact & HR Emails</span></h4>
+            <span id="cmodal-emails-count" class="mini-badge accent">0 emails</span>
+          </div>
+          <div id="cmodal-emails-container" class="emails-box">
+            <span class="muted-note">No emails found yet. Click "Enrich with AI" below to discover contacts.</span>
+          </div>
+        </div>
+
+        <div class="overview-box">
+          <div>
+            <span class="t block">Company Executive Overview</span>
+            <p id="cmodal-summary">Not enriched yet. Click "Enrich with AI" below to analyze company details and tech stack.</p>
+          </div>
+          <div class="overview-split">
+            <div><span class="k">Industry</span><p id="cmodal-industry" class="v">Technology</p></div>
+            <div><span class="k">Tone / Vibe</span><p id="cmodal-tone" class="v">Professional</p></div>
+          </div>
+          <div class="stack" style="--stack:8px;padding-top:12px;border-top:1px dashed var(--line-2)">
+            <span class="t">Identified Tech Stack</span>
+            <div id="cmodal-techstack" class="chip-wrap">
+              <span class="muted-note">Analyze with AI to detect company technologies.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="cmodal-panel-ai" class="stack hidden" style="--stack:10px">
+        <div class="sec-head">
+          <h4><span class="material-symbols-outlined">description</span><span>Technical Intelligence Report</span></h4>
+          <button type="button" id="cmodal-btn-copy-report" class="btn btn-secondary btn-xs">
+            <span class="material-symbols-outlined">content_copy</span><span>Copy</span>
+          </button>
+        </div>
+        <div id="cmodal-detailed-analysis" class="report-box markdown-content">
+          Not enriched yet. Click "Enrich with AI" below to generate a detailed intelligence report.
+        </div>
+      </div>
+    </div>
+
+    <div class="am-foot">
+      <div class="grp">
+        <button id="cmodal-btn-enrich" type="button" class="btn btn-secondary">
+          <span class="material-symbols-outlined">auto_awesome</span><span>Enrich with AI</span>
+        </button>
+        <button id="cmodal-btn-admin-action" type="button" class="hidden btn">
+          <span class="material-symbols-outlined">shield</span><span id="cmodal-admin-action-text">Mark as Invalid</span>
+        </button>
+      </div>
+      <div class="grp">
+        <button id="cmodal-btn-cancel" type="button" class="btn btn-ghost">Close</button>
+        <button id="cmodal-btn-pitch" type="button" class="btn btn-primary">
+          <span class="material-symbols-outlined">send</span><span>Write Outreach Email</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== Pitch preview and edit modal ===================== -->
+<div id="pitch-modal" class="app-modal fixed inset-0 hidden">
+  <div class="am-card">
+    <div class="am-head">
+      <div class="am-title-row">
+        <div class="min-w-0">
+          <h3 id="modal-company-name">Personalized Outreach Email</h3>
+          <p class="recipient-line">Recipient: <span id="modal-target-email" class="inline-flex items-center gap-1"><span class="em">hr@company.com</span></span></p>
         </div>
         <div class="flex items-center gap-1.5">
-          <button id="btn-modal-regenerate" type="button" class="btn-tactile-slate px-2.5 py-1.5 rounded-lg text-caption font-medium flex items-center gap-1 text-on-surface hover:text-primary transition cursor-pointer" title="Regenerate all variants with AI">
-            <span class="material-symbols-outlined text-[15px] text-amber-400">autorenew</span>
-            <span class="hidden sm:inline">Regenerate</span>
+          <button id="btn-modal-regenerate" type="button" class="btn btn-secondary btn-sm" title="Regenerate all variants with AI">
+            <span class="material-symbols-outlined">autorenew</span><span class="hidden sm:inline">Regenerate</span>
           </button>
-          <button id="modal-close" class="text-outline hover:text-on-surface p-1.5 rounded-lg hover:bg-surface-container transition cursor-pointer">
-            <span class="material-symbols-outlined text-[20px]">close</span>
-          </button>
+          <button id="modal-close" type="button" class="icon-btn sm bare" aria-label="Close"><span class="material-symbols-outlined">close</span></button>
         </div>
       </div>
-
-      <div class="space-y-3">
-        <!-- Subject Line -->
-        <div>
-          <label for="modal-subject" class="block text-label-sm font-label-sm text-on-surface-variant font-medium mb-1.5">Subject Line</label>
-          <input type="text" id="modal-subject" class="w-full recessed-well px-3.5 py-2 text-body-sm text-on-surface focus:outline-none focus:border-primary-container transition" placeholder="Email Subject Line">
-        </div>
-
-        <!-- Email Message Body -->
-        <div>
-          <div class="flex items-center justify-between mb-1.5">
-            <label for="modal-body" class="block text-label-sm font-label-sm text-on-surface-variant font-medium">Email Message</label>
-            <span id="pitch-word-count" class="text-caption font-mono text-outline">0 words</span>
-          </div>
-          <textarea id="modal-body" rows="9" class="w-full recessed-well p-3.5 text-body-sm text-on-surface font-sans leading-relaxed focus:outline-none focus:border-primary-container transition" placeholder="Email pitch message..."></textarea>
-        </div>
+    </div>
+    <div class="am-body">
+      <div class="field-row">
+        <label for="modal-subject">Subject Line</label>
+        <input type="text" id="modal-subject" class="recessed-well" placeholder="Email Subject Line">
       </div>
-
-      <!-- Resume Attachment Option in Pitch Modal -->
-      <div class="bg-surface-container-lowest border border-outline-variant/30 rounded-xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-body-sm">
-        <div class="flex items-center gap-2.5 min-w-0">
-          <span class="material-symbols-outlined text-[18px] text-primary shrink-0">attach_file</span>
+      <div class="field-row">
+        <div class="field-label-row"><label for="modal-body">Email Message</label><span id="pitch-word-count" class="word-count">0 words</span></div>
+        <textarea id="modal-body" rows="9" class="recessed-well" placeholder="Email pitch message..."></textarea>
+      </div>
+      <div class="attach-row">
+        <div class="l">
+          <span class="material-symbols-outlined">attach_file</span>
           <div class="min-w-0">
-            <div class="flex items-center gap-1.5 flex-wrap">
-              <span class="font-semibold text-on-surface text-label-sm font-label-sm">Attachment:</span>
-              <span id="pitch-modal-resume-name" class="font-mono text-secondary truncate max-w-[200px] sm:max-w-[280px] text-caption">No file selected</span>
-            </div>
-            <p class="text-caption font-caption text-outline">Attached directly to the email sent via your authorized Gmail account.</p>
+            <div class="flex items-center gap-1.5 flex-wrap"><b class="text-sm">Attachment:</b><span id="pitch-modal-resume-name">No file selected</span></div>
+            <p class="app-field-hint">Attached directly to the email sent via your authorized Gmail account.</p>
           </div>
         </div>
-
-        <div class="flex items-center gap-2.5 shrink-0">
-          <button type="button" id="btn-pitch-modal-choose-resume" class="btn-tactile-slate px-3 py-1.5 rounded text-label-sm font-label-sm font-medium transition cursor-pointer">
-            Pick File
-          </button>
-          <!-- Attach in Email Slider Toggle -->
-          <label class="toggle-switch flex items-center gap-2 bg-surface-container px-3 py-1.5 rounded-lg border border-outline-variant/40 hover:border-outline-variant/60 transition cursor-pointer" title="Toggle resume attachment in outgoing email">
+        <div class="r">
+          <button type="button" id="btn-pitch-modal-choose-resume" class="btn btn-secondary btn-sm">Pick File</button>
+          <label class="toggle-switch" title="Toggle resume attachment in outgoing email">
             <input type="checkbox" id="pitch-modal-attach-toggle">
             <span class="toggle-slider"></span>
-            <span class="text-label-sm font-label-sm font-medium text-on-surface whitespace-nowrap">Attach resume</span>
+            <span>Attach resume</span>
           </label>
         </div>
       </div>
-
-      <div class="flex items-center justify-between pt-1">
-        <button id="btn-copy-pitch" class="btn-tactile-slate px-3.5 py-2 rounded text-label-sm font-label-sm font-medium text-on-surface transition flex items-center gap-1.5 cursor-pointer">
-          <span class="material-symbols-outlined text-[15px]">content_copy</span>
-          <span>Copy Message</span>
-        </button>
-
-        <div class="flex items-center gap-2">
-          <button id="btn-send-direct-oauth" type="button" class="btn-tactile-ecru px-4 py-2 rounded text-label-sm font-label-sm font-semibold transition flex items-center gap-1.5 cursor-pointer">
-            <span class="material-symbols-outlined text-[15px]">send</span>
-            <span id="btn-send-direct-text">Send via Gmail</span>
-          </button>
-        </div>
-      </div>
     </div>
-  </div>
-
-  <!-- SENT EMAIL DETAILS MODAL -->
-  <div id="sent-email-modal" class="fixed inset-0 z-[130] w-screen h-screen bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4 overflow-hidden">
-    <div class="relative bg-surface-container-low border border-outline-variant/30 rounded-2xl max-w-2xl w-full p-6 space-y-4 shadow-2xl my-auto">
-      <div class="flex items-center justify-between border-b border-outline-variant/20 pb-3">
-        <div>
-          <div class="flex items-center gap-2">
-            <span class="px-2.5 py-0.5 rounded-full text-caption font-semibold bg-primary-container/15 border border-primary-container/30 text-primary uppercase tracking-wide flex items-center gap-1">
-              <span class="material-symbols-outlined text-[13px]">check_circle</span>
-              <span id="sent-modal-method">SENT</span>
-            </span>
-            <h3 class="text-base font-bold text-on-surface truncate" id="sent-modal-company-name">Company Name</h3>
-          </div>
-          <p class="text-caption font-caption text-on-surface-variant mt-1">Recipient: <span id="sent-modal-recipient" class="font-mono text-secondary font-semibold">hr@company.com</span> &bull; <span id="sent-modal-date" class="text-outline">Oct 19, 2026</span></p>
-        </div>
-        <button id="sent-modal-close" type="button" aria-label="Close" class="text-outline hover:text-on-surface p-1.5 rounded-lg hover:bg-surface-container transition cursor-pointer">
-          <span class="material-symbols-outlined text-[20px]">close</span>
-        </button>
-      </div>
-
-      <div class="space-y-3">
-        <div>
-          <label class="block text-label-sm font-label-sm text-on-surface-variant font-medium uppercase tracking-wider mb-1">Subject</label>
-          <div id="sent-modal-subject" class="w-full bg-surface-container-lowest border border-outline-variant/30 rounded-xl px-3.5 py-2.5 text-body-sm text-on-surface font-medium select-text">
-            Subject
-          </div>
-        </div>
-        <div>
-          <label class="block text-label-sm font-label-sm text-on-surface-variant font-medium uppercase tracking-wider mb-1">Email Message Sent</label>
-          <div id="sent-modal-body" class="w-full bg-surface-container-lowest border border-outline-variant/30 rounded-xl p-3.5 text-body-sm text-on-surface font-mono leading-relaxed whitespace-pre-wrap max-h-72 overflow-y-auto select-text">
-            Body
-          </div>
-        </div>
-      </div>
-
-      <div class="flex items-center justify-between pt-2">
-        <button id="btn-copy-sent-email" type="button" class="px-3.5 py-2 bg-surface-container hover:bg-surface-container-high border border-outline-variant/40 rounded-lg text-label-sm font-label-sm font-medium text-on-surface transition flex items-center gap-1.5 cursor-pointer">
-          <span class="material-symbols-outlined text-[15px]">content_copy</span>
-          <span>Copy Content</span>
-        </button>
-        <button id="btn-close-sent-email" type="button" class="px-4 py-2 bg-surface-container hover:bg-surface-container-high text-on-surface rounded-lg text-label-sm font-label-sm font-semibold border border-outline-variant/40 transition cursor-pointer">
-          Close
+    <div class="am-foot">
+      <button id="btn-copy-pitch" type="button" class="btn btn-secondary">
+        <span class="material-symbols-outlined">content_copy</span><span>Copy Message</span>
+      </button>
+      <div class="grp">
+        <button id="btn-send-direct-oauth" type="button" class="btn btn-primary">
+          <span class="material-symbols-outlined">send</span><span id="btn-send-direct-text">Send via Gmail</span>
         </button>
       </div>
     </div>
   </div>
+</div>
 
-  {% if not subscription_kill_switch %}
-  <!-- SUBSCRIPTION & DAILY QUOTA MANAGER MODAL -->
-  <div id="modal-user-subscription" class="fixed inset-0 z-[135] w-screen h-screen bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
-    <div class="relative bg-surface-container-low border border-outline-variant/30 rounded-2xl max-w-3xl w-full p-5 sm:p-7 space-y-6 shadow-2xl my-auto max-h-[90vh] overflow-y-auto">
-      
-      <!-- Modal Header -->
-      <div class="flex items-start justify-between border-b border-outline-variant/20 pb-4">
+<!-- ===================== Sent email modal ===================== -->
+<div id="sent-email-modal" class="app-modal fixed inset-0 hidden">
+  <div class="am-card">
+    <div class="am-head">
+      <div class="am-title-row">
+        <div class="min-w-0">
+          <div class="flex items-center gap-2 flex-wrap">
+            <span class="sent-pill"><span class="material-symbols-outlined">check_circle</span><span id="sent-modal-method">SENT</span></span>
+            <h3 id="sent-modal-company-name" class="truncate">Company Name</h3>
+          </div>
+          <p class="recipient-line">Recipient: <span id="sent-modal-recipient" class="em">hr@company.com</span> &bull; <span id="sent-modal-date" class="subtle">Oct 19, 2026</span></p>
+        </div>
+        <button id="sent-modal-close" type="button" aria-label="Close" class="icon-btn sm bare"><span class="material-symbols-outlined">close</span></button>
+      </div>
+    </div>
+    <div class="am-body">
+      <div class="field-row"><span class="sub-label">Subject</span><div id="sent-modal-subject" class="readonly-box">Subject</div></div>
+      <div class="field-row"><span class="sub-label">Email message sent</span><div id="sent-modal-body" class="readonly-box body">Body</div></div>
+    </div>
+    <div class="am-foot">
+      <button id="btn-copy-sent-email" type="button" class="btn btn-secondary"><span class="material-symbols-outlined">content_copy</span><span>Copy Content</span></button>
+      <div class="grp"><button id="btn-close-sent-email" type="button" class="btn btn-ghost">Close</button></div>
+    </div>
+  </div>
+</div>
+
+{% if not subscription_kill_switch %}
+<!-- ===================== Subscription and quota modal ===================== -->
+<div id="modal-user-subscription" class="app-modal fixed inset-0 hidden">
+  <div class="am-card lg">
+    <div class="am-head">
+      <div class="am-title-row">
         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary shrink-0">
-            <span class="material-symbols-outlined text-[22px]">loyalty</span>
-          </div>
+          <span class="icon-tile"><span class="material-symbols-outlined">loyalty</span></span>
           <div>
-            <h3 class="text-headline-md font-headline-md font-bold text-on-surface">Subscription &amp; Daily Outreach Quota</h3>
-            <p class="text-xs text-on-surface-variant font-mono">Real-time daily sending limits &amp; tier upgrade options</p>
+            <h3>Subscription &amp; Daily Outreach Quota</h3>
+            <p class="recipient-line">Your daily sending limit and plan options</p>
           </div>
         </div>
-        <button id="btn-close-sub-modal" type="button" class="text-on-surface-variant hover:text-on-surface p-1.5 rounded-lg hover:bg-surface-container transition cursor-pointer" title="Close Modal">
-          <span class="material-symbols-outlined text-[20px]">close</span>
-        </button>
+        <button id="btn-close-sub-modal" type="button" class="icon-btn sm bare" title="Close Modal" aria-label="Close"><span class="material-symbols-outlined">close</span></button>
       </div>
-
-      <!-- Current Quota & Plan Status Card -->
-      <div class="p-4 sm:p-5 rounded-xl bg-surface-container border border-outline-variant/40 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div class="space-y-1">
+    </div>
+    <div class="am-body">
+      <div class="plan-now">
+        <div>
           <div class="flex items-center gap-2">
-            <span class="text-xs font-mono text-on-surface-variant uppercase tracking-wider font-semibold">Active Plan</span>
-            <span id="sub-modal-tier-badge" class="px-2.5 py-0.5 rounded text-[11px] font-mono font-bold uppercase tracking-wider bg-primary/15 text-primary border border-primary/30">
+            <span class="sub-label">Active plan</span>
+            <span id="sub-modal-tier-badge" class="tier-badge">
               {{ user_subscription_tier_name if user_subscription_tier_name else "Free Starter" }}
             </span>
           </div>
-          <h4 id="sub-modal-tier-title" class="text-lg font-bold text-on-surface">{{ user_subscription_tier_name if user_subscription_tier_name else "Free Job Seeker" }}</h4>
-          <p class="text-xs text-on-surface-variant leading-relaxed">
-            Your daily quota resets automatically every day at <strong class="text-on-surface font-mono">midnight IST</strong> (12:00 AM India time).
-          </p>
+          <h4 id="sub-modal-tier-title">{{ user_subscription_tier_name if user_subscription_tier_name else "Free Job Seeker" }}</h4>
+          <p>Your daily quota resets automatically every day at <strong>midnight IST</strong> (12:00 AM India time).</p>
         </div>
-
-        <div class="shrink-0 flex items-center gap-3 bg-surface-container-lowest p-3 rounded-xl border border-outline-variant/30">
-          <div class="flex flex-col text-right">
-            <span class="text-[11px] font-mono text-on-surface-variant uppercase">Remaining Today</span>
-            <span class="text-2xl font-bold font-mono text-primary tabular-nums" id="sub-modal-remaining-count">{{ user_remaining if user_remaining is defined else 10 }}</span>
-            <span class="text-[10px] text-on-surface-variant font-mono">of <span id="sub-modal-total-limit">{{ user_daily_limit if user_daily_limit is defined else 10 }}</span> daily limit</span>
+        <div class="remaining-box">
+          <div class="text-center">
+            <span class="k block">Remaining today</span>
+            <span class="n tabular-nums block" id="sub-modal-remaining-count">{{ user_remaining if user_remaining is defined else 10 }}</span>
+            <span class="s">of <span id="sub-modal-total-limit">{{ user_daily_limit if user_daily_limit is defined else 10 }}</span> daily limit</span>
           </div>
-          <div class="w-12 h-12 rounded-full border-4 border-surface-container-high flex items-center justify-center relative">
-            <span class="material-symbols-outlined text-primary text-[20px]">send</span>
-          </div>
+          <span class="ring"><span class="material-symbols-outlined">send</span></span>
         </div>
       </div>
 
-      <!-- Available Subscription Packs Grid -->
-      <div>
-        <div class="flex items-center justify-between mb-3">
-          <h4 class="text-xs font-mono uppercase tracking-wider text-on-surface-variant font-bold">Available Outreach Packs</h4>
-          <span class="text-[11px] text-on-surface-variant font-mono">Switch or upgrade at any time</span>
-        </div>
+      <div class="spread"><span class="sub-label">Available outreach packs</span><span class="app-field-hint">Switch or upgrade at any time</span></div>
 
-        <!-- Plan cards: built from the plans in the admin panel (Tiers & Plans).
-             app.js (updateUserSubscriptionUI) marks the current plan's card. -->
-        {% set plan_count = (tiers or [])|length %}
-        <div class="grid grid-cols-1 {% if plan_count >= 3 %}md:grid-cols-3{% elif plan_count == 2 %}md:grid-cols-2{% endif %} gap-4" id="sub-modal-plans-grid">
-          {% for t in (tiers or []) %}
-          {% set featured = t.code == 'pro' %}
-          {% set is_current = user_subscription_tier == t.code %}
-          {% set verb = "Switch to" if t.price_inr == 0 else "Upgrade to" %}
-          {% set change_href = "mailto:founder@outreachpilot.in?subject=" ~ ((verb ~ " " ~ t.name ~ " plan")|urlencode) %}
-          <div class="p-4 rounded-xl flex flex-col justify-between relative {% if featured %}bg-primary/5 border-2 border-primary shadow-sm{% else %}bg-surface-container border border-outline-variant/30{% endif %}{% if is_current %} ring-2 ring-primary{% endif %}" data-tier-card="{{ t.code }}">
-            {% if t.badge %}
-            <div class="absolute -top-2.5 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase tracking-wider whitespace-nowrap {% if featured %}bg-primary text-on-primary{% else %}bg-surface-container-highest text-on-surface border border-outline-variant/40{% endif %}">
-              {{ t.badge }}
-            </div>
+      {% set plan_count = (tiers or [])|length %}
+      <div class="sub-plans {% if plan_count >= 3 %}n3{% elif plan_count == 2 %}n2{% endif %}" id="sub-modal-plans-grid">
+        {% for t in (tiers or []) %}
+        {% set featured = t.code == 'pro' %}
+        {% set is_current = user_subscription_tier == t.code %}
+        {% set verb = "Switch to" if t.price_inr == 0 else "Upgrade to" %}
+        {% set change_href = "mailto:founder@outreachpilot.in?subject=" ~ ((verb ~ " " ~ t.name ~ " plan")|urlencode) %}
+        <div class="sub-plan{% if featured %} is-featured{% endif %}{% if is_current %} ring-primary{% endif %}" data-tier-card="{{ t.code }}">
+          {% if t.badge %}<span class="badge-top">{{ t.badge }}</span>{% endif %}
+          <div>
+            <div class="nm"><b>{{ t.name }}</b>{% if t.subtitle %}<span>{{ t.subtitle }}</span>{% endif %}</div>
+            <div class="pr"><b>₹{{ "{:,}".format(t.price_inr) }}</b><span>/ month</span></div>
+            <div class="qt">{{ "{:,}".format(t.daily_pitch_limit) }} pitches / day</div>
+            {% if t.features %}
+            <ul>
+              {% for f in t.features %}
+              <li><span class="material-symbols-outlined" aria-hidden="true">check</span><span>{{ f }}</span></li>
+              {% endfor %}
+            </ul>
             {% endif %}
-            <div>
-              <div class="flex items-center justify-between gap-2 mb-1.5 {% if t.badge %}pt-1{% endif %}">
-                <span class="text-xs font-bold {% if featured %}text-primary{% else %}text-on-surface{% endif %}">{{ t.name }}</span>
-                {% if t.subtitle %}<span class="text-[10px] font-mono px-1.5 py-0.5 rounded font-semibold whitespace-nowrap {% if featured %}bg-primary/20 text-primary{% else %}bg-surface-container-highest text-on-surface-variant{% endif %}">{{ t.subtitle }}</span>{% endif %}
-              </div>
-              <div class="flex items-baseline gap-1 my-2">
-                <span class="text-2xl font-bold font-mono {% if featured %}text-primary{% else %}text-on-surface{% endif %}">₹{{ "{:,}".format(t.price_inr) }}</span>
-                <span class="text-[11px] text-on-surface-variant font-mono">/ month</span>
-              </div>
-              <div class="p-2 rounded text-xs font-mono font-semibold text-primary mb-3 {% if featured %}bg-primary/10{% else %}bg-surface-container-lowest{% endif %}">
-                {{ "{:,}".format(t.daily_pitch_limit) }} pitches / day
-              </div>
-              {% if t.features %}
-              <ul class="text-[11px] space-y-1.5 {% if featured %}text-on-surface{% else %}text-on-surface-variant{% endif %}">
-                {% for f in t.features %}
-                <li class="flex items-start gap-1.5"><span class="material-symbols-outlined text-[14px] text-primary shrink-0 mt-px" aria-hidden="true">check</span><span>{{ f }}</span></li>
-                {% endfor %}
-              </ul>
-              {% endif %}
-            </div>
-            <div class="pt-3 mt-3 border-t {% if featured %}border-primary/20{% else %}border-outline-variant/20{% endif %}">
-              <a {% if not is_current %}href="{{ change_href }}"{% else %}aria-disabled="true"{% endif %} data-href="{{ change_href }}" data-default-label="{{ verb }} {{ t.name }}" data-tier-code="{{ t.code }}" class="btn-tier-action w-full py-1.5 rounded-lg text-xs font-mono font-bold text-center block transition {% if featured %}bg-primary text-on-primary hover:opacity-90 shadow{% else %}border border-outline-variant/40 bg-surface-container-lowest text-on-surface hover:border-primary/50{% endif %}{% if is_current %} opacity-60 cursor-default pointer-events-none{% endif %}">{% if is_current %}Current Active Plan{% else %}{{ verb }} {{ t.name }}{% endif %}</a>
-            </div>
           </div>
-          {% endfor %}
+          <a {% if not is_current %}href="{{ change_href }}"{% else %}aria-disabled="true"{% endif %} data-href="{{ change_href }}" data-default-label="{{ verb }} {{ t.name }}" data-tier-code="{{ t.code }}" class="btn-tier-action{% if is_current %} pointer-events-none{% endif %}">{% if is_current %}Current Active Plan{% else %}{{ verb }} {{ t.name }}{% endif %}</a>
         </div>
+        {% endfor %}
       </div>
-
     </div>
   </div>
-  {% endif %}
+</div>
+{% endif %}
 
-  <!-- LOGIN REQUIRED MODAL -->
-  <div id="login-modal" class="fixed inset-0 z-[140] w-screen h-screen bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4 overflow-hidden">
-    <div class="relative bg-surface-container-low border border-outline-variant/30 rounded-2xl max-w-lg w-full p-6 sm:p-7 space-y-4 shadow-2xl my-auto text-center">
-      <div class="mx-auto w-12 h-12 rounded-2xl bg-primary-container/20 border border-primary-container/30 flex items-center justify-center text-primary">
-        <span class="material-symbols-outlined text-[24px]">lock</span>
-      </div>
+<!-- ===================== Login required modal ===================== -->
+<div id="login-modal" class="app-modal fixed inset-0 hidden">
+  <div class="am-card sm">
+    <div class="center-modal">
+      <span class="ic"><span class="material-symbols-outlined">lock</span></span>
       <div>
-        <h3 id="login-modal-title" class="text-headline-sm font-headline-sm font-bold text-on-surface">Please Log In</h3>
-        <p id="login-modal-desc" class="text-body-sm font-body-sm text-on-surface-variant mt-1.5 leading-relaxed">
+        <h3 id="login-modal-title">Please Log In</h3>
+        <p id="login-modal-desc" style="margin-top:8px">
           Please log in to use this feature. Sign in with Google to analyze leads, detect tech stacks, and generate personalized outreach.
         </p>
       </div>
-
-      <div class="space-y-2.5 pt-2">
-        <a id="btn-modal-google-login" href="/auth/google/login" class="btn-tactile-slate flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-lg text-label-md font-label-md font-semibold transition shadow-sm cursor-pointer">
-          <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24"><path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
-          <span>Sign In with Google</span>
+      <div class="stack-btns">
+        <a id="btn-modal-google-login" href="/auth/google/login" class="btn btn-google btn-lg btn-block">
+          <svg class="g-logo" aria-hidden="true"><use href="#i-google"/></svg><span>Sign In with Google</span>
         </a>
-
         {% if dev_mode %}
-        <div class="space-y-1.5 pt-2 border-t border-outline-variant/20">
-          <span class="text-caption font-caption text-outline uppercase tracking-wider block">Dev Sandbox Quick Access</span>
-          <button id="btn-modal-admin-login" type="button" class="w-full py-2.5 px-3 rounded-lg bg-error/10 hover:bg-error/20 border border-error/30 text-label-sm font-label-sm font-bold text-error transition cursor-pointer flex items-center justify-center gap-2 shadow-sm" title="Sign In as Master Admin">
-            <span class="material-symbols-outlined text-[16px]">verified_user</span>
-            <span>Sign In as Master Admin</span>
+        <div class="dev-box">
+          <span class="sub-label">Dev sandbox quick access</span>
+          <button id="btn-modal-admin-login" type="button" class="btn btn-danger-soft btn-block" title="Sign In as Master Admin">
+            <span class="material-symbols-outlined">verified_user</span><span>Sign In as Master Admin</span>
           </button>
-          <button id="btn-modal-demo-login" type="button" class="w-full py-2 px-3 rounded-lg bg-surface-container hover:bg-surface-container-high border border-outline-variant/30 text-label-sm font-label-sm font-medium text-on-surface transition cursor-pointer flex items-center justify-center gap-2" title="Sign In as Standard User">
-            <span class="material-symbols-outlined text-[16px]">person</span>
-            <span>Sign In as Standard User</span>
+          <button id="btn-modal-demo-login" type="button" class="btn btn-secondary btn-block" title="Sign In as Standard User">
+            <span class="material-symbols-outlined">person</span><span>Sign In as Standard User</span>
           </button>
         </div>
         {% endif %}
-
-        <button id="login-modal-close" type="button" class="w-full py-1.5 text-label-sm font-label-sm text-outline hover:text-on-surface transition cursor-pointer">
-          Cancel
-        </button>
+        <button id="login-modal-close" type="button" class="btn btn-ghost btn-block">Cancel</button>
       </div>
     </div>
   </div>
+</div>
 
-  <!-- RESUME ATTACHMENT CONFIRMATION MODAL -->
-  <div id="resume-confirm-modal" class="fixed inset-0 z-[145] w-screen h-screen bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4 overflow-hidden">
-    <div class="relative bg-surface-container-low border border-outline-variant/30 rounded-2xl max-w-md w-full p-6 sm:p-7 space-y-4 shadow-2xl my-auto text-center">
-      <div class="mx-auto w-12 h-12 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-500">
-        <span class="material-symbols-outlined text-[24px]">attach_file</span>
-      </div>
+<!-- ===================== Resume confirmation modal ===================== -->
+<div id="resume-confirm-modal" class="app-modal fixed inset-0 hidden">
+  <div class="am-card sm">
+    <div class="center-modal">
+      <span class="ic warn"><span class="material-symbols-outlined">attach_file</span></span>
       <div>
-        <h3 id="resume-confirm-title" class="text-headline-sm font-headline-sm font-bold text-on-surface">Send Without Resume Attachment?</h3>
-        <p id="resume-confirm-desc" class="text-body-sm font-body-sm text-on-surface-variant mt-2 leading-relaxed">
+        <h3 id="resume-confirm-title">Send Without Resume Attachment?</h3>
+        <p id="resume-confirm-desc" style="margin-top:8px">
           No resume file is currently attached. Sending cold outreach without your resume attached may lower response rates from hiring teams.
         </p>
       </div>
-
-      <div class="space-y-2 pt-2">
-        <button id="btn-resume-confirm-attach" type="button" class="btn-tactile-ecru flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-lg text-label-md font-label-md font-semibold transition shadow-sm cursor-pointer">
-          <span class="material-symbols-outlined text-[17px]">upload_file</span>
-          <span>Attach Resume First</span>
+      <div class="stack-btns">
+        <button id="btn-resume-confirm-attach" type="button" class="btn btn-primary btn-lg btn-block">
+          <span class="material-symbols-outlined">upload_file</span><span>Attach Resume First</span>
         </button>
-        <button id="btn-resume-confirm-proceed" type="button" class="btn-tactile-slate flex items-center justify-center gap-2 w-full py-2.5 px-4 rounded-lg text-label-md font-label-md font-semibold transition shadow-sm cursor-pointer text-on-surface hover:text-amber-400">
-          <span class="material-symbols-outlined text-[17px]">send</span>
-          <span>Send Without Resume</span>
+        <button id="btn-resume-confirm-proceed" type="button" class="btn btn-secondary btn-lg btn-block">
+          <span class="material-symbols-outlined">send</span><span>Send Without Resume</span>
         </button>
-        <button id="btn-resume-confirm-cancel" type="button" class="w-full py-1.5 text-label-sm font-label-sm text-outline hover:text-on-surface transition cursor-pointer">
-          Cancel
-        </button>
+        <button id="btn-resume-confirm-cancel" type="button" class="btn btn-ghost btn-block">Cancel</button>
       </div>
     </div>
   </div>
+</div>
 
-  <script id="initial-auth-data" type="application/json">
-    {
-      "is_logged_in": {{ 'true' if is_logged_in else 'false' }},
-      "email": {% if user and is_logged_in %}"{{ user.email }}"{% else %}null{% endif %},
-      "is_master_admin": {{ 'true' if is_master_admin else 'false' }},
-      "subscription_tier": "{{ user_subscription_tier if user_subscription_tier else 'free' }}",
-      "subscription_tier_name": "{{ user_subscription_tier_name if user_subscription_tier_name else 'Free Job Seeker' }}",
-      "daily_pitch_limit": {{ user_daily_limit if user_daily_limit is defined else 10 }},
-      "pitches_sent_today": {{ user_sent_today if user_sent_today is defined else 0 }},
-      "pitches_remaining": {{ user_remaining if user_remaining is defined else 10 }},
-      "dev_mode": {{ 'true' if dev_mode else 'false' }}
-    }
-  </script>
-  <script>
-    try {
-      window.__INITIAL_AUTH__ = JSON.parse(document.getElementById("initial-auth-data").textContent);
-    } catch (_) {
-      window.__INITIAL_AUTH__ = { is_logged_in: false, email: null, is_master_admin: false, dev_mode: false };
-    }
-  </script>
-  <script src="/static/js/scroll-lock.js?v=1.3"></script>
-  <script src="/static/js/app.js?v=10.13"></script>
-</body>
-</html>
+<script id="initial-auth-data" type="application/json">
+  {
+    "is_logged_in": {{ 'true' if is_logged_in else 'false' }},
+    "email": {% if user and is_logged_in %}"{{ user.email }}"{% else %}null{% endif %},
+    "is_master_admin": {{ 'true' if is_master_admin else 'false' }},
+    "subscription_tier": "{{ user_subscription_tier if user_subscription_tier else 'free' }}",
+    "subscription_tier_name": "{{ user_subscription_tier_name if user_subscription_tier_name else 'Free Job Seeker' }}",
+    "daily_pitch_limit": {{ user_daily_limit if user_daily_limit is defined else 10 }},
+    "pitches_sent_today": {{ user_sent_today if user_sent_today is defined else 0 }},
+    "pitches_remaining": {{ user_remaining if user_remaining is defined else 10 }},
+    "dev_mode": {{ 'true' if dev_mode else 'false' }}
+  }
+</script>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  try {
+    window.__INITIAL_AUTH__ = JSON.parse(document.getElementById("initial-auth-data").textContent);
+  } catch (_) {
+    window.__INITIAL_AUTH__ = { is_logged_in: false, email: null, is_master_admin: false, dev_mode: false };
+  }
+</script>
+<script src="/static/js/scroll-lock.js?v=1.3"></script>
+{#- Feature files first (plain scripts, shared global scope), then the controller. -#}
+<script src="/static/js/app/utils.js?v={{ asset_v }}"></script>
+<script src="/static/js/app/feedback.js?v={{ asset_v }}"></script>
+<script src="/static/js/app/pagination.js?v={{ asset_v }}"></script>
+<script src="/static/js/app/dropdown.js?v={{ asset_v }}"></script>
+<script src="/static/js/app/activity.js?v={{ asset_v }}"></script>
+<script src="/static/js/app/subscription.js?v={{ asset_v }}"></script>
+<script src="/static/js/app/profile.js?v={{ asset_v }}"></script>
+<script src="/static/js/app/theme.js?v={{ asset_v }}"></script>
+<script src="/static/js/app/shortcuts.js?v={{ asset_v }}"></script>
+<script src="/static/js/app.js?v={{ asset_v }}"></script>
+{% endblock %}

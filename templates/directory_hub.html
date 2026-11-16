@@ -1,349 +1,164 @@
-<!DOCTYPE html>
-<html class="dark" lang="en">
-<head>
-  <meta charset="utf-8"/>
-  <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-  <link rel="icon" type="image/svg+xml" href="/static/img/favicon.svg">
-  <link rel="icon" type="image/x-icon" href="/static/favicon.ico">
-  <title>{{ page_title }} | OutreachPilot</title>
+{% extends "base.html" %}
+{% import "macros/ui.html" as ui %}
+{% set page_css = ["directory.css"] %}
+{% set nav_cta_href = workspace_url or '/app' %}
+{% set nav_cta_label = "Scout Workspace" %}
+
+{% block title %}{{ page_title }} | OutreachPilot{% endblock %}
+
+{% block meta %}
   <meta name="description" content="{{ meta_description }}"/>
   <link rel="canonical" href="{{ canonical_url }}"/>
-
-  <!-- Open Graph -->
   <meta property="og:type" content="website"/>
   <meta property="og:url" content="{{ canonical_url }}"/>
   <meta property="og:title" content="{{ page_title }} | OutreachPilot"/>
   <meta property="og:description" content="{{ meta_description }}"/>
   <meta property="og:site_name" content="OutreachPilot"/>
-
-  <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image"/>
   <meta name="twitter:title" content="{{ page_title }}"/>
   <meta name="twitter:description" content="{{ meta_description }}"/>
-
-  <!-- Typography -->
-  <link rel="preload" href="/static/fonts/spacegrotesk-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="/static/fonts/dmsans-latin.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="/static/css/fonts.css">
-  <link rel="stylesheet" href="/static/css/style.css?v=9.0">
-  <script src="https://cdn.tailwindcss.com/3.4.17?plugins=forms@0.5.10"></script>
-
-  <script>
-    (function() {
-      try {
-        const saved = localStorage.getItem('pilot_theme');
-        const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
-        const theme = saved ? saved : 'light'; /* default: light */
-        if (theme === 'light') {
-          document.documentElement.classList.remove('dark');
-          document.documentElement.classList.add('light');
-        } else {
-          document.documentElement.classList.add('dark');
-          document.documentElement.classList.remove('light');
-        }
-      } catch (e) {}
-    })();
-  </script>
-
-  <script>
-    tailwind.config = {
-      darkMode: "class",
-      theme: {
-        extend: {
-          colors: {
-            "background": "rgb(var(--color-background) / <alpha-value>)",
-            "on-background": "rgb(var(--color-on-background) / <alpha-value>)",
-            "surface": "rgb(var(--color-surface) / <alpha-value>)",
-            "surface-container-lowest": "rgb(var(--color-surface-container-lowest) / <alpha-value>)",
-            "surface-container-low": "rgb(var(--color-surface-container-low) / <alpha-value>)",
-            "surface-container": "rgb(var(--color-surface-container) / <alpha-value>)",
-            "surface-container-high": "rgb(var(--color-surface-container-high) / <alpha-value>)",
-            "outline": "rgb(var(--color-outline) / <alpha-value>)",
-            "outline-variant": "rgb(var(--color-outline-variant) / <alpha-value>)",
-            "primary": "rgb(var(--color-primary) / <alpha-value>)",
-            "secondary": "rgb(var(--color-secondary) / <alpha-value>)",
-            "tertiary": "rgb(var(--color-tertiary) / <alpha-value>)",
-            "on-surface": "rgb(var(--color-on-surface) / <alpha-value>)",
-            "on-surface-variant": "rgb(var(--color-on-surface-variant) / <alpha-value>)"
-          },
-          fontFamily: {
-            display: ["Space Grotesk", "-apple-system", "sans-serif"],
-            sans: ["DM Sans", "-apple-system", "sans-serif"],
-            mono: ["JetBrains Mono", "monospace"]
-          }
-        }
-      }
-    };
-  </script>
-
-  <style>
-    .tnum { font-variant-numeric: tabular-nums; }
-    .bento-cell {
-      background-color: rgb(var(--color-surface-container-low));
-      border: 1px solid rgb(var(--color-outline));
-      border-radius: 0.75rem;
-      transition: all 0.2s ease;
-    }
-    .bento-cell:hover {
-      border-color: rgb(var(--color-outline-variant));
-      transform: translateY(-2px);
-    }
-    .btn-tactile-ecru {
-      background-color: #EFECE6;
-      color: #111317;
-      border: 1px solid #EFECE6;
-      font-weight: 600;
-      transition: all 0.15s ease;
-    }
-    .btn-tactile-ecru:hover {
-      background-color: #DFDCD5;
-      transform: translateY(-1px);
-    }
-  </style>
-
-  <!-- AEO Schema.org JSON-LD Structured Data -->
   <script type="application/ld+json">
   {{ json_ld_schema | safe }}
   </script>
-</head>
-<body class="bg-background text-on-background min-h-screen flex flex-col font-sans antialiased selection:bg-secondary/20 selection:text-secondary">
+{% endblock %}
 
-  <!-- NAVBAR -->
-  <header class="w-full border-b border-outline bg-background/90 backdrop-blur sticky top-0 z-40">
-    <div class="max-w-6xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between gap-4">
-      <div class="flex items-center gap-4 sm:gap-6 shrink-0">
-        <a href="/" class="flex items-center gap-2 group shrink-0 whitespace-nowrap">
-          <div class="w-7 h-7 rounded-lg bg-surface-container-high border border-outline-variant flex items-center justify-center text-primary shrink-0">
-            <span class="material-symbols-outlined text-[17px]">rocket_launch</span>
-          </div>
-          <span class="font-display font-bold text-base tracking-tight text-primary whitespace-nowrap">Outreach<span class="text-secondary">Pilot</span></span>
-        </a>
-        <nav class="hidden md:flex items-center gap-4 text-xs font-mono text-on-surface-variant whitespace-nowrap shrink-0">
-          <a href="/directory" class="text-primary font-semibold border-b-2 border-secondary pb-0.5 whitespace-nowrap">Directory</a>
-          <a href="/#workflow" class="hover:text-primary transition-colors whitespace-nowrap">How It Works</a>
-          <a href="/#capabilities" class="hover:text-primary transition-colors whitespace-nowrap">Features</a>
-        </nav>
-      </div>
+{% block body_class %}page-directory{% endblock %}
 
-      <div class="flex items-center gap-2.5 sm:gap-3 shrink-0 whitespace-nowrap">
-        <button id="btn-theme-toggle" type="button" aria-label="Toggle Theme" class="w-8 h-8 rounded-lg flex items-center justify-center text-on-surface-variant hover:text-on-surface hover:bg-surface-container border border-outline-variant/40 transition cursor-pointer shrink-0">
-          <span id="theme-toggle-icon" class="material-symbols-outlined text-[18px]">light_mode</span>
-        </button>
-        <a href="{{ workspace_url or '/app' }}" class="btn-tactile-ecru flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-mono font-bold whitespace-nowrap shrink-0">
-          <span>Scout Workspace</span>
-          <span class="material-symbols-outlined text-[14px] shrink-0">arrow_forward</span>
-        </a>
-      </div>
-    </div>
-  </header>
+{% block content %}
+<div class="crumb-bar">
+  <div class="container">
+    <nav class="crumbs" aria-label="Breadcrumb">
+      <a href="/">Home</a>
+      <span class="sep">/</span>
+      <a href="/directory">Directory</a>
+      <span class="sep">/</span>
+      <span class="here">{{ hub_name }}</span>
+    </nav>
+  </div>
+</div>
 
-  <!-- BREADCRUMBS -->
-  <nav class="w-full border-b border-outline/60 bg-surface-container-lowest/40" aria-label="Breadcrumb">
-    <div class="max-w-6xl mx-auto px-6 py-2.5 text-xs font-mono text-on-surface-variant flex items-center gap-2">
-      <a href="/" class="hover:text-primary transition-colors">Home</a>
-      <span class="text-outline-variant">/</span>
-      <a href="/directory" class="hover:text-primary transition-colors">Directory</a>
-      <span class="text-outline-variant">/</span>
-      <span class="text-primary font-medium">{{ hub_name }}</span>
-    </div>
-  </nav>
-
-  <main class="flex-grow flex flex-col items-center w-full px-6 py-10">
-    <div class="w-full max-w-6xl space-y-10">
-
-      <!-- HEADER -->
-      <section class="space-y-3">
-        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-container-high border border-outline-variant text-xs font-mono text-secondary">
-          <span class="w-2 h-2 rounded-full bg-secondary"></span>
-          <span>{{ hub_badge }}</span>
-        </div>
-        <h1 class="text-2xl sm:text-3xl md:text-4xl font-display font-bold text-primary tracking-tight">
+<section class="dir-hero">
+  <div class="container hub-top">
+    <div class="hub-copy">
+      <span class="hero-badge reveal"><span class="dot dot-live"></span><span>{{ hub_badge }}</span></span>
+      <h1 class="h1 reveal" style="--d:.05s">
           {{ page_heading }}
         </h1>
-        <p class="text-sm text-on-surface-variant max-w-3xl leading-relaxed">
+      <p class="lead reveal" style="--d:.1s">
           {{ page_subtitle }}
         </p>
-      </section>
-
-      <!-- AEO DIRECT-ANSWER KEY TAKEAWAYS BOX -->
-      <section class="bento-cell p-5 bg-surface-container-high/40 border-secondary/30 space-y-3" aria-label="Executive Summary">
-        <div class="flex items-center gap-2 text-xs font-mono text-secondary font-semibold">
-          <span class="material-symbols-outlined text-[16px]">verified</span>
-          <span>AT A GLANCE</span>
-        </div>
-        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-1">
-          <div class="p-3 rounded-lg bg-surface-container-lowest border border-outline font-mono text-xs">
-            <span class="text-on-surface-variant block text-[11px]">Total Verified Companies:</span>
-            <span class="text-lg font-bold text-primary tnum">{{ "{:,}".format(total_companies) }} {{ 'company' if total_companies == 1 else 'companies' }}</span>
-          </div>
-          <div class="p-3 rounded-lg bg-surface-container-lowest border border-outline font-mono text-xs">
-            <span class="text-on-surface-variant block text-[11px]">Average Client Sentiment:</span>
-            <span class="text-lg font-bold text-secondary tnum">{{ avg_rating }}★ / 5.0</span>
-          </div>
-          <div class="p-3 rounded-lg bg-surface-container-lowest border border-outline font-mono text-xs">
-            <span class="text-on-surface-variant block text-[11px]">Contact &amp; Outreach Readiness:</span>
-            <span class="text-lg font-bold text-tertiary">Verified Contacts</span>
-          </div>
-        </div>
-      </section>
-
-      <!-- INTERNAL LINKING: RELATED TOPICS -->
-      {% if related_items and related_items|length > 0 %}
-      <section class="space-y-3">
-        <h2 class="text-xs font-mono uppercase tracking-wider text-on-surface-variant font-semibold">
-          {{ related_title }}
-        </h2>
-        <div class="flex flex-wrap gap-2">
-          {% for r in related_items %}
-          <a href="{{ r.url }}" class="px-2.5 py-1 rounded-md text-xs font-mono bg-surface-container hover:bg-surface-container-high text-primary border border-outline hover:border-secondary transition-all flex items-center gap-1.5">
-            <span>{{ r.name }}</span>
-            <span class="text-on-surface-variant text-[10px] tnum">({{ r.count }})</span>
-          </a>
-          {% endfor %}
-        </div>
-      </section>
-      {% endif %}
-
-      <!-- COMPANY LISTINGS GRID -->
-      <section class="space-y-4">
-        <div class="flex items-center justify-between border-b border-outline pb-2.5">
-          <h2 class="text-lg font-display font-bold text-primary">
-            Verified Company Profiles <span class="text-xs font-mono text-on-surface-variant font-normal">({{ companies|length }} showing)</span>
-          </h2>
-          <a href="{{ workspace_url or '/app' }}" class="text-xs font-mono text-secondary hover:underline flex items-center gap-1">
-            <span>Prospect all in Workspace</span>
-            <span class="material-symbols-outlined text-[14px]">arrow_forward</span>
-          </a>
-        </div>
-
-        {% if companies and companies|length > 0 %}
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {% for c in companies %}
-          <div class="rounded-xl border border-outline-variant/40 bg-surface-container-low p-4 sm:p-5 flex flex-col justify-between hover:border-secondary/60 hover:shadow-md transition-all group">
-            <div>
-              <div class="flex items-start justify-between gap-2.5 mb-2">
-                <a href="/company/{{ c.slug }}" class="font-display font-bold text-sm text-on-surface hover:text-secondary transition-colors line-clamp-1" title="{{ c.name }}">
-                  {{ c.name }}
-                </a>
-                <span class="text-xs font-mono text-amber-500 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20 flex items-center gap-1 shrink-0 font-semibold">
-                  <span class="material-symbols-outlined text-[13px] fill-current">star</span>
-                  <span class="tnum">{{ c.rating }}</span>
-                  <span class="text-on-surface-variant text-[10px] tnum font-normal">({{ c.reviews_count }})</span>
-                </span>
-              </div>
-
-              <div class="text-[11px] font-mono text-on-surface-variant flex items-center gap-1.5 mb-3 flex-wrap">
-                <span class="flex items-center gap-0.5 text-on-surface-variant/80">
-                  <span class="material-symbols-outlined text-[13px]">location_on</span>
-                  <span>{{ c.city }}</span>
-                </span>
-                <span class="h-3 w-px bg-outline-variant/50" aria-hidden="true"></span>
-                <a href="{{ c.website_url if c.website_url else 'https://' + c.domain }}" target="_blank" rel="noopener noreferrer" class="text-primary hover:underline truncate max-w-[140px] inline-flex items-center gap-0.5">
-                  <span class="truncate">{{ c.domain }}</span>
-                  <span class="material-symbols-outlined text-[11px] shrink-0">open_in_new</span>
-                </a>
-                {% if c.industry_domain %}
-                <span class="h-3 w-px bg-outline-variant/50" aria-hidden="true"></span>
-                <span class="text-[10px] px-1.5 py-0.2 rounded bg-surface-container border border-outline-variant/40 text-on-surface-variant">{{ c.industry_domain }}</span>
-                {% endif %}
-              </div>
-
-              {% if c.profile.summary %}
-              <p class="text-xs text-on-surface-variant leading-relaxed line-clamp-2 mb-3 font-sans min-h-[36px]">
-                {{ c.profile.summary }}
-              </p>
-              {% else %}
-              <div class="min-h-[36px] mb-3 text-xs text-on-surface-variant/40 italic">
-                Verified commercial entity with crawled domain intelligence.
-              </div>
-              {% endif %}
-
-              <!-- Tech Stack Badges -->
-              {% if c.tech_stack and c.tech_stack|length > 0 %}
-              <div class="flex flex-wrap gap-1 mb-4 min-h-[24px]">
-                {% for tag in c.tech_stack[:4] %}
-                <span class="px-2 py-0.5 rounded text-[10px] font-mono bg-surface-container text-on-surface-variant border border-outline-variant/40">
-                  {{ tag }}
-                </span>
-                {% endfor %}
-              </div>
-              {% else %}
-              <div class="min-h-[24px] mb-4"></div>
-              {% endif %}
-            </div>
-
-            <div class="pt-3 border-t border-outline-variant/30 grid grid-cols-2 gap-2 text-xs font-mono">
-              <a href="/company/{{ c.slug }}" class="h-8 px-2.5 rounded-lg border border-outline-variant/50 bg-surface-container hover:bg-surface-container-high text-on-surface flex items-center justify-center gap-1 font-semibold transition-all">
-                <span>Dossier</span>
-                <span class="material-symbols-outlined text-[13px]">arrow_forward</span>
-              </a>
-              <a href="/app?action=pitch&company_id={{ c.id }}&company_name={{ c.name | urlencode }}" class="h-8 px-2.5 rounded-lg bg-primary hover:bg-primary/90 text-on-primary flex items-center justify-center gap-1 font-semibold transition-all shadow-xs">
-                <span class="material-symbols-outlined text-[13px]">send</span>
-                <span>Pitch Lead</span>
-              </a>
-            </div>
-          </div>
-          {% endfor %}
-        </div>
-        {% else %}
-        <div class="bento-cell p-8 text-center text-on-surface-variant font-mono text-xs">
-          No verified companies found matching this criteria yet.
-        </div>
-        {% endif %}
-      </section>
-
-      <!-- AEO FAQ SECTION -->
-      {% if faqs and faqs|length > 0 %}
-      <section class="bento-cell p-6 space-y-4">
-        <div class="flex items-center gap-2 text-xs font-mono text-secondary">
-          <span class="material-symbols-outlined text-sm">help_outline</span>
-          <span>FREQUENTLY ASKED QUESTIONS</span>
-        </div>
-        <h2 class="text-xl font-display font-bold text-primary">Frequently Asked Questions</h2>
-
-        <div class="space-y-3 pt-2">
-          {% for f in faqs %}
-          <details class="group border border-outline rounded-lg p-3.5 bg-surface-container-high/40" {% if loop.first %}open{% endif %}>
-            <summary class="font-display font-semibold text-sm text-primary cursor-pointer flex items-center justify-between">
-              <span>{{ f.question }}</span>
-              <span class="material-symbols-outlined text-sm group-open:rotate-180 transition-transform">expand_more</span>
-            </summary>
-            <p class="text-xs text-on-surface-variant leading-relaxed mt-2.5 pt-2 border-t border-outline/50">
-              {{ f.answer }}
-            </p>
-          </details>
-          {% endfor %}
-        </div>
-      </section>
-      {% endif %}
-
-    </div>
-  </main>
-
-  <!-- FOOTER -->
-  <footer class="w-full border-t border-outline bg-background py-8 text-xs font-mono text-on-surface-variant">
-    <div class="max-w-6xl mx-auto px-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-      <div>&copy; 2026 OutreachPilot. Direct Recruiter Outreach & Career Discovery Engine. All rights reserved.</div>
-      <div class="flex items-center gap-4">
-        <a href="/directory" class="hover:text-primary transition-colors">Directory</a>
-        <a href="/llms.txt" class="hover:text-primary transition-colors">llms.txt</a>
-        <a href="/sitemap.xml" class="hover:text-primary transition-colors">sitemap.xml</a>
+      <div class="hero-actions reveal" style="--d:.15s">
+        <a href="{{ workspace_url or '/app' }}" class="btn btn-primary"><span class="material-symbols-outlined" aria-hidden="true">travel_explore</span><span>Prospect all in Workspace</span></a>
+        <a href="/directory" class="btn btn-secondary">Back to the directory</a>
       </div>
     </div>
-  </footer>
 
-  <script>
-    function toggleTheme() {
-      const isLight = document.documentElement.classList.contains("light");
-      const next = isLight ? "dark" : "light";
-      document.documentElement.classList.toggle("dark", next === "dark");
-      document.documentElement.classList.toggle("light", next === "light");
-      try { localStorage.setItem("pilot_theme", next); } catch (_) {}
-      const icon = document.getElementById("theme-toggle-icon");
-      if (icon) icon.textContent = next === "light" ? "dark_mode" : "light_mode";
-    }
-    document.getElementById("btn-theme-toggle")?.addEventListener("click", toggleTheme);
-  </script>
-</body>
-</html>
+    <section class="glance reveal" style="--d:.2s" aria-label="Executive Summary">
+      <span class="glance-title"><span class="material-symbols-outlined" aria-hidden="true">verified</span>At a glance</span>
+      <div class="stat-row cols-3">
+        <div class="stat-card"><div class="v tnum">{{ "{:,}".format(total_companies) }}</div><div class="k">Verified {{ 'company' if total_companies == 1 else 'companies' }}</div></div>
+        <div class="stat-card">{% if avg_rating %}<div class="v accent tnum">{{ avg_rating }}<span class="subtle" style="font-size:.5em">/5</span></div>{% else %}<div class="v" style="font-size:1.25rem;line-height:1.3">No ratings yet</div>{% endif %}<div class="k">Average Google rating</div></div>
+        <div class="stat-card"><div class="v" style="font-size:1.25rem;line-height:1.3">Verified contacts</div><div class="k">Contact and outreach ready</div></div>
+      </div>
+    </section>
+  </div>
+</section>
 
+{% if related_items and related_items|length > 0 %}
+<section class="section tight" style="padding-top:0">
+  <div class="container">
+    <div class="related-block reveal">
+      <div class="related-title"><span class="material-symbols-outlined" aria-hidden="true">explore</span><h2>{{ related_title }}</h2></div>
+      <ul class="chip-cloud" role="list">
+        {% for r in related_items %}
+        <li><a href="{{ r.url }}" class="link-chip"><span>{{ r.name }}</span><span class="n tnum">({{ r.count }})</span></a></li>
+        {% endfor %}
+      </ul>
+    </div>
+  </div>
+</section>
+{% endif %}
+
+<section class="section tight" style="padding-top:0">
+  <div class="container">
+    <div class="dir-head">
+      <h2>
+            Verified Company Profiles <span class="subtle tnum" style="font-family:var(--font-mono);font-size:.5em;letter-spacing:0">({{ companies|length }} showing)</span>
+          </h2>
+      <a href="{{ workspace_url or '/app' }}" class="btn btn-text"><span>Prospect all in Workspace</span><svg class="ico ico-sm arrow" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+    </div>
+
+    {% if companies and companies|length > 0 %}
+    <ul class="co-grid reveal-stagger" role="list">
+      {% for c in companies %}
+      <li>
+        <article class="co-card">
+          <div class="co-id">
+            <span class="co-mono" aria-hidden="true">{{ (c.name or "?")[:1] | upper }}</span>
+            <div class="grow">
+              <a href="/company/{{ c.slug }}" class="co-name" title="{{ c.name }}">
+                  {{ c.name }}
+                </a>
+              <div class="co-meta">
+                <span><span class="material-symbols-outlined" aria-hidden="true">location_on</span>{{ c.city }}</span>
+                <a href="{{ c.website_url if c.website_url else 'https://' + c.domain }}" target="_blank" rel="noopener noreferrer" class="co-site"><span>{{ c.domain }}</span><span class="material-symbols-outlined" aria-hidden="true">open_in_new</span></a>
+                {% if c.industry_domain %}
+                <span class="pc-tag co-tag">{{ c.industry_domain }}</span>
+                {% endif %}
+              </div>
+            </div>
+            <span class="co-rating"><span class="material-symbols-outlined" aria-hidden="true">star</span><span class="tnum">{{ c.rating }}</span><span class="r tnum">({{ c.reviews_count }})</span></span>
+          </div>
+
+          {% if c.profile.summary %}
+          <p class="co-summary">
+                {{ c.profile.summary }}
+              </p>
+          {% endif %}
+
+          {% if c.tech_stack and c.tech_stack|length > 0 %}
+          <div class="co-tags">
+            {% for tag in c.tech_stack[:4] %}
+            <span>{{ tag }}</span>
+            {% endfor %}
+          </div>
+          {% endif %}
+
+          <div class="co-actions">
+            <a href="/company/{{ c.slug }}" class="btn btn-secondary btn-sm"><span>View profile</span></a>
+            <a href="/app?action=pitch&company_id={{ c.id }}&company_name={{ c.name | urlencode }}" class="btn btn-primary btn-sm"><span class="material-symbols-outlined" aria-hidden="true">send</span><span>Pitch Lead</span></a>
+          </div>
+        </article>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <div class="dir-empty">
+          No verified companies found matching this criteria yet.
+        </div>
+    {% endif %}
+  </div>
+</section>
+
+{% if faqs and faqs|length > 0 %}
+<section class="section tight">
+  <div class="container dir-faq">
+    <div class="section-head">
+      {{ ui.eyebrow("Questions") }}
+      <h2 class="h2">Frequently Asked Questions</h2>
+    </div>
+    <div class="faq">
+      {% for f in faqs %}
+      <details {% if loop.first %}open{% endif %}>
+        <summary>{{ f.question }}<span class="plus" aria-hidden="true"></span></summary>
+        <div class="answer">{{ f.answer }}</div>
+      </details>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+{% endblock %}

@@ -949,7 +949,7 @@ def workspace_page(request: Request, db: Session = Depends(get_db)):
     is_logged_in = bool(user and user.oauth_tokens)
     is_master_admin = bool(is_logged_in and (getattr(user, "is_admin", False) or config.is_master_admin(user.email)))
     all_domains = seo_engine.get_all_domains(db)
-    total_valid = sum(d.get("count", 0) for d in all_domains) or 55119
+    total_valid = sum(d.get("count", 0) for d in all_domains)
     sub_info = get_user_subscription_info(user, db)
     kill_switch = sub_info.get("kill_switch_active", False)
     
@@ -1257,7 +1257,9 @@ def directory_city_hub(city_slug: str, request: Request, db: Session = Depends(g
         for c in active_combos[:16]
     ]
     top_tech_names = [c["tech_name"] for c in active_combos[:5]]
-    avg_rating = round(sum(c["rating"] for c in companies) / max(1, len(companies)), 1) if companies else 4.2
+    # Average Google rating straight from the database aggregate for the whole city.
+    # With an industry filter there is no exact aggregate, so none is shown.
+    avg_rating = city_match.get("avg_rating") if not domain_clean else None
 
     faqs = seo_engine.generate_city_faqs(city_name, total_count, top_tech_names)
 
@@ -1321,7 +1323,9 @@ def directory_tech_hub(tech_slug: str, request: Request, db: Session = Depends(g
         for c in tech_combos[:16]
     ]
     top_city_names = [c["city_name"] for c in tech_combos[:5]]
-    avg_rating = round(sum(c["rating"] for c in companies) / max(1, len(companies)), 1) if companies else 4.3
+    # Average Google rating straight from the database aggregate for this category.
+    cat_match = next((t for t in seo_engine.get_all_categories(db) if t.get("slug") == tech_slug), None)
+    avg_rating = cat_match.get("avg_rating") if cat_match else None
 
     faqs = seo_engine.generate_tech_faqs(tech_name, total_count, top_city_names)
 
@@ -1408,7 +1412,9 @@ def directory_companies(
             for c in all_combos if c["tech_slug"] == tech_slug and c["city_slug"] != city_slug
         ][:12]
 
-        avg_rating = round(sum(c["rating"] for c in companies) / max(1, len(companies)), 1) if companies else 4.2
+        # Average Google rating straight from the database aggregate for this city and category.
+        combo_match = next((c for c in all_combos if c["city_slug"] == city_slug and c["tech_slug"] == tech_slug), None)
+        avg_rating = combo_match.get("avg_rating") if combo_match else None
         faqs = seo_engine.generate_combo_faqs(city_name, tech_name, total_count, avg_rating)
 
         breadcrumbs = [

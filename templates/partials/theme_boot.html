@@ -1,0 +1,17 @@
+{#- Applies the saved theme before first paint. Same rules as before:
+    key "pilot_theme", light unless the user picked dark. Also marks
+    the page as JS-enabled so reveal animations can start hidden. -#}
+<script>
+  (function () {
+    var root = document.documentElement;
+    root.classList.add("js");
+    try {
+      var saved = localStorage.getItem("pilot_theme");
+      var theme = saved ? saved : "light";
+      if (theme === "light") { root.classList.remove("dark"); root.classList.add("light"); }
+      else { root.classList.add("dark"); root.classList.remove("light"); }
+    } catch (e) {}
+  })();
+</script>
+<meta name="theme-color" content="#F0EDE3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#07080B" media="(prefers-color-scheme: dark)">

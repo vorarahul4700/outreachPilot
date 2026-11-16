@@ -1,0 +1,107 @@
+/* =========================================================
+   Overlays: modal, drawer, dropdown menu, toast, tooltip
+   ========================================================= */
+
+/* Modal */
+.modal {
+  position: fixed; inset: 0; z-index: var(--z-modal);
+  display: grid; place-items: center;
+  padding: 16px;
+  background: var(--overlay);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  animation: fade-in var(--t-base) var(--ease) both;
+}
+.modal-card {
+  position: relative;
+  width: min(100%, var(--modal-w, 520px));
+  max-height: calc(100dvh - 32px);
+  display: flex; flex-direction: column;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r-xl);
+  box-shadow: var(--shadow-xl);
+  overflow: hidden;
+  animation: scale-in var(--t-slow) var(--ease-out) both;
+}
+.modal-card.lg { --modal-w: 760px; }
+.modal-card.xl { --modal-w: 980px; }
+.modal-head { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--s-4); padding: 22px 24px 0; }
+.modal-title { font-family: var(--font-display); font-size: 1.45rem; line-height: 1.2; }
+.modal-body { padding: 16px 24px; overflow-y: auto; color: var(--text-2); }
+.modal-foot { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 10px; padding: 16px 24px 22px; }
+@media (max-width: 639px) {
+  .modal { place-items: end center; padding: 0; }
+  .modal-card { width: 100%; border-radius: var(--r-xl) var(--r-xl) 0 0; max-height: 92dvh; animation-name: rise-in; }
+  .modal-foot { padding-bottom: calc(18px + env(safe-area-inset-bottom)); }
+  .modal-foot .btn { flex: 1; }
+}
+
+/* Drawer (side sheet) */
+.drawer {
+  position: fixed; top: 0; right: 0; bottom: 0; z-index: var(--z-modal);
+  width: min(100%, 460px);
+  background: var(--surface); border-left: 1px solid var(--line); box-shadow: var(--shadow-xl);
+  transform: translateX(100%);
+  transition: transform var(--t-slow) var(--ease-out);
+  display: flex; flex-direction: column;
+}
+.drawer.is-open { transform: none; }
+
+/* Dropdown menu */
+.menu {
+  position: absolute; z-index: var(--z-dropdown);
+  min-width: 220px; padding: 6px;
+  background: var(--surface);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-lg);
+  animation: rise-in var(--t-base) var(--ease-out) both;
+}
+.menu-item {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  padding: 9px 10px; border-radius: 8px;
+  font-size: .9rem; color: var(--text); text-align: left;
+  transition: background-color var(--t-fast) var(--ease);
+}
+.menu-item:hover, .menu-item.is-active, .menu-item[aria-selected="true"] { background: var(--surface-3); }
+.menu-item .material-symbols-outlined { font-size: 18px; color: var(--text-3); }
+.menu-sep { height: 1px; margin: 6px 4px; background: var(--line); }
+.menu-label { padding: 8px 10px 4px; font-family: var(--font-mono); font-size: var(--fs-2xs); letter-spacing: var(--track-mono); text-transform: uppercase; color: var(--text-3); }
+
+/* Toast */
+.toast-stack {
+  position: fixed; z-index: var(--z-toast);
+  right: 16px; bottom: calc(16px + env(safe-area-inset-bottom));
+  display: grid; gap: 10px; width: min(calc(100% - 32px), 380px);
+  pointer-events: none;
+}
+.toast {
+  pointer-events: auto;
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--line-2);
+  border-radius: var(--r-lg);
+  box-shadow: var(--shadow-lg);
+  color: var(--text); font-size: var(--fs-sm);
+  animation: rise-in var(--t-slow) var(--ease-out) both;
+}
+.toast .material-symbols-outlined { color: var(--accent-text); }
+.toast.ok .material-symbols-outlined { color: var(--ok); }
+.toast.warn .material-symbols-outlined { color: var(--warn); }
+.toast.danger .material-symbols-outlined { color: var(--danger); }
+
+/* Tooltip (data-tip attribute) */
+[data-tip] { position: relative; }
+[data-tip]::after {
+  content: attr(data-tip);
+  position: absolute; left: 50%; bottom: calc(100% + 8px);
+  transform: translate(-50%, 4px);
+  padding: 6px 10px; border-radius: 8px;
+  background: var(--text); color: var(--text-inverse);
+  font-size: .75rem; font-weight: 600; white-space: nowrap;
+  opacity: 0; pointer-events: none;
+  transition: opacity var(--t-fast) var(--ease), transform var(--t-fast) var(--ease);
+}
+[data-tip]:hover::after, [data-tip]:focus-visible::after { opacity: 1; transform: translate(-50%, 0); }
