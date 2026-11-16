@@ -162,7 +162,7 @@
 .c-send-btn { pointer-events: none; }
 .console.is-sent .c-send-btn { background: var(--ok); }
 
-.pipeline {
+ol.pipeline { /* ol. beats the base ol[role="list"] reset, which zeroed this padding */
   display: grid; grid-template-columns: repeat(5, 1fr);
   list-style: none; padding: 14px 18px; margin: 0;
   border-top: 1px solid var(--line); background: var(--surface-2);
@@ -195,7 +195,7 @@
 .pipeline li.is-done i { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
 .pipeline li.is-done i b { display: none; }
 .pipeline li.is-done i .material-symbols-outlined { display: inline-flex; }
-@media (max-width: 559px) { .pipeline span { display: none; } .pipeline { padding: 12px; } }
+@media (max-width: 559px) { .pipeline span { display: none; } ol.pipeline { padding: 12px 12px 16px; } }
 
 /* ---------- Directory band + marquee items ---------- */
 .band { padding: clamp(36px, 5vw, 56px) 0; border-block: 1px solid var(--line); background: var(--bg-2); display: grid; gap: 14px; overflow: hidden; }
