@@ -9,7 +9,7 @@
                    "/" everywhere else (default)
       page_css     list of page stylesheets under /static/css/pages/
 ========================================================= -#}
-{%- set asset_v = "2.2.0" -%}
+{%- set asset_v = "2.3.0" -%}
 <!DOCTYPE html>
 <html lang="en" class="light {% block html_class %}{% endblock %}">
 <head>
@@ -21,10 +21,11 @@
   {% include "partials/head_assets.html" %}
   {% block head_extra %}{% endblock %}
 </head>
-<body class="{% block body_class %}{% endblock %}">
+<body class="{% block body_class %}{% endblock %} has-map">
   <a class="skip-link" href="#main">Skip to content</a>
   {% include "partials/icons.html" %}
-  {% block page_bg %}{% endblock %}
+  {#- Interactive map canvas behind every page (site/page-canvas.js). Decorative only. -#}
+  {% block page_bg %}<canvas id="page-canvas" class="page-canvas" aria-hidden="true"></canvas>{% endblock %}
 
   {% block nav %}{% include "partials/site_nav.html" %}{% endblock %}
 
@@ -42,6 +43,7 @@
   <script src="/static/js/site/nav.js?v={{ asset_v }}" defer></script>
   {% endif %}
   <script src="/static/js/site/motion.js?v={{ asset_v }}" defer></script>
+  <script src="/static/js/site/page-canvas.js?v={{ asset_v }}" defer></script>
   {% block scripts %}{% endblock %}
 </body>
 </html>

@@ -1,4 +1,4 @@
-/* Full-page interactive map behind the homepage.
+/* Full-page interactive map behind every page (loaded from base.html).
    The page is a map you scroll over:
    - Street-light dots drift with a slow parallax as you scroll.
    - A dashed route winds from the top of the page to the bottom. A paper
@@ -301,8 +301,24 @@
   document.addEventListener("pointerleave", function () { mouse.on = false; if (reduce) kick(); });
 
   var SKIP = "a,button,input,textarea,select,label,summary,details,[role=button],[role=tab],.card,.tile,.plan,.lab,.console,.mail,.cmp,.secure,.final,.faq,.flow-step,.browse-card,.m-item,.site-nav,.mobile-menu,.announce";
+  // True when the click landed on a solid panel (card, sidebar, table, modal) rather than
+  // on the open page background. Keeps the canvas out of the way in /app and /admin.
+  function onSolid(el) {
+    for (var n = el; n && n !== document.body && n !== document.documentElement; n = n.parentElement) {
+      if (n.tagName === "MAIN") continue;
+      var bg = getComputedStyle(n).backgroundColor;
+      var m = bg.match(/rgba?\(([^)]+)\)/);
+      if (!m) continue;
+      var parts = m[1].split(/[\s,\/]+/).filter(Boolean);
+      var a = parts.length > 3 ? parseFloat(parts[3]) : 1;
+      if (a >= 0.9) return true;
+    }
+    return false;
+  }
   document.addEventListener("click", function (e) {
     if (reduce || e.target.closest(SKIP)) return;
+    if (document.documentElement.classList.contains("scroll-locked") || e.target.closest(".fixed")) return;
+    if (onSolid(e.target)) return;
     if (window.getSelection && String(window.getSelection())) return;
     launch(e.clientX, e.clientY + (window.scrollY || 0), performance.now(), true);
     kick();
