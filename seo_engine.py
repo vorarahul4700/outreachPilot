@@ -12,6 +12,7 @@ Provides:
 """
 
 import html
+import json
 import math
 import os
 import re
@@ -24,7 +25,7 @@ from sqlalchemy import String, func, or_, text
 from sqlalchemy.orm import Session, joinedload
 
 import config
-from db import Company, CompanyEmail, CompanyProfile
+from db import Company, CompanyEmail, CompanyProfile, SystemSetting
 
 # In-memory cache store with 1-hour default TTL
 _SEO_CACHE: dict[str, dict[str, Any]] = {}
@@ -60,6 +61,169 @@ def clear_seo_cache():
     global _SEO_CACHE
     _SEO_CACHE = {}
     _COMPANY_DETAIL_CACHE.clear()
+
+
+# --- Hidden categories (admin panel > Categories) ---------------------------
+# An admin can switch a category off. The category and every company in it then
+# disappear from everything users see: the workspace list and filters, directory
+# pages, company profiles, sitemaps and llms.txt. Company rows are never changed;
+# user-facing queries add visible_kw_clause() / visible_kw_sql(). The admin panel
+# itself still lists every company.
+HIDDEN_CATEGORIES_KEY = "hidden_categories"
+_HIDDEN_SLUGS_TTL = 60        # re-read the setting at least once a minute (other workers)
+_HIDDEN_KEYWORDS_TTL = 900    # re-scan keywords every 15 min so new scrapes are covered
+_hidden_state: dict[str, Any] = {"slugs": None, "slugs_ts": 0.0, "keywords": None, "kw_ts": 0.0, "kw_for": None}
+
+# The keyword a company's category is derived from: the same expression the
+# category queries below group by. The trailing '' keeps rows with no keyword
+# visible (NOT (NULL = ANY(...)) would otherwise drop them).
+RAW_KW_SQL = "COALESCE(NULLIF(trim({p}normalized_keyword), ''), trim({p}search_keyword), '')"
+
+
+def _raw_kw_expr():
+    return func.coalesce(
+        func.nullif(func.trim(Company.normalized_keyword), ""),
+        func.trim(Company.search_keyword),
+        "",
+    )
+
+
+def clear_hidden_categories_cache() -> None:
+    _hidden_state.update(slugs=None, slugs_ts=0.0, keywords=None, kw_ts=0.0, kw_for=None)
+
+
+def get_hidden_category_slugs(db: Session) -> set[str]:
+    """Slugs of categories the admin has switched off (cached for a minute)."""
+    now = time.time()
+    if _hidden_state["slugs"] is not None and now - _hidden_state["slugs_ts"] < _HIDDEN_SLUGS_TTL:
+        return set(_hidden_state["slugs"])
+    slugs: set[str] = set()
+    try:
+        row = db.query(SystemSetting).filter(SystemSetting.key == HIDDEN_CATEGORIES_KEY).first()
+        if row and row.value:
+            slugs = {str(s).strip().lower() for s in json.loads(row.value) if str(s).strip()}
+    except Exception as e:
+        # Fail open: if the setting cannot be read, keep the last known list (or none).
+        print(f"[Categories] Could not read hidden categories: {e}")
+        try:
+            db.rollback()
+        except Exception:
+            pass
+        slugs = set(_hidden_state["slugs"] or [])
+    _hidden_state.update(slugs=slugs, slugs_ts=now)
+    return set(slugs)
+
+
+def get_hidden_category_keywords(db: Session) -> list[str]:
+    """Every raw keyword whose category is hidden. Empty when nothing is hidden."""
+    slugs = get_hidden_category_slugs(db)
+    if not slugs:
+        return []
+    now = time.time()
+    frozen = frozenset(slugs)
+    if (_hidden_state["keywords"] is not None and _hidden_state["kw_for"] == frozen
+            and now - _hidden_state["kw_ts"] < _HIDDEN_KEYWORDS_TTL):
+        return list(_hidden_state["keywords"])
+    try:
+        rows = db.execute(text(f"SELECT DISTINCT {RAW_KW_SQL.format(p='')} FROM companies")).fetchall()
+    except Exception as e:
+        print(f"[Categories] Could not scan category keywords: {e}")
+        try:
+            db.rollback()
+        except Exception:
+            pass
+        return list(_hidden_state["keywords"] or [])
+    keywords = []
+    for (kw,) in rows:
+        kw = (kw or "").strip()
+        if kw and tech_to_slug(normalize_keyword_to_category(kw)) in slugs:
+            keywords.append(kw)
+    _hidden_state.update(keywords=keywords, kw_ts=now, kw_for=frozen)
+    return list(keywords)
+
+
+def is_category_hidden(db: Session, category_name_or_slug: str) -> bool:
+    if not category_name_or_slug:
+        return False
+    return tech_to_slug(category_name_or_slug) in get_hidden_category_slugs(db)
+
+
+def visible_kw_clause(db: Session):
+    """ORM condition that is true for companies NOT in a hidden category (None = no filter)."""
+    keywords = get_hidden_category_keywords(db)
+    if not keywords:
+        return None
+    return ~_raw_kw_expr().in_(keywords)
+
+
+def apply_category_visibility(query, db: Session):
+    """Add the hidden-category filter to an ORM query on Company (no-op when nothing is hidden)."""
+    cond = visible_kw_clause(db)
+    return query.filter(cond) if cond is not None else query
+
+
+def visible_kw_sql(db: Session, prefix: str = "") -> tuple[str, dict]:
+    """Raw-SQL version: (' AND NOT (...)', params), or ('', {}) when nothing is hidden.
+    prefix is the table alias with its dot, e.g. 'c.'."""
+    keywords = get_hidden_category_keywords(db)
+    if not keywords:
+        return "", {}
+    return f" AND NOT ({RAW_KW_SQL.format(p=prefix)} = ANY(:hidden_kws))", {"hidden_kws": keywords}
+
+
+def set_hidden_categories(db: Session, slugs: set[str]) -> set[str]:
+    """Save the hidden list and drop every cache that could still show those companies."""
+    clean = sorted({str(s).strip().lower() for s in slugs if str(s).strip()})
+    row = db.query(SystemSetting).filter(SystemSetting.key == HIDDEN_CATEGORIES_KEY).first()
+    value = json.dumps(clean)
+    if row:
+        row.value = value
+    else:
+        db.add(SystemSetting(
+            key=HIDDEN_CATEGORIES_KEY,
+            value=value,
+            description="Category slugs hidden from users (admin panel > Categories)",
+        ))
+    db.commit()
+    clear_hidden_categories_cache()
+    clear_seo_cache()
+    return set(clean)
+
+
+def get_category_admin_overview(db: Session) -> list[dict[str, Any]]:
+    """Every category with its company count, ignoring the hidden switch (admin view only)."""
+    rows = db.execute(text(f"""
+        SELECT {RAW_KW_SQL.format(p='')} AS raw_kw, COUNT(*) AS cnt
+        FROM companies
+        WHERE is_invalid = FALSE
+        GROUP BY 1
+    """)).fetchall()
+    hidden = get_hidden_category_slugs(db)
+    cats: dict[str, dict[str, Any]] = {}
+    for raw_kw, cnt in rows:
+        raw_kw = (raw_kw or "").strip()
+        if not raw_kw:
+            continue  # no keyword = no category to switch
+        name = normalize_keyword_to_category(raw_kw)
+        slug = tech_to_slug(name)
+        entry = cats.get(slug)
+        if entry is None:
+            entry = cats[slug] = {
+                "slug": slug,
+                "name": name,
+                "domain": get_category_domain(name),
+                "domain_code": get_category_domain_code(name),
+                "count": 0,
+            }
+        entry["count"] += int(cnt or 0)
+    # Hidden categories that currently have no companies stay listed so they can be switched back on.
+    for slug in hidden - cats.keys():
+        name = slug_to_tech_name(slug)
+        cats[slug] = {"slug": slug, "name": name, "domain": get_category_domain(name),
+                      "domain_code": get_category_domain_code(name), "count": 0}
+    for entry in cats.values():
+        entry["hidden"] = entry["slug"] in hidden
+    return sorted(cats.values(), key=lambda e: (-e["count"], e["name"].lower()))
 
 
 # Bounded LRU cache for public company profile pages. Each profile is ~2-6 KB, so
@@ -752,7 +916,8 @@ def get_directory_stats(db: Session) -> dict[str, Any]:
     if cached:
         return cached
 
-    row = db.execute(text("""
+    vis_sql, vis_params = visible_kw_sql(db)
+    row = db.execute(text(f"""
         SELECT 
             COUNT(*) FILTER (WHERE is_invalid = FALSE) AS total_companies,
             COUNT(*) FILTER (WHERE is_invalid = FALSE AND is_enriched = TRUE) AS enriched_companies,
@@ -763,8 +928,9 @@ def get_directory_stats(db: Session) -> dict[str, Any]:
                 WHERE is_invalid = FALSE
                   AND EXISTS (SELECT 1 FROM company_emails ce WHERE ce.company_id = companies.id)
             ) AS email_companies
-        FROM companies;
-    """)).fetchone()
+        FROM companies
+        WHERE TRUE{vis_sql};
+    """), vis_params).fetchone()
 
     # Real values only: no invented fallbacks if the query returns nothing.
     stats = {
@@ -784,33 +950,35 @@ def get_all_cities(db: Session) -> list[dict[str, Any]]:
     if cached:
         return cached
 
+    vis_sql, vis_params = visible_kw_sql(db)
+
     # 1. City totals & average ratings
-    rows = db.execute(text("""
+    rows = db.execute(text(f"""
         SELECT 
             initcap(trim(city)) AS norm_city,
             COUNT(*) AS count,
             ROUND(AVG(rating)::numeric, 1) AS avg_rating
         FROM companies
-        WHERE is_invalid = FALSE 
+        WHERE is_invalid = FALSE{vis_sql}
           AND city IS NOT NULL 
           AND trim(city) != ''
         GROUP BY initcap(trim(city))
         HAVING COUNT(*) >= 1
         ORDER BY count DESC, norm_city ASC;
-    """)).fetchall()
+    """), vis_params).fetchall()
 
     # 2. City breakdown by raw keyword / category across industry domains
-    domain_rows = db.execute(text("""
+    domain_rows = db.execute(text(f"""
         SELECT 
             initcap(trim(city)) AS norm_city,
             COALESCE(NULLIF(trim(normalized_keyword), ''), trim(search_keyword), '') AS raw_kw,
             COUNT(*) AS cnt
         FROM companies
-        WHERE is_invalid = FALSE 
+        WHERE is_invalid = FALSE{vis_sql}
           AND city IS NOT NULL 
           AND trim(city) != ''
         GROUP BY initcap(trim(city)), COALESCE(NULLIF(trim(normalized_keyword), ''), trim(search_keyword), '');
-    """)).fetchall()
+    """), vis_params).fetchall()
 
     city_domain_counts = defaultdict(lambda: defaultdict(int))
     for r in domain_rows:
@@ -868,7 +1036,8 @@ def get_all_categories(db: Session) -> list[dict[str, Any]]:
     if cached:
         return cached
 
-    rows = db.execute(text("""
+    vis_sql, vis_params = visible_kw_sql(db)
+    rows = db.execute(text(f"""
         SELECT
             COALESCE(NULLIF(trim(normalized_keyword), ''), trim(search_keyword)) AS raw_kw,
             COUNT(*) AS count,
@@ -878,7 +1047,7 @@ def get_all_categories(db: Session) -> list[dict[str, Any]]:
                 WHERE EXISTS (SELECT 1 FROM company_emails ce WHERE ce.company_id = companies.id)
             ) AS emails_count
         FROM companies
-        WHERE is_invalid = FALSE 
+        WHERE is_invalid = FALSE{vis_sql}
           AND (
               (search_keyword IS NOT NULL AND trim(search_keyword) != '')
               OR (normalized_keyword IS NOT NULL AND trim(normalized_keyword) != '')
@@ -886,7 +1055,7 @@ def get_all_categories(db: Session) -> list[dict[str, Any]]:
         GROUP BY COALESCE(NULLIF(trim(normalized_keyword), ''), trim(search_keyword))
         HAVING COUNT(*) >= 1
         ORDER BY count DESC;
-    """)).fetchall()
+    """), vis_params).fetchall()
 
     results = []
     seen_slugs = set()
@@ -990,14 +1159,15 @@ def get_all_combinations(db: Session) -> list[dict[str, Any]]:
     if cached:
         return cached
 
-    rows = db.execute(text("""
+    vis_sql, vis_params = visible_kw_sql(db)
+    rows = db.execute(text(f"""
         SELECT 
             initcap(trim(city)) AS city_name,
             COALESCE(NULLIF(trim(normalized_keyword), ''), trim(search_keyword)) AS raw_kw,
             COUNT(*) AS count,
             ROUND((AVG(rating) FILTER (WHERE is_invalid = FALSE AND rating > 0))::numeric, 1) AS avg_rating
         FROM companies
-        WHERE is_invalid = FALSE 
+        WHERE is_invalid = FALSE{vis_sql}
           AND city IS NOT NULL AND trim(city) != ''
           AND (
               (search_keyword IS NOT NULL AND trim(search_keyword) != '')
@@ -1006,7 +1176,7 @@ def get_all_combinations(db: Session) -> list[dict[str, Any]]:
         GROUP BY initcap(trim(city)), COALESCE(NULLIF(trim(normalized_keyword), ''), trim(search_keyword))
         HAVING COUNT(*) >= 1
         ORDER BY count DESC;
-    """)).fetchall()
+    """), vis_params).fetchall()
 
     combos = []
     seen = {}
@@ -1053,6 +1223,11 @@ def get_companies_list(
         .options(joinedload(Company.profile), joinedload(Company.emails))
         .filter(Company.is_invalid.is_(False))
     )
+    query = apply_category_visibility(query, db)
+
+    # A hidden category's own page lists nothing, so its hub and city pages 404.
+    if tech and is_category_hidden(db, tech):
+        return [], 0
 
     if city:
         query = query.filter(func.lower(Company.city) == city.strip().lower())
@@ -1305,12 +1480,12 @@ def get_company_details(db: Session, company_id: int) -> dict[str, Any] | None:
     if cached is not None:
         return cached
 
-    c = (
+    c = apply_category_visibility(
         db.query(Company)
         .options(joinedload(Company.profile), joinedload(Company.emails))
-        .filter(Company.id == company_id, Company.is_invalid.is_(False))
-        .first()
-    )
+        .filter(Company.id == company_id, Company.is_invalid.is_(False)),
+        db,
+    ).first()
     if not c:
         return None
 
@@ -1376,8 +1551,11 @@ def get_nearby_companies(db: Session, city: str | None, exclude_id: int, limit: 
     top = get_cached(key)
     if top is None:
         rows = (
-            db.query(Company.id, Company.name, Company.domain, Company.rating, Company.reviews_count)
-            .filter(Company.is_invalid.is_(False), func.lower(Company.city) == city.strip().lower())
+            apply_category_visibility(
+                db.query(Company.id, Company.name, Company.domain, Company.rating, Company.reviews_count)
+                .filter(Company.is_invalid.is_(False), func.lower(Company.city) == city.strip().lower()),
+                db,
+            )
             .order_by(Company.is_enriched.desc(), Company.rating.desc().nullslast(),
                       Company.reviews_count.desc().nullslast(), Company.id.asc())
             .limit(limit + 1)
@@ -1645,8 +1823,10 @@ def generate_sitemap_companies(base_url: str, page: int, db: Session) -> str:
     limit = 5000
     offset = (page - 1) * limit
     companies = (
-        db.query(Company.id, Company.name, Company.domain)
-        .filter(Company.is_invalid.is_(False))
+        apply_category_visibility(
+            db.query(Company.id, Company.name, Company.domain).filter(Company.is_invalid.is_(False)),
+            db,
+        )
         .order_by(Company.id.asc())
         .offset(offset)
         .limit(limit)
