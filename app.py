@@ -66,21 +66,26 @@ def invalidate_filter_cache():
 
 import config
 import seo_engine
+import taxonomy
 from ai_agent import (
     generate_personalized_pitch,
     normalize_single_keyword,
     parse_resume_text,
 )
 from db import (
+    Category,
     ColdPitch,
     Company,
     CompanyEmail,
     CompanyProfile,
+    CompanyTech,
+    Industry,
     OutreachLog,
     ScoutJob,
     SessionLocal,
     SubscriptionTier,
     SystemSetting,
+    Tech,
     User,
     engine,
     get_db,
@@ -139,8 +144,7 @@ def _prewarm_cache():
                 COUNT(*) FILTER (WHERE is_invalid = FALSE{vis_sql}) AS total_valid,
                 COUNT(*) FILTER (WHERE is_invalid = TRUE) AS invalid_count,
                 COUNT(*) FILTER (WHERE is_invalid = FALSE AND is_enriched = TRUE{vis_sql}) AS enriched_count
-            FROM companies
-            WHERE domain NOT LIKE '%.local' AND domain LIKE '%.%';
+            FROM companies;
         """), vis_params).fetchone()
 
         total_valid = (counts_res[0] if counts_res else 0) or 0
@@ -1832,6 +1836,62 @@ async def stop_scrape():
     return {"status": "idle", "message": "No active scrape job."}
 
 
+# --- Company filters: exact ID matches on the taxonomy tables (taxonomy.py) ---
+# City, tech and industry never match on text. Names or slugs from the UI and links
+# are looked up exactly; anything unknown matches no company.
+
+def _multi_param(request: Request, names: tuple[str, ...], single: str) -> list[str]:
+    """Values of a repeatable / comma-separated query param."""
+    vals: list[str] = []
+    for n in names:
+        for v in request.query_params.getlist(n):
+            vals += [x.strip() for x in v.split(",") if x.strip()]
+        if vals:
+            break
+    if not vals and single and single.strip():
+        vals = [x.strip() for x in single.split(",") if x.strip()]
+    return vals
+
+
+def _city_id_cond(terms: list[str]):
+    if not terms:
+        return None
+    ids = [i for i in (taxonomy.city_id_for(t) for t in terms) if i]
+    return Company.city_id.in_(ids or [-1])
+
+
+def _tech_id_cond(db: Session, terms: list[str]):
+    """A company matches a tech when its category is that tech or its profile lists it."""
+    if not terms:
+        return None
+    cat_ids = [c["id"] for c in (taxonomy.category_for(t) for t in terms) if c]
+    tech_ids = [i for i in (taxonomy.tech_id_for(t) for t in terms) if i]
+    conds = []
+    if cat_ids:
+        conds.append(Company.category_id.in_(cat_ids))
+    if tech_ids:
+        conds.append(Company.id.in_(db.query(CompanyTech.company_id).filter(CompanyTech.tech_id.in_(tech_ids))))
+    return or_(*conds) if conds else (Company.id == -1)
+
+
+def _domain_id_cond(domain: str):
+    ids = taxonomy.industry_category_ids(domain)
+    return None if ids is None else Company.category_id.in_(ids or [-1])
+
+
+def _status_cond(db: Session, user, status_val: str):
+    if status_val == "enriched":
+        return Company.is_enriched.is_(True)
+    if status_val == "emails":
+        return Company.id.in_(db.query(CompanyEmail.company_id).distinct())
+    if status_val in ("contacted", "sent"):
+        if not user:
+            return Company.id == -1
+        return Company.id.in_(db.query(OutreachLog.company_id).filter(
+            OutreachLog.status == "SENT", OutreachLog.user_id == user.id).distinct())
+    return None
+
+
 @app.get("/api/companies/filters")
 def get_companies_filters(
     request: Request,
@@ -1909,326 +1969,82 @@ def get_companies_filters(
                         cached["stats"]["is_logged_in"] = bool(user)
                     return cached
 
-        # Helper: Build Tech condition
-        def build_tech_condition(t_terms):
-            if not t_terms:
-                return None
-            profile_conds = []
-            company_tech_conds = []
-            seo_engine.ensure_category_maps(db)
-            for t_term in t_terms:
-                t_slug = seo_engine.tech_to_slug(t_term)
-                canon_name = seo_engine.slug_to_tech_name(t_slug)
-                tokens = {t_term}
-                if canon_name:
-                    tokens.add(canon_name.lower())
-                if t_term in ("net", ".net", "dotnet"):
-                    tokens.update([".net", "dotnet"])
-                elif t_term in ("node", "nodejs", "node.js"):
-                    tokens.update(["node", "nodejs"])
-                elif t_term in ("react", "reactjs", "react.js"):
-                    tokens.update(["react", "react js"])
-                elif t_term in ("vue", "vuejs", "vue.js"):
-                    tokens.update(["vue", "vue.js"])
-                elif t_term in ("angular", "angularjs"):
-                    tokens.update(["angular", "angularjs"])
-                elif t_term in ("aws", "amazon web services"):
-                    tokens.update(["aws", "amazon web services"])
-
-                for tok in tokens:
-                    profile_conds.append(CompanyProfile.tech_stack.cast(String).ilike(f"%{tok}%"))
-                    company_tech_conds.append(Company.search_keyword.ilike(f"%{tok}%"))
-                    company_tech_conds.append(Company.normalized_keyword.ilike(f"%{tok}%"))
-                    company_tech_conds.append(Company.source_query.ilike(f"%{tok}%"))
-
-            if profile_conds:
-                prof_sub = db.query(CompanyProfile.company_id).filter(or_(*profile_conds))
-                company_tech_conds.append(Company.id.in_(prof_sub))
-
-            return or_(*company_tech_conds)
-
-        # Helper: Build Domain condition
-        def build_domain_condition(d_val):
-            if not d_val or d_val == "all":
-                return None
-            if d_val in ("it", "it-software"):
-                non_it = [raw for raw, cat in seo_engine.SEED_KEYWORD_OVERRIDES.items() if seo_engine.get_category_domain_code(cat) != "it"]
-                if non_it:
-                    return ~Company.search_keyword.in_(non_it)
-            else:
-                dom_kws = [raw for raw, cat in seo_engine.SEED_KEYWORD_OVERRIDES.items() if seo_engine.get_category_domain_code(cat) == d_val]
-                if dom_kws:
-                    return Company.search_keyword.in_(dom_kws)
-                else:
-                    return Company.id == -1
-            return None
-
-        # Helper: Build City condition
-        def build_city_condition(c_terms):
-            if not c_terms:
-                return None
-            city_conds = []
-            for c_term in c_terms:
-                c_pat = f"%{c_term}%"
-                city_conds.append(Company.city.ilike(c_pat))
-            return or_(*city_conds)
-
-        # Helper: Build Status condition
-        def build_status_condition(st_val):
-            if st_val == "enriched":
-                return Company.is_enriched.is_(True)
-            elif st_val == "emails":
-                emails_sub = db.query(CompanyEmail.company_id).distinct()
-                return Company.id.in_(emails_sub)
-            elif st_val in ("contacted", "sent"):
-                if user:
-                    sent_sub = db.query(OutreachLog.company_id).filter(
-                        OutreachLog.status == "SENT", OutreachLog.user_id == user.id
-                    ).distinct()
-                    return Company.id.in_(sent_sub)
-                return Company.id == -1
-            return None
-
-        d_cond = build_domain_condition(domain_val)
-        t_cond = build_tech_condition(tech_terms)
-        c_cond = build_city_condition(city_terms)
-        st_cond = build_status_condition(status_val)
+        # Every condition is an exact ID match (taxonomy tables). Unknown names match nothing.
+        d_cond = _domain_id_cond(domain_val)
+        t_cond = _tech_id_cond(db, tech_terms)
+        c_cond = _city_id_cond(city_terms)
+        st_cond = _status_cond(db, user, status_val)
         # Categories hidden from users (admin > Categories): leave their companies out of every count.
         h_cond = seo_engine.visible_kw_clause(db)
-        h_sql, h_params = seo_engine.visible_kw_sql(db, prefix="c.")
+
+        def scoped(q, *skip):
+            for name, cond in (("h", h_cond), ("d", d_cond), ("t", t_cond), ("c", c_cond), ("st", st_cond)):
+                if cond is not None and name not in skip:
+                    q = q.filter(cond)
+            return q
+
+        look = taxonomy.lookup()
+        city_slug_by_id = {i: s for s, i in look["cities"].items()}
 
         # --- FACET 1: Cities (scoped to domain, tech, status - NOT city itself) ---
         if tech_terms or domain_val or status_val != "all":
-            q_cities = db.query(Company.city, func.count(Company.id)).filter(
-                Company.is_invalid.is_(False),
-                Company.city.isnot(None),
-                func.trim(Company.city) != ""
+            rows = scoped(
+                db.query(Company.city_id, func.count(Company.id)).filter(
+                    Company.is_invalid.is_(False), Company.city_id.isnot(None)),
+                "c",
+            ).group_by(Company.city_id).all()
+            sorted_cities = sorted(
+                ({"id": cid, "name": look["city_names"].get(cid, ""), "slug": city_slug_by_id.get(cid, ""), "count": n}
+                 for cid, n in rows if n > 0),
+                key=lambda x: x["name"].lower(),
             )
-            if h_cond is not None:
-                q_cities = q_cities.filter(h_cond)
-            if d_cond is not None:
-                q_cities = q_cities.filter(d_cond)
-            if t_cond is not None:
-                q_cities = q_cities.filter(t_cond)
-            if st_cond is not None:
-                q_cities = q_cities.filter(st_cond)
-
-            city_counts = q_cities.group_by(Company.city).all()
-            sorted_cities = [
-                {"name": r[0].strip().title(), "slug": seo_engine.city_to_slug(r[0]), "count": r[1]}
-                for r in city_counts if r[0] and r[1] > 0
-            ]
-            sorted_cities.sort(key=lambda x: x["name"].lower())
         else:
-            cities_meta = seo_engine.get_all_cities(db)
-            sorted_cities = [
-                {
-                    "name": c["name"],
-                    "slug": c["slug"],
-                    "count": c["count"],
-                    "domain_counts": c.get("domain_counts", {})
-                }
-                for c in cities_meta if c.get("name") and c.get("count", 0) > 0
-            ]
-            sorted_cities.sort(key=lambda x: x["name"].lower())
+            sorted_cities = sorted(
+                ({"id": c["id"], "name": c["name"], "slug": c["slug"], "count": c["count"],
+                  "domain_counts": c.get("domain_counts", {})}
+                 for c in seo_engine.get_all_cities(db) if c.get("count", 0) > 0),
+                key=lambda x: x["name"].lower(),
+            )
 
-        # --- FACET 2: Tech Stacks (scoped to domain, city, status - NOT tech itself) ---
-        if city_terms or domain_val or status_val != "all":
-            tech_map = defaultdict(int)
-            city_tuple = tuple(city_terms) if city_terms else None
-            
-            # Profile tech_stack query
-            prof_sql = """
-                SELECT item, COUNT(DISTINCT c.id) AS count
-                FROM companies c
-                JOIN company_profiles cp ON cp.company_id = c.id,
-                     jsonb_array_elements_text(
-                         CASE 
-                             WHEN jsonb_typeof(cp.tech_stack) = 'array' THEN cp.tech_stack 
-                             ELSE '[]'::jsonb 
-                         END
-                     ) AS item
-                WHERE c.is_invalid = FALSE{h_sql}
-            """
-            prof_sql = prof_sql.replace("{h_sql}", h_sql)
-            params = dict(h_params)
-            if city_tuple:
-                prof_sql += " AND LOWER(c.city) IN :cities"
-                params["cities"] = city_tuple
-            prof_sql += " AND item IS NOT NULL AND trim(item) != '' GROUP BY item ORDER BY count DESC LIMIT 60;"
-            
-            try:
-                t_rows = db.execute(text(prof_sql), params).fetchall()
-                for t_name, count in t_rows:
-                    if t_name and t_name.strip():
-                        clean = t_name.strip()
-                        key = clean.lower()
-                        if key == ".net" or key.startswith(".net "):
-                            display = ".NET" + clean[4:]
-                        elif key in ["aws", "php", "html", "css", "sql", "api", "seo", "crm", "erp"]:
-                            display = clean.upper()
-                        elif key == "javascript":
-                            display = "JavaScript"
-                        elif key == "typescript":
-                            display = "TypeScript"
-                        else:
-                            display = clean.title() if len(clean) > 3 else clean.upper()
-                        tech_map[display] += count
-            except Exception as e:
-                print(f"[Filters Warning] Profile tech aggregation fallback: {e}")
-
-            # Also check scout keywords for companies in these cities
-            kw_sql = """
-                SELECT 
-                    CASE 
-                        WHEN LOWER(c.search_keyword) LIKE '%php%' OR LOWER(c.source_query) LIKE '%php%' THEN 'PHP'
-                        WHEN LOWER(c.search_keyword) LIKE '%react%' OR LOWER(c.source_query) LIKE '%react%' THEN 'React'
-                        WHEN LOWER(c.search_keyword) LIKE '%python%' OR LOWER(c.source_query) LIKE '%python%' THEN 'Python'
-                        WHEN LOWER(c.search_keyword) LIKE '%node%' OR LOWER(c.source_query) LIKE '%node%' THEN 'Node.js'
-                        WHEN LOWER(c.search_keyword) LIKE '%angular%' OR LOWER(c.source_query) LIKE '%angular%' THEN 'Angular'
-                        WHEN LOWER(c.search_keyword) LIKE '%aws%' OR LOWER(c.source_query) LIKE '%aws%' THEN 'AWS'
-                        WHEN LOWER(c.search_keyword) LIKE '%flutter%' OR LOWER(c.source_query) LIKE '%flutter%' THEN 'Flutter'
-                        WHEN LOWER(c.search_keyword) LIKE '%wordpress%' OR LOWER(c.source_query) LIKE '%wordpress%' THEN 'WordPress'
-                        WHEN LOWER(c.search_keyword) LIKE '%shopify%' OR LOWER(c.source_query) LIKE '%shopify%' THEN 'Shopify'
-                        WHEN LOWER(c.search_keyword) LIKE '%magento%' OR LOWER(c.source_query) LIKE '%magento%' THEN 'Magento'
-                        WHEN LOWER(c.search_keyword) LIKE '%laravel%' OR LOWER(c.source_query) LIKE '%laravel%' THEN 'Laravel'
-                        WHEN LOWER(c.search_keyword) LIKE '%vue%' OR LOWER(c.source_query) LIKE '%vue%' THEN 'Vue.js'
-                        ELSE NULL
-                    END AS tech_name,
-                    COUNT(DISTINCT c.id) AS cnt
-                FROM companies c
-                WHERE c.is_invalid = FALSE{h_sql}
-            """
-            kw_sql = kw_sql.replace("{h_sql}", h_sql)
-            kw_params = dict(h_params)
-            if city_tuple:
-                kw_sql += " AND LOWER(c.city) IN :cities"
-                kw_params["cities"] = city_tuple
-            kw_sql += " GROUP BY 1 HAVING 1 IS NOT NULL;"
-            
-            try:
-                kw_rows = db.execute(text(kw_sql), kw_params).fetchall()
-                for r in kw_rows:
-                    if r[0] and r[1]:
-                        tech_map[r[0]] = max(tech_map[r[0]], r[1])
-            except Exception as e:
-                print(f"[Filters Warning] Keyword tech aggregation fallback: {e}")
-
-            sorted_tech = [
-                {"name": tech_name, "count": count}
-                for tech_name, count in sorted(tech_map.items(), key=lambda x: x[0].lower())
-                if count > 0
-            ]
-        else:
-            # Global tech stacks
-            tech_map = defaultdict(int)
-            try:
-                if h_sql:
-                    tech_rows = db.execute(text(f"""
-                        SELECT item, COUNT(*) AS count
-                        FROM company_profiles cp
-                        JOIN companies c ON c.id = cp.company_id,
-                             jsonb_array_elements_text(
-                                 CASE
-                                     WHEN jsonb_typeof(cp.tech_stack) = 'array' THEN cp.tech_stack
-                                     ELSE '[]'::jsonb
-                                 END
-                             ) AS item
-                        WHERE item IS NOT NULL AND trim(item) != ''
-                          AND c.is_invalid = FALSE{h_sql}
-                        GROUP BY item
-                        ORDER BY count DESC
-                        LIMIT 60;
-                    """), h_params).fetchall()
-                else:
-                    tech_rows = db.execute(text("""
-                    SELECT item, COUNT(*) AS count
-                    FROM company_profiles,
-                         jsonb_array_elements_text(
-                             CASE
-                                 WHEN jsonb_typeof(tech_stack) = 'array' THEN tech_stack
-                                 ELSE '[]'::jsonb
-                             END
-                         ) AS item
-                    WHERE item IS NOT NULL AND trim(item) != ''
-                    GROUP BY item
-                    ORDER BY count DESC
-                    LIMIT 60;
-                """)).fetchall()
-
-                for t_name, count in tech_rows:
-                    if t_name and t_name.strip():
-                        clean = t_name.strip()
-                        key = clean.lower()
-                        if key == ".net" or key.startswith(".net "):
-                            display = ".NET" + clean[4:]
-                        elif key in ["aws", "php", "html", "css", "sql", "api", "seo", "crm", "erp"]:
-                            display = clean.upper()
-                        elif key == "javascript":
-                            display = "JavaScript"
-                        elif key == "typescript":
-                            display = "TypeScript"
-                        else:
-                            display = clean.title() if len(clean) > 3 else clean.upper()
-                        tech_map[display] += count
-            except Exception as tech_err:
-                print(f"[Filters Warning] JSONB tech stack query fallback: {tech_err}")
-
-            sorted_tech = [
-                {"name": tech_name, "count": count}
-                for tech_name, count in sorted(tech_map.items(), key=lambda x: x[0].lower())
-                if count > 0
-            ]
+        # --- FACET 2: Tech stacks (scoped to domain, city, status - NOT tech itself) ---
+        # A company "has" a tech when its profile lists it, or its category is that tech (e.g. React).
+        tech_rows = scoped(
+            db.query(Tech.id, Tech.slug, Tech.name, func.count(func.distinct(Company.id)))
+            .join(CompanyTech, CompanyTech.tech_id == Tech.id)
+            .join(Company, Company.id == CompanyTech.company_id)
+            .filter(Company.is_invalid.is_(False)),
+            "t",
+        ).group_by(Tech.id).order_by(func.count(func.distinct(Company.id)).desc()).limit(60).all()
+        tech_map = {slug: {"id": tid, "name": name, "slug": slug, "count": n} for tid, slug, name, n in tech_rows}
+        cat_rows = scoped(
+            db.query(Category.slug, Category.name, func.count(Company.id))
+            .join(Company, Company.category_id == Category.id)
+            .filter(Company.is_invalid.is_(False), Category.slug.in_(db.query(Tech.slug))),
+            "t",
+        ).group_by(Category.id).all()
+        for slug, name, n in cat_rows:
+            entry = tech_map.setdefault(slug, {"id": look["techs"].get(slug), "name": name, "slug": slug, "count": 0})
+            entry["count"] = max(entry["count"], n)
+        sorted_tech = sorted((t for t in tech_map.values() if t["count"] > 0), key=lambda x: x["name"].lower())
 
         # --- FACET 3: Domains (scoped to city, tech, status - NOT domain itself) ---
         all_domains = seo_engine.get_all_domains(db)
-        if city_terms or tech_terms:
-            q_dom = db.query(
-                Company.normalized_keyword, Company.search_keyword, func.count(Company.id)
-            ).filter(Company.is_invalid.is_(False))
-            if h_cond is not None:
-                q_dom = q_dom.filter(h_cond)
-            if c_cond is not None:
-                q_dom = q_dom.filter(c_cond)
-            if t_cond is not None:
-                q_dom = q_dom.filter(t_cond)
-            if st_cond is not None:
-                q_dom = q_dom.filter(st_cond)
-
-            dom_kw_rows = q_dom.group_by(Company.normalized_keyword, Company.search_keyword).all()
-            d_counts = defaultdict(int)
-            total_scoped = 0
-            for norm_kw, search_kw, cnt in dom_kw_rows:
-                total_scoped += cnt
-                raw_kw = (norm_kw or "").strip() or (search_kw or "").strip()
-                if raw_kw:
-                    cat = seo_engine.normalize_keyword_to_category(raw_kw)
-                    code = seo_engine.get_category_domain_code(cat)
-                    if code != "it" and code != "all":
-                        d_counts[code] += cnt
-
-            non_it = sum(d_counts.values())
-            d_counts["it"] = max(0, total_scoped - non_it)
-            d_counts["all"] = total_scoped
-
-            domains_result = []
-            for d in all_domains:
-                domains_result.append({**d, "count": d_counts.get(d["code"], 0)})
+        if city_terms or tech_terms or status_val != "all":
+            rows = scoped(
+                db.query(Industry.code, func.count(Company.id))
+                .join(Category, Category.industry_id == Industry.id)
+                .join(Company, Company.category_id == Category.id)
+                .filter(Company.is_invalid.is_(False)),
+                "d",
+            ).group_by(Industry.code).all()
+            d_counts = {code: n for code, n in rows}
+            d_counts["all"] = sum(d_counts.values())
+            domains_result = [{**d, "count": d_counts.get(d["code"], 0)} for d in all_domains]
         else:
             domains_result = all_domains
 
         # --- STATS: Total matching leads with ALL active filters applied ---
-        q_total = db.query(func.count(Company.id)).filter(Company.is_invalid.is_(False))
-        if h_cond is not None:
-            q_total = q_total.filter(h_cond)
-        if d_cond is not None:
-            q_total = q_total.filter(d_cond)
-        if c_cond is not None:
-            q_total = q_total.filter(c_cond)
-        if t_cond is not None:
-            q_total = q_total.filter(t_cond)
-        if st_cond is not None:
-            q_total = q_total.filter(st_cond)
+        q_total = scoped(db.query(func.count(Company.id)).filter(Company.is_invalid.is_(False)))
         total_valid = q_total.scalar() or 0
 
         # Enriched count with filters
@@ -2325,11 +2141,7 @@ def get_companies(
         user = get_current_user(db, request)
         is_admin = bool(user and config.is_master_admin(user.email))
 
-        base_query = (
-            db.query(Company)
-            .filter(~Company.domain.like("%.local"))
-            .filter(Company.domain.contains("."))
-        )
+        base_query = db.query(Company)
 
         # Pull invalid_count from cache if possible instead of running an extra full count
         cached_invalid = 0
@@ -2394,98 +2206,18 @@ def get_companies(
                 ).distinct()
                 query = query.filter(~Company.id.in_(sent_sub))
 
-        # 3. Search query filter
+        # 3. Search box: free text on name, website and address (trigram-indexed).
+        #    City, tech and industry are ID filters below, not text matches.
         if search and search.strip():
-            s = f"%{search.strip().lower()}%"
-            query = query.filter(
-                (Company.name.ilike(s)) |
-                (Company.domain.ilike(s)) |
-                (Company.city.ilike(s)) |
-                (Company.address.ilike(s)) |
-                (Company.source_query.ilike(s)) |
-                (Company.normalized_keyword.ilike(s))
-            )
+            s = f"%{search.strip()}%"
+            query = query.filter(or_(Company.name.ilike(s), Company.domain.ilike(s), Company.address.ilike(s)))
 
-        # 4. City filter (multi-select supported via comma-separated string or multiple query params)
-        raw_cities = request.query_params.getlist("city")
-        city_terms = []
-        for c_val in raw_cities:
-            city_terms.extend([x.strip().lower() for x in c_val.split(",") if x.strip()])
-        if not city_terms and city and city.strip():
-            city_terms = [x.strip().lower() for x in city.split(",") if x.strip()]
-
-        if city_terms:
-            city_conds = []
-            for c_term in city_terms:
-                c_pat = f"%{c_term}%"
-                city_conds.append(Company.city.ilike(c_pat))
-            query = query.filter(or_(*city_conds))
-
-        # 5. Tech stack filter (multi-select supported via comma-separated string or multiple query params)
-        raw_techs = request.query_params.getlist("tech") or request.query_params.getlist("tech_stack")
-        tech_terms = []
-        for t_val in raw_techs:
-            tech_terms.extend([x.strip().lower() for x in t_val.split(",") if x.strip()])
-        if not tech_terms and tech and tech.strip():
-            tech_terms = [x.strip().lower() for x in tech.split(",") if x.strip()]
-
-        if tech_terms:
-            profile_conds = []
-            company_tech_conds = []
-            seo_engine.ensure_category_maps(db)
-            for t_term in tech_terms:
-                t_slug = seo_engine.tech_to_slug(t_term)
-                canon_name = seo_engine.slug_to_tech_name(t_slug)
-                tokens = {t_term}
-                if canon_name:
-                    tokens.add(canon_name.lower())
-
-                # Expand specific common tech terms & synonyms
-                if t_term in ("net", ".net", "dotnet"):
-                    tokens.update([".net", "dotnet"])
-                elif t_term in ("node", "nodejs", "node.js"):
-                    tokens.update(["node", "nodejs"])
-                elif t_term in ("react", "reactjs", "react.js"):
-                    tokens.update(["react", "react js"])
-                elif t_term in ("vue", "vuejs", "vue.js"):
-                    tokens.update(["vue", "vue.js"])
-                elif t_term in ("angular", "angularjs"):
-                    tokens.update(["angular", "angularjs"])
-                elif t_term in ("aws", "amazon web services"):
-                    tokens.update(["aws", "amazon web services"])
-
-                for tok in tokens:
-                    profile_conds.append(CompanyProfile.tech_stack.cast(String).ilike(f"%{tok}%"))
-                    company_tech_conds.append(Company.search_keyword.ilike(f"%{tok}%"))
-                    company_tech_conds.append(Company.normalized_keyword.ilike(f"%{tok}%"))
-                    company_tech_conds.append(Company.source_query.ilike(f"%{tok}%"))
-
-            # Match either AI-extracted tech stack in profile OR scout search keywords without table joins
-            if profile_conds:
-                prof_sub = db.query(CompanyProfile.company_id).filter(or_(*profile_conds))
-                company_tech_conds.append(Company.id.in_(prof_sub))
-
-            query = query.filter(or_(*company_tech_conds))
-
-        # 5b. Industry Domain Filter (IT, Sales, Marketing, Pharma, Finance, etc.)
-        if domain and domain.strip() and domain.strip().lower() != "all":
-            dom_clean = domain.strip().lower()
-            if dom_clean in ("it", "it-software"):
-                non_it_keywords = [
-                    raw for raw, cat in seo_engine.SEED_KEYWORD_OVERRIDES.items()
-                    if seo_engine.get_category_domain_code(cat) != "it"
-                ]
-                if non_it_keywords:
-                    query = query.filter(~Company.search_keyword.in_(non_it_keywords))
-            else:
-                domain_keywords = [
-                    raw for raw, cat in seo_engine.SEED_KEYWORD_OVERRIDES.items()
-                    if seo_engine.get_category_domain_code(cat) == dom_clean
-                ]
-                if domain_keywords:
-                    query = query.filter(Company.search_keyword.in_(domain_keywords))
-                else:
-                    query = query.filter(Company.id == -1)
+        # 4-5b. City, tech and industry: exact ID matches (taxonomy tables).
+        city_terms = _multi_param(request, ("city",), city)
+        tech_terms = _multi_param(request, ("tech", "tech_stack"), tech)
+        for cond in (_city_id_cond(city_terms), _tech_id_cond(db, tech_terms), _domain_id_cond(domain)):
+            if cond is not None:
+                query = query.filter(cond)
 
         # 6. Sorting (Strictly prioritize companies with verified emails and AI enrichment first)
         email_order = Company.has_email.desc()
@@ -2626,8 +2358,8 @@ def get_companies(
                 "search_keyword": c.search_keyword or c.source_query or "General Leads",
                 "city": c.city or "",
                 "normalized_keyword": c.normalized_keyword or c.search_keyword or "General Leads",
-                "industry_domain": seo_engine.get_category_domain(seo_engine.normalize_keyword_to_category(c.normalized_keyword or c.search_keyword or "")),
-                "domain_code": seo_engine.get_category_domain_code(seo_engine.normalize_keyword_to_category(c.normalized_keyword or c.search_keyword or "")),
+                "industry_domain": seo_engine._category_labels(c.category_id)[1],
+                "domain_code": seo_engine._category_labels(c.category_id)[2],
                 "rating": c.rating,
                 "reviews_count": c.reviews_count,
                 "is_enriched": c.is_enriched,
@@ -4489,12 +4221,12 @@ def list_companies_admin(
         q = q.filter(Company.is_invalid == True)
 
     if search:
-        s = f"%{search.strip().lower()}%"
-        q = q.filter(or_(Company.name.ilike(s), Company.domain.ilike(s), Company.city.ilike(s)))
-    if city:
-        q = q.filter(Company.city.ilike(f"%{city.strip()}%"))
-    if category:
-        q = q.filter(or_(Company.source_query.ilike(f"%{category.strip()}%"), Company.search_keyword.ilike(f"%{category.strip()}%")))
+        s = f"%{search.strip()}%"
+        q = q.filter(or_(Company.name.ilike(s), Company.domain.ilike(s)))
+    # city: a city name or slug; category: an industry code (it, sales, ...). Exact ID matches.
+    for cond in (_city_id_cond([city] if city else []), _domain_id_cond(category)):
+        if cond is not None:
+            q = q.filter(cond)
 
     # Fast total count: check cache if unfiltered to prevent scanning 132k rows on every click
     is_unfiltered = (not search and not city and not category)

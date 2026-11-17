@@ -25,7 +25,8 @@ from sqlalchemy import String, func, or_, text
 from sqlalchemy.orm import Session, joinedload
 
 import config
-from db import Company, CompanyEmail, CompanyProfile, SystemSetting
+import taxonomy
+from db import Company, CompanyEmail, CompanyProfile, CompanyTech
 
 # In-memory cache store with 1-hour default TTL
 _SEO_CACHE: dict[str, dict[str, Any]] = {}
@@ -44,17 +45,8 @@ def set_cached(key: str, val: Any):
 
 
 def ensure_category_maps(db: Session) -> None:
-    """Make sure the category taxonomy maps are cached before resolving slugs.
-
-    slug_to_tech_name() and get_companies_list() read "slug_category_map" and
-    "category_raw_keywords_map", which are only filled by get_all_categories().
-    On a cold start, or after the 1-hour TTL expires, those maps are missing:
-    "architecture-and-planning" then resolves to "Architecture And Planning",
-    matches no companies, and city/category pages return 404. Rebuild them here.
-    """
-    if get_cached("slug_category_map") is None or get_cached("category_raw_keywords_map") is None:
-        _SEO_CACHE.pop("all_techs", None)  # force get_all_categories() to recompute and re-cache the maps
-        get_all_categories(db)
+    """Kept for callers: category names now come from the categories table (taxonomy.lookup)."""
+    taxonomy.lookup()
 
 
 def clear_seo_cache():
@@ -67,93 +59,31 @@ def clear_seo_cache():
 # An admin can switch a category off. The category and every company in it then
 # disappear from everything users see: the workspace list and filters, directory
 # pages, company profiles, sitemaps and llms.txt. Company rows are never changed;
-# user-facing queries add visible_kw_clause() / visible_kw_sql(). The admin panel
-# itself still lists every company.
-HIDDEN_CATEGORIES_KEY = "hidden_categories"
-_HIDDEN_SLUGS_TTL = 60        # re-read the setting at least once a minute (other workers)
-_HIDDEN_KEYWORDS_TTL = 900    # re-scan keywords every 15 min so new scrapes are covered
-_hidden_state: dict[str, Any] = {"slugs": None, "slugs_ts": 0.0, "keywords": None, "kw_ts": 0.0, "kw_for": None}
-
-# The keyword a company's category is derived from: the same expression the
-# category queries below group by. The trailing '' keeps rows with no keyword
-# visible (NOT (NULL = ANY(...)) would otherwise drop them).
-RAW_KW_SQL = "COALESCE(NULLIF(trim({p}normalized_keyword), ''), trim({p}search_keyword), '')"
-
-
-def _raw_kw_expr():
-    return func.coalesce(
-        func.nullif(func.trim(Company.normalized_keyword), ""),
-        func.trim(Company.search_keyword),
-        "",
-    )
+# user-facing queries add visible_kw_clause() / visible_kw_sql(), which match on
+# companies.category_id against categories.is_hidden. The admin panel itself
+# still lists every company.
 
 
 def clear_hidden_categories_cache() -> None:
-    _hidden_state.update(slugs=None, slugs_ts=0.0, keywords=None, kw_ts=0.0, kw_for=None)
+    taxonomy.clear_lookup()
 
 
 def get_hidden_category_slugs(db: Session) -> set[str]:
-    """Slugs of categories the admin has switched off (cached for a minute)."""
-    now = time.time()
-    if _hidden_state["slugs"] is not None and now - _hidden_state["slugs_ts"] < _HIDDEN_SLUGS_TTL:
-        return set(_hidden_state["slugs"])
-    slugs: set[str] = set()
-    try:
-        row = db.query(SystemSetting).filter(SystemSetting.key == HIDDEN_CATEGORIES_KEY).first()
-        if row and row.value:
-            slugs = {str(s).strip().lower() for s in json.loads(row.value) if str(s).strip()}
-    except Exception as e:
-        # Fail open: if the setting cannot be read, keep the last known list (or none).
-        print(f"[Categories] Could not read hidden categories: {e}")
-        try:
-            db.rollback()
-        except Exception:
-            pass
-        slugs = set(_hidden_state["slugs"] or [])
-    _hidden_state.update(slugs=slugs, slugs_ts=now)
-    return set(slugs)
-
-
-def get_hidden_category_keywords(db: Session) -> list[str]:
-    """Every raw keyword whose category is hidden. Empty when nothing is hidden."""
-    slugs = get_hidden_category_slugs(db)
-    if not slugs:
-        return []
-    now = time.time()
-    frozen = frozenset(slugs)
-    if (_hidden_state["keywords"] is not None and _hidden_state["kw_for"] == frozen
-            and now - _hidden_state["kw_ts"] < _HIDDEN_KEYWORDS_TTL):
-        return list(_hidden_state["keywords"])
-    try:
-        rows = db.execute(text(f"SELECT DISTINCT {RAW_KW_SQL.format(p='')} FROM companies")).fetchall()
-    except Exception as e:
-        print(f"[Categories] Could not scan category keywords: {e}")
-        try:
-            db.rollback()
-        except Exception:
-            pass
-        return list(_hidden_state["keywords"] or [])
-    keywords = []
-    for (kw,) in rows:
-        kw = (kw or "").strip()
-        if kw and tech_to_slug(normalize_keyword_to_category(kw)) in slugs:
-            keywords.append(kw)
-    _hidden_state.update(keywords=keywords, kw_ts=now, kw_for=frozen)
-    return list(keywords)
+    """Slugs of categories the admin has switched off (refreshed every minute)."""
+    return {slug for slug, c in taxonomy.lookup()["categories"].items() if c["hidden"]}
 
 
 def is_category_hidden(db: Session, category_name_or_slug: str) -> bool:
-    if not category_name_or_slug:
-        return False
-    return tech_to_slug(category_name_or_slug) in get_hidden_category_slugs(db)
+    cat = taxonomy.category_for(category_name_or_slug)
+    return bool(cat and cat["hidden"])
 
 
 def visible_kw_clause(db: Session):
     """ORM condition that is true for companies NOT in a hidden category (None = no filter)."""
-    keywords = get_hidden_category_keywords(db)
-    if not keywords:
+    ids = taxonomy.hidden_category_ids()
+    if not ids:
         return None
-    return ~_raw_kw_expr().in_(keywords)
+    return or_(Company.category_id.is_(None), ~Company.category_id.in_(ids))
 
 
 def apply_category_visibility(query, db: Session):
@@ -163,67 +93,39 @@ def apply_category_visibility(query, db: Session):
 
 
 def visible_kw_sql(db: Session, prefix: str = "") -> tuple[str, dict]:
-    """Raw-SQL version: (' AND NOT (...)', params), or ('', {}) when nothing is hidden.
+    """Raw-SQL version: (' AND (...)', params), or ('', {}) when nothing is hidden.
     prefix is the table alias with its dot, e.g. 'c.'."""
-    keywords = get_hidden_category_keywords(db)
-    if not keywords:
+    ids = taxonomy.hidden_category_ids()
+    if not ids:
         return "", {}
-    return f" AND NOT ({RAW_KW_SQL.format(p=prefix)} = ANY(:hidden_kws))", {"hidden_kws": keywords}
+    return (f" AND ({prefix}category_id IS NULL OR NOT ({prefix}category_id = ANY(:hidden_cat_ids)))",
+            {"hidden_cat_ids": ids})
 
 
 def set_hidden_categories(db: Session, slugs: set[str]) -> set[str]:
     """Save the hidden list and drop every cache that could still show those companies."""
     clean = sorted({str(s).strip().lower() for s in slugs if str(s).strip()})
-    row = db.query(SystemSetting).filter(SystemSetting.key == HIDDEN_CATEGORIES_KEY).first()
-    value = json.dumps(clean)
-    if row:
-        row.value = value
-    else:
-        db.add(SystemSetting(
-            key=HIDDEN_CATEGORIES_KEY,
-            value=value,
-            description="Category slugs hidden from users (admin panel > Categories)",
-        ))
+    db.execute(text("UPDATE categories SET is_hidden = (slug = ANY(:s))"), {"s": clean})
     db.commit()
     clear_hidden_categories_cache()
     clear_seo_cache()
-    return set(clean)
+    return get_hidden_category_slugs(db)
 
 
 def get_category_admin_overview(db: Session) -> list[dict[str, Any]]:
     """Every category with its company count, ignoring the hidden switch (admin view only)."""
-    rows = db.execute(text(f"""
-        SELECT {RAW_KW_SQL.format(p='')} AS raw_kw, COUNT(*) AS cnt
-        FROM companies
-        WHERE is_invalid = FALSE
-        GROUP BY 1
+    rows = db.execute(text("""
+        SELECT k.slug, k.name, k.is_hidden, i.name AS domain, i.code AS domain_code,
+               COUNT(c.id) FILTER (WHERE c.is_invalid = FALSE) AS cnt
+        FROM categories k
+        JOIN industries i ON i.id = k.industry_id
+        LEFT JOIN companies c ON c.category_id = k.id
+        GROUP BY k.id, i.id
     """)).fetchall()
-    hidden = get_hidden_category_slugs(db)
-    cats: dict[str, dict[str, Any]] = {}
-    for raw_kw, cnt in rows:
-        raw_kw = (raw_kw or "").strip()
-        if not raw_kw:
-            continue  # no keyword = no category to switch
-        name = normalize_keyword_to_category(raw_kw)
-        slug = tech_to_slug(name)
-        entry = cats.get(slug)
-        if entry is None:
-            entry = cats[slug] = {
-                "slug": slug,
-                "name": name,
-                "domain": get_category_domain(name),
-                "domain_code": get_category_domain_code(name),
-                "count": 0,
-            }
-        entry["count"] += int(cnt or 0)
-    # Hidden categories that currently have no companies stay listed so they can be switched back on.
-    for slug in hidden - cats.keys():
-        name = slug_to_tech_name(slug)
-        cats[slug] = {"slug": slug, "name": name, "domain": get_category_domain(name),
-                      "domain_code": get_category_domain_code(name), "count": 0}
-    for entry in cats.values():
-        entry["hidden"] = entry["slug"] in hidden
-    return sorted(cats.values(), key=lambda e: (-e["count"], e["name"].lower()))
+    cats = [{"slug": r.slug, "name": r.name, "domain": r.domain, "domain_code": r.domain_code,
+             "count": int(r.cnt or 0), "hidden": bool(r.is_hidden)}
+            for r in rows if r.cnt or r.is_hidden]  # empty categories stay listed only while hidden
+    return sorted(cats, key=lambda e: (-e["count"], e["name"].lower()))
 
 
 # Bounded LRU cache for public company profile pages. Each profile is ~2-6 KB, so
@@ -865,10 +767,10 @@ def slug_to_tech_name(slug: str) -> str:
         return ""
     clean_slug = slug.strip().lower()
 
-    # 1. Check in-memory cached dynamic taxonomy
-    slug_map = get_cached("slug_category_map")
-    if slug_map and clean_slug in slug_map:
-        return slug_map[clean_slug]
+    # 1. Categories table (taxonomy)
+    cat = taxonomy.lookup()["categories"].get(clean_slug)
+    if cat:
+        return cat["name"]
 
     # 2. Curated Acronym & Tech Overrides
     if clean_slug in CURATED_ACRONYM_MAP:
@@ -918,11 +820,11 @@ def get_directory_stats(db: Session) -> dict[str, Any]:
 
     vis_sql, vis_params = visible_kw_sql(db)
     row = db.execute(text(f"""
-        SELECT 
+        SELECT
             COUNT(*) FILTER (WHERE is_invalid = FALSE) AS total_companies,
             COUNT(*) FILTER (WHERE is_invalid = FALSE AND is_enriched = TRUE) AS enriched_companies,
-            COUNT(DISTINCT NULLIF(trim(lower(city)), '')) FILTER (WHERE is_invalid = FALSE) AS total_cities,
-            COUNT(DISTINCT NULLIF(trim(lower(search_keyword)), '')) FILTER (WHERE is_invalid = FALSE) AS total_techs,
+            COUNT(DISTINCT city_id) FILTER (WHERE is_invalid = FALSE) AS total_cities,
+            COUNT(DISTINCT category_id) FILTER (WHERE is_invalid = FALSE) AS total_techs,
             ROUND((AVG(rating) FILTER (WHERE is_invalid = FALSE AND rating > 0))::numeric, 1) AS avg_rating,
             COUNT(*) FILTER (
                 WHERE is_invalid = FALSE
@@ -950,70 +852,41 @@ def get_all_cities(db: Session) -> list[dict[str, Any]]:
     if cached:
         return cached
 
-    vis_sql, vis_params = visible_kw_sql(db)
-
-    # 1. City totals & average ratings
+    vis_sql, vis_params = visible_kw_sql(db, prefix="c.")
     rows = db.execute(text(f"""
-        SELECT 
-            initcap(trim(city)) AS norm_city,
-            COUNT(*) AS count,
-            ROUND(AVG(rating)::numeric, 1) AS avg_rating
-        FROM companies
-        WHERE is_invalid = FALSE{vis_sql}
-          AND city IS NOT NULL 
-          AND trim(city) != ''
-        GROUP BY initcap(trim(city))
-        HAVING COUNT(*) >= 1
-        ORDER BY count DESC, norm_city ASC;
+        SELECT ci.id, ci.name, ci.slug, COUNT(*) AS count, ROUND(AVG(c.rating)::numeric, 1) AS avg_rating
+        FROM companies c
+        JOIN cities ci ON ci.id = c.city_id
+        WHERE c.is_invalid = FALSE{vis_sql}
+        GROUP BY ci.id
+        ORDER BY count DESC, ci.name ASC;
     """), vis_params).fetchall()
 
-    # 2. City breakdown by raw keyword / category across industry domains
+    # Per-city counts by industry, straight from category -> industry IDs.
     domain_rows = db.execute(text(f"""
-        SELECT 
-            initcap(trim(city)) AS norm_city,
-            COALESCE(NULLIF(trim(normalized_keyword), ''), trim(search_keyword), '') AS raw_kw,
-            COUNT(*) AS cnt
-        FROM companies
-        WHERE is_invalid = FALSE{vis_sql}
-          AND city IS NOT NULL 
-          AND trim(city) != ''
-        GROUP BY initcap(trim(city)), COALESCE(NULLIF(trim(normalized_keyword), ''), trim(search_keyword), '');
+        SELECT c.city_id, i.code, COUNT(*) AS cnt
+        FROM companies c
+        JOIN categories k ON k.id = c.category_id
+        JOIN industries i ON i.id = k.industry_id
+        WHERE c.is_invalid = FALSE{vis_sql}
+        GROUP BY c.city_id, i.code;
     """), vis_params).fetchall()
-
-    city_domain_counts = defaultdict(lambda: defaultdict(int))
-    for r in domain_rows:
-        c_name = r[0]
-        raw_kw = (r[1] or "").strip()
-        cnt = int(r[2] or 0)
-        if raw_kw:
-            cat = normalize_keyword_to_category(raw_kw)
-            d_code = get_category_domain_code(cat)
-            if d_code != "it" and d_code != "all":
-                city_domain_counts[c_name][d_code] += cnt
+    city_domain_counts = defaultdict(dict)
+    for city_id, code, cnt in domain_rows:
+        city_domain_counts[city_id][code] = int(cnt or 0)
 
     results = []
     for r in rows:
-        name = r[0]
-        total_cnt = int(r[1] or 0)
-        c_counts = city_domain_counts[name]
-        non_it_total = sum(c_counts.values())
-        it_cnt = max(0, total_cnt - non_it_total)
-
-        domain_dict = {
-            "all": total_cnt,
-            "it": it_cnt,
-        }
+        domain_dict = {"all": int(r.count or 0)}
         for d in INDUSTRY_DOMAINS:
-            code = d["code"]
-            if code not in domain_dict:
-                domain_dict[code] = c_counts.get(code, 0)
-
+            domain_dict[d["code"]] = city_domain_counts[r.id].get(d["code"], 0)
         results.append({
-            "name": name,
-            "slug": city_to_slug(name),
-            "count": total_cnt,
-            "avg_rating": float(r[2]) if r[2] is not None else None,
-            "domain_counts": domain_dict
+            "id": r.id,
+            "name": r.name,
+            "slug": r.slug,
+            "count": int(r.count or 0),
+            "avg_rating": float(r.avg_rating) if r.avg_rating is not None else None,
+            "domain_counts": domain_dict,
         })
 
     set_cached("all_cities", results)
@@ -1027,185 +900,115 @@ def get_city_domain_counts(db: Session) -> dict[str, dict[str, int]]:
 
 
 def get_all_categories(db: Session) -> list[dict[str, Any]]:
-    """
-    Dynamically retrieves and aggregates ALL industry categories, tech stacks, and services
-    present across the entire company database.
-    Works for ANY industry (IT, Healthcare, Real Estate, Finance, Manufacturing, etc.).
-    """
+    """Every category (categories table) with its company counts, biggest first."""
     cached = get_cached("all_techs")
     if cached:
         return cached
 
-    vis_sql, vis_params = visible_kw_sql(db)
+    vis_sql, vis_params = visible_kw_sql(db, prefix="c.")
     rows = db.execute(text(f"""
         SELECT
-            COALESCE(NULLIF(trim(normalized_keyword), ''), trim(search_keyword)) AS raw_kw,
+            k.id, k.slug, k.name, i.name AS domain, i.code AS domain_code,
             COUNT(*) AS count,
-            ROUND((AVG(rating) FILTER (WHERE is_invalid = FALSE AND rating > 0))::numeric, 1) AS avg_rating,
-            COUNT(*) FILTER (WHERE is_enriched = TRUE) AS enriched_count,
+            ROUND((AVG(c.rating) FILTER (WHERE c.rating > 0))::numeric, 1) AS avg_rating,
+            COUNT(*) FILTER (WHERE c.is_enriched = TRUE) AS enriched_count,
             COUNT(*) FILTER (
-                WHERE EXISTS (SELECT 1 FROM company_emails ce WHERE ce.company_id = companies.id)
+                WHERE EXISTS (SELECT 1 FROM company_emails ce WHERE ce.company_id = c.id)
             ) AS emails_count
-        FROM companies
-        WHERE is_invalid = FALSE{vis_sql}
-          AND (
-              (search_keyword IS NOT NULL AND trim(search_keyword) != '')
-              OR (normalized_keyword IS NOT NULL AND trim(normalized_keyword) != '')
-          )
-        GROUP BY COALESCE(NULLIF(trim(normalized_keyword), ''), trim(search_keyword))
-        HAVING COUNT(*) >= 1
+        FROM companies c
+        JOIN categories k ON k.id = c.category_id
+        JOIN industries i ON i.id = k.industry_id
+        WHERE c.is_invalid = FALSE{vis_sql}
+        GROUP BY k.id, i.id
         ORDER BY count DESC;
     """), vis_params).fetchall()
 
-    results = []
-    seen_slugs = set()
-    slug_category_map = {}
-    category_slug_map = {}
-    category_raw_keywords_map = defaultdict(set)
-
-    for r in rows:
-        raw_kw = (r[0] or "").strip()
-        if not raw_kw:
-            continue
-        display_name = normalize_keyword_to_category(raw_kw)
-        slug = tech_to_slug(display_name)
-        category_raw_keywords_map[slug].add(raw_kw)
-
-        if slug in seen_slugs:
-            for existing in results:
-                if existing["slug"] == slug:
-                    existing["count"] += r[1]
-                    existing["enriched_count"] += int(r[3] or 0)
-                    existing["emails_count"] += int(r[4] or 0)
-                    break
-            continue
-
-        seen_slugs.add(slug)
-        results.append({
-            "name": display_name,
-            "raw_keyword": raw_kw,
-            "slug": slug,
-            "domain": get_category_domain(display_name),
-            "domain_code": get_category_domain_code(display_name),
-            "count": r[1],
-            "avg_rating": float(r[2]) if r[2] is not None else None,
-            "enriched_count": int(r[3] or 0),
-            "emails_count": int(r[4] or 0),
-        })
-        slug_category_map[slug] = display_name
-        category_slug_map[display_name.lower()] = slug
-
-    results.sort(key=lambda x: x["count"], reverse=True)
+    results = [{
+        "id": r.id,
+        "name": r.name,
+        "raw_keyword": r.name,
+        "slug": r.slug,
+        "domain": r.domain,
+        "domain_code": r.domain_code,
+        "count": int(r.count or 0),
+        "avg_rating": float(r.avg_rating) if r.avg_rating is not None else None,
+        "enriched_count": int(r.enriched_count or 0),
+        "emails_count": int(r.emails_count or 0),
+    } for r in rows]
 
     set_cached("all_techs", results)
-    set_cached("slug_category_map", slug_category_map)
-    set_cached("category_slug_map", category_slug_map)
-    set_cached("category_raw_keywords_map", {k: list(v) for k, v in category_raw_keywords_map.items()})
+    set_cached("slug_category_map", {r["slug"]: r["name"] for r in results})
+    set_cached("category_slug_map", {r["name"].lower(): r["slug"] for r in results})
     return results
 
 get_all_technologies = get_all_categories
 
 
 def get_all_domains(db: Session = None) -> list[dict[str, Any]]:
-    """
-    Returns all 8 industry domains with company counts.
-    Accurately sums non-IT companies from dynamic category classification,
-    and sets IT to total_companies minus non_it_total so counts always stay 100% consistent.
-    """
+    """All 8 industry domains with company counts, summed from their categories."""
     categories = get_all_categories(db) if db else []
     domain_counts = defaultdict(int)
     domain_enriched = defaultdict(int)
     domain_emails = defaultdict(int)
     for cat in categories:
-        d_code = cat.get("domain_code", "it")
-        if d_code != "it" and d_code != "all":
-            domain_counts[d_code] += cat.get("count", 0)
-            domain_enriched[d_code] += cat.get("enriched_count", 0)
-            domain_emails[d_code] += cat.get("emails_count", 0)
+        d_code = cat.get("domain_code") or "it"
+        domain_counts[d_code] += cat.get("count", 0)
+        domain_enriched[d_code] += cat.get("enriched_count", 0)
+        domain_emails[d_code] += cat.get("emails_count", 0)
 
-    stats = get_directory_stats(db) if db else {}
-    total_companies = stats.get("total_companies", 0) if stats else 0
-    total_enriched = stats.get("enriched_companies", 0) if stats else 0
-    total_emails = stats.get("email_companies", 0) if stats else 0
-
-    # IT is everything not classified into another domain, so all three counts
-    # (companies, AI-researched, with email) stay consistent with the totals.
-    domain_counts["it"] = max(0, total_companies - sum(domain_counts.values()))
-    domain_enriched["it"] = max(0, total_enriched - sum(domain_enriched.values()))
-    domain_emails["it"] = max(0, total_emails - sum(domain_emails.values()))
-
-    domain_list = []
-    for d in INDUSTRY_DOMAINS:
-        code = d["code"]
-        domain_list.append({
-            "name": d["name"],
-            "slug": d["slug"],
-            "code": code,
-            "icon": d["icon"],
-            "description": d["description"],
-            "count": domain_counts.get(code, 0),
-            "enriched_count": domain_enriched.get(code, 0),
-            "emails_count": domain_emails.get(code, 0),
-        })
-    return domain_list
-
+    return [{
+        "name": d["name"],
+        "slug": d["slug"],
+        "code": d["code"],
+        "icon": d["icon"],
+        "description": d["description"],
+        "count": domain_counts.get(d["code"], 0),
+        "enriched_count": domain_enriched.get(d["code"], 0),
+        "emails_count": domain_emails.get(d["code"], 0),
+    } for d in INDUSTRY_DOMAINS]
 
 
 def get_all_combinations(db: Session) -> list[dict[str, Any]]:
-    """
-    Dynamically aggregates all city + category/technology combinations across the entire database.
-    """
+    """Every city + category pair that has companies."""
     cached = get_cached("all_combinations")
     if cached:
         return cached
 
-    vis_sql, vis_params = visible_kw_sql(db)
+    vis_sql, vis_params = visible_kw_sql(db, prefix="c.")
     rows = db.execute(text(f"""
-        SELECT 
-            initcap(trim(city)) AS city_name,
-            COALESCE(NULLIF(trim(normalized_keyword), ''), trim(search_keyword)) AS raw_kw,
-            COUNT(*) AS count,
-            ROUND((AVG(rating) FILTER (WHERE is_invalid = FALSE AND rating > 0))::numeric, 1) AS avg_rating
-        FROM companies
-        WHERE is_invalid = FALSE{vis_sql}
-          AND city IS NOT NULL AND trim(city) != ''
-          AND (
-              (search_keyword IS NOT NULL AND trim(search_keyword) != '')
-              OR (normalized_keyword IS NOT NULL AND trim(normalized_keyword) != '')
-          )
-        GROUP BY initcap(trim(city)), COALESCE(NULLIF(trim(normalized_keyword), ''), trim(search_keyword))
-        HAVING COUNT(*) >= 1
+        SELECT ci.name AS city_name, ci.slug AS city_slug, k.name AS tech_name, k.slug AS tech_slug,
+               COUNT(*) AS count,
+               ROUND((AVG(c.rating) FILTER (WHERE c.rating > 0))::numeric, 1) AS avg_rating
+        FROM companies c
+        JOIN cities ci ON ci.id = c.city_id
+        JOIN categories k ON k.id = c.category_id
+        WHERE c.is_invalid = FALSE{vis_sql}
+        GROUP BY ci.id, k.id
         ORDER BY count DESC;
     """), vis_params).fetchall()
 
-    combos = []
-    seen = {}
-    for r in rows:
-        c_name = r[0]
-        raw_kw = (r[1] or "").strip()
-        disp_cat = normalize_keyword_to_category(raw_kw)
-        c_slug = city_to_slug(c_name)
-        t_slug = tech_to_slug(disp_cat)
-        combo_key = f"{c_slug}:{t_slug}"
-        if combo_key in seen:
-            seen[combo_key]["count"] += r[2]
-            continue
-        entry = {
-            "city_name": c_name,
-            "city_slug": c_slug,
-            "tech_name": disp_cat,
-            "tech_slug": t_slug,
-            "count": r[2],
-            "avg_rating": float(r[3]) if r[3] is not None else None
-        }
-        seen[combo_key] = entry
-        combos.append(entry)
-
+    combos = [{
+        "city_name": r.city_name,
+        "city_slug": r.city_slug,
+        "tech_name": r.tech_name,
+        "tech_slug": r.tech_slug,
+        "count": int(r.count or 0),
+        "avg_rating": float(r.avg_rating) if r.avg_rating is not None else None,
+    } for r in rows]
     set_cached("all_combinations", combos)
     return combos
 
 
 # --- Data Retrieval for Directory Pages ---
+
+def _category_labels(category_id: int | None) -> tuple[str, str, str]:
+    """(category name, industry name, industry code) for a company's category_id."""
+    look = taxonomy.lookup()
+    cat = look["category_by_id"].get(category_id)
+    if not cat:
+        return "", "", "all"
+    ind = look["industries"].get(cat["industry"], {})
+    return cat["name"], ind.get("name", ""), cat["industry"]
 
 def get_companies_list(
     db: Session,
@@ -1229,67 +1032,23 @@ def get_companies_list(
     if tech and is_category_hidden(db, tech):
         return [], 0
 
+    # Every filter is an exact ID match (taxonomy tables); unknown names match nothing.
     if city:
-        query = query.filter(func.lower(Company.city) == city.strip().lower())
+        query = query.filter(Company.city_id == taxonomy.city_id_for(city))
 
-    if domain and domain.strip() and domain.strip().lower() != "all":
-        dom_clean = domain.strip().lower()
-        if dom_clean in ("it", "it-software"):
-            non_it_keywords = [
-                raw for raw, cat in SEED_KEYWORD_OVERRIDES.items()
-                if get_category_domain_code(cat) != "it"
-            ]
-            if non_it_keywords:
-                # NULL-safe: normalized_keyword is NULL on almost every row, and
-                # NOT (x IN (...) OR NULL) evaluates to NULL in SQL, which silently
-                # dropped every company and made ?domain=it return 0 everywhere.
-                query = query.filter(
-                    ~or_(
-                        func.coalesce(Company.search_keyword, "").in_(non_it_keywords),
-                        func.coalesce(Company.normalized_keyword, "").in_(non_it_keywords)
-                    )
-                )
-        else:
-            domain_keywords = [
-                raw for raw, cat in SEED_KEYWORD_OVERRIDES.items()
-                if get_category_domain_code(cat) == dom_clean
-            ]
-            if domain_keywords:
-                query = query.filter(
-                    or_(
-                        Company.search_keyword.in_(domain_keywords),
-                        Company.normalized_keyword.in_(domain_keywords)
-                    )
-                )
-            else:
-                query = query.filter(Company.id == -1)
+    cat_ids = taxonomy.industry_category_ids(domain)
+    if cat_ids is not None:
+        query = query.filter(Company.category_id.in_(cat_ids or [-1]))
 
     if tech:
-        ensure_category_maps(db)
-        clean_tech = tech.strip()
-        tech_slug = tech_to_slug(clean_tech)
-        canonical_name = slug_to_tech_name(tech_slug)
-
-        # Dynamic keyword matching: retrieve dynamic raw keywords mapped to this category
-        raw_kw_map = get_cached("category_raw_keywords_map") or {}
-        matching_keywords = list(raw_kw_map.get(tech_slug, []))
-        if not matching_keywords:
-            matching_keywords = [clean_tech, canonical_name]
-
-        prof_sub = db.query(CompanyProfile.company_id).filter(
-            CompanyProfile.tech_stack.cast(String).ilike(f"%{clean_tech.lower()}%")
-        )
-
-        query = query.filter(
-            or_(
-                Company.search_keyword.in_(matching_keywords),
-                func.lower(Company.search_keyword).ilike(f"%{clean_tech.lower()}%"),
-                func.lower(Company.normalized_keyword).ilike(f"%{clean_tech.lower()}%"),
-                func.lower(Company.search_keyword).ilike(f"%{canonical_name.lower()}%"),
-                func.lower(Company.normalized_keyword) == tech_slug,
-                Company.id.in_(prof_sub)
-            )
-        )
+        cat = taxonomy.category_for(tech)
+        tech_id = taxonomy.tech_id_for(tech)
+        conds = []
+        if cat:
+            conds.append(Company.category_id == cat["id"])
+        if tech_id:
+            conds.append(Company.id.in_(db.query(CompanyTech.company_id).filter(CompanyTech.tech_id == tech_id)))
+        query = query.filter(or_(*conds) if conds else Company.id == -1)
 
     total_count = query.count()
 
@@ -1323,14 +1082,8 @@ def get_companies_list(
 
         slug = company_to_slug(c.name, c.domain, c.id)
 
-        stack_badges = profile_data.get("tech_stack", [])
-        if not stack_badges and c.search_keyword:
-            canon_name = normalize_keyword_to_category(c.search_keyword)
-            stack_badges = [canon_name]
-
-        comp_cat = normalize_keyword_to_category(c.search_keyword or c.normalized_keyword or "")
-        comp_dom = get_category_domain(comp_cat)
-        comp_dom_code = get_category_domain_code(comp_cat)
+        comp_cat, comp_dom, comp_dom_code = _category_labels(c.category_id)
+        stack_badges = profile_data.get("tech_stack", []) or ([comp_cat] if comp_cat else [])
 
         serialized.append({
             "id": c.id,
@@ -1496,7 +1249,7 @@ def get_company_details(db: Session, company_id: int) -> dict[str, Any] | None:
     tech_stack = list(p.tech_stack or []) if p else []
     services = list(p.services or []) if p else []
 
-    comp_cat = normalize_keyword_to_category(c.search_keyword or c.normalized_keyword or "")
+    comp_cat, comp_dom, comp_dom_code = _category_labels(c.category_id)
     # The search category is not a technology; keep it out of the tech list.
     tech_stack = [t for t in tech_stack if t and t != comp_cat]
 
@@ -1518,8 +1271,8 @@ def get_company_details(db: Session, company_id: int) -> dict[str, Any] | None:
         "id": c.id,
         "name": c.name,
         "domain": c.domain,
-        "industry_domain": get_category_domain(comp_cat),
-        "domain_code": get_category_domain_code(comp_cat),
+        "industry_domain": comp_dom or None,
+        "domain_code": comp_dom_code,
         "category": comp_cat or None,
         "category_slug": tech_to_slug(comp_cat) if comp_cat else None,
         "website_url": c.website_url or (f"https://{c.domain}" if c.domain else None),
@@ -1553,7 +1306,7 @@ def get_nearby_companies(db: Session, city: str | None, exclude_id: int, limit: 
         rows = (
             apply_category_visibility(
                 db.query(Company.id, Company.name, Company.domain, Company.rating, Company.reviews_count)
-                .filter(Company.is_invalid.is_(False), func.lower(Company.city) == city.strip().lower()),
+                .filter(Company.is_invalid.is_(False), Company.city_id == taxonomy.city_id_for(city)),
                 db,
             )
             .order_by(Company.is_enriched.desc(), Company.rating.desc().nullslast(),

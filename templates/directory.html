@@ -346,6 +346,12 @@
 
     function setDirectoryDomain(targetDomain) {
       activeDomain = (targetDomain || "all").toLowerCase().trim();
+      // Keep ?domain= in step with the chosen industry so a reload or a shared link shows the same view.
+      try {
+        const u = new URL(window.location.href);
+        if (activeDomain === "all") u.searchParams.delete("domain"); else u.searchParams.set("domain", activeDomain);
+        window.history.replaceState({}, "", u);
+      } catch (_) {}
 
       // Update pill active classes
       if (pillContainer) {
