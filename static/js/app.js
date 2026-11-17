@@ -3738,6 +3738,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const q = urlParams.get("q") || urlParams.get("search");
 
       if (!action && !companyId && !city && !tech && !q && !domain) return;
+      // Apply the link once: drop it from the address bar so Reset sticks and a reload does not reopen it.
+      window.history.replaceState({}, document.title, window.location.pathname);
 
       // 1. Direct Pitch Trigger (?action=pitch&company_id=123)
       if (action === "pitch" && companyId) {
