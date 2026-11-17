@@ -5,6 +5,7 @@ Architecture: SeleniumBase (Undetected Chrome) + ThreadPoolExecutor for Parallel
 """
 
 import os
+import random
 import re
 import shutil
 import time
@@ -497,7 +498,7 @@ class GoogleScraper:
             "User-Agent": (
                 "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
                 "AppleWebKit/537.36 (KHTML, like Gecko) "
-                "Chrome/124.0.0.0 Safari/537.36"
+                "Chrome/131.0.0.0 Safari/537.36"
             ),
             "Cookie": cookie_to_use.replace("\n", " ").strip(),
             "Accept": (
@@ -506,11 +507,11 @@ class GoogleScraper:
                 "application/signed-exchange;v=b3;q=0.7"
             ),
             "Accept-Language": "en-US,en;q=0.9,hi;q=0.8",
-            "Sec-Ch-Ua": '"Chromium";v="124", "Google Chrome";v="124", "Not-A.Brand";v="99"',
+            "Sec-Ch-Ua": '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
             "Sec-Ch-Ua-Arch": '"x86"',
             "Sec-Ch-Ua-Bitness": '"64"',
-            "Sec-Ch-Ua-Full-Version": '"124.0.6367.92"',
-            "Sec-Ch-Ua-Full-Version-List": '"Chromium";v="124.0.6367.92", "Google Chrome";v="124.0.6367.92", "Not-A.Brand";v="99.0.0.0"',
+            "Sec-Ch-Ua-Full-Version": '"131.0.6778.205"',
+            "Sec-Ch-Ua-Full-Version-List": '"Google Chrome";v="131.0.6778.205", "Chromium";v="131.0.6778.205", "Not_A Brand";v="24.0.0.0"',
             "Sec-Ch-Ua-Mobile": "?0",
             "Sec-Ch-Ua-Model": '""',
             "Sec-Ch-Ua-Platform": '"Windows"',
@@ -548,10 +549,29 @@ class GoogleScraper:
                 encoded = urllib.parse.quote_plus(full_query)
                 url = f"https://www.google.com/search?q={encoded}&udm=local&start={start_offset}&gl={gl}&hl={hl}"
 
+            resp = None
             try:
-                resp = http_session.get(url, timeout=8.0)
-                if resp.status_code != 200 or "sorry/index" in resp.url:
-                    self._log(f"[Fast-Path HTTP] Notice: Status {resp.status_code} or checkpoint on {page_label}.", pct)
+                for http_attempt in range(3):
+                    try:
+                        resp = http_session.get(url, timeout=10.0)
+                        if resp.status_code == 200 and "sorry/index" not in (resp.url or ""):
+                            break
+                        if resp.status_code in (429, 503) or "sorry/index" in (resp.url or ""):
+                            if http_attempt < 2:
+                                backoff = (http_attempt + 1) * 2.5 + random.uniform(0.5, 1.5)
+                                self._log(f"[Fast-Path HTTP] Rate-limit (status {resp.status_code}) on {page_label}; backing off {backoff:.1f}s (retry {http_attempt+1}/2)...", pct)
+                                time.sleep(backoff)
+                                continue
+                    except Exception as req_err:
+                        if http_attempt < 2:
+                            time.sleep(1.5)
+                            continue
+                        self._log(f"[Fast-Path HTTP Error] on {page_label}: {req_err}", pct)
+                        break
+
+                if not resp or resp.status_code != 200 or "sorry/index" in (resp.url or ""):
+                    code_str = str(resp.status_code) if resp else "connection_failed"
+                    self._log(f"[Fast-Path HTTP] Notice: Status {code_str} or checkpoint on {page_label}.", pct)
                     break
 
                 soup = BeautifulSoup(resp.text, "html.parser")
@@ -723,7 +743,7 @@ class GoogleScraper:
                         "user_data_dir": tmp_profile_dir,
                         "disable_gpu": True,
                         "no_sandbox": True,
-                        "chromium_arg": "--disable-dev-shm-usage,--disable-software-rasterizer,--no-first-run,--start-maximized,--disable-blink-features=AutomationControlled",
+                        "chromium_arg": "--disable-dev-shm-usage,--disable-software-rasterizer,--no-first-run,--start-maximized,--window-size=1920,1080,--disable-blink-features=AutomationControlled",
                     }
                     if chrome_bin_path:
                         driver_kwargs["binary_location"] = chrome_bin_path

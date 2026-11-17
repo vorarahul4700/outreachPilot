@@ -107,7 +107,14 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           GITHUB_REPOSITORY: ${{ github.repository }}
         run: |
-          xvfb-run -a python cloud_worker.py \
+          WORKER_ID="${{ matrix.worker_id }}"
+          # Stagger runner startup across 36s to prevent simultaneous concurrency burst against Google
+          STAGGER_DELAY=$(( (WORKER_ID - 1) * 3 ))
+          if [ "$STAGGER_DELAY" -gt 0 ]; then
+            echo "Staggering Runner-$WORKER_ID startup by ${STAGGER_DELAY}s to prevent Google rate-limits..."
+            sleep $STAGGER_DELAY
+          fi
+          xvfb-run -s "-screen 0 1920x1080x24" -a python cloud_worker.py \
             --mode "${{ github.event.inputs.mode || 'queue' }}" \
             --domain "${{ github.event.inputs.domain }}" \
             --city "${{ github.event.inputs.city }}" \
