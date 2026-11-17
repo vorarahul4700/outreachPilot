@@ -62,6 +62,49 @@ class User(Base):
     outreach_logs = relationship("OutreachLog", back_populates="user", cascade="all, delete-orphan")
 
 
+# --- Taxonomy: filters match on these IDs, never on text (see taxonomy.py) ---
+class Industry(Base):
+    __tablename__ = "industries"
+
+    id = Column(Integer, primary_key=True)
+    code = Column(String(30), unique=True, nullable=False)   # it, sales, marketing, ...
+    name = Column(String(120), nullable=False)
+    slug = Column(String(120), unique=True, nullable=False)
+
+
+class Category(Base):
+    __tablename__ = "categories"
+
+    id = Column(Integer, primary_key=True)
+    slug = Column(String(160), unique=True, nullable=False)
+    name = Column(String(160), nullable=False)
+    industry_id = Column(Integer, ForeignKey("industries.id"), nullable=False, index=True)
+    is_hidden = Column(Boolean, default=False, nullable=False)  # admin > Categories
+
+
+class City(Base):
+    __tablename__ = "cities"
+
+    id = Column(Integer, primary_key=True)
+    slug = Column(String(120), unique=True, nullable=False)
+    name = Column(String(120), nullable=False)
+
+
+class Tech(Base):
+    __tablename__ = "techs"
+
+    id = Column(Integer, primary_key=True)
+    slug = Column(String(120), unique=True, nullable=False)
+    name = Column(String(120), nullable=False)
+
+
+class CompanyTech(Base):
+    __tablename__ = "company_techs"
+
+    company_id = Column(Integer, ForeignKey("companies.id", ondelete="CASCADE"), primary_key=True)
+    tech_id = Column(Integer, ForeignKey("techs.id", ondelete="CASCADE"), primary_key=True, index=True)
+
+
 class Company(Base):
     __tablename__ = "companies"
 
@@ -78,6 +121,9 @@ class Company(Base):
     search_keyword = Column(String(255), nullable=True, index=True)
     city = Column(String(100), nullable=True, index=True)
     normalized_keyword = Column(String(255), nullable=True, index=True)
+    # Filled from city / keyword by taxonomy.py on every save; filters use these.
+    city_id = Column(Integer, ForeignKey("cities.id"), nullable=True, index=True)
+    category_id = Column(Integer, ForeignKey("categories.id"), nullable=True, index=True)
     is_enriched = Column(Boolean, default=False)
     enrichment_status = Column(String(50), default="PENDING", nullable=False, index=True)
     enrichment_attempts = Column(Integer, default=0, nullable=False)
@@ -298,6 +344,8 @@ def init_db():
                     ("companies", "enrichment_status", "VARCHAR(50) DEFAULT 'PENDING'"),
                     ("companies", "enrichment_attempts", "INTEGER DEFAULT 0"),
                     ("companies", "last_enriched_at", "TIMESTAMP"),
+                    ("companies", "city_id", "INTEGER REFERENCES cities(id)"),
+                    ("companies", "category_id", "INTEGER REFERENCES categories(id)"),
                     ("outreach_logs", "email_body", "TEXT"),
                     ("users", "resume_link", "VARCHAR(500)"),
                 ]
@@ -325,12 +373,21 @@ def init_db():
                     "CREATE INDEX IF NOT EXISTS ix_company_emails_company_id ON company_emails(company_id);",
                     "CREATE INDEX IF NOT EXISTS ix_company_profiles_company_id ON company_profiles(company_id);",
                     "CREATE INDEX IF NOT EXISTS ix_outreach_logs_user_company ON outreach_logs(user_id, company_id);",
+                    "CREATE INDEX IF NOT EXISTS ix_companies_city_id ON companies(city_id);",
+                    "CREATE INDEX IF NOT EXISTS ix_companies_category_id ON companies(category_id);",
                 ]
                 for stmt in statements:
                     try:
                         conn.execute(text(stmt))
                     except Exception as e:
                         print(f"[DB] Skipped migration step ({str(e).splitlines()[0][:120]}): {stmt[:70]}")
+
+            # Fill city_id / category_id / company_techs for rows saved before they existed.
+            try:
+                import taxonomy
+                taxonomy.backfill()
+            except Exception as tax_err:
+                print(f"[DB Warning] Taxonomy backfill failed: {tax_err}")
 
         # Seed default subscription tiers if none exist
         try:
@@ -414,3 +471,8 @@ def get_db():
         yield db
     finally:
         db.close()
+
+
+# Keep city_id / category_id / company_techs in step with every save (any writer).
+import taxonomy  # noqa: E402  (needs the models above)
+taxonomy.register(SessionLocal)
