@@ -35,6 +35,10 @@ from db import Company, ScoutJob, SessionLocal
 from scraper_engine import GoogleBlockedException, GoogleScraper, is_genuine_company_domain
 from clean_db_company_names import clean_company_name
 
+# Empty or errored searches go back to the queue this many times before the job is closed.
+MAX_REQUEUES = 3
+REQUEUE_MARK = "Re-queued"
+
 
 def log_job(db, job_id: int, msg: str, progress: int = None, live_card: dict = None):
     """Updates job progress and logs in Neon database in real-time"""
@@ -202,6 +206,19 @@ def execute_scout_job(job_id: int, auto_enrich: bool = False) -> bool:
 
         # Update ScoutJob in Neon DB
         job = db.query(ScoutJob).filter(ScoutJob.id == job_id).first()
+        # Google often hands runner IPs an empty page, and Chrome can die mid-pagination.
+        # Don't burn the job: keep what was saved and put it back in the queue (companies dedupe by domain).
+        if job and (total_scraped == 0 or scraper.error):
+            tries = sum(1 for line in (job.logs or []) if REQUEUE_MARK in str(line))
+            if tries < MAX_REQUEUES:
+                job.status = "QUEUED"
+                job.progress = 0
+                job.total_found = len(registered_cards)
+                job.updated_at = datetime.utcnow()
+                db.commit()
+                reason = f"scrape error ({scraper.error})" if scraper.error else "no listings returned"
+                log_job(db, job_id, f"{REQUEUE_MARK} {tries + 1}/{MAX_REQUEUES}: {reason}. Saved {len(registered_cards)} companies; will retry later.", 0)
+                return "REQUEUED"
         if job:
             job.status = "COMPLETED"
             job.progress = 100
@@ -431,7 +448,8 @@ def claim_next_queued_job(domain_filter: str = None, city_filter: str = None) ->
                 # Custom keyword string fallback
                 query = query.filter(ScoutJob.keyword.ilike(f"%{domain_filter.strip()}%"))
 
-        job = query.order_by(ScoutJob.id.asc()).with_for_update(skip_locked=True).first()
+        # Least recently touched first, so a re-queued job goes to the back instead of straight back to this runner.
+        job = query.order_by(ScoutJob.updated_at.asc(), ScoutJob.id.asc()).with_for_update(skip_locked=True).first()
         if not job:
             return None
 
@@ -490,6 +508,9 @@ def run_queue_consumer(
             print(f">>> [Runner-{runner_id}] Job #{job_id} was challenged by Google (sorry/index). Re-queued safely. <<<")
             print(f"[Runner-{runner_id}] Halting queue consumer on this runner to avoid hammering rate-limited IP and burning jobs.\n")
             break
+        elif res == "REQUEUED":
+            processed_count += 1
+            print(f">>> [Runner-{runner_id}] Job #{job_id} came back empty or errored. Re-queued for a later retry. <<<\n")
         elif res:
             processed_count += 1
             print(f">>> [Runner-{runner_id}] Finished Job #{job_id} (Status: SUCCESS) <<<\n")
