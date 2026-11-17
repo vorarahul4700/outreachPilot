@@ -350,6 +350,9 @@ class CachedStaticFiles(StaticFiles):
             response.headers.setdefault("Timing-Allow-Origin", "*")
             if lower_path.endswith((".woff2", ".woff", ".ttf", ".otf", ".eot", ".svg", ".png", ".ico", ".webp")):
                 response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+            elif lower_path.endswith((".css", ".js")) and b"v=" in scope.get("query_string", b""):
+                # ?v=<asset_v> changes on every release, so this URL's content never changes.
+                response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
             elif lower_path.endswith((".css", ".js")):
                 response.headers["Cache-Control"] = "public, max-age=86400, s-maxage=604800, stale-while-revalidate=604800"
             else:

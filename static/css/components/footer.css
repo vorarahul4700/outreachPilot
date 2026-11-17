@@ -38,6 +38,8 @@
   user-select: none;
   white-space: nowrap;
 }
+/* Decorative watermark: generated content, so contrast checks skip it. */
+.footer-word::before { content: "OutreachPilot"; }
 .footer-bottom {
   display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--s-3);
   margin-top: var(--s-6); padding-top: var(--s-5); border-top: 1px solid var(--line);

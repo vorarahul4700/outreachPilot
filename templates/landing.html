@@ -64,13 +64,14 @@
       <svg class="ico ico-sm" aria-hidden="true"><use href="#i-arrow"/></svg>
     </a>
 
-    <h1 class="display hero-title reveal" style="--d:.06s">
+    {#- Hero title and lead are the LCP: no .reveal, so they paint without waiting for motion.js. -#}
+    <h1 class="display hero-title">
       <span class="line">Your next <span class="rotator" aria-hidden="true"><span class="is-current">job offer</span><span>client</span><span>project</span><span>reply</span></span></span>
       <span class="line">is already <span class="map-word">on the map<svg class="map-pin" viewBox="0 0 24 30" aria-hidden="true"><path d="M12 29S2 19.7 2 12a10 10 0 0 1 20 0c0 7.7-10 17-10 17z" fill="currentColor"/><circle cx="12" cy="12" r="4" fill="var(--surface)"/></svg></span>.</span>
       <span class="sr-only">Find real businesses. Get direct emails. Start conversations that actually get replies.</span>
     </h1>
 
-    <p class="lead hero-lead reveal" style="--d:.12s">Search any city and industry to find verified companies on Google Maps. OutreachPilot uncovers real decision-maker emails, learns what each company does, and drafts a personal email you send straight from <strong>your own Gmail</strong>.</p>
+    <p class="lead hero-lead">Search any city and industry to find verified companies on Google Maps. OutreachPilot uncovers real decision-maker emails, learns what each company does, and drafts a personal email you send straight from <strong>your own Gmail</strong>.</p>
 
     <div class="hero-cta reveal" style="--d:.18s">
       <a href="/app" class="btn btn-primary btn-lg">{{ ui.icon("travel_explore") }}<span>Start finding leads free</span></a>
@@ -180,7 +181,7 @@
 
     <div class="compare reveal-stagger">
       <div class="cmp cmp-old">
-        <div class="cmp-head"><h3 class="h4">The old way</h3>{{ ui.badge("Hours of busywork", "outline") }}</div>
+        <div class="cmp-head"><h2 class="h4">The old way</h2>{{ ui.badge("Hours of busywork", "outline") }}</div>
         <ul role="list">
           <li>{{ ui.icon("close") }}<div><b>Copy companies from Maps by hand</b><span>One business at a time, into a spreadsheet.</span></div></li>
           <li>{{ ui.icon("close") }}<div><b>Guess emails like info@</b><span>Generic inboxes nobody reads, and bounces.</span></div></li>
@@ -189,7 +190,7 @@
         </ul>
       </div>
       <div class="cmp cmp-new">
-        <div class="cmp-head"><h3 class="h4"><span class="logo-mark sm"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#logo-plane"/></svg></span>With OutreachPilot</h3>{{ ui.badge("Seconds to search", "accent") }}</div>
+        <div class="cmp-head"><h2 class="h4"><span class="logo-mark sm"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#logo-plane"/></svg></span>With OutreachPilot</h2>{{ ui.badge("Seconds to search", "accent") }}</div>
         <ul role="list">
           <li>{{ ui.icon("check") }}<div><b>Real companies from Google Maps</b><span>With website, phone, address and rating.</span></div></li>
           <li>{{ ui.icon("check") }}<div><b>Verified contact emails</b><span>Owners and hiring managers, found on their own websites.</span></div></li>

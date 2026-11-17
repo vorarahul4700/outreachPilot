@@ -253,10 +253,10 @@ h5, h6, .h5 { font-family: var(--font-body); font-weight: 700; line-height: var(
 }
 
 /* ---------- Word rotator (site/motion.js) ---------- */
-.rotator { position: relative; display: inline-grid; vertical-align: bottom; transition: width var(--t-slow) var(--ease-out); }
+.rotator { position: relative; display: inline-grid; vertical-align: bottom; }
 .rotator > span {
   grid-area: 1 / 1;
-  justify-self: start;
+  justify-self: center; /* box is as wide as the longest word; keep shorter ones centred */
   white-space: nowrap;
   color: var(--accent-text);
   opacity: 0;
