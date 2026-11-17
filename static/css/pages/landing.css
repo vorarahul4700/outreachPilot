@@ -235,7 +235,7 @@ ol.pipeline { /* ol. beats the base ol[role="list"] reset, which zeroed this pad
 .cmp-old { background: transparent; border-style: dashed; border-color: var(--line-2); }
 .cmp-new { border-color: var(--accent-line); box-shadow: var(--shadow-md); }
 .cmp-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; padding-bottom: 16px; margin-bottom: 8px; border-bottom: 1px solid var(--line); }
-.cmp-head h3 { display: inline-flex; align-items: center; gap: 10px; }
+.cmp-head h2 { display: inline-flex; align-items: center; gap: 10px; }
 .logo-mark.sm { width: 26px; height: 26px; border-radius: 8px; }
 .logo-mark.sm svg { width: 20px; height: 20px; }
 .cmp ul { list-style: none; padding: 0; display: grid; }

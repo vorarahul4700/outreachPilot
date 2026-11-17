@@ -74,10 +74,8 @@
       var words = rot.children;
       if (words.length < 2) return;
       var i = 0;
-      var fit = function (el) { rot.style.width = el.getBoundingClientRect().width + "px"; };
       for (var k = 0; k < words.length; k++) { if (words[k].classList.contains("is-current")) i = k; }
-      fit(words[i]);
-      window.addEventListener("resize", function () { fit(words[i]); });
+      // Width stays at the widest word (inline-grid), so the line never reflows (no layout shift).
       setInterval(function () {
         var cur = words[i];
         i = (i + 1) % words.length;
@@ -85,7 +83,6 @@
         cur.classList.remove("is-current");
         cur.classList.add("is-leaving");
         next.classList.add("is-current");
-        fit(next);
         setTimeout(function () { cur.classList.remove("is-leaving"); }, 600);
       }, 2600);
     });
