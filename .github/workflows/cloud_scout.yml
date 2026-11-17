@@ -115,3 +115,12 @@ jobs:
             --job-id "${{ github.event.inputs.job_id || '0' }}" \
             --batch-size "${{ github.event.inputs.batch_size || '30' }}" \
             --runner-id "${{ matrix.worker_id }}"
+
+      - name: Upload empty Google pages (debug)
+        if: always() && steps.runner_gate.outputs.skip != 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: scout-debug-runner-${{ matrix.worker_id }}
+          path: var/scout_debug/
+          if-no-files-found: ignore
+          retention-days: 3

@@ -964,6 +964,15 @@ class GoogleScraper:
                         curr_url = driver.current_url or "No URL"
                         src_preview = (driver.page_source or "")[:250].replace("\n", " ")
                         self._log(f"No listings found on {page_label}. URL: {curr_url} | Title: {page_title} | HTML snippet: {src_preview}", 90)
+                        # Debug: the <head> snippet above never says why; keep the page Google actually served.
+                        try:
+                            visible = " ".join(BeautifulSoup(driver.page_source or "", "html.parser").get_text(" ").split())[:600]
+                            self._log(f"Visible text on empty page: {visible}", 90)
+                            os.makedirs("var/scout_debug", exist_ok=True)
+                            with open(f"var/scout_debug/empty_{int(time.time())}.html", "w", encoding="utf-8") as fh:
+                                fh.write(driver.page_source or "")
+                        except Exception:
+                            pass
                     break
 
                 # Extract embedded places data directly from Google Places client script
