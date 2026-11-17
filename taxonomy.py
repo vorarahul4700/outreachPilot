@@ -4,7 +4,7 @@ Filters match on companies.city_id / companies.category_id / company_techs.tech_
 never on text. This module turns the free text that scrapers, admins and the AI
 write (city, search_keyword, profile tech_stack) into those IDs:
 
-- register(): a save hook, so every writer keeps the IDs current without changes.
+- _before_flush/_after_flush: a save hook (registered in db.py), so every writer keeps the IDs current without changes.
 - backfill(): fills rows saved before the IDs existed (runs at startup, cheap when done).
 
 Canonical rules:
@@ -15,7 +15,7 @@ Canonical rules:
 """
 import threading
 
-from sqlalchemy import event, inspect, text
+from sqlalchemy import inspect, text
 
 from db import Company, CompanyProfile, engine
 
@@ -135,11 +135,6 @@ def _after_flush(session, flush_context):
                                   [{"c": p.company_id, "t": t} for t in ids])
 
 
-def register(session_factory) -> None:
-    event.listen(session_factory, "before_flush", _before_flush)
-    event.listen(session_factory, "after_flush", _after_flush)
-
-
 # --- backfill --------------------------------------------------------------
 
 KW_SQL = "COALESCE(NULLIF(trim(normalized_keyword), ''), trim(search_keyword), '')"
@@ -186,3 +181,80 @@ def backfill() -> None:
 
         if raw_cities or raw_kws:
             print(f"[Taxonomy] Backfilled {len(raw_cities)} city values and {len(raw_kws)} keywords to IDs.")
+
+
+# --- read side: slug -> ID lookups for filters -----------------------------
+
+_LOOKUP_TTL = 60  # seconds; admin hide/show and new rows show up within a minute
+_lookup: dict = {"ts": 0.0}
+
+
+def lookup(db=None) -> dict:
+    """Taxonomy maps loaded from the tables, refreshed every minute:
+    cities / techs: {slug: id}; city_names: {id: name};
+    categories: {slug: {id, name, industry, hidden}}; category_by_id: {id: same};
+    industries: {code: {id, name, slug}}; industry_categories: {code: [category ids]}."""
+    import time
+    now = time.time()
+    if now - _lookup["ts"] < _LOOKUP_TTL and "cities" in _lookup:
+        return _lookup
+    with engine.connect() as conn:
+        industries = {r.code: {"id": r.id, "name": r.name, "slug": r.slug}
+                      for r in conn.execute(text("SELECT id, code, name, slug FROM industries"))}
+        code_by_id = {v["id"]: k for k, v in industries.items()}
+        cats = {}
+        for r in conn.execute(text("SELECT id, slug, name, industry_id, is_hidden FROM categories")):
+            cats[r.slug] = {"id": r.id, "slug": r.slug, "name": r.name,
+                            "industry": code_by_id.get(r.industry_id, "it"), "hidden": bool(r.is_hidden)}
+        cities = {r.slug: r.id for r in conn.execute(text("SELECT id, slug FROM cities"))}
+        city_names = {r.id: r.name for r in conn.execute(text("SELECT id, name FROM cities"))}
+        techs = {r.slug: r.id for r in conn.execute(text("SELECT id, slug FROM techs"))}
+    ind_cats: dict[str, list[int]] = {code: [] for code in industries}
+    for c in cats.values():
+        ind_cats.setdefault(c["industry"], []).append(c["id"])
+    _lookup.update(ts=now, industries=industries, categories=cats, category_by_id={c["id"]: c for c in cats.values()},
+                   cities=cities, city_names=city_names, techs=techs, industry_categories=ind_cats)
+    return _lookup
+
+
+def clear_lookup() -> None:
+    _lookup["ts"] = 0.0
+
+
+def city_id_for(value: str | None) -> int | None:
+    """Exact: a city name or slug ("Ahmedabad", "ahmedabad", "Thaltej, Ahmedabad") -> its ID, or None."""
+    if not value or not value.strip():
+        return None
+    import seo_engine
+    return lookup()["cities"].get(seo_engine.city_to_slug(city_name(value)))
+
+
+def category_for(value: str | None) -> dict | None:
+    """Exact: a category name or slug -> {id, name, industry, hidden}, or None."""
+    if not value or not value.strip():
+        return None
+    import seo_engine
+    return lookup()["categories"].get(seo_engine.tech_to_slug(value))
+
+
+def tech_id_for(value: str | None) -> int | None:
+    if not value or not value.strip():
+        return None
+    import seo_engine
+    return lookup()["techs"].get(seo_engine.tech_to_slug(value))
+
+
+def industry_category_ids(code: str | None) -> list[int] | None:
+    """Category IDs in an industry ("it", "it-software", "pharma", ...). None = no industry filter."""
+    code = (code or "").strip().lower()
+    if not code or code == "all":
+        return None
+    look = lookup()
+    for c, info in look["industries"].items():
+        if code in (c, info["slug"]):
+            return look["industry_categories"].get(c, [])
+    return []
+
+
+def hidden_category_ids() -> list[int]:
+    return [c["id"] for c in lookup()["categories"].values() if c["hidden"]]

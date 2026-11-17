@@ -12,6 +12,7 @@ from sqlalchemy import (
     String,
     Text,
     create_engine,
+    event,
     text,
 )
 from sqlalchemy.dialects.postgresql import JSONB
@@ -375,6 +376,11 @@ def init_db():
                     "CREATE INDEX IF NOT EXISTS ix_outreach_logs_user_company ON outreach_logs(user_id, company_id);",
                     "CREATE INDEX IF NOT EXISTS ix_companies_city_id ON companies(city_id);",
                     "CREATE INDEX IF NOT EXISTS ix_companies_category_id ON companies(category_id);",
+                    # Search box is free text: trigram indexes make ILIKE '%x%' use an index.
+                    "CREATE EXTENSION IF NOT EXISTS pg_trgm;",
+                    "CREATE INDEX IF NOT EXISTS ix_companies_name_trgm ON companies USING gin (name gin_trgm_ops);",
+                    "CREATE INDEX IF NOT EXISTS ix_companies_domain_trgm ON companies USING gin (domain gin_trgm_ops);",
+                    "CREATE INDEX IF NOT EXISTS ix_companies_address_trgm ON companies USING gin (address gin_trgm_ops);",
                 ]
                 for stmt in statements:
                     try:
@@ -474,5 +480,14 @@ def get_db():
 
 
 # Keep city_id / category_id / company_techs in step with every save (any writer).
-import taxonomy  # noqa: E402  (needs the models above)
-taxonomy.register(SessionLocal)
+# Imported lazily: taxonomy imports this module.
+@event.listens_for(SessionLocal, "before_flush")
+def _taxonomy_before_flush(session, flush_context, instances):
+    import taxonomy
+    taxonomy._before_flush(session, flush_context, instances)
+
+
+@event.listens_for(SessionLocal, "after_flush")
+def _taxonomy_after_flush(session, flush_context):
+    import taxonomy
+    taxonomy._after_flush(session, flush_context)

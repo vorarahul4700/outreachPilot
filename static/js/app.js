@@ -957,7 +957,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (c.domain_counts) {
         cnt = c.domain_counts[dom] !== undefined ? c.domain_counts[dom] : (dom === "all" ? c.count : 0);
       }
-      return { value: (c.name || "").toLowerCase(), label: c.name, count: cnt };
+      return { value: c.slug || (c.name || "").toLowerCase(), label: c.name, count: cnt };
     });
 
     // ALL cities dropdown will ALWAYS be in alphabetical order (A to Z)
@@ -1120,7 +1120,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const techOpts = [{ value: "", label: "Tech Stack (All)", count: null }];
         data.tech_stacks.forEach(t => {
           if (t && t.name) {
-            techOpts.push({ value: t.name.toLowerCase(), label: t.name, count: t.count });
+            techOpts.push({ value: t.slug || t.name.toLowerCase(), label: t.name, count: t.count });
           }
         });
         if (isOutreach) {
@@ -1136,7 +1136,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const cityOpts = [{ value: "", label: "All Cities", count: null }];
         data.cities.forEach(c => {
           if (c && c.name && (c.count === undefined || c.count > 0)) {
-            cityOpts.push({ value: (c.name || "").toLowerCase(), label: c.name, count: c.count });
+            cityOpts.push({ value: c.slug || (c.name || "").toLowerCase(), label: c.name, count: c.count });
           }
         });
         if (isOutreach) {
@@ -1159,7 +1159,9 @@ document.addEventListener("DOMContentLoaded", () => {
         });
         const countAllEl = document.getElementById("domain-count-all");
         if (countAllEl) {
-          const allCount = (data.stats && typeof data.stats.total === "number") ? data.stats.total : totalAllDomains;
+          // Every company has exactly one industry, so "All" is the sum of the industry pills
+          // (stats.total is narrowed to the selected industry).
+          const allCount = totalAllDomains;
           countAllEl.textContent = `(${Number(allCount).toLocaleString()})`;
         }
       }
@@ -3778,26 +3780,26 @@ document.addEventListener("DOMContentLoaded", () => {
       // 3. Filter Directory by City and/or Tech and/or Search Query
       if (city || tech || q) {
         switchTab("companies");
-        const filterTerms = [];
-        if (city) filterTerms.push(city);
-        if (tech) filterTerms.push(tech);
-        if (q && !filterTerms.includes(q)) filterTerms.push(q);
+        const filterTerms = [city, tech, q].filter(Boolean);
 
-        if (filterInput && filterTerms.length > 0) {
-          filterInput.value = filterTerms.join(" ");
+        // City and tech are ID filters (dropdowns below); only ?q= is free-text search.
+        if (filterInput && q) {
+          filterInput.value = q;
         }
 
+        // Dropdown values are slugs (exact keys the server maps to IDs).
+        const toSlug = (v) => v.toLowerCase().trim().replace(/[^\w\s-]/g, "").replace(/[\s_]+/g, "-");
         if (city && filterCitySelect) {
-          filterCitySelect.value = city.toLowerCase();
+          filterCitySelect.value = toSlug(city);
           if (typeof ddFilterCity !== "undefined" && ddFilterCity) {
-            ddFilterCity.setValue(city.toLowerCase());
+            ddFilterCity.setValue(toSlug(city));
           }
         }
 
         if (tech && filterTechSelect) {
-          filterTechSelect.value = tech.toLowerCase();
+          filterTechSelect.value = toSlug(tech);
           if (typeof ddFilterTech !== "undefined" && ddFilterTech) {
-            ddFilterTech.setValue(tech.toLowerCase());
+            ddFilterTech.setValue(toSlug(tech));
           }
         }
 
