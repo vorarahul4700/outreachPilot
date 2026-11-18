@@ -852,6 +852,27 @@
   </div>
 </div>
 
+<div id="resend-confirm-modal" class="app-modal fixed inset-0 hidden" role="dialog" aria-modal="true" aria-labelledby="resend-confirm-title">
+  <div class="am-card sm">
+    <div class="center-modal">
+      <span class="ic warn"><span class="material-symbols-outlined">mark_email_read</span></span>
+      <div>
+        <h3 id="resend-confirm-title">You already emailed this company</h3>
+        <p id="resend-confirm-desc" style="margin-top:8px"></p>
+      </div>
+      <div class="stack-btns">
+        <button id="btn-resend-view" type="button" class="btn btn-primary btn-lg btn-block">
+          <span class="material-symbols-outlined">visibility</span><span>See the email you sent</span>
+        </button>
+        <button id="btn-resend-proceed" type="button" class="btn btn-secondary btn-lg btn-block">
+          <span class="material-symbols-outlined">send</span><span>Write another email</span>
+        </button>
+        <button id="btn-resend-cancel" type="button" class="btn btn-ghost btn-block">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script id="initial-auth-data" type="application/json">
   {
     "is_logged_in": {{ 'true' if is_logged_in else 'false' }},

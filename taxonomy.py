@@ -14,6 +14,7 @@ Canonical rules:
 - tech: seo_engine.tech_to_slug() of each tech_stack entry.
 """
 import threading
+from contextlib import contextmanager
 
 from sqlalchemy import inspect, text
 
@@ -99,6 +100,20 @@ def tech_id(conn, raw_tech: str) -> int | None:
 
 # --- save hook -------------------------------------------------------------
 
+@contextmanager
+def _ids_conn():
+    """engine.begin(), but a rollback also drops cached IDs that may never have been committed."""
+    before = {t: dict(v) for t, v in _cache.items()}
+    try:
+        with engine.begin() as conn:
+            yield conn
+    except Exception:
+        with _lock:
+            for t, v in before.items():
+                _cache[t] = v
+        raise
+
+
 def _changed(obj, attr: str) -> bool:
     return inspect(obj).attrs[attr].history.has_changes()
 
@@ -108,7 +123,7 @@ def _before_flush(session, flush_context, instances):
     if not companies:
         return
     # Taxonomy rows commit on their own connection, so parallel workers never race on them.
-    with engine.begin() as conn:
+    with _ids_conn() as conn:
         for c in companies:
             is_new = c in session.new
             if is_new or _changed(c, "city"):
@@ -124,15 +139,19 @@ def _after_flush(session, flush_context):
     ]
     if not profiles:
         return
-    sess_conn = session.connection()
-    with engine.begin() as conn:
+    # New tech rows must be committed before the session links to them (FK check).
+    links = {}
+    with _ids_conn() as conn:
         for p in profiles:
             ids = {tech_id(conn, t) for t in (p.tech_stack or []) if isinstance(t, str) and t.strip()}
             ids.discard(None)
-            sess_conn.execute(text("DELETE FROM company_techs WHERE company_id = :c"), {"c": p.company_id})
-            if ids:
-                sess_conn.execute(text("INSERT INTO company_techs (company_id, tech_id) VALUES (:c, :t) ON CONFLICT DO NOTHING"),
-                                  [{"c": p.company_id, "t": t} for t in ids])
+            links[p.company_id] = ids
+    sess_conn = session.connection()
+    for company_id, ids in links.items():
+        sess_conn.execute(text("DELETE FROM company_techs WHERE company_id = :c"), {"c": company_id})
+        if ids:
+            sess_conn.execute(text("INSERT INTO company_techs (company_id, tech_id) VALUES (:c, :t) ON CONFLICT DO NOTHING"),
+                              [{"c": company_id, "t": t} for t in ids])
 
 
 # --- backfill --------------------------------------------------------------
