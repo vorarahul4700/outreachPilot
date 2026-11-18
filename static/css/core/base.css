@@ -256,7 +256,7 @@ h5, h6, .h5 { font-family: var(--font-body); font-weight: 700; line-height: var(
 .rotator { position: relative; display: inline-grid; vertical-align: bottom; }
 .rotator > span {
   grid-area: 1 / 1;
-  justify-self: center; /* box is as wide as the longest word; keep shorter ones centred */
+  justify-self: start; /* box is as wide as the longest word, so it never resizes (no layout shift) */
   white-space: nowrap;
   color: var(--accent-text);
   opacity: 0;
@@ -264,6 +264,8 @@ h5, h6, .h5 { font-family: var(--font-body); font-weight: 700; line-height: var(
   transition: opacity var(--t-slow) var(--ease-out), transform var(--t-slow) var(--ease-out);
 }
 .rotator > span.is-current { opacity: 1; transform: none; }
+/* On phones the rotator wraps onto its own centred line, so centre the word in its box. */
+@media (max-width: 640px) { .rotator > span { justify-self: center; } }
 .rotator > span.is-leaving { opacity: 0; transform: translateY(-.45em); }
 
 /* ---------- Full-page map canvas (site/page-canvas.js), body class "has-map" ---------- */
