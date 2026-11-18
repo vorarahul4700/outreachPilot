@@ -104,4 +104,4 @@ i[data-lucide], svg.lucide { flex-shrink: 0; }
 .inset-0 { inset: 0; }
 html.scroll-locked, html.scroll-locked body { overflow: hidden !important; overscroll-behavior: none; }
 html.scroll-locked body { padding-right: var(--scroll-lock-gap, 0px); }
-.fixed.inset-0, .fixed.inset-0 .am-body, .fixed.inset-0 #audit-logs { overscroll-behavior: contain; }
+.fixed.inset-0, .fixed.inset-0 .am-body { overscroll-behavior: contain; }

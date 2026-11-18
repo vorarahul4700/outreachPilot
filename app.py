@@ -231,6 +231,11 @@ def _prewarm_cache():
 IST = timezone(timedelta(hours=5, minutes=30))
 
 
+def ist_text(dt, fmt: str = "%b %d, %Y %I:%M %p") -> str:
+    """A stored naive-UTC time as India time text, e.g. "Nov 18, 2026 11:43 AM"."""
+    return dt.replace(tzinfo=timezone.utc).astimezone(IST).strftime(fmt) if dt else ""
+
+
 def quota_day_start_utc(now: datetime | None = None) -> datetime:
     """Start of the current quota day (00:00 IST) as a naive UTC datetime,
     matching how timestamps are stored (datetime.utcnow())."""
@@ -2368,6 +2373,7 @@ def get_companies(
                 log.company_id: log.sent_at
                 for log in db.query(OutreachLog)
                 .filter(OutreachLog.status == "SENT", OutreachLog.user_id == user.id, OutreachLog.company_id.in_(company_ids))
+                .order_by(OutreachLog.sent_at.asc())  # latest send wins in the dict
                 .all()
             }
             user_pitches = {
@@ -2409,7 +2415,7 @@ def get_companies(
                 "profile": profile,
                 "pitch_id": user_pitches.get(c.id),
                 "already_contacted": bool(sent_time),
-                "contacted_at": sent_time.strftime("%b %d, %Y %I:%M %p") if sent_time else None
+                "contacted_at": ist_text(sent_time) or None
             })
 
         # Compute domain-aware scoped stats for frontend cards
@@ -2550,7 +2556,7 @@ def get_company_detail(company_id: int, request: Request, db: Session = Depends(
         "profile": profile_data,
         "pitch": pitch_data,
         "already_contacted": bool(sent_log),
-        "contacted_at": sent_log.sent_at.strftime("%b %d, %Y %I:%M %p") if sent_log else None
+        "contacted_at": (ist_text(sent_log.sent_at) or None) if sent_log else None
     }
 
 
@@ -3508,35 +3514,6 @@ async def bulk_send_outreach(
     return result
 
 
-@app.get("/api/outreach/logs")
-def get_outreach_logs(request: Request = None, db: Session = Depends(get_db)):
-    user = get_current_user(db, request)
-    if not user or not user.oauth_tokens:
-        return {"logs": []}
-
-    logs = (
-        db.query(OutreachLog)
-        .options(joinedload(OutreachLog.company))
-        .filter(OutreachLog.user_id == user.id)
-        .order_by(OutreachLog.sent_at.desc())
-        .limit(100)
-        .all()
-    )
-    return {
-        "logs": [{
-            "id": log_item.id,
-            "company_id": log_item.company_id,
-            "company_name": log_item.company.name if log_item.company else "Unknown",
-            "recipient_email": log_item.recipient_email,
-            "subject": log_item.subject,
-            "email_body": log_item.email_body or "",
-            "delivery_method": log_item.delivery_method,
-            "status": log_item.status,
-            "sent_at": log_item.sent_at.strftime("%b %d, %Y %I:%M:%S %p") if log_item.sent_at else ""
-        } for log_item in logs]
-    }
-
-
 @app.get("/api/outreach/sent/{company_id}")
 def get_sent_email_for_company(company_id: int, request: Request, db: Session = Depends(get_db)):
     user = get_current_user(db, request)
@@ -3564,7 +3541,7 @@ def get_sent_email_for_company(company_id: int, request: Request, db: Session = 
                 "subject": pitch.subject_line,
                 "email_body": pitch.email_body,
                 "delivery_method": pitch.delivery_method or "SENT",
-                "sent_at": pitch.sent_at.strftime("%b %d, %Y %I:%M:%S %p") if pitch.sent_at else ""
+                "sent_at": ist_text(pitch.sent_at)
             }
         return {"found": False}
 
@@ -3575,7 +3552,7 @@ def get_sent_email_for_company(company_id: int, request: Request, db: Session = 
         "subject": log.subject,
         "email_body": log.email_body or "",
         "delivery_method": log.delivery_method,
-        "sent_at": log.sent_at.strftime("%b %d, %Y %I:%M:%S %p") if log.sent_at else ""
+        "sent_at": ist_text(log.sent_at)
     }
 
 
@@ -5186,7 +5163,7 @@ def list_pitches_admin(
                 "delivery_method": cp.delivery_method or "OAUTH_DIRECT",
                 "status": cp.status or "SENT",
                 "error_message": None,
-                "sent_at": cp.sent_at.strftime("%b %d, %Y %I:%M %p") if cp.sent_at else (cp.created_at.strftime("%b %d, %Y %I:%M %p") if cp.created_at else "")
+                "sent_at": ist_text(cp.sent_at or cp.created_at)
             }
             for cp in cp_records
         ]
@@ -5206,7 +5183,7 @@ def list_pitches_admin(
                 "delivery_method": log.delivery_method or "GMAIL_OAUTH",
                 "status": log.status or "SENT",
                 "error_message": log.error_message,
-                "sent_at": log.sent_at.strftime("%b %d, %Y %I:%M %p") if log.sent_at else ""
+                "sent_at": ist_text(log.sent_at)
             }
             for log in records
         ]

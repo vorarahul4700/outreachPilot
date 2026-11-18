@@ -385,9 +385,6 @@
         <p>Review personalized emails, send them directly with your Gmail, and see who you've contacted.</p>
       </div>
       <div class="head-actions">
-        <button id="btn-toggle-activity" type="button" class="btn btn-secondary" title="Toggle Live Activity & Sent History Feed">
-          <span class="dot dot-live"></span><span>Activity Log</span>
-        </button>
         <button id="btn-gen-all-pitches" type="button" class="btn btn-secondary" title="Generate personalized emails for selected companies">
           <span class="material-symbols-outlined">auto_awesome</span><span id="btn-gen-all-pitches-text">Prepare Emails</span>
         </button>
@@ -528,32 +525,6 @@
   </section>
 
   </div>
-</div>
-
-<!-- ===================== Activity drawer ===================== -->
-<div id="outreach-activity-drawer-root" class="fixed inset-0 pointer-events-none">
-  <div id="outreach-activity-backdrop" class="fixed inset-0 opacity-0 pointer-events-none"></div>
-  <aside id="outreach-activity-drawer" class="translate-x-full" aria-label="Outreach activity">
-    <div>
-      <div class="drawer-head">
-        <div class="l">
-          <span class="ic"><span class="material-symbols-outlined">history</span></span>
-          <div>
-            <h2>Outreach Activity Stream <span class="dot dot-live"></span></h2>
-            <small>Emails you have sent from your Gmail</small>
-          </div>
-        </div>
-        <button id="btn-close-activity" type="button" class="icon-btn sm bare" title="Close activity stream" aria-label="Close">
-          <span class="material-symbols-outlined">close</span>
-        </button>
-      </div>
-      <div class="drawer-meta"><span>Sent emails</span><span class="on">Gmail connected</span></div>
-      <div id="audit-logs">
-        <p class="log-empty">No emails sent yet today.</p>
-      </div>
-    </div>
-    <div class="drawer-foot"><span>OutreachPilot</span><span>Google sign-in</span></div>
-  </aside>
 </div>
 
 <!-- ===================== Company details modal ===================== -->
