@@ -16,20 +16,20 @@ const specimens = [
     pitches: {
       architecture: {
         subject: "Frontend development & web app architecture at ApexForge Systems",
-        p1: "I came across ApexForge Systems while researching top software development agencies specializing in custom web and mobile apps. Your 4.9 rating across 184 client reviews really caught my attention.",
-        p2: "I build fast, responsive web applications using React, TypeScript, and Tailwind CSS. I noticed you build custom client solutions where smooth user experience and fast loading times are essential.",
-        p3: "I'm currently looking for new projects and full-time opportunities with great development teams. Are you taking on new developers right now?",
+        p1: "I came across ApexForge Systems while looking for software companies in Bengaluru that build web and mobile apps, and I would love to join your team.",
+        p2: "I build fast, responsive web applications using React, TypeScript, and Tailwind CSS, which matches the stack your team works with.",
+        p3: "I am looking for a full-time front-end developer role and have attached my resume. Are you hiring developers right now?",
       },
       executive: {
-        subject: "Helping ApexForge Systems deliver client web projects faster",
-        p1: "ApexForge Systems has a stellar reputation for delivering end-to-end cloud and web products for clients.",
-        p2: "I help agencies speed up client delivery by building clean, reusable front-end design systems and keeping codebases organized and bug-free.",
-        p3: "If your team is looking for a dependable front-end developer to help with upcoming client projects, I'd welcome a brief 5-minute conversation.",
+        subject: "Front-end developer applying to ApexForge Systems",
+        p1: "ApexForge Systems has a strong reputation for well-built web and cloud products.",
+        p2: "In my last role I built reusable front-end components that cut release time for my team and kept the codebase organized and bug-free.",
+        p3: "If you have an opening for a front-end developer, I would welcome a short conversation. My resume is attached.",
       },
       peer: {
         subject: "Quick hello from a front-end developer in Bengaluru",
         p1: "Hey ApexForge team: I really admire the quality of web platforms your team has shipped over recent years.",
-        p2: "I'm a front-end developer working with React and TypeScript, and I love building clean, responsive interfaces. I'd love to connect with your team for upcoming project opportunities.",
+        p2: "I'm a front-end developer working with React and TypeScript, and I love building clean, responsive interfaces. I'd love to be considered for any open developer roles on your team.",
         p3: "Would you have 5 minutes this week for a quick chat?",
       }
     }
@@ -51,10 +51,10 @@ const specimens = [
         p3: "I'm looking for new software engineering roles where I can help build rock-solid systems. Do you have any openings on your core development team?",
       },
       executive: {
-        subject: "Reliable senior backend engineering capacity for VortexLogic Labs",
-        p1: "VortexLogic Labs' consistent 5.0 delivery track record across 140+ client engagements demonstrates top-tier execution.",
-        p2: "I help software firms ship client deliverables on time by building clean API architectures and automated tests that catch issues before release.",
-        p3: "If you're looking for extra engineering support on upcoming client deliverables, I'd welcome a quick 5-minute introductory chat.",
+        subject: "Backend engineer applying to VortexLogic Labs",
+        p1: "VortexLogic Labs' 5.0 rating across 140+ reviews says a lot about how your team works.",
+        p2: "I build clean API architectures and automated tests that catch issues before release, and I would like to bring that to your engineering team.",
+        p3: "If you are hiring backend engineers, I would welcome a short conversation. My resume is attached.",
       },
       peer: {
         subject: "Connecting with the VortexLogic engineering team",
@@ -81,10 +81,10 @@ const specimens = [
         p3: "I'm eager to bring hands-on full-stack and AI development skills to NovaCrest AI. Would your technical team be open to a 10-minute introductory call?",
       },
       executive: {
-        subject: "Full-stack product engineering support for NovaCrest AI",
+        subject: "Full-stack engineer applying to NovaCrest AI",
         p1: "NovaCrest AI's focus on practical, AI-powered software products is exactly where modern technology is heading.",
-        p2: "I help SaaS companies turn AI prototypes into polished, reliable web applications that customers love using.",
-        p3: "If NovaCrest AI is looking for extra developer firepower to build new product features this quarter, I'd welcome a chance to share my work.",
+        p2: "I have turned AI prototypes into polished, reliable web applications, and I would like to do the same as part of your product team.",
+        p3: "If NovaCrest AI is hiring full-stack engineers, I would welcome a chance to share my work. My resume is attached.",
       },
       peer: {
         subject: "Fellow developer saying hello to the NovaCrest AI team",
@@ -187,7 +187,7 @@ function copyPitch() {
     label.textContent = "Copied!";
     setTimeout(() => {
       icon.textContent = "content_copy";
-      label.textContent = "Copy Pitch";
+      label.textContent = "Copy Email";
     }, 2000);
   });
 }

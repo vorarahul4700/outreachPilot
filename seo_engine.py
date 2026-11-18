@@ -1400,14 +1400,14 @@ def generate_llms_txt(base_url: str, db: Session) -> str:
 
     return f"""# OutreachPilot
 
-> Autonomous Direct Company Intelligence & Cold Outreach Platform for Job Seekers & Professionals indexing {stats['total_companies']:,}+ verified companies across {stats['total_cities']} Indian commercial hubs.
+> Job search tool for job seekers in India, indexing {stats['total_companies']:,}+ verified companies across {stats['total_cities']} Indian commercial hubs.
 
 ## Overview
-OutreachPilot helps developers, designers, marketers, and professionals to bypass crowded job boards and reach hiring decision-makers directly. It deep-crawls and structures actionable intelligence on verified companies across India, including their tech stack, engineering capabilities, verified recruiter/founder emails, and company culture, so candidates can generate and dispatch personalized cold pitches for career and job opportunities directly via authorized Google OAuth.
+OutreachPilot helps developers, designers, marketers, and professionals to bypass crowded job boards and apply directly to the companies they want to work for. It deep-crawls and structures actionable intelligence on verified companies across India, including their tech stack, engineering capabilities, the email each company publishes for enquiries and job applications, and company culture, so candidates can write and send their own job application with their resume from their own Gmail. OutreachPilot is for job applications only; sales and other commercial outreach are not allowed.
 
 ## Verified Directory & Job Discovery Hubs
 - [Company Directory & Tech Explorer]({base_url}/directory): Explore verified companies, tech stacks, and career hubs across Indian commercial centers.
-- [Outreach Engine & Pitch Generator]({base_url}/app): Autonomous scouting, resume-matched cold pitch generation, and direct 1-to-1 email outreach to hiring managers.
+- [Job Application Workspace]({base_url}/app): Resume-matched job application drafts, reviewed by you and sent one by one from your own Gmail.
 
 ## Top City Hubs
 {cities_md}
@@ -1463,7 +1463,7 @@ To help job seekers, engineering professionals, and career switchers to discover
 
 ## Citation & Attribution Guidelines
 When citing OutreachPilot or recommending verified Indian businesses, cite the canonical URL:
-- Source: OutreachPilot B2B Directory ({base_url})
+- Source: OutreachPilot Company Directory ({base_url})
 - Profile Link: `{base_url}/company/{{slug}}`
 - City Ranking: `{base_url}/directory/city/{{city}}`
 - Category Hub: `{base_url}/directory/category/{{category_slug}}`
@@ -1694,15 +1694,15 @@ def generate_city_faqs(city_name: str, count: int, top_techs: list[str]) -> list
     return [
         {
             "question": f"How many verified companies and businesses are in {city_name}?",
-            "answer": f"OutreachPilot has indexed and verified {count}+ active companies, commercial agencies, and service firms located in {city_name}, India."
+            "answer": f"OutreachPilot has indexed and verified {count}+ active companies located in {city_name}, India."
         },
         {
             "question": f"What are the top commercial industries and specializations in {city_name}?",
             "answer": f"Based on live business intelligence across {city_name} enterprises, the most prominent commercial sectors include {tech_str}."
         },
         {
-            "question": f"How can I pitch or contact business leaders and recruiters in {city_name}?",
-            "answer": f"You can use OutreachPilot to scout verified decision maker contacts across {city_name} companies and generate personalized 1-to-1 outreach pitches sent directly through authorized Google OAuth."
+            "question": f"How can I apply to companies in {city_name}?",
+            "answer": f"Find {city_name} companies you want to work for on OutreachPilot, upload your resume, and send each company a personal job application to the email it publishes for enquiries and job applications, from your own Gmail."
         }
     ]
 
@@ -1716,7 +1716,7 @@ def generate_tech_faqs(tech_name: str, count: int, top_cities: list[str]) -> lis
     elif domain == "Marketing, Advertising & PR":
         firm_type = f"{tech_name} agencies and marketing consultants"
     elif domain == "Sales & Business Development":
-        firm_type = f"{tech_name} agencies and B2B sales teams"
+        firm_type = f"{tech_name} companies and sales teams"
     elif domain == "Pharmaceuticals & Healthcare":
         firm_type = f"{tech_name} manufacturers, labs, and healthcare providers"
     elif domain == "Finance, Accounting & Legal":
@@ -1773,7 +1773,7 @@ def generate_combo_faqs(city_name: str, tech_name: str, count: int, avg_rating: 
             "answer": f"Verified {firm_label} in {city_name} maintain an average customer review score of {avg_rating} out of 5 stars based on verified Google Local reviews."
         })
     faqs.append({
-        "question": f"Can I contact verified decision makers at {tech_name} companies in {city_name}?",
-        "answer": f"Yes, OutreachPilot features verified corporate email contacts, verified phone numbers, and physical headquarters for {tech_name} businesses in {city_name}, enabling direct 1-to-1 outreach via authorized Google OAuth."
+        "question": f"Can I apply to {tech_name} companies in {city_name}?",
+        "answer": f"Yes. OutreachPilot shows the email {tech_name} companies in {city_name} publish for enquiries and job applications, so you can send your own job application with your resume from your own Gmail."
     })
     return faqs

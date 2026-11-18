@@ -5,7 +5,7 @@
 {% block title %}{{ project_name }} - {{ tagline }}{% endblock %}
 
 {% block meta %}
-  <meta name="description" content="OutreachPilot: Direct company discovery, tech stack intelligence, and automated cold email outreach for job opportunities.">
+  <meta name="description" content="OutreachPilot: Find companies you want to work for and send each one a job application from your own Gmail.">
 {% endblock %}
 
 {% block head_extra %}
@@ -147,7 +147,7 @@
       <div>
         <span class="eyebrow">Directory</span>
         <h1>Companies</h1>
-        <p id="header-leads-subtitle">Browse, research, and reach out to <span id="header-leads-counter" class="tabular-nums"></span> verified businesses.</p>
+        <p id="header-leads-subtitle">Browse, research, and apply to <span id="header-leads-counter" class="tabular-nums"></span> companies.</p>
       </div>
       <div class="head-actions">
         {% if not subscription_kill_switch %}
@@ -182,7 +182,7 @@
         <div class="num"><span id="stat-enriched-count" class="tabular-nums">0</span><span id="stat-enriched-badge" class="mini-badge accent">0 Active</span></div>
         <p class="sub">Ready to reach out</p>
       </div>
-      <div id="stat-card-contacted" class="app-stat" title="Click to view sent pitches (requires sign-in)">
+      <div id="stat-card-contacted" class="app-stat" title="Click to view sent applications (requires sign-in)">
         <div class="top"><span>Emails Sent</span><span class="material-symbols-outlined">send</span></div>
         <div class="num"><span id="stat-contacted-count" class="tabular-nums">0</span><span id="stat-contacted-badge" class="mini-badge">Sign in</span></div>
         <p id="stat-contacted-text" class="sub">Sign in to track sent emails</p>
@@ -244,12 +244,12 @@
     </section>
 
     <div id="companies-pagination" class="hidden pager-bar">
-      <div class="pager-left"><span>Showing <strong id="companies-page-range">0-0</strong> of <strong id="companies-page-total">0</strong> leads</span></div>
+      <div class="pager-left"><span>Showing <strong id="companies-page-range">0-0</strong> of <strong id="companies-page-total">0</strong> companies</span></div>
       <div class="pager-right">
         <span class="pager-label hidden-xs">Per page</span>
         <div class="custom-dropdown dropdown-compact" id="dropdown-companies-per-page">
           <input type="hidden" id="companies-per-page" value="24">
-          <button type="button" class="custom-dropdown-btn" aria-haspopup="listbox" aria-expanded="false" title="Leads per page">
+          <button type="button" class="custom-dropdown-btn" aria-haspopup="listbox" aria-expanded="false" title="Companies per page">
             <span class="custom-dropdown-label">24</span>
             <span class="material-symbols-outlined dropdown-chevron">expand_more</span>
           </button>
@@ -271,7 +271,7 @@
     </div>
 
     <div id="companies-pagination-bottom" class="hidden pager-bar">
-      <div class="pager-left"><span>Showing <strong id="companies-page-range-bottom">0-0</strong> of <strong id="companies-page-total-bottom">0</strong> leads</span></div>
+      <div class="pager-left"><span>Showing <strong id="companies-page-range-bottom">0-0</strong> of <strong id="companies-page-total-bottom">0</strong> companies</span></div>
       <div id="companies-page-buttons-bottom" class="flex items-center gap-1"></div>
     </div>
   </section>
@@ -388,7 +388,7 @@
         <button id="btn-gen-all-pitches" type="button" class="btn btn-secondary" title="Generate personalized emails for selected companies">
           <span class="material-symbols-outlined">auto_awesome</span><span id="btn-gen-all-pitches-text">Prepare Emails</span>
         </button>
-        <button id="btn-send-all-outreach" type="button" class="btn btn-primary" title="Send cold emails to selected companies with discovered email addresses">
+        <button id="btn-send-all-outreach" type="button" class="btn btn-primary" title="Send job applications to the selected companies">
           <span class="material-symbols-outlined">send</span><span id="btn-send-all-outreach-text">Send Emails</span>
         </button>
       </div>
@@ -482,10 +482,10 @@
 
     <div class="seg-tabs hub-tabs" role="tablist" aria-label="Outreach lists">
       <button type="button" role="tab" id="outreach-tab-ready" class="cmodal-tab-btn active" aria-selected="true" data-outreach-tab="ready">
-        <span class="material-symbols-outlined">send</span><span>To pitch</span><span class="tab-count outreach-badge-ready">0</span>
+        <span class="material-symbols-outlined">send</span><span>To apply</span><span class="tab-count outreach-badge-ready">0</span>
       </button>
       <button type="button" role="tab" id="outreach-tab-sent" class="cmodal-tab-btn" aria-selected="false" data-outreach-tab="sent">
-        <span class="material-symbols-outlined">mark_email_read</span><span>Pitched</span><span class="tab-count outreach-badge-sent">0</span>
+        <span class="material-symbols-outlined">mark_email_read</span><span>Applied</span><span class="tab-count outreach-badge-sent">0</span>
       </button>
     </div>
 
@@ -647,7 +647,7 @@
       </div>
       <div class="field-row">
         <div class="field-label-row"><label for="modal-body">Email Message</label><span id="pitch-word-count" class="word-count">0 words</span></div>
-        <textarea id="modal-body" rows="9" class="recessed-well" placeholder="Email pitch message..."></textarea>
+        <textarea id="modal-body" rows="9" class="recessed-well" placeholder="Job application message..."></textarea>
       </div>
       <div class="attach-row">
         <div class="l">
@@ -763,7 +763,7 @@
           <div>
             <div class="nm"><b>{{ t.name }}</b>{% if t.subtitle %}<span>{{ t.subtitle }}</span>{% endif %}</div>
             <div class="pr"><b>₹{{ "{:,}".format(t.price_inr) }}</b><span>/ month</span></div>
-            <div class="qt">{{ "{:,}".format(t.daily_pitch_limit) }} pitches / day</div>
+            <div class="qt">{{ "{:,}".format(t.daily_pitch_limit) }} applications / day</div>
             {% if t.features %}
             <ul>
               {% for f in t.features %}
@@ -789,7 +789,7 @@
       <div>
         <h3 id="login-modal-title">Please Log In</h3>
         <p id="login-modal-desc" style="margin-top:8px">
-          Please log in to use this feature. Sign in with Google to analyze leads, detect tech stacks, and generate personalized outreach.
+          Please log in to use this feature. Sign in with Google to research companies and write job applications from your resume.
         </p>
       </div>
       <div class="stack-btns">
@@ -821,7 +821,7 @@
       <div>
         <h3 id="resume-confirm-title">Send Without Resume Attachment?</h3>
         <p id="resume-confirm-desc" style="margin-top:8px">
-          No resume file is currently attached. Sending cold outreach without your resume attached may lower response rates from hiring teams.
+          No resume file is currently attached. Sending a job application without your resume attached may lower response rates from hiring teams.
         </p>
       </div>
       <div class="stack-btns">

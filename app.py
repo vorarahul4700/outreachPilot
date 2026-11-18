@@ -918,7 +918,7 @@ def get_user_subscription_info(user: User | None, db: Session) -> dict:
     kill_switch_active = is_subscription_kill_switch_active(db)
     tier_name_map = {
         "free": "Free Job Seeker",
-        "pro": "Pro Outreach",
+        "pro": "Job Seeker Pro",
         "premium_plus": "Premium+",
         "master_admin": "Master Admin Persona"
     }
@@ -942,7 +942,7 @@ def get_user_subscription_info(user: User | None, db: Session) -> dict:
     if is_master:
         tier_name = "Master Admin"
     elif kill_switch_active:
-        tier_name = "Temp User (Infinite Pitches)"
+        tier_name = "Temp User (Unlimited Applications)"
         tier_code = "temp_user"
 
     daily_limit = 999999 if (is_master or kill_switch_active) else (getattr(user, "daily_pitch_limit", 10) or 10)
@@ -1274,7 +1274,7 @@ def sitemap_companies_endpoint(page: int, request: Request, db: Session = Depend
 
 @app.api_route("/directory", methods=["GET", "HEAD"], response_class=HTMLResponse)
 def directory_index_page(request: Request, db: Session = Depends(get_db)):
-    """Master B2B Technology & Agency Directory Homepage"""
+    """Company directory homepage for job seekers."""
     base_url = seo_engine.get_canonical_base_url(request)
     canonical_url = f"{base_url}/directory"
     stats = seo_engine.get_directory_stats(db)
@@ -1453,9 +1453,9 @@ def directory_tech_hub(tech_slug: str, request: Request, db: Session = Depends(g
     faq_schema = seo_engine.build_faq_schema(faqs)
     combined_schema = json.dumps([bc_schema, itemlist_schema, faq_schema], ensure_ascii=False)
 
-    page_title = f"Top {tech_name} Companies & Agencies in India (2026 Rankings)"
+    page_title = f"Top {tech_name} Companies to Work For in India (2026)"
     page_subtitle = f"Directory of {total_count}+ verified {tech_name} firms and specialists across India's top commercial and technology hubs."
-    meta_description = f"Explore {total_count}+ verified {tech_name} companies, agencies, and firms across India. Crawled capabilities, Google ratings, client reviews, and verified contacts."
+    meta_description = f"Explore {total_count}+ {tech_name} companies across India you can apply to. See what each company does, its Google rating and the email it publishes for job applications."
 
     response = templates.TemplateResponse(
         request=request,
@@ -1494,7 +1494,7 @@ def directory_companies(
     db: Session = Depends(get_db)
 ):
     """
-    Scalable Parameterized B2B Directory Landing & Search Engine.
+    Parameterized company directory landing pages for job seekers.
     Supports query parameters: ?city=noida&tech=nextjs and ?city=mumbai&category=dentists
     for future-proof multidimensional expansion across all business domains.
     """
@@ -1727,7 +1727,7 @@ def run_scraper_sync(keyword: str, city: str, direct_url: str, max_pages: int = 
 async def start_scrape(req: ScrapeRequest, db: Session = Depends(get_db)):
     return {
         "status": "error",
-        "message": "Public on-demand scraping is disabled. All directory leads are curated and managed autonomously via cloud workflows."
+        "message": "Public on-demand scraping is disabled. All directory companies are curated and managed via cloud workflows."
     }
     existing_active = (
         db.query(ScoutJob)
@@ -2588,13 +2588,13 @@ def auth_status(request: Request, db: Session = Depends(get_db)):
         sent_today = getattr(user, "pitches_sent_today", 0) or 0
         remaining = 999999
         tier_code = "temp_user"
-        tier_name = "Temp User (Infinite Pitches)"
+        tier_name = "Temp User (Unlimited Applications)"
     else:
         # Normal path: read real tier from user record (kill switch OFF restores this automatically)
         tier_code = getattr(user, "subscription_tier", "free") or "free"
         tier_name_map = {
             "free": "Free Job Seeker",
-            "pro": "Pro Outreach",
+            "pro": "Job Seeker Pro",
             "premium_plus": "Premium+",
             "master_admin": "Master Admin"
         }
@@ -2609,7 +2609,7 @@ def auth_status(request: Request, db: Session = Depends(get_db)):
     real_tier_code = (getattr(user, "subscription_tier", "free") or "free") if is_logged_in else "guest"
     real_tier_name_map = {
         "free": "Free Job Seeker",
-        "pro": "Pro Outreach",
+        "pro": "Job Seeker Pro",
         "premium_plus": "Premium+",
         "master_admin": "Master Admin"
     }
@@ -2657,17 +2657,17 @@ def get_public_tiers(db: Session = Depends(get_db)):
                     "subtitle": "Starter Tier",
                     "price_inr": 0,
                     "daily_pitch_limit": 10,
-                    "features": ["10 pitches / day", "Full company directory access", "Verified contact email discovery", "Standard Gmail OAuth sending"],
+                    "features": ["10 job applications / day", "Full company directory access", "Careers and contact email discovery", "Sends from your own Gmail"],
                     "badge": None,
                     "is_popular": False
                 },
                 {
                     "code": "pro",
-                    "name": "Pro Outreach",
+                    "name": "Job Seeker Pro",
                     "subtitle": "Growth Tier",
                     "price_inr": 499,
                     "daily_pitch_limit": 50,
-                    "features": ["50 pitches / day", "Deep AI Website crawler analysis", "Auto-PDF Resume attachment", "Bulk pitch generator engine"],
+                    "features": ["50 job applications / day", "AI research of each company website", "Resume PDF attached automatically", "Each application written for that company"],
                     "badge": "Most Popular",
                     "is_popular": True
                 },
@@ -2677,7 +2677,7 @@ def get_public_tiers(db: Session = Depends(get_db)):
                     "subtitle": "Maximum Velocity",
                     "price_inr": 999,
                     "daily_pitch_limit": 100,
-                    "features": ["100 pitches / day", "Highest priority email queue", "Tech-stack deep matching", "Unlimited AI pitch regenerations"],
+                    "features": ["100 job applications / day", "Highest priority email queue", "Matches your skills to each company's tech stack", "Unlimited AI rewrites of each application"],
                     "badge": "Maximum Velocity",
                     "is_popular": False
                 }
@@ -2955,7 +2955,7 @@ async def generate_single_pitch(
     if not user or not user.oauth_tokens:
         raise HTTPException(
             status_code=401,
-            detail="Authentication required. Please connect your Google account to generate personalized pitches."
+            detail="Authentication required. Please connect your Google account to write job applications."
         )
     if getattr(user, "is_banned", False):
         raise HTTPException(
@@ -3145,7 +3145,7 @@ async def generate_bulk_pitches(
     if not user or not user.oauth_tokens:
         raise HTTPException(
             status_code=401,
-            detail="Authentication required. Please connect your Google account to generate personalized pitches."
+            detail="Authentication required. Please connect your Google account to write job applications."
         )
     if getattr(user, "is_banned", False):
         raise HTTPException(
@@ -3335,10 +3335,10 @@ async def send_single_pitch_direct(
 
     pitch = db.query(ColdPitch).filter(ColdPitch.id == pitch_id).first()
     if not pitch:
-        raise HTTPException(status_code=404, detail="Pitch not found")
+        raise HTTPException(status_code=404, detail="Application not found")
 
     if not is_master and pitch.user_id != user.id:
-        raise HTTPException(status_code=403, detail="Forbidden: You do not own this pitch record.")
+        raise HTTPException(status_code=403, detail="Forbidden: You do not own this application record.")
 
     # Take this send from today's quota up front (atomic); refunded below if it fails.
     reserved = 0
