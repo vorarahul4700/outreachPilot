@@ -3,17 +3,17 @@
 {% set nav_prefix = "" %}
 {% set page_css = ["landing.css"] %}
 
-{% block title %}OutreachPilot - Find Verified Companies, Decision-Maker Emails &amp; Send Cold Outreach{% endblock %}
+{% block title %}OutreachPilot - Apply Directly to Companies Hiring in India{% endblock %}
 
 {% block meta %}
-  <meta name="description" content="Find verified local businesses on Google Maps, discover real contact emails and tech stacks, and send personalized cold emails directly from your Gmail with one click."/>
+  <meta name="description" content="A job search tool for job seekers in India. Find companies you want to work for, see what they do, and send a personal job application with your resume from your own Gmail."/>
   <link rel="canonical" href="https://outreachpilot.in/"/>
   <meta name="robots" content="index, follow, max-image-preview:large"/>
   <meta property="og:type" content="website"/>
   <meta property="og:site_name" content="OutreachPilot"/>
   <meta property="og:url" content="https://outreachpilot.in/"/>
-  <meta property="og:title" content="OutreachPilot - Find Verified Companies and Decision-Maker Emails"/>
-  <meta property="og:description" content="Find verified companies across India, discover real contact emails and tech stacks, and send personalized emails from your own Gmail."/>
+  <meta property="og:title" content="OutreachPilot - Apply Directly to Companies Hiring in India"/>
+  <meta property="og:description" content="Find companies across India you want to work for and send a personal job application with your resume from your own Gmail."/>
   <meta property="og:image" content="https://outreachpilot.in/static/img/favicon.png"/>
   <meta property="og:image:width" content="512"/>
   <meta property="og:image:height" content="512"/>
@@ -66,15 +66,15 @@
 
     {#- Hero title and lead are the LCP: no .reveal, so they paint without waiting for motion.js. -#}
     <h1 class="display hero-title">
-      <span class="line">Your next <span class="rotator" aria-hidden="true"><span class="is-current">job offer</span><span>client</span><span>project</span><span>reply</span></span></span>
+      <span class="line">Your next <span class="rotator" aria-hidden="true"><span class="is-current">job offer</span><span>interview</span><span>callback</span><span>reply</span></span></span>
       <span class="line">is already <span class="map-word">on the map<svg class="map-pin" viewBox="0 0 24 30" aria-hidden="true"><path d="M12 29S2 19.7 2 12a10 10 0 0 1 20 0c0 7.7-10 17-10 17z" fill="currentColor"/><circle cx="12" cy="12" r="4" fill="var(--surface)"/></svg></span>.</span>
-      <span class="sr-only">Find real businesses. Get direct emails. Start conversations that actually get replies.</span>
+      <span class="sr-only">Find companies you want to work for. Send your job application straight to their published email.</span>
     </h1>
 
-    <p class="lead hero-lead">Search any city and industry to find verified companies on Google Maps. OutreachPilot uncovers real decision-maker emails, learns what each company does, and drafts a personal email you send straight from <strong>your own Gmail</strong>.</p>
+    <p class="lead hero-lead">Search any city and industry to find companies you want to work for. OutreachPilot finds the email each company publishes for enquiries and job applications, learns what the company does, and drafts a job application from your resume that you send from <strong>your own Gmail</strong>.</p>
 
     <div class="hero-cta reveal" style="--d:.18s">
-      <a href="/app" class="btn btn-primary btn-lg">{{ ui.icon("travel_explore") }}<span>Start finding leads free</span></a>
+      <a href="/app" class="btn btn-primary btn-lg">{{ ui.icon("travel_explore") }}<span>Start applying free</span></a>
       <a href="#specimen-lab" class="btn btn-secondary btn-lg"><span>See how it works</span><svg class="ico ico-sm arrow" aria-hidden="true"><use href="#i-arrow"/></svg></a>
     </div>
 
@@ -124,7 +124,7 @@
           </ul>
           <div class="c-draft">
             <div class="c-draft-head"><span>{{ ui.icon("edit_note") }}Draft for ApexForge Systems</span></div>
-            <div class="c-subject"><span class="subtle">Subject</span> <span class="typed" data-text="Frontend developer interested in your client web projects"></span></div>
+            <div class="c-subject"><span class="subtle">Subject</span> <span class="typed" data-text="Frontend developer applying to join your team"></span></div>
             <div class="c-lines"><i></i><i></i><i style="width:72%"></i></div>
             <div class="c-send"><span class="small subtle">{{ ui.icon("shield") }}From your Gmail</span><span class="btn btn-primary btn-xs c-send-btn">Send</span></div>
           </div>
@@ -177,7 +177,7 @@
 <section class="section" id="why">
   <div class="container">
     {{ ui.eyebrow("Why OutreachPilot") }}
-    <p class="manifesto reveal"><span class="m-hook">Most cold outreach fails before it is even sent.</span> <span class="m-body">Hours copying companies from Maps into spreadsheets. Guessing <span class="strike">info@</span> addresses that bounce. One template sent to two hundred strangers. <span class="em">So we rebuilt every step.</span></span></p>
+    <p class="manifesto reveal"><span class="m-hook">Most job applications fail before they are even sent.</span> <span class="m-body">Hours copying companies from Maps into spreadsheets. Guessing <span class="strike">info@</span> addresses that bounce. One generic cover letter sent everywhere. <span class="em">So we rebuilt every step.</span></span></p>
 
     <div class="compare reveal-stagger">
       <div class="cmp cmp-old">
@@ -207,15 +207,15 @@
   <div class="container">
     <div class="section-head">
       {{ ui.eyebrow("Try it here") }}
-      <h2 class="h2 reveal">See how a <span class="em">personal email</span> gets written</h2>
-      <p class="lead reveal" style="--d:.08s">Click any example company below to see how OutreachPilot finds their details and drafts a customized email ready to send.</p>
+      <h2 class="h2 reveal">See how a <span class="em">job application</span> gets written</h2>
+      <p class="lead reveal" style="--d:.08s">Click any example company below to see how OutreachPilot finds their details and drafts a job application ready to send.</p>
     </div>
 
     <div class="lab reveal">
       <div class="lab-tabs" role="group" aria-label="Example companies">
         <button type="button" class="specimen-tab active" onclick="selectSpecimen(0)">
           <span class="lab-tab-top"><span class="font-display">ApexForge Systems</span><span class="lab-city">Bengaluru</span></span>
-          <span class="lab-tab-sub">Web and mobile app agency</span>
+          <span class="lab-tab-sub">Web and mobile app company</span>
         </button>
         <button type="button" class="specimen-tab" onclick="selectSpecimen(1)">
           <span class="lab-tab-top"><span class="font-display">VortexLogic Labs</span><span class="lab-city">Pune</span></span>
@@ -271,9 +271,9 @@
           <div class="mail-row"><span class="mail-k">Subject</span><span class="mail-v strong" id="pitch-subject">Frontend development &amp; web app architecture at ApexForge Systems</span></div>
           <div class="mail-body" id="pitch-body">
             <p>Hi ApexForge Team,</p>
-            <p>I came across ApexForge Systems while researching top software development agencies specializing in custom web and mobile apps. Your 4.9 rating across 184 client reviews really caught my attention.</p>
-            <p>I build fast, responsive web applications using React, TypeScript, and Tailwind CSS. I noticed you build custom client solutions where smooth user experience and fast loading times are essential.</p>
-            <p>I'm currently looking for new projects and full-time opportunities with great development teams. Are you taking on new developers right now?</p>
+            <p>I came across ApexForge Systems while looking for software companies in Bengaluru that build web and mobile apps, and I would love to join your team.</p>
+            <p>I build fast, responsive web applications using React, TypeScript, and Tailwind CSS, which matches the stack your team works with.</p>
+            <p>I am looking for a full-time front-end developer role and have attached my resume. Are you hiring developers right now?</p>
           </div>
           <div class="mail-foot">
             <span class="small subtle">{{ ui.icon("bolt") }}Tailored to this company</span>
@@ -291,13 +291,13 @@
 <!-- ===================== Features ===================== -->
 <section class="section" id="capabilities">
   <div class="container">
-    {{ ui.section_head("Features", 'Everything you need to find clients <span class="em">and get hired</span>', "Stop spending hours searching Google Maps, copying emails into spreadsheets and writing cold emails from scratch.") }}
+    {{ ui.section_head("Features", 'Everything you need to <span class="em">get hired</span>', "Stop spending hours on crowded job boards, copying emails into spreadsheets and writing every application from scratch.") }}
 
     <div class="bento reveal-stagger">
       <article class="tile b-4 tile-search">
         <span class="icon-tile">{{ ui.icon("explore") }}</span>
         <h3>Find local companies in any city</h3>
-        <p>Type any business type and city, like digital marketing agencies in Mumbai. OutreachPilot pulls real companies from Google Maps with their website, address, phone number and rating.</p>
+        <p>Type an industry and city, like software companies in Pune. OutreachPilot shows real companies from Google Maps with their website, address and rating, so you can choose where you want to work.</p>
         <div class="tile-visual mini-search">
           <div class="mini-bar">{{ ui.icon("search") }}<span>Software companies in Bengaluru</span><span class="btn btn-primary btn-xs">Search</span></div>
           <div class="cluster" style="--cluster:8px">{{ ui.chip("Real companies from Maps", "accent", cls="chip-sm") }}{{ ui.chip("Website", cls="chip-sm") }}{{ ui.chip("Phone", cls="chip-sm") }}{{ ui.chip("Rating", cls="chip-sm") }}</div>
@@ -307,7 +307,7 @@
       <article class="tile b-2">
         <span class="icon-tile">{{ ui.icon("memory") }}</span>
         <h3>See what each company does</h3>
-        <p>OutreachPilot visits each website to find their services, the technologies they use and direct contact emails.</p>
+        <p>OutreachPilot visits each website to find what the company does, the technologies it uses and the email it publishes for enquiries and job applications.</p>
         <div class="tile-visual cluster" style="--cluster:6px">{{ ui.chip("Web apps", cls="chip-sm") }}{{ ui.chip("Mobile apps", cls="chip-sm") }}{{ ui.chip("Cloud", cls="chip-sm") }}{{ ui.chip("Verified emails", "accent", cls="chip-sm") }}</div>
       </article>
 
@@ -341,20 +341,20 @@
       <li class="flow-step">
         <span class="flow-num">01</span>
         <span class="icon-tile">{{ ui.icon("travel_explore") }}</span>
-        <h3 class="h4">Find Target Companies</h3>
-        <p>Type any business type and city. Within seconds you get active companies with websites, phone numbers and ratings.</p>
+        <h3 class="h4">Find companies to work for</h3>
+        <p>Type an industry and city. Within seconds you get active companies with websites and ratings.</p>
       </li>
       <li class="flow-step">
         <span class="flow-num">02</span>
         <span class="icon-tile">{{ ui.icon("contact_mail") }}</span>
-        <h3 class="h4">Find Emails &amp; Info</h3>
-        <p>Each company website is checked for verified emails of owners and hiring managers, plus the services and technologies they work with.</p>
+        <h3 class="h4">See what each company does</h3>
+        <p>Each company website is checked for its published careers or contact email, plus the services and technologies the company works with.</p>
       </li>
       <li class="flow-step">
         <span class="flow-num">03</span>
         <span class="icon-tile">{{ ui.icon("send") }}</span>
-        <h3 class="h4">Review &amp; Send via Gmail</h3>
-        <p>A personal, friendly email is written for that company. Review it, make quick edits, and send it from your Gmail with one click.</p>
+        <h3 class="h4">Review &amp; apply via Gmail</h3>
+        <p>A job application is written for that company from your resume. Review it, edit it, and send it from your Gmail with your resume attached.</p>
       </li>
     </ol>
   </div>
@@ -363,11 +363,11 @@
 <!-- ===================== Who it is for ===================== -->
 <section class="section" id="who">
   <div class="container">
-    {{ ui.section_head("Who it is for", 'Built for anyone who needs <span class="em">a reply</span>') }}
+    {{ ui.section_head("Who it is for", 'Built only for <span class="em">job seekers</span>') }}
     <div class="grid grid-3 reveal-stagger">
-      {{ ui.feature("work", "Job seekers", "Write to the companies you want to work for, with your resume attached and your real skills in every line.") }}
-      {{ ui.feature("design_services", "Freelancers", "Find local businesses that need what you do, and introduce yourself with an email that shows you know their work.") }}
-      {{ ui.feature("groups", "Agencies", "Build a list of real companies in any city and reach the people who decide, one personal email at a time.") }}
+      {{ ui.feature("school", "Freshers", "Apply to companies before they post a job opening, with your resume attached and your real skills in every line.") }}
+      {{ ui.feature("work", "Experienced professionals", "Reach the careers inbox of the companies you want to join, with an application that shows you know their work.") }}
+      {{ ui.feature("swap_horiz", "Career switchers", "Find companies in your new field and explain in your own words why your skills fit, one application at a time.") }}
     </div>
   </div>
 </section>
@@ -404,15 +404,15 @@
     <div class="pricing-head">
       <div class="section-head">
         {{ ui.eyebrow("Pricing") }}
-        <h2 class="h2 reveal">Predictable outreach limits. <span class="em">Zero spam tax.</span></h2>
-        <p class="lead reveal" style="--d:.08s">{% if free_plan %}Start free with {{ free_plan.daily_pitch_limit }} pitches every day. {% endif %}Move to a bigger plan whenever you need a higher daily limit.</p>
+        <h2 class="h2 reveal">Clear daily limits. <span class="em">No spam, ever.</span></h2>
+        <p class="lead reveal" style="--d:.08s">{% if free_plan %}Start free with {{ free_plan.daily_pitch_limit }} job applications every day. {% endif %}Move to a bigger plan whenever you need a higher daily limit.</p>
       </div>
       {% if is_logged_in and sub_info %}
       <div class="current-plan reveal">
         <span class="dot dot-live"></span>
         <div>
           <div class="small strong">Active: <span class="accent-text">{{ sub_info.tier_name }}</span></div>
-          <div class="xsmall subtle">{{ sub_info.pitches_remaining }} / {{ sub_info.daily_pitch_limit }} pitches left today</div>
+          <div class="xsmall subtle">{{ sub_info.pitches_remaining }} / {{ sub_info.daily_pitch_limit }} applications left today</div>
         </div>
         <a href="/app" class="btn btn-primary btn-xs">Open App</a>
       </div>
@@ -430,7 +430,7 @@
           {% if t.subtitle %}<div class="plan-sub">{{ t.subtitle }}</div>{% endif %}
           <h3 class="plan-name">{{ t.name }}</h3>
           <div class="plan-price"><span class="amount">₹{{ "{:,}".format(t.price_inr) }}</span><span class="per">/ month</span></div>
-          <div class="plan-quota"><span>Daily outreach quota</span><b>{{ "{:,}".format(t.daily_pitch_limit) }} pitches / day</b></div>
+          <div class="plan-quota"><span>Daily limit</span><b>{{ "{:,}".format(t.daily_pitch_limit) }} applications / day</b></div>
           {% if t.features %}
           <ul class="plan-features" role="list">
             {% for f in t.features %}
@@ -473,9 +473,9 @@
       {{ ui.faq_item("Can OutreachPilot see my Google password?", "No. Sign-in happens on Google itself. We never see your password and we never sell your data.") }}
       {{ ui.faq_item("Will anything be sent without me?", "No. An email is only sent after you review it and click Send.") }}
       {% if free_plan %}
-      {{ ui.faq_item("How many emails can I send each day?", "The free plan includes " ~ free_plan.daily_pitch_limit ~ " pitches every day. Bigger plans raise the daily limit.") }}
+      {{ ui.faq_item("How many emails can I send each day?", "The free plan includes " ~ free_plan.daily_pitch_limit ~ " job applications every day. Bigger plans raise the daily limit.") }}
       {% endif %}
-      {{ ui.faq_item("Where do the companies come from?", "Companies come from Google Maps. OutreachPilot then checks each company website for contact emails, services and technologies.") }}
+      {{ ui.faq_item("Where do the companies come from?", "Companies come from Google Maps. OutreachPilot then checks each company website for the email it publishes for enquiries and job applications, plus its services and technologies.") }}
     </div>
   </div>
 </section>
@@ -487,9 +487,9 @@
       <div class="final-bg bg-dots" aria-hidden="true"></div>
       <span class="logo-mark lg" aria-hidden="true"><svg viewBox="0 0 24 24"><use href="#logo-plane"/></svg></span>
       <h2 class="h1">Ready to start reaching <span class="em">real companies</span> today?</h2>
-      <p class="lead">Find verified businesses in your target city, get direct contact info, and start conversations that lead to jobs and new clients. Free to start, no credit card needed.</p>
+      <p class="lead">Find companies you want to work for in your city, and send each one a job application with your resume from your own Gmail. Free to start, no credit card needed.</p>
       <div class="cluster" style="justify-content:center">
-        <a href="/app" class="btn btn-primary btn-lg"><span>Search leads for free</span><svg class="ico ico-sm arrow" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+        <a href="/app" class="btn btn-primary btn-lg"><span>Start applying for free</span><svg class="ico ico-sm arrow" aria-hidden="true"><use href="#i-arrow"/></svg></a>
         <a href="/directory" class="btn btn-secondary btn-lg">Browse the directory</a>
       </div>
     </div>

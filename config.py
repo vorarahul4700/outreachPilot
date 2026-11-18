@@ -16,7 +16,7 @@ env_path = Path(__file__).parent / ".env"
 load_dotenv(dotenv_path=env_path)
 
 PROJECT_NAME = os.getenv("PROJECT_NAME", "OutreachPilot")
-TAGLINE = os.getenv("TAGLINE", "Find Leads. Personalize. Reach Out.")
+TAGLINE = os.getenv("TAGLINE", "Find companies. Apply directly. Get hired.")
 APP_DESCRIPTOR = os.getenv("APP_DESCRIPTOR", "AI Outreach Automation")
 
 DEV_MODE = os.getenv("DEV_MODE", "false").lower() in ("true", "1", "yes")

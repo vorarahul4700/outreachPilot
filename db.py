@@ -407,25 +407,25 @@ def init_db():
                             price_inr=0,
                             daily_pitch_limit=10,
                             features=[
-                                "10 pitches / day",
+                                "10 job applications / day",
                                 "Full company directory access",
-                                "Verified contact email discovery",
-                                "Standard Gmail OAuth sending"
+                                "Careers and contact email discovery",
+                                "Sends from your own Gmail"
                             ],
                             badge=None,
                             is_active=True
                         ),
                         SubscriptionTier(
                             code="pro",
-                            name="Pro Outreach",
+                            name="Job Seeker Pro",
                             subtitle="Growth Tier",
                             price_inr=499,
                             daily_pitch_limit=50,
                             features=[
-                                "50 pitches / day",
-                                "Deep AI Website crawler analysis",
-                                "Auto-PDF Resume attachment",
-                                "Bulk pitch generator engine"
+                                "50 job applications / day",
+                                "AI research of each company website",
+                                "Resume PDF attached automatically",
+                                "Each application written for that company"
                             ],
                             badge="Most Popular",
                             is_active=True
@@ -437,10 +437,10 @@ def init_db():
                             price_inr=999,
                             daily_pitch_limit=100,
                             features=[
-                                "100 pitches / day",
+                                "100 job applications / day",
                                 "Highest priority email queue",
-                                "Tech-stack deep matching",
-                                "Unlimited AI pitch regenerations"
+                                "Matches your skills to each company's tech stack",
+                                "Unlimited AI rewrites of each application"
                             ],
                             badge="Maximum Velocity",
                             is_active=True

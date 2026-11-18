@@ -196,7 +196,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentFilteredCompanies = [];
   const companyDetailCache = new Map();
 
-  // Scout Leads Pagination State & Elements
+  // Scout Companies Pagination State & Elements
   const scoutPagination = document.getElementById("scout-pagination");
   const scoutPageRange = document.getElementById("scout-page-range");
   const scoutPageTotal = document.getElementById("scout-page-total");
@@ -228,7 +228,7 @@ document.addEventListener("DOMContentLoaded", () => {
     currentScoutList = list || [];
     currentScoutQueryLabel = queryLabel;
 
-    if (scoutLeadsCount) scoutLeadsCount.textContent = `${(list || []).length} Leads`;
+    if (scoutLeadsCount) scoutLeadsCount.textContent = `${(list || []).length} Companies`;
     if (scoutQueryLabel) scoutQueryLabel.textContent = queryLabel || '-';
 
     if (scoutCardsContainer) scoutCardsContainer.innerHTML = "";
@@ -241,9 +241,9 @@ document.addEventListener("DOMContentLoaded", () => {
             <div class="inline-flex p-3 rounded-full bg-primary/10 text-primary border border-primary/20 shadow-sm">
               <i data-lucide="radar" class="w-6 h-6"></i>
             </div>
-            <p class="text-sm font-semibold text-on-surface">Ready to Discover Leads</p>
+            <p class="text-sm font-semibold text-on-surface">Ready to Discover Companies</p>
             <p class="text-xs text-on-surface-variant max-w-md mx-auto leading-relaxed">
-              Enter your Target Keyword and Location above, then click <strong class="text-primary">"Find Leads"</strong>. Real-time scraped leads from your search session will appear here instantly.
+              Enter your Target Keyword and Location above, then click <strong class="text-primary">"Find Companies"</strong>. Real-time scraped companies from your search session will appear here instantly.
             </p>
           </div>
         `;
@@ -406,9 +406,9 @@ document.addEventListener("DOMContentLoaded", () => {
       ? `"${kwDisplay}" in "${cityDisplay}"`
       : (kwDisplay ? `"${kwDisplay}"` : (cityDisplay ? `in "${cityDisplay}"` : ""));
 
-    // Find Leads tab ONLY shows live real-time scraped leads from current session
+    // Find Companies tab ONLY shows live real-time scraped companies from current session
     if (liveScrapedResults && liveScrapedResults.length > 0) {
-      renderScoutResults(liveScrapedResults, queryTag ? `Discovered Leads: ${queryTag}` : "Discovered Leads");
+      renderScoutResults(liveScrapedResults, queryTag ? `Discovered Companies: ${queryTag}` : "Discovered Companies");
     } else {
       renderScoutResults([], queryTag ? `Ready to Search: ${queryTag}` : "-");
     }
@@ -581,7 +581,7 @@ document.addEventListener("DOMContentLoaded", () => {
     statCardContacted.addEventListener("click", () => {
       requireLogin(() => {
         setActiveMetricFilter("contacted");
-      }, "Please sign in with Google to view and track your sent pitches.");
+      }, "Please sign in with Google to view and track your sent applications.");
     });
   }
   if (statCardInvalid) statCardInvalid.addEventListener("click", () => setActiveMetricFilter("invalid"));
@@ -833,22 +833,22 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Initialize Scout Leads Tactile Dropdowns
+  // Initialize Scout Companies Tactile Dropdowns
   const ddScoutPages = initCustomDropdown({
     containerId: "dropdown-scout-pages",
     inputId: "input-pages",
-    defaultLabel: "2 Pages (~40 leads)"
+    defaultLabel: "2 Pages (~40 companies)"
   });
   if (ddScoutPages) {
     ddScoutPages.setOptions([
-      { value: "1", label: "1 Page (~20 leads)" },
-      { value: "2", label: "2 Pages (~40 leads)" },
-      { value: "3", label: "3 Pages (~60 leads)" },
-      { value: "5", label: "5 Pages (~100 leads)" },
-      { value: "10", label: "10 Pages (~200 leads)" },
-      { value: "15", label: "15 Pages (~300 leads)" },
-      { value: "20", label: "20 Pages (~400 leads)" },
-      { value: "30", label: "30 Pages (~600 leads)" },
+      { value: "1", label: "1 Page (~20 companies)" },
+      { value: "2", label: "2 Pages (~40 companies)" },
+      { value: "3", label: "3 Pages (~60 companies)" },
+      { value: "5", label: "5 Pages (~100 companies)" },
+      { value: "10", label: "10 Pages (~200 companies)" },
+      { value: "15", label: "15 Pages (~300 companies)" },
+      { value: "20", label: "20 Pages (~400 companies)" },
+      { value: "30", label: "30 Pages (~600 companies)" },
       { value: "0", label: "All Available Pages" }
     ]);
   }
@@ -986,10 +986,10 @@ document.addEventListener("DOMContentLoaded", () => {
     if (countEl) countEl.textContent = Number(totalCount || 0).toLocaleString();
     if (subtitleEl) {
       if (!domainCode || domainCode === "all") {
-        subtitleEl.innerHTML = `Manage and engage with <span id="header-leads-counter">${Number(totalCount || 0).toLocaleString()}</span> verified prospective companies.`;
+        subtitleEl.innerHTML = `Manage and engage with <span id="header-leads-counter">${Number(totalCount || 0).toLocaleString()}</span> companies you can apply to.`;
       } else {
         const domName = DOMAIN_DISPLAY_NAMES[domainCode] || domainCode.toUpperCase();
-        subtitleEl.innerHTML = `Manage and engage with <span id="header-leads-counter">${Number(totalCount || 0).toLocaleString()}</span> verified prospective companies in ${domName}.`;
+        subtitleEl.innerHTML = `Manage and engage with <span id="header-leads-counter">${Number(totalCount || 0).toLocaleString()}</span> companies you can apply to in ${domName}.`;
       }
     }
   }
@@ -1242,7 +1242,7 @@ document.addEventListener("DOMContentLoaded", () => {
       fetchCompaniesFilters({ context: "companies" });
 
       updateMetricCardStyles();
-      // Purge any invalid company IDs from multi-selection if viewing active leads
+      // Purge any invalid company IDs from multi-selection if viewing active companies
       if (activeMetricFilter !== "invalid") {
         companies.forEach(c => {
           if (c.is_invalid) selectedCompanyIds.delete(c.id);
@@ -1264,8 +1264,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!list || list.length === 0) {
       if (companiesPagination) companiesPagination.classList.add("hidden");
       if (companiesPaginationBottom) companiesPaginationBottom.classList.add("hidden");
-      let emptyTitle = "No leads saved yet";
-      let emptyMsg = "No leads available. Scout companies in Step 1 first.";
+      let emptyTitle = "No companies saved yet";
+      let emptyMsg = "No companies available. Scout companies in Step 1 first.";
       if (activeDomainFilter && activeDomainFilter !== "all") {
         const domainNames = {
           it: "Information Technology & Software",
@@ -1278,20 +1278,20 @@ document.addEventListener("DOMContentLoaded", () => {
           hr: "HR, Staffing & Consulting"
         };
         const domName = domainNames[activeDomainFilter] || activeDomainFilter.toUpperCase();
-        emptyTitle = `No ${domName} Leads Saved Yet`;
+        emptyTitle = `No ${domName} Companies Saved Yet`;
         emptyMsg = `There are no ${domName} companies in the directory yet. Switch back to All Domains to see every company.`;
       } else if (activeMetricFilter === "invalid") {
-        emptyTitle = "No Invalid Leads Found";
-        emptyMsg = "No invalid / excluded leads recorded. Active companies can be marked invalid by Master Admin.";
+        emptyTitle = "No Invalid Companies Found";
+        emptyMsg = "No invalid / excluded companies recorded. Active companies can be marked invalid by Master Admin.";
       } else if (activeMetricFilter === "enriched") {
-        emptyTitle = "No Deep Enriched Leads Found";
+        emptyTitle = "No Deep Enriched Companies Found";
         emptyMsg = "None of the companies have been enriched yet. Click 'Deep Enrich All' or enrich individually.";
       } else if (activeMetricFilter === "emails") {
-        emptyTitle = "No Leads with Discovered Emails";
+        emptyTitle = "No Companies with Discovered Emails";
         emptyMsg = "No direct emails discovered under this filter. Try enriching companies to discover contacts.";
       } else if (activeMetricFilter === "contacted") {
         emptyTitle = "No Outreach Sent Yet";
-        emptyMsg = "You haven't contacted any companies yet under this filter. Generate a pitch and reach out!";
+        emptyMsg = "You haven't contacted any companies yet under this filter. Write a job application to get started!";
       }
 
       if (companiesContainer) {
@@ -1349,7 +1349,7 @@ document.addEventListener("DOMContentLoaded", () => {
           // Status Badge: Pitched, Researched, Uncontacted
           let statusBadge = "";
           if (c.already_contacted) {
-            statusBadge = `<span onclick="event.stopPropagation(); window.viewSentEmailForCompany && window.viewSentEmailForCompany(${c.id})" class="status-pill sent" title="Click to view outreach sent"><span class="material-symbols-outlined">check_circle</span><span>Pitched</span></span>`;
+            statusBadge = `<span onclick="event.stopPropagation(); window.viewSentEmailForCompany && window.viewSentEmailForCompany(${c.id})" class="status-pill sent" title="Click to view the application you sent"><span class="material-symbols-outlined">check_circle</span><span>Applied</span></span>`;
           } else if (c.is_enriched) {
             statusBadge = `<span class="status-pill researched"><span class="material-symbols-outlined">auto_awesome</span><span>Researched</span></span>`;
           } else {
@@ -1436,7 +1436,7 @@ document.addEventListener("DOMContentLoaded", () => {
               </button>
               <button type="button" class="btn-single-pitch btn ${c.already_contacted ? "btn-secondary" : "btn-primary"} btn-sm">
                 <span class="material-symbols-outlined">${c.already_contacted ? "forward_to_inbox" : "send"}</span>
-                <span class="truncate">${c.already_contacted ? "Email again" : "Draft Pitch"}</span>
+                <span class="truncate">${c.already_contacted ? "Email again" : "Write Application"}</span>
               </button>
             </div>
           `;
@@ -1509,7 +1509,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // Export Leads to CSV Controller
+  // Export Companies to CSV Controller
   const btnExportCsv = document.getElementById("btn-export-csv");
   if (btnExportCsv) {
     btnExportCsv.addEventListener("click", () => {
@@ -1635,7 +1635,7 @@ document.addEventListener("DOMContentLoaded", () => {
     cmodalBadge.removeAttribute("title");
     if (company.is_invalid) {
       cmodalBadge.className = "modal-badge invalid";
-      cmodalBadge.innerHTML = `<span class="material-symbols-outlined text-[13px]">shield</span><span>INVALID LEAD</span>`;
+      cmodalBadge.innerHTML = `<span class="material-symbols-outlined text-[13px]">shield</span><span>INVALID COMPANY</span>`;
     } else if (company.already_contacted) {
       cmodalBadge.className = "modal-badge contacted";
       cmodalBadge.title = "Click to view message sent";
@@ -1646,7 +1646,7 @@ document.addEventListener("DOMContentLoaded", () => {
       cmodalBadge.innerHTML = `<span class="material-symbols-outlined text-[13px]">auto_awesome</span><span>AI Enriched</span>`;
     } else {
       cmodalBadge.className = "modal-badge verified";
-      cmodalBadge.innerHTML = `<span class="material-symbols-outlined text-[13px]">verified</span><span>Verified Lead</span>`;
+      cmodalBadge.innerHTML = `<span class="material-symbols-outlined text-[13px]">verified</span><span>Verified Company</span>`;
     }
 
     // Discovered Emails
@@ -1791,7 +1791,7 @@ document.addEventListener("DOMContentLoaded", () => {
     requireLogin(() => {
       cmodal.classList.add("hidden");
       handleGeneratePitch(activeModalCompany.id);
-    }, "generate outreach pitches");
+    }, "write job applications");
   });
 
   if (filterInput) {
@@ -1904,13 +1904,13 @@ document.addEventListener("DOMContentLoaded", () => {
     // Required Field Validations
     if (!direct_url) {
       if (!keyword && !city) {
-        highlightFieldWarning(inputKwEl, "Please enter a Target Keyword / Industry and City / Location to find leads.");
+        highlightFieldWarning(inputKwEl, "Please enter a Target Keyword / Industry and City / Location to find companies.");
         inputCityEl?.classList.add("input-warning-highlight");
         setTimeout(() => inputCityEl?.classList.remove("input-warning-highlight"), 3200);
         return;
       }
       if (!keyword) {
-        highlightFieldWarning(inputKwEl, "Target Keyword / Industry is required (e.g. IT Companies, Software Agencies).");
+        highlightFieldWarning(inputKwEl, "Target Keyword / Industry is required (e.g. IT Companies, Software Companies).");
         return;
       }
       if (!city) {
@@ -1989,11 +1989,11 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         // Clean user-friendly status message
-        let friendlyStatus = data.status_message || "Searching for verified business leads...";
+        let friendlyStatus = data.status_message || "Searching for companies...";
         if (/cloud_enrich|ai\s*enrichment|ai\s*worker/i.test(friendlyStatus)) {
           friendlyStatus = "AI analyzing company tech stacks & contacts...";
         } else if (/saving.*companies|registered.*neon/i.test(friendlyStatus)) {
-          friendlyStatus = "Saving verified leads to outreach directory...";
+          friendlyStatus = "Saving companies to your directory...";
         } else if (/fetching listings from page\s*(\d+)/i.test(friendlyStatus)) {
           const p = friendlyStatus.match(/page\s*(\d+)/i)?.[1] || "1";
           friendlyStatus = `Scanning Google Local listings (Page ${p})...`;
@@ -2021,7 +2021,7 @@ document.addEventListener("DOMContentLoaded", () => {
             : (activeKw ? `"${activeKw}"` : (activeCity ? `in "${activeCity}"` : ""));
           renderScoutResults(liveScrapedResults, data.is_running 
             ? (queryTag ? `Live Cloud Scouting: ${queryTag}` : `Live Cloud Scouting`)
-            : (queryTag ? `Discovered Leads: ${queryTag}` : `Discovered Leads`));
+            : (queryTag ? `Discovered Companies: ${queryTag}` : `Discovered Companies`));
         }
 
         if (data.error) {
@@ -2048,8 +2048,8 @@ document.addEventListener("DOMContentLoaded", () => {
             : (activeKw ? `"${activeKw}"` : (activeCity ? `in "${activeCity}"` : ""));
           if (liveScrapedResults && liveScrapedResults.length > 0) {
             renderScoutResults(liveScrapedResults, queryTag
-              ? `Discovered ${liveScrapedResults.length} Leads for ${queryTag}`
-              : `Discovered ${liveScrapedResults.length} Leads`);
+              ? `Discovered ${liveScrapedResults.length} Companies for ${queryTag}`
+              : `Discovered ${liveScrapedResults.length} Companies`);
           }
         }
       } catch (err) {
@@ -2081,7 +2081,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (customMessage) {
         modalDesc.textContent = customMessage;
       } else {
-        modalDesc.textContent = "Please log in to use this feature. Sign in with Google to analyze leads, detect tech stacks, and generate personalized outreach.";
+        modalDesc.textContent = "Please log in to use this feature. Sign in with Google to research companies and write job applications from your resume.";
       }
     }
     loginModal?.classList.remove("hidden");
@@ -2283,7 +2283,7 @@ document.addEventListener("DOMContentLoaded", () => {
   if (btnGenAllPitches) {
     btnGenAllPitches.addEventListener("click", async () => {
       if (!selectedOutreachCompanyIds || selectedOutreachCompanyIds.size === 0) {
-        showToast("Please select at least one company using the checkboxes to prepare pitches.", "warning");
+        showToast("Please select at least one company using the checkboxes to prepare applications.", "warning");
         return;
       }
 
@@ -2291,7 +2291,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const eligible = targets.filter(c => selectedOutreachCompanyIds.has(c.id) && !c.is_invalid);
 
       if (eligible.length === 0) {
-        showToast("No valid companies selected to prepare pitches for.", "warning");
+        showToast("No valid companies selected to prepare applications for.", "warning");
         return;
       }
 
@@ -2320,8 +2320,8 @@ document.addEventListener("DOMContentLoaded", () => {
             if (res.status === 401) {
               authFailed = true;
               currentUser.is_logged_in = false;
-              showToast("Authentication required. Please connect your Google account to generate personalized pitches.", "warning");
-              showLoginModal("Authentication required. Please connect your Google account to generate personalized pitches.");
+              showToast("Authentication required. Please connect your Google account to write job applications.", "warning");
+              showLoginModal("Authentication required. Please connect your Google account to write job applications.");
               break;
             }
 
@@ -2338,7 +2338,7 @@ document.addEventListener("DOMContentLoaded", () => {
               }
             } else {
               const errData = await res.json().catch(() => ({}));
-              showToast(errData.detail || "Failed to generate pitches for batch.", "error");
+              showToast(errData.detail || "Failed to prepare applications for this batch.", "error");
             }
           } catch (err) {
             console.error("Bulk pitch error:", err);
@@ -2346,7 +2346,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         if (!authFailed) {
-          btnGenAllPitches.innerHTML = `<span class="material-symbols-outlined text-[16px] text-emerald-400">check</span><span>${generatedCount} Pitches Prepared!</span>`;
+          btnGenAllPitches.innerHTML = `<span class="material-symbols-outlined text-[16px] text-emerald-400">check</span><span>${generatedCount} Applications Prepared!</span>`;
           renderPitchesList();
         }
 
@@ -2355,7 +2355,7 @@ document.addEventListener("DOMContentLoaded", () => {
           btnGenAllPitches.disabled = false;
           updateOutreachSelectionUI();
         }, 2500);
-      }, "Authentication required. Please connect your Google account to generate personalized pitches.");
+      }, "Authentication required. Please connect your Google account to write job applications.");
     });
   }
 
@@ -2377,7 +2377,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       confirmResumeAttachmentIfNeeded(
-        `cold outreach emails to ${eligible.length} selected companies`,
+        `job applications to ${eligible.length} selected companies`,
         () => {
           requireLogin(async () => {
             // Strictly filter to selected companies with at least one discovered email
@@ -2456,7 +2456,7 @@ document.addEventListener("DOMContentLoaded", () => {
               btnSendAllOutreach.disabled = false;
               btnSendAllOutreach.innerHTML = oldText;
               if (!authFailed && pitchIdsToSend.length === 0) {
-                showToast("Could not prepare email pitches. Please try again.", "error");
+                showToast("Could not prepare the applications. Please try again.", "error");
               }
               return;
             }
@@ -2553,7 +2553,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const targetRole = (inputTargetRole?.value || "").trim();
 
       if (!targetRole) {
-        highlightFieldWarning(inputTargetRole, "Target Job Role is required (e.g. Senior Full-Stack Engineer, B2B Growth Lead).");
+        highlightFieldWarning(inputTargetRole, "Target Job Role is required (e.g. Senior Full-Stack Engineer, Data Analyst).");
         return;
       }
 
@@ -2679,7 +2679,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     } else {
       if (outreachResumeStatus) {
-        outreachResumeStatus.textContent = "No resume selected for this session. Choose a PDF file to attach when sending cold emails.";
+        outreachResumeStatus.textContent = "No resume selected for this session. Choose a PDF file to attach to your job applications.";
       }
       if (btnChooseResumeText) btnChooseResumeText.textContent = "Choose Resume File";
       if (btnRemoveOutreachResume) btnRemoveOutreachResume.classList.add("hidden");
@@ -2920,8 +2920,8 @@ document.addEventListener("DOMContentLoaded", () => {
       });
       if (res.status === 401) {
         currentUser.is_logged_in = false;
-        showToast("Please sign in with Google to generate personalized outreach pitches.", "warning");
-        showLoginModal("Please sign in with Google to generate personalized outreach pitches.");
+        showToast("Please sign in with Google to write job applications.", "warning");
+        showLoginModal("Please sign in with Google to write job applications.");
         return;
       }
       const data = await res.json();
@@ -2943,10 +2943,10 @@ document.addEventListener("DOMContentLoaded", () => {
         modal.classList.remove("hidden");
         refreshIcons();
       } else {
-        showToast(data.detail || data.message || "Failed to generate outreach pitch.", "error");
+        showToast(data.detail || data.message || "Failed to write the job application.", "error");
       }
     } catch (err) {
-      showToast("Pitch generation failed: " + err.message, "error");
+      showToast("Writing the application failed: " + err.message, "error");
     } finally {
       if (triggerBtn) {
         triggerBtn.disabled = false;
@@ -2982,7 +2982,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      confirmResumeAttachmentIfNeeded("this cold email", async () => {
+      confirmResumeAttachmentIfNeeded("this job application", async () => {
         btnSendDirectOauth.disabled = true;
         btnSendDirectOauth.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i><span>Sending via Gmail...</span>`;
         refreshIcons();
@@ -3095,7 +3095,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (btnGenText) {
-      btnGenText.textContent = count > 0 ? `Prepare Pitches (${count})` : "Prepare Pitches";
+      btnGenText.textContent = count > 0 ? `Prepare Applications (${count})` : "Prepare Applications";
     }
     if (btnSendText) {
       btnSendText.textContent = count > 0 ? `Send Emails (${count})` : "Send Emails";
@@ -3738,12 +3738,12 @@ document.addEventListener("DOMContentLoaded", () => {
         switchTab("companies");
         const cId = parseInt(companyId, 10);
         if (!isNaN(cId)) {
-          showToast(`Opening AI pitch generator for ${companyName || 'company'}...`, "info");
+          showToast(`Opening the application writer for ${companyName || 'company'}...`, "info");
           // Allow auth check and table initialization to finish
           setTimeout(() => {
             requireLogin(() => {
               handleGeneratePitch(cId);
-            }, "generate an AI pitch for this company");
+            }, "write a job application for this company");
           }, 400);
         }
         return;

@@ -48,7 +48,7 @@
           {{ page_subtitle }}
         </p>
       <div class="hero-actions reveal" style="--d:.15s">
-        <a href="{{ workspace_url or '/app' }}" class="btn btn-primary"><span class="material-symbols-outlined" aria-hidden="true">travel_explore</span><span>Prospect all in Workspace</span></a>
+        <a href="{{ workspace_url or '/app' }}" class="btn btn-primary"><span class="material-symbols-outlined" aria-hidden="true">travel_explore</span><span>Apply in Workspace</span></a>
         <a href="/directory" class="btn btn-secondary">Back to the directory</a>
       </div>
     </div>
@@ -85,7 +85,7 @@
       <h2>
             Verified Company Profiles <span class="subtle tnum" style="font-family:var(--font-mono);font-size:.5em;letter-spacing:0">({{ companies|length }} showing)</span>
           </h2>
-      <a href="{{ workspace_url or '/app' }}" class="btn btn-text"><span>Prospect all in Workspace</span><svg class="ico ico-sm arrow" aria-hidden="true"><use href="#i-arrow"/></svg></a>
+      <a href="{{ workspace_url or '/app' }}" class="btn btn-text"><span>Apply in Workspace</span><svg class="ico ico-sm arrow" aria-hidden="true"><use href="#i-arrow"/></svg></a>
     </div>
 
     {% if companies and companies|length > 0 %}
@@ -126,7 +126,7 @@
 
           <div class="co-actions">
             <a href="/company/{{ c.slug }}" class="btn btn-secondary btn-sm"><span>View profile</span></a>
-            <a href="/app?action=pitch&company_id={{ c.id }}&company_name={{ c.name | urlencode }}" class="btn btn-primary btn-sm"><span class="material-symbols-outlined" aria-hidden="true">send</span><span>Pitch Lead</span></a>
+            <a href="/app?action=pitch&company_id={{ c.id }}&company_name={{ c.name | urlencode }}" class="btn btn-primary btn-sm"><span class="material-symbols-outlined" aria-hidden="true">send</span><span>Apply</span></a>
           </div>
         </article>
       </li>
