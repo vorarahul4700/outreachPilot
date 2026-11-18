@@ -497,6 +497,8 @@ textarea.recessed-well { min-height: 220px; resize: vertical; line-height: 1.7; 
 .am-body { flex: 1; overflow-y: auto; padding: 18px 22px; display: grid; gap: 14px; align-content: start; }
 .am-foot { display: flex; flex-direction: column; flex-wrap: wrap; gap: 10px; padding: 14px 22px; border-top: 1px solid var(--line); background: var(--surface-2); }
 @media (min-width: 640px) { .am-foot { flex-direction: row; align-items: center; justify-content: space-between; } }
+.am-foot.split { flex-direction: row; }   /* two equal actions side by side */
+.am-foot.split > .btn { flex: 1 1 0; min-width: 0; }
 .am-foot .grp { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .am-foot .grp:only-child { margin-left: auto; }   /* a lone action group sits on the right */
 @media (max-width: 639px) { .am-foot .grp { width: 100%; } .am-foot .grp .btn { flex: 1; } }
