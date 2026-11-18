@@ -1,5 +1,6 @@
 {% extends "base.html" %}
 {% set skip_site_js = True %}
+{% set page_css = ["app/app-utils.css", "app/app.css", "app/admin-utils.css", "app/admin.css"] %}
 
 {% block title %}Admin Hub - {{ project_name }}{% endblock %}
 
@@ -7,12 +8,7 @@
   <meta name="description" content="OutreachPilot Master Admin Dashboard - Lead intelligence, user quotas, subscription tiers, and pipeline telemetry.">
 {% endblock %}
 
-{% block head_extra %}
-  <link rel="stylesheet" href="/static/css/app/app-utils.css?v={{ asset_v }}">
-  <link rel="stylesheet" href="/static/css/app/app.css?v={{ asset_v }}">
-  <link rel="stylesheet" href="/static/css/app/admin-utils.css?v={{ asset_v }}">
-  <link rel="stylesheet" href="/static/css/app/admin.css?v={{ asset_v }}">
-{% endblock %}
+
 
 {% block body_class %}admin-body{% endblock %}
 {% block nav %}{% endblock %}

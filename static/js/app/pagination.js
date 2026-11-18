@@ -39,6 +39,7 @@ function renderPaginationControls({
   prevBtnMobile.type = "button";
   prevBtnMobile.className = `pg-btn${safeCurrentPage <= 1 ? ' is-disabled' : ''}`;
   prevBtnMobile.innerHTML = `<i data-lucide="chevron-left" class="w-3.5 h-3.5"></i>`;
+  prevBtnMobile.setAttribute("aria-label", "Previous page");
   prevBtnMobile.disabled = safeCurrentPage <= 1;
   prevBtnMobile.addEventListener("click", () => {
     if (safeCurrentPage > 1) onPageChange(safeCurrentPage - 1);
@@ -52,6 +53,7 @@ function renderPaginationControls({
   nextBtnMobile.type = "button";
   nextBtnMobile.className = `pg-btn${safeCurrentPage >= totalPages ? ' is-disabled' : ''}`;
   nextBtnMobile.innerHTML = `<i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>`;
+  nextBtnMobile.setAttribute("aria-label", "Next page");
   nextBtnMobile.disabled = safeCurrentPage >= totalPages;
   nextBtnMobile.addEventListener("click", () => {
     if (safeCurrentPage < totalPages) onPageChange(safeCurrentPage + 1);

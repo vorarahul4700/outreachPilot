@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% set skip_site_js = True %}
-{% set page_css = [] %}
+{% set page_css = ["app/app-utils.css", "app/app.css"] %}
 
 {% block title %}{{ project_name }} - {{ tagline }}{% endblock %}
 
@@ -9,10 +9,8 @@
 {% endblock %}
 
 {% block head_extra %}
-  <link rel="stylesheet" href="/static/css/app/app-utils.css?v={{ asset_v }}">
-  <link rel="stylesheet" href="/static/css/app/app.css?v={{ asset_v }}">
-  <script src="https://unpkg.com/lucide@1.73.0/dist/umd/lucide.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/marked@15.0.12/marked.min.js"></script>
+  <script src="https://unpkg.com/lucide@1.73.0/dist/umd/lucide.min.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/marked@15.0.12/marked.min.js" defer></script>
 {% endblock %}
 
 {% block body_class %}app-body{% endblock %}
@@ -191,7 +189,7 @@
       </div>
     </div>
 
-    <div class="pill-row" id="companies-domain-filter-pills" role="tablist" aria-label="Filter companies by industry domain">
+    <div class="pill-row" id="companies-domain-filter-pills" role="group" aria-label="Filter companies by industry domain">
       <button type="button" class="domain-filter-pill active" data-domain="all"><span class="material-symbols-outlined">apps</span><span>All Domains</span><span class="n tnum" id="domain-count-all">{% if domains %}({{ domains|sum(attribute='count') }}){% endif %}</span></button>
       <button type="button" class="domain-filter-pill" data-domain="it"><span class="material-symbols-outlined">computer</span><span>IT &amp; Software</span><span class="n tnum" id="domain-count-it">({% for d in domains if d.code == 'it' %}{{ d.count }}{% else %}0{% endfor %})</span></button>
       <button type="button" class="domain-filter-pill" data-domain="sales"><span class="material-symbols-outlined">support_agent</span><span>Sales &amp; BPO</span><span class="n tnum" id="domain-count-sales">({% for d in domains if d.code == 'sales' %}{{ d.count }}{% else %}0{% endfor %})</span></button>
@@ -532,7 +530,7 @@
         <div class="l">
           <span class="ic"><span class="material-symbols-outlined">history</span></span>
           <div>
-            <h3>Outreach Activity Stream <span class="dot dot-live"></span></h3>
+            <h2>Outreach Activity Stream <span class="dot dot-live"></span></h2>
             <small>Emails you have sent from your Gmail</small>
           </div>
         </div>
@@ -737,7 +735,7 @@
         <div class="flex items-center gap-3">
           <span class="icon-tile"><span class="material-symbols-outlined">loyalty</span></span>
           <div>
-            <h3>Subscription &amp; Daily Outreach Quota</h3>
+            <h2>Subscription &amp; Daily Outreach Quota</h2>
             <p class="recipient-line">Your daily sending limit and plan options</p>
           </div>
         </div>

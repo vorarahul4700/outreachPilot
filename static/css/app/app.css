@@ -489,7 +489,7 @@ textarea.recessed-well { min-height: 220px; resize: vertical; line-height: 1.7; 
 .am-card.lg { --am-w: 860px; }
 .am-head { display: grid; gap: 12px; padding: 20px 22px 16px; border-bottom: 1px solid var(--line); background: var(--surface); }
 .am-title-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
-.am-title-row h3 { font-family: var(--font-display); font-weight: 400; font-size: clamp(1.3rem, 1.1rem + .8vw, 1.7rem); line-height: 1.15; overflow-wrap: anywhere; }
+.am-title-row h2, .am-title-row h3 { font-family: var(--font-display); font-weight: 400; font-size: clamp(1.3rem, 1.1rem + .8vw, 1.7rem); line-height: 1.15; overflow-wrap: anywhere; }
 .am-sub { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; margin-top: 6px; font-size: .82rem; color: var(--text-2); }
 .am-sub a { display: inline-flex; align-items: center; gap: 4px; font-family: var(--font-mono); color: var(--accent-text); }
 .am-sub a:hover { text-decoration: underline; }
@@ -613,7 +613,7 @@ textarea.recessed-well { min-height: 220px; resize: vertical; line-height: 1.7; 
 .drawer-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-bottom: 16px; border-bottom: 1px solid var(--line); }
 .drawer-head .l { display: flex; align-items: center; gap: 12px; }
 .drawer-head .l > .ic { width: 40px; height: 40px; border-radius: 13px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent-ink); }
-.drawer-head h3 { font-family: var(--font-display); font-weight: 400; font-size: 1.3rem; display: flex; align-items: center; gap: 8px; }
+.drawer-head h2, .drawer-head h3 { font-family: var(--font-display); font-weight: 400; font-size: 1.3rem; display: flex; align-items: center; gap: 8px; }
 .drawer-head small { font-size: .78rem; color: var(--text-3); }
 .drawer-meta { display: flex; align-items: center; justify-content: space-between; margin: 16px 0 10px; font-family: var(--font-mono); font-size: .66rem; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); }
 .drawer-meta .on { color: var(--ok-text); }
@@ -692,3 +692,6 @@ textarea.recessed-well { min-height: 220px; resize: vertical; line-height: 1.7; 
 
 /* Review pass 3: on phones the status badge takes width from the name, so allow a third line */
 @media (max-width: 479px) { .ac-name h3, .ac-name h4 { -webkit-line-clamp: 3; font-size: 1.02rem; } }
+
+/* Lucide placeholders hold their size before lucide.js (deferred) swaps in the SVG, so nothing shifts. */
+:where(i[data-lucide]) { display: inline-block; width: 1em; height: 1em; flex-shrink: 0; vertical-align: -0.125em; }
