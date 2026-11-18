@@ -508,6 +508,10 @@ textarea.recessed-well { min-height: 220px; resize: vertical; line-height: 1.7; 
 .seg-tabs .cmodal-tab-btn { flex: 1; height: 38px; display: inline-flex; align-items: center; justify-content: center; gap: 6px; border-radius: 9px; font-size: .84rem; font-weight: 600; color: var(--text-3); transition: background-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease), box-shadow var(--t-base) var(--ease); }
 .seg-tabs .cmodal-tab-btn .material-symbols-outlined { font-size: 17px; }
 .seg-tabs .cmodal-tab-btn:hover { color: var(--text); }
+.hub-tabs { margin-bottom: 14px; }
+.hub-tabs .cmodal-tab-btn { height: 44px; font-size: .92rem; }
+.hub-tabs .tab-count { padding: 1px 8px; border-radius: var(--r-pill); background: var(--surface-3); font-family: var(--font-mono); font-size: .72rem; font-variant-numeric: tabular-nums; }
+.hub-tabs .cmodal-tab-btn.active .tab-count { background: var(--accent-soft); color: var(--accent-ink); }
 .seg-tabs .cmodal-tab-btn.active { background: var(--surface); color: var(--text); box-shadow: var(--shadow-sm); }
 .info-grid { display: grid; gap: 10px; grid-template-columns: 1fr; }
 @media (min-width: 560px) { .info-grid { grid-template-columns: 1fr 1fr; } }
