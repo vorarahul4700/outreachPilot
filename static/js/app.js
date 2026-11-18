@@ -1453,7 +1453,7 @@ document.addEventListener("DOMContentLoaded", () => {
           if (btnPitch) {
             btnPitch.addEventListener("click", (e) => {
               e.stopPropagation();
-              handleGeneratePitch(c.id);
+              confirmResendIfNeeded(c, () => handleGeneratePitch(c.id));
             });
           }
         }
@@ -2699,6 +2699,31 @@ document.addEventListener("DOMContentLoaded", () => {
     showToast(`Resume attached for this session: ${file.name}`, "info");
   }
 
+  // Before drafting for a company this user already emailed: show the sent email, or write another on purpose.
+  function confirmResendIfNeeded(company, onProceed) {
+    const modal = document.getElementById("resend-confirm-modal");
+    if (!company || !company.already_contacted || !modal) {
+      onProceed();
+      return;
+    }
+    const when = company.contacted_at ? ` on ${company.contacted_at}` : "";
+    document.getElementById("resend-confirm-desc").textContent =
+      `You sent an email to ${company.name}${when}. Sending another one counts toward your daily limit.`;
+    modal.classList.remove("hidden");
+    const btnView = document.getElementById("btn-resend-view");
+    const btnProceed = document.getElementById("btn-resend-proceed");
+    const btnCancel = document.getElementById("btn-resend-cancel");
+    const close = (next) => () => {
+      modal.classList.add("hidden");
+      btnView.onclick = btnProceed.onclick = btnCancel.onclick = null;
+      if (next) next();
+    };
+    btnView.onclick = close(() => viewSentEmailForCompany(company.id));
+    btnProceed.onclick = close(onProceed);
+    btnCancel.onclick = close(null);
+    btnView.focus();
+  }
+
   function confirmResumeAttachmentIfNeeded(actionDescription, onProceed) {
     const hasResume = Boolean(attachResumeInEmail && sessionResumeFile);
     if (hasResume) {
@@ -2975,6 +3000,11 @@ document.addEventListener("DOMContentLoaded", () => {
               : "Email sent directly through your authorized Gmail account!";
             showToast(successMsg, "success");
             modal.classList.add("hidden");
+            const sentCompany = companies.find(c => c.id === currentPitchCompanyId);
+            if (sentCompany) {
+              sentCompany.already_contacted = true;
+              renderCompanies(companies);
+            }
             await fetchCompanies();
             fetchAuditLogs();
             checkAuthStatus();
@@ -3559,7 +3589,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (btnPitch) {
         btnPitch.addEventListener("click", (e) => {
           e.stopPropagation();
-          handleGeneratePitch(c.id);
+          confirmResendIfNeeded(c, () => handleGeneratePitch(c.id));
         });
       }
 

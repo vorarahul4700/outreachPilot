@@ -3500,7 +3500,7 @@ async def bulk_send_outreach(
         raise
 
     # Give back reserved sends that did not go out.
-    sent_count = int((result or {}).get("sent_count") or 0)
+    sent_count = int((result or {}).get("sent") or 0)
     refund_daily_pitches(db, user.id, reserved - sent_count)
     if result is not None and reserved and requested > reserved:
         result["skipped_over_limit"] = requested - reserved

@@ -1,5 +1,6 @@
 import asyncio
 import base64
+import html
 import random
 import urllib.parse
 from datetime import datetime
@@ -47,11 +48,24 @@ def add_do_not_contact(db: Session, email: str, source: str = "unsubscribe_link"
 
 
 def with_optout_footer(body: str, recipient: str) -> str:
-    return (
-        f"{body.rstrip()}\n\n--\n"
-        "Not interested in emails like this? Opt out and no OutreachPilot user will email this address again:\n"
-        f"{optout_url(recipient)}"
-    )
+    return f"{body.rstrip()}\n\n--\nNot interested? Unsubscribe: {optout_url(recipient)}"
+
+
+def html_with_optout_footer(body: str, recipient: str) -> str:
+    """HTML version of the email: paragraphs use the reader's full width (Gmail wraps plain text narrow)."""
+    paras = [p for p in body.replace("\r\n", "\n").strip().split("\n\n") if p.strip()]
+    html_body = "".join(f"<p>{html.escape(p.strip()).replace(chr(10), '<br>')}</p>" for p in paras)
+    link = html.escape(optout_url(recipient), quote=True)
+    return (f"<div>{html_body}<p style=\"margin-top:24px;color:#888;font-size:12px\">"
+            f"Not interested? <a href=\"{link}\" style=\"color:#888\">Unsubscribe</a></p></div>")
+
+
+def _text_and_html(text_body: str, html_body: str):
+    from email.mime.multipart import MIMEMultipart
+    alt = MIMEMultipart("alternative")
+    alt.attach(MIMEText(text_body, "plain", "utf-8"))
+    alt.attach(MIMEText(html_body, "html", "utf-8"))
+    return alt
 
 
 def get_effective_recipient(actual_email: str) -> str:
@@ -121,6 +135,7 @@ async def send_via_google_oauth(
         return {"success": False, "blocked": True,
                 "error": "This address opted out of emails from OutreachPilot users. Not sent."}
     sent_body = with_optout_footer(body, to_email)
+    sent_html = html_with_optout_footer(body, to_email)
     unsubscribe_link = optout_url(to_email)
 
     effective_to = get_effective_recipient(to_email)
@@ -198,7 +213,7 @@ async def send_via_google_oauth(
             message["to"] = effective_to
             message["from"] = user.email
             message["subject"] = effective_subject
-            message.attach(MIMEText(sent_body, "plain"))
+            message.attach(_text_and_html(sent_body, sent_html))
             try:
                 subtype = "pdf" if att_filename.lower().endswith(".pdf") else "octet-stream"
                 part = MIMEBase("application", subtype)
@@ -209,7 +224,7 @@ async def send_via_google_oauth(
             except Exception as att_err:
                 print(f"[Attachment Warning] Could not attach resume bytes: {att_err}")
         else:
-            message = MIMEText(sent_body)
+            message = _text_and_html(sent_body, sent_html)
             message["to"] = effective_to
             message["from"] = user.email
             message["subject"] = effective_subject
@@ -231,7 +246,7 @@ async def send_via_google_oauth(
                 user_id=user.id,
                 recipient_email=effective_to,
                 subject=effective_subject,
-                email_body=sent_body,
+                email_body=body,
                 delivery_method="OAUTH_DIRECT",
                 status="SENT",
                 sent_at=datetime.utcnow()
