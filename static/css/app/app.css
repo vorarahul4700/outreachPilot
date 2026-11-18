@@ -342,6 +342,7 @@
 .status-pill.sent:hover { background: var(--accent-hover); }
 .status-pill.researched { background: var(--accent-soft); color: var(--accent-ink); }
 .status-pill.excluded { background: var(--danger-soft); color: var(--danger-text); }
+.app-card.is-sent { background: color-mix(in srgb, var(--accent-soft) 45%, var(--surface)); border-color: color-mix(in srgb, var(--accent) 35%, var(--line)); }
 .app-card.is-invalid { border-color: color-mix(in srgb, var(--danger) 35%, var(--line)); background: color-mix(in srgb, var(--danger-soft) 35%, var(--surface)); }
 .invalid-note { display: grid; gap: 3px; padding: 10px 12px; border-radius: var(--r-md); background: var(--danger-soft); color: var(--danger-text); font-size: .8rem; }
 .invalid-note b { display: flex; align-items: center; gap: 5px; font-size: .72rem; letter-spacing: .04em; text-transform: uppercase; }
@@ -572,6 +573,10 @@ textarea.recessed-well { min-height: 220px; resize: vertical; line-height: 1.7; 
 .dev-box .sub-label { text-align: center; }
 
 /* Subscription modal */
+.limit-note { display: flex; gap: 12px; align-items: flex-start; padding: 14px 16px; margin-bottom: 14px; border-radius: var(--r-lg); background: var(--danger-soft); color: var(--danger-text); border: 1px solid color-mix(in srgb, var(--danger) 30%, transparent); }
+.limit-note.hidden { display: none; }
+.limit-note b { display: block; font-size: 1rem; }
+.limit-note p { margin-top: 2px; font-size: .9rem; }
 .plan-now { display: flex; flex-direction: column; gap: 14px; padding: 16px; border-radius: var(--r-lg); background: var(--surface-2); border: 1px solid var(--line); }
 @media (min-width: 720px) { .plan-now { flex-direction: row; align-items: center; justify-content: space-between; } }
 .plan-now h4 { font-family: var(--font-display); font-weight: 400; font-size: 1.4rem; margin-top: 4px; }

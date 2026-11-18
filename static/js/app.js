@@ -1389,7 +1389,7 @@ document.addEventListener("DOMContentLoaded", () => {
             techPillsHtml = `<span class="ac-tag muted"><span class="material-symbols-outlined">hourglass_top</span><span>Stack pending AI enrichment</span></span>`;
           }
 
-          card.className = "company-card app-card is-clickable";
+          card.className = "company-card app-card is-clickable" + (c.already_contacted ? " is-sent" : "");
           card.innerHTML = `
             <div class="ac-head">
               <div class="ac-id">
@@ -1435,9 +1435,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 <span class="material-symbols-outlined">visibility</span>
                 <span class="truncate">View Intel</span>
               </button>
-              <button type="button" class="btn-single-pitch btn btn-primary btn-sm">
-                <span class="material-symbols-outlined">send</span>
-                <span class="truncate">Draft Pitch</span>
+              <button type="button" class="btn-single-pitch btn ${c.already_contacted ? "btn-secondary" : "btn-primary"} btn-sm">
+                <span class="material-symbols-outlined">${c.already_contacted ? "forward_to_inbox" : "send"}</span>
+                <span class="truncate">${c.already_contacted ? "Email again" : "Draft Pitch"}</span>
               </button>
             </div>
           `;
@@ -2186,7 +2186,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const headerQuotaWidget = document.getElementById("header-quota-widget");
   const sidebarQuotaCard = document.getElementById("sidebar-quota-card");
 
-  function openSubscriptionModal() {
+  function openSubscriptionModal(limitReached = false) {
+    document.getElementById("sub-modal-limit-note")?.classList.toggle("hidden", limitReached !== true);
     if (subModal) {
       subModal.classList.remove("hidden");
       window.ScrollLock?.refresh();
@@ -2201,8 +2202,15 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  headerQuotaWidget?.addEventListener("click", openSubscriptionModal);
-  sidebarQuotaCard?.addEventListener("click", openSubscriptionModal);
+  headerQuotaWidget?.addEventListener("click", () => openSubscriptionModal());
+  sidebarQuotaCard?.addEventListener("click", () => openSubscriptionModal());
+  // Out of today's sends: show the plans (current one marked) instead of a plain error toast.
+  function showDailyLimitReached(msg) {
+    if (!subModal || !/^Daily limit reached/i.test(msg || "")) return false;
+    document.getElementById("pitch-modal")?.classList.add("hidden");
+    openSubscriptionModal(true);
+    return true;
+  }
   btnCloseSubModal?.addEventListener("click", closeSubscriptionModal);
   if (subModal) {
     subModal.addEventListener("click", (e) => {
@@ -2488,6 +2496,7 @@ document.addEventListener("DOMContentLoaded", () => {
               }
 
               const bulkData = await bulkRes.json();
+              if (bulkRes.status === 403 && showDailyLimitReached(bulkData.detail)) return;
               const sent = bulkData.sent || 0;
               const skipped = (bulkData.skipped_no_email || 0) + noEmailCount;
 
@@ -3010,6 +3019,7 @@ document.addEventListener("DOMContentLoaded", () => {
             checkAuthStatus();
           } else {
             const errMsg = data.detail || data.error || "Company email not found! Cannot send email.";
+            if (showDailyLimitReached(errMsg)) return;
             showToast(errMsg, "error");
             if (errMsg.toLowerCase().includes("session expired") || errMsg.toLowerCase().includes("reconnect") || errMsg.toLowerCase().includes("sign in with google")) {
               showLoginModal(errMsg);

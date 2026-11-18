@@ -7,7 +7,7 @@
 
 <link rel="preload" href="/static/fonts/figtree-latin.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/static/fonts/youngserif-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/static/fonts/materialsymbols-outlined-subset.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/static/fonts/materialsymbols-outlined-subset.woff2?v=2" as="font" type="font/woff2" crossorigin>
 
 {#- Core CSS + page_css in one request (app.py css_bundle); bare names are under static/css/pages/. -#}
 <link rel="stylesheet" href="/assets/site.css?p={{ (page_css if page_css is defined else []) | join(',') }}&amp;v={{ asset_v }}">

@@ -2,7 +2,8 @@
 
 The full Material Symbols font is 1.1 MB; the subset (~90 KB) keeps every icon name that
 appears anywhere in templates/, static/js/, app.py or seo_engine.py. Run it after using a
-new icon name, otherwise that icon shows as plain text.
+new icon name, otherwise that icon shows as plain text. Then bump the ?v= on the font URL in
+static/css/core/fonts.css and templates/partials/head_assets.html (fonts are cached for a year).
 
 Needs fontTools + brotli (dev only, not in requirements.txt):
     python -m pip install fonttools brotli
