@@ -62,7 +62,6 @@ document.addEventListener("DOMContentLoaded", () => {
       } else {
         renderPitchesList();
       }
-      fetchAuditLogs();
     } else if (tabId === "resume") {
       loadCandidateProfile();
     }
@@ -2510,7 +2509,6 @@ document.addEventListener("DOMContentLoaded", () => {
               });
 
               await fetchCompanies();
-              fetchAuditLogs();
               renderPitchesList();
               checkAuthStatus();
             } catch (err) {
@@ -3015,7 +3013,6 @@ document.addEventListener("DOMContentLoaded", () => {
               renderCompanies(companies);
             }
             await fetchCompanies();
-            fetchAuditLogs();
             checkAuthStatus();
           } else {
             const errMsg = data.detail || data.error || "Company email not found! Cannot send email.";
@@ -3208,31 +3205,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  const btnToggleActivity = document.getElementById("btn-toggle-activity");
-  const btnCloseActivity = document.getElementById("btn-close-activity");
-  const outreachActivityDrawer = document.getElementById("outreach-activity-drawer");
-  const outreachActivityBackdrop = document.getElementById("outreach-activity-backdrop");
-  const activityBadgeCount = document.getElementById("activity-badge-count");
-
-  function openActivityDrawer() {
-    if (outreachActivityDrawer) outreachActivityDrawer.classList.remove("translate-x-full");
-    if (outreachActivityBackdrop) {
-      outreachActivityBackdrop.classList.remove("opacity-0", "pointer-events-none");
-      outreachActivityBackdrop.classList.add("opacity-100", "pointer-events-auto");
-    }
-  }
-
-  function closeActivityDrawer() {
-    if (outreachActivityDrawer) outreachActivityDrawer.classList.add("translate-x-full");
-    if (outreachActivityBackdrop) {
-      outreachActivityBackdrop.classList.add("opacity-0", "pointer-events-none");
-      outreachActivityBackdrop.classList.remove("opacity-100", "pointer-events-auto");
-    }
-  }
-
-  if (btnToggleActivity) btnToggleActivity.addEventListener("click", openActivityDrawer);
-  if (btnCloseActivity) btnCloseActivity.addEventListener("click", closeActivityDrawer);
-  if (outreachActivityBackdrop) outreachActivityBackdrop.addEventListener("click", closeActivityDrawer);
 
   function updateOutreachPillStyles() {
     document.querySelectorAll("[data-outreach-tab]").forEach(tab => {
@@ -3431,6 +3403,9 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       const isSelected = selectedOutreachCompanyIds.has(c.id);
+      const sentOnHtml = (c.already_contacted && c.contacted_at)
+        ? `<span class="sent-on"><span class="material-symbols-outlined" style="font-size:14px">schedule</span>Sent ${escapeHTML(c.contacted_at)}</span>`
+        : "";
 
       if (outreachViewMode === "grid") {
         // Mode A: Executive Dispatch Bento Card
@@ -3452,6 +3427,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 <div class="ac-sub">
                   <span class="dom">${escapeHTML(c.domain || '')}</span>
                   ${c.city ? `<span><span class="material-symbols-outlined">location_on</span>${escapeHTML(c.city)}</span>` : ''}
+                  ${sentOnHtml}
                 </div>
               </div>
             </div>
@@ -3525,6 +3501,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 ${hasDirectEmail ? `<span class="em">${escapeHTML(directEmail)}</span>` : `<span class="miss">Email not found</span>`}
                 <span>${escapeHTML(c.domain || '')}</span>
                 ${c.city ? `<span class="inline-flex items-center gap-1"><span class="material-symbols-outlined" style="font-size:14px">location_on</span>${escapeHTML(c.city)}</span>` : ''}
+                ${sentOnHtml}
               </div>
             </div>
           </div>
@@ -3711,12 +3688,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   window.viewSentEmailForCompany = viewSentEmailForCompany;
-
-  window._openCachedLog = function(idx) {
-    if (window._cachedAuditLogs && window._cachedAuditLogs[idx]) {
-      openSentEmailModal(window._cachedAuditLogs[idx]);
-    }
-  };
 
   document.querySelectorAll("#btn-theme-toggle, #btn-theme-toggle-mobile").forEach(btn => {
     btn.addEventListener("click", toggleThemeMode);

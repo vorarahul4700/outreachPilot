@@ -1,4 +1,4 @@
-/* OutreachPilot app: Activity log lines and the sent-email drawer list.
+/* OutreachPilot app: friendly lines for the scout progress log.
    Moved unchanged out of static/js/app.js (redesign Phase 6). These functions
    use no shared state, so they run the same as globals. Load before app.js. */
 
@@ -93,43 +93,4 @@ function formatUserFriendlyLog(rawLog) {
       <span class="msg">${escapeHTML(friendlyText)}</span>
     </div>
   `;
-}
-
-async function fetchAuditLogs() {
-  try {
-    const res = await fetch("/api/outreach/logs");
-    if (res.status === 401) {
-      const logsContainer = document.getElementById("audit-logs");
-      if (logsContainer) {
-        logsContainer.innerHTML = `<p class="log-empty">Sign in to view your sent outreach history.</p>`;
-      }
-      return;
-    }
-    const data = await res.json();
-    const logsContainer = document.getElementById("audit-logs");
-    if (!logsContainer) return;
-    if (!data.logs || data.logs.length === 0) {
-      logsContainer.innerHTML = `<p class="log-empty">No emails sent yet today.</p>`;
-      return;
-    }
-
-    window._cachedAuditLogs = data.logs;
-
-    logsContainer.innerHTML = data.logs.map((l, idx) => `
-      <div onclick="window._openCachedLog(${idx})" class="log-card" title="Click to view message sent">
-        <div class="top">
-          <b>${escapeHTML(l.company_name)}</b>
-          <span class="method">${escapeHTML(l.delivery_method)}</span>
-        </div>
-        <p class="to">To: ${escapeHTML(l.recipient_email)}</p>
-        <div class="bottom">
-          <span>${escapeHTML(l.sent_at)}</span>
-          <span class="view"><span>View message</span><i data-lucide="chevron-right" class="w-3 h-3"></i></span>
-        </div>
-      </div>
-    `).join("");
-    refreshIcons();
-  } catch (err) {
-    console.error("Failed to load audit logs:", err);
-  }
 }
