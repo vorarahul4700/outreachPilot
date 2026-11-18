@@ -35,28 +35,33 @@
     links.addEventListener("mouseleave", function () { pill.style.opacity = "0"; });
   }
 
-  /* Scrollspy: mark the in-page link whose section is in view */
-  if (links && "IntersectionObserver" in window) {
-    var map = {};
+  /* Scrollspy: mark the last linked section the reader has reached (its top is above the
+     middle of the screen). Nothing is marked above the first one, and the dot never jumps
+     back and forth: it only moves forward as you scroll down and back as you scroll up. */
+  if (links) {
+    var spyLinks = [];
     links.querySelectorAll('a[href^="#"]').forEach(function (a) {
-      var id = a.getAttribute("href").slice(1);
-      var sec = id && document.getElementById(id);
-      if (sec) map[id] = a;
+      var sec = document.getElementById(a.getAttribute("href").slice(1));
+      if (sec) spyLinks.push({ a: a, sec: sec });
     });
-    // Page order, not nav order (the nav lists "How it works" before "Features").
-    var ids = Object.keys(map).sort(function (a, b) {
-      return document.getElementById(a).compareDocumentPosition(document.getElementById(b)) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1;
-    });
-    if (ids.length) {
-      // Track every section in the middle band; mark the last one (page order), or none
-      // when the band is outside all of them (hero, footer), so the dot never goes stale.
-      var inBand = {};
-      var spy = new IntersectionObserver(function (entries) {
-        entries.forEach(function (en) { inBand[en.target.id] = en.isIntersecting; });
-        var current = ids.filter(function (k) { return inBand[k]; }).pop();
-        ids.forEach(function (k) { map[k].classList.toggle("is-current", k === current); });
-      }, { rootMargin: "-45% 0px -50% 0px" });
-      ids.forEach(function (k) { spy.observe(document.getElementById(k)); });
+    if (spyLinks.length) {
+      var spyTick = false;
+      var spy = function () {
+        var line = window.innerHeight * 0.45;
+        var current = null;
+        spyLinks.forEach(function (s) { if (s.sec.getBoundingClientRect().top <= line) current = s.a; });
+        spyLinks.forEach(function (s) { s.a.classList.toggle("is-current", s.a === current); });
+        spyTick = false;
+      };
+      // Page order, not nav order, decides which section comes "last".
+      spyLinks.sort(function (x, y) {
+        return x.sec.compareDocumentPosition(y.sec) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1;
+      });
+      window.addEventListener("scroll", function () {
+        if (!spyTick) { spyTick = true; requestAnimationFrame(spy); }
+      }, { passive: true });
+      window.addEventListener("resize", spy);
+      spy();
     }
   }
 
