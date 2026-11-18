@@ -1389,7 +1389,7 @@ document.addEventListener("DOMContentLoaded", () => {
             techPillsHtml = `<span class="ac-tag muted"><span class="material-symbols-outlined">hourglass_top</span><span>Stack pending AI enrichment</span></span>`;
           }
 
-          card.className = "company-card app-card is-clickable";
+          card.className = "company-card app-card is-clickable" + (c.already_contacted ? " is-sent" : "");
           card.innerHTML = `
             <div class="ac-head">
               <div class="ac-id">
@@ -1435,9 +1435,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 <span class="material-symbols-outlined">visibility</span>
                 <span class="truncate">View Intel</span>
               </button>
-              <button type="button" class="btn-single-pitch btn btn-primary btn-sm">
-                <span class="material-symbols-outlined">send</span>
-                <span class="truncate">Draft Pitch</span>
+              <button type="button" class="btn-single-pitch btn ${c.already_contacted ? "btn-secondary" : "btn-primary"} btn-sm">
+                <span class="material-symbols-outlined">${c.already_contacted ? "forward_to_inbox" : "send"}</span>
+                <span class="truncate">${c.already_contacted ? "Email again" : "Draft Pitch"}</span>
               </button>
             </div>
           `;
@@ -2186,7 +2186,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const headerQuotaWidget = document.getElementById("header-quota-widget");
   const sidebarQuotaCard = document.getElementById("sidebar-quota-card");
 
-  function openSubscriptionModal() {
+  function openSubscriptionModal(limitReached = false) {
+    document.getElementById("sub-modal-limit-note")?.classList.toggle("hidden", limitReached !== true);
     if (subModal) {
       subModal.classList.remove("hidden");
       window.ScrollLock?.refresh();
@@ -2201,8 +2202,15 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  headerQuotaWidget?.addEventListener("click", openSubscriptionModal);
-  sidebarQuotaCard?.addEventListener("click", openSubscriptionModal);
+  headerQuotaWidget?.addEventListener("click", () => openSubscriptionModal());
+  sidebarQuotaCard?.addEventListener("click", () => openSubscriptionModal());
+  // Out of today's sends: show the plans (current one marked) instead of a plain error toast.
+  function showDailyLimitReached(msg) {
+    if (!subModal || !/^Daily limit reached/i.test(msg || "")) return false;
+    document.getElementById("pitch-modal")?.classList.add("hidden");
+    openSubscriptionModal(true);
+    return true;
+  }
   btnCloseSubModal?.addEventListener("click", closeSubscriptionModal);
   if (subModal) {
     subModal.addEventListener("click", (e) => {
@@ -2488,6 +2496,7 @@ document.addEventListener("DOMContentLoaded", () => {
               }
 
               const bulkData = await bulkRes.json();
+              if (bulkRes.status === 403 && showDailyLimitReached(bulkData.detail)) return;
               const sent = bulkData.sent || 0;
               const skipped = (bulkData.skipped_no_email || 0) + noEmailCount;
 
@@ -3010,6 +3019,7 @@ document.addEventListener("DOMContentLoaded", () => {
             checkAuthStatus();
           } else {
             const errMsg = data.detail || data.error || "Company email not found! Cannot send email.";
+            if (showDailyLimitReached(errMsg)) return;
             showToast(errMsg, "error");
             if (errMsg.toLowerCase().includes("session expired") || errMsg.toLowerCase().includes("reconnect") || errMsg.toLowerCase().includes("sign in with google")) {
               showLoginModal(errMsg);
@@ -3041,7 +3051,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // ==========================================
   // OUTREACH HUB CONTROLS & PIPELINE
   // ==========================================
-  let outreachActiveFilter = "all"; // "all" | "emails" | "ready" | "sent"
+  let outreachActiveFilter = "ready"; // Outreach Hub tabs: "ready" (To pitch) | "sent" (Pitched)
   let outreachSearchQuery = "";
   let outreachSelectedTech = "";
   let outreachSelectedCity = "";
@@ -3115,10 +3125,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   const outreachSearchInput = document.getElementById("outreach-search-input");
-  const outreachFilterAll = document.getElementById("outreach-filter-all");
-  const outreachFilterEmails = document.getElementById("outreach-filter-emails");
-  const outreachFilterReady = document.getElementById("outreach-filter-ready");
-  const outreachFilterSent = document.getElementById("outreach-filter-sent");
 
   const outreachTechSelect = document.getElementById("outreach-tech-select");
   const outreachCitySelect = document.getElementById("outreach-city-select");
@@ -3126,8 +3132,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnOutreachViewGrid = document.getElementById("btn-outreach-view-grid");
   const btnOutreachViewList = document.getElementById("btn-outreach-view-list");
 
-  const outreachStatAll = document.getElementById("outreach-stat-all");
-  const outreachStatEmails = document.getElementById("outreach-stat-emails");
   const outreachStatReady = document.getElementById("outreach-stat-ready");
   const outreachStatSent = document.getElementById("outreach-stat-sent");
 
@@ -3231,32 +3235,25 @@ document.addEventListener("DOMContentLoaded", () => {
   if (outreachActivityBackdrop) outreachActivityBackdrop.addEventListener("click", closeActivityDrawer);
 
   function updateOutreachPillStyles() {
-    // Update Quick Metric Cards ring highlight as primary filters
-    const statCards = [
-      { id: "all", el: outreachStatAll },
-      { id: "emails", el: outreachStatEmails },
-      { id: "ready", el: outreachStatReady },
-      { id: "sent", el: outreachStatSent }
-    ];
-    statCards.forEach(s => {
-      if (!s.el) return;
-      const isActive = (s.id === outreachActiveFilter);
-      if (isActive) {
-        s.el.classList.add("ring-2", "ring-primary/25", "border-primary", "bg-surface-container-high", "shadow-sm");
-        s.el.classList.remove("border-outline-variant/30", "bg-surface-container-low", "opacity-80");
-      } else {
-        s.el.classList.remove("ring-2", "ring-primary/25", "border-primary", "bg-surface-container-high", "shadow-sm");
-        s.el.classList.add("border-outline-variant/30", "bg-surface-container-low", "opacity-80");
-      }
+    document.querySelectorAll("[data-outreach-tab]").forEach(tab => {
+      const on = tab.dataset.outreachTab === outreachActiveFilter;
+      tab.classList.toggle("active", on);
+      tab.setAttribute("aria-selected", String(on));
     });
   }
 
   function setOutreachFilter(filterName) {
+    if (filterName === outreachActiveFilter) return;
     outreachActiveFilter = filterName;
     outreachCurrentPage = 1;
+    // A selection made on one list must not carry into the other.
+    selectedOutreachCompanyIds.clear();
     updateOutreachPillStyles();
     fetchOutreachCompanies(false);
   }
+  document.querySelectorAll("[data-outreach-tab]").forEach(tab => {
+    tab.addEventListener("click", () => setOutreachFilter(tab.dataset.outreachTab));
+  });
 
   if (outreachSearchInput) {
     let outreachDebounce = null;
@@ -3333,9 +3330,7 @@ document.addEventListener("DOMContentLoaded", () => {
       outreachSearchQuery = "";
       outreachSelectedTech = "";
       outreachSelectedCity = "";
-      outreachActiveFilter = "all";
       outreachCurrentPage = 1;
-      updateOutreachPillStyles();
       fetchOutreachCompanies(false);
       showToast("Outreach filters reset to default", "info");
     });
@@ -3359,13 +3354,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  if (outreachFilterAll) outreachFilterAll.addEventListener("click", () => setOutreachFilter("all"));
-  if (outreachFilterEmails) outreachFilterEmails.addEventListener("click", () => setOutreachFilter("emails"));
-  if (outreachFilterReady) outreachFilterReady.addEventListener("click", () => setOutreachFilter("ready"));
-  if (outreachFilterSent) outreachFilterSent.addEventListener("click", () => setOutreachFilter("sent"));
 
-  if (outreachStatAll) outreachStatAll.addEventListener("click", () => setOutreachFilter("all"));
-  if (outreachStatEmails) outreachStatEmails.addEventListener("click", () => setOutreachFilter("emails"));
   if (outreachStatReady) outreachStatReady.addEventListener("click", () => setOutreachFilter("ready"));
   if (outreachStatSent) outreachStatSent.addEventListener("click", () => setOutreachFilter("sent"));
 
