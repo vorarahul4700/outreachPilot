@@ -566,7 +566,7 @@ textarea.recessed-well { min-height: 220px; resize: vertical; line-height: 1.7; 
 .sent-pill { display: inline-flex; align-items: center; gap: 4px; height: 24px; padding: 0 10px; border-radius: var(--r-pill); background: var(--accent); color: var(--on-accent); font-size: .7rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
 .sent-pill .material-symbols-outlined { font-size: 14px; }
 .readonly-box { padding: 12px 14px; border-radius: var(--r-md); background: var(--surface-2); border: 1px solid var(--line); font-size: .9rem; color: var(--text); user-select: text; }
-.readonly-box.body { font-family: var(--font-mono); font-size: .82rem; line-height: 1.7; white-space: pre-wrap; max-height: 300px; overflow-y: auto; }
+.readonly-box.body { font-size: .92rem; line-height: 1.7; white-space: pre-wrap; max-height: 300px; overflow-y: auto; }
 .center-modal { display: grid; justify-items: center; gap: 14px; padding: 28px 24px 22px; text-align: center; }
 .center-modal .ic { width: 56px; height: 56px; border-radius: 18px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent-ink); }
 .center-modal .ic.warn { background: var(--warn-soft); color: var(--warn-text); }
