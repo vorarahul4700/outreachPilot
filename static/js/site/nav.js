@@ -43,15 +43,18 @@
       var sec = id && document.getElementById(id);
       if (sec) map[id] = a;
     });
-    var ids = Object.keys(map);
+    // Page order, not nav order (the nav lists "How it works" before "Features").
+    var ids = Object.keys(map).sort(function (a, b) {
+      return document.getElementById(a).compareDocumentPosition(document.getElementById(b)) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1;
+    });
     if (ids.length) {
+      // Track every section in the middle band; mark the last one (page order), or none
+      // when the band is outside all of them (hero, footer), so the dot never goes stale.
+      var inBand = {};
       var spy = new IntersectionObserver(function (entries) {
-        entries.forEach(function (en) {
-          if (en.isIntersecting) {
-            ids.forEach(function (k) { map[k].classList.remove("is-current"); });
-            map[en.target.id].classList.add("is-current");
-          }
-        });
+        entries.forEach(function (en) { inBand[en.target.id] = en.isIntersecting; });
+        var current = ids.filter(function (k) { return inBand[k]; }).pop();
+        ids.forEach(function (k) { map[k].classList.toggle("is-current", k === current); });
       }, { rootMargin: "-45% 0px -50% 0px" });
       ids.forEach(function (k) { spy.observe(document.getElementById(k)); });
     }
