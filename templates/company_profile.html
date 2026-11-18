@@ -48,7 +48,7 @@
 
 <section class="profile-hero">
   <div class="container">
-    <div class="profile-card reveal">
+    <div class="profile-card">
       <div class="profile-mono" aria-hidden="true">{{ (company.name or "?")[:2] | upper }}</div>
       <div class="profile-id">
         <h1>{{ company.name }}</h1>
@@ -83,7 +83,7 @@
     <div class="profile-main">
       {% if has_research %}
         {% if p.summary %}
-        <section class="p-block reveal" aria-labelledby="about-h">
+        <section class="p-block" aria-labelledby="about-h">
           <div class="p-head"><span class="material-symbols-outlined" aria-hidden="true">info</span><h2 id="about-h">About {{ company.name }}</h2></div>
           <p>{{ p.summary }}</p>
           {% if p.industry %}<p>Industry: <span class="strong">{{ p.industry }}</span></p>{% endif %}

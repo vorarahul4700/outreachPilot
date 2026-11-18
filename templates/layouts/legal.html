@@ -17,8 +17,8 @@
       <a href="/privacy"{% if legal_active == "privacy" %} class="is-active" aria-current="page"{% endif %}>Privacy</a>
     </div>
     <span class="eyebrow reveal">Legal</span>
-    <h1 class="h1 reveal" style="--d:.05s">{% block legal_title_text %}{% endblock %}</h1>
-    <p class="lead reveal" style="--d:.1s">{% block legal_lead %}{% endblock %}</p>
+    <h1 class="h1">{% block legal_title_text %}{% endblock %}</h1>
+    <p class="lead">{% block legal_lead %}{% endblock %}</p>
     <div class="legal-meta reveal" style="--d:.15s">
       <span class="badge badge-outline"><span class="material-symbols-outlined" aria-hidden="true">event</span>{% block legal_updated %}{% endblock %}</span>
       <span class="badge badge-accent"><span class="material-symbols-outlined" aria-hidden="true">verified</span>{% block legal_status %}{% endblock %}</span>

@@ -71,5 +71,6 @@
   font-style: normal;
   font-weight: 100 700;
   font-display: block;
-  src: url("/static/fonts/materialsymbols-outlined.woff2") format("woff2");
+  /* Subset to the icons the site uses (subset_icon_font.py; rerun after adding new icon names). */
+  src: url("/static/fonts/materialsymbols-outlined-subset.woff2") format("woff2");
 }

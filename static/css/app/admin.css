@@ -48,6 +48,8 @@
 .admin-crumb { display: flex; align-items: center; gap: 8px; font-family: var(--font-mono); font-size: .72rem; letter-spacing: .04em; color: var(--text-3); margin-bottom: 8px; }
 .admin-crumb b { color: var(--accent-text); font-weight: 500; }
 .health { display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 14px; border-radius: var(--r-pill); background: var(--surface); border: 1px solid var(--line); font-size: .82rem; font-weight: 600; }
+/* min-width: 0 so wide tables scroll inside their .scroll box instead of stretching the page */
+.admin-tab-panel, .admin-tab-panel > * { min-width: 0; }
 .admin-tab-panel { display: grid; gap: 22px; }
 .admin-tab-panel.hidden { display: none !important; }
 

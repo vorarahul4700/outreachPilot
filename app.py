@@ -364,6 +364,41 @@ class CachedStaticFiles(StaticFiles):
 app.mount("/static", CachedStaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
+# --- One render-blocking stylesheet per page instead of ~12 ---------------------
+# templates/partials/head_assets.html links /assets/site.css?p=<page css>&v=<asset_v>.
+# Order matters: fonts, tokens, base, components, then the page's own sheets.
+_CORE_CSS = [
+    "core/fonts.css", "core/tokens.css", "core/base.css",
+    "components/buttons.css", "components/forms.css", "components/chips.css", "components/cards.css",
+    "components/nav.css", "components/footer.css", "components/overlays.css", "components/data.css",
+]
+_PAGE_CSS_RE = re.compile(r"^(?:(?:app|pages)/)?[a-z0-9-]+\.css$")
+_css_bundle_cache: dict[str, str] = {}
+
+
+@app.get("/assets/site.css")
+def css_bundle(p: str = "", v: str = ""):
+    """Core CSS + the page's sheets (p: comma list; bare names live in static/css/pages/)."""
+    pages = []
+    for name in (x.strip() for x in p.split(",") if x.strip()):
+        if not _PAGE_CSS_RE.match(name):
+            raise HTTPException(status_code=400, detail="Bad stylesheet name")
+        pages.append(name if "/" in name else f"pages/{name}")
+    key = ",".join(pages)
+    css = _css_bundle_cache.get(key)
+    if css is None:
+        parts = []
+        for rel in _CORE_CSS + pages:
+            path = os.path.join("static", "css", rel)
+            if not os.path.isfile(path):
+                raise HTTPException(status_code=404, detail=f"Missing stylesheet {rel}")
+            with open(path, encoding="utf-8") as fh:
+                parts.append(f"/* {rel} */\n{fh.read()}")
+        css = "\n".join(parts)
+        _css_bundle_cache[key] = css
+    cache = "public, max-age=31536000, immutable" if v else "public, max-age=3600"
+    return Response(content=css, media_type="text/css", headers={"Cache-Control": cache})
+
 
 # --- Maintenance Mode Middleware ---
 @app.middleware("http")
@@ -377,6 +412,7 @@ async def maintenance_mode_middleware(request: Request, call_next):
                      "/robots.txt", "/llms.txt", "/llms-full.txt", "/sitemap.xml",
                      "/sitemap-core.xml", "/sitemap-cities.xml", "/sitemap-tech.xml", "/sitemap-directory.xml")
             or path.startswith("/static/")
+            or path.startswith("/assets/")
             or path.startswith("/directory")
             or path.startswith("/company/")
             or path.startswith("/sitemap-companies-")

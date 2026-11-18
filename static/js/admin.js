@@ -1710,7 +1710,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <td class="px-4 py-3">
               <div class="flex flex-col font-mono text-xs">
                 <span class="text-on-surface">${r.branch} (<span class="text-primary">${r.commit_sha}</span>)</span>
-                <span class="text-[11px] text-on-surface-variant truncate max-w-xs">${r.commit_msg}</span>
+                <span class="text-[11px] text-on-surface-variant truncate max-w-xs" title="${catvisEscape(r.commit_msg)}">${catvisEscape(r.commit_msg)}</span>
               </div>
             </td>
             <td class="px-4 py-3 font-mono text-xs text-on-surface-variant">${r.duration}</td>
