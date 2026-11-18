@@ -1453,7 +1453,7 @@ document.addEventListener("DOMContentLoaded", () => {
           if (btnPitch) {
             btnPitch.addEventListener("click", (e) => {
               e.stopPropagation();
-              confirmResendIfNeeded(c, () => handleGeneratePitch(c.id));
+              confirmResendIfNeeded(c, () => handleGeneratePitch(c.id, false, btnPitch));
             });
           }
         }
@@ -2890,9 +2890,9 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  async function handleGeneratePitch(companyId, forceRegenerate = false) {
+  async function handleGeneratePitch(companyId, forceRegenerate = false, clickedBtn = null) {
     currentPitchCompanyId = companyId;
-    const triggerBtn = document.querySelector(`.btn-gen-pitch-row[data-id="${companyId}"]`);
+    const triggerBtn = clickedBtn || document.querySelector(`.btn-gen-pitch-row[data-id="${companyId}"]`);
     const origHtml = triggerBtn ? triggerBtn.innerHTML : "";
     if (triggerBtn) {
       triggerBtn.disabled = true;
