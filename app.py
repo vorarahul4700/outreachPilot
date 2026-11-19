@@ -282,6 +282,31 @@ def reserve_daily_pitches(db: Session, user_id: int, wanted: int) -> int:
     return int(row[0]) if row else 0
 
 
+def draft_allowance(db: Session, user) -> tuple[int, int]:
+    """Return (new drafts the user may still create today, sends left today).
+    New drafts are capped at sends left minus today's unsent drafts, so once the daily
+    limit is used the AI writer stops too and users cannot draft here and send by hand."""
+    if getattr(user, "is_admin", False) or config.is_master_admin(user.email) or is_subscription_kill_switch_active(db):
+        return 999999, 999999
+    if reset_daily_quota_if_due(user):
+        db.commit()
+    sends_left = max(0, (user.daily_pitch_limit or 10) - (user.pitches_sent_today or 0))
+    open_drafts = db.query(func.count(ColdPitch.id)).filter(
+        ColdPitch.user_id == user.id,
+        ColdPitch.status == "DRAFT",
+        ColdPitch.created_at >= quota_day_start_utc(),
+    ).scalar() or 0
+    return max(0, sends_left - open_drafts), sends_left
+
+
+def daily_limit_reached_error(user) -> HTTPException:
+    return HTTPException(
+        status_code=429,
+        detail=(f"You have used today's {user.daily_pitch_limit or 10} applications. "
+                "Writing new emails opens again at midnight (IST)."),
+    )
+
+
 def refund_daily_pitches(db: Session, user_id: int, count: int) -> None:
     """Give back reserved sends that did not go out (failed or skipped)."""
     if count <= 0:
@@ -2666,8 +2691,8 @@ def get_public_tiers(db: Session = Depends(get_db)):
                     "name": "Job Seeker Pro",
                     "subtitle": "Growth Tier",
                     "price_inr": 499,
-                    "daily_pitch_limit": 50,
-                    "features": ["50 job applications / day", "AI research of each company website", "Resume PDF attached automatically", "Each application written for that company"],
+                    "daily_pitch_limit": 25,
+                    "features": ["25 job applications / day", "AI research of each company website", "Resume PDF attached automatically", "Each application written for that company"],
                     "badge": "Most Popular",
                     "is_popular": True
                 },
@@ -2676,8 +2701,8 @@ def get_public_tiers(db: Session = Depends(get_db)):
                     "name": "Premium+",
                     "subtitle": "Maximum Velocity",
                     "price_inr": 999,
-                    "daily_pitch_limit": 100,
-                    "features": ["100 job applications / day", "Highest priority email queue", "Matches your skills to each company's tech stack", "Unlimited AI rewrites of each application"],
+                    "daily_pitch_limit": 50,
+                    "features": ["50 job applications / day", "Highest priority email queue", "Matches your skills to each company's tech stack", "Unlimited AI rewrites of each application"],
                     "badge": "Maximum Velocity",
                     "is_popular": False
                 }
@@ -3001,6 +3026,14 @@ async def generate_single_pitch(
     t_role = cand_profile.get("target_role") or (user.target_role if user and user.target_role else "Professional")
     c_name_clean = c_name.strip() if c_name else "Candidate"
 
+    allowance, sends_left = draft_allowance(db, user)
+    has_draft = db.query(ColdPitch.id).filter(
+        ColdPitch.company_id == company.id, ColdPitch.user_id == user.id
+    ).first() is not None
+    # Rewriting an existing draft is fine while sends remain; a new company needs a free slot.
+    if sends_left <= 0 or (not has_draft and allowance <= 0):
+        raise daily_limit_reached_error(user)
+
     existing_pitch = db.query(ColdPitch).filter(
         ColdPitch.company_id == company.id,
         ColdPitch.user_id == user.id
@@ -3182,6 +3215,23 @@ async def generate_bulk_pitches(
         ).all()
     }
 
+    # Daily limit also caps drafting: existing drafts can be rewritten while sends remain,
+    # and only as many new companies as there are free slots today.
+    allowance, sends_left = draft_allowance(db, user)
+    if sends_left <= 0:
+        raise daily_limit_reached_error(user)
+    requested = len(companies)
+    kept = []
+    for comp in companies:
+        if comp.id in existing_pitches:
+            kept.append(comp)
+        elif allowance > 0:
+            kept.append(comp)
+            allowance -= 1
+    if not kept:
+        raise daily_limit_reached_error(user)
+    companies = kept
+
     # Extract plain dicts in main thread for complete thread safety
     tasks = []
     for comp in companies:
@@ -3307,6 +3357,7 @@ async def generate_bulk_pitches(
         "success": True,
         "generated_count": len(saved_pitches),
         "total": len(companies),
+        "skipped_for_daily_limit": requested - len(companies),
         "pitches": saved_pitches
     }
 

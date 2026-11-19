@@ -2327,6 +2327,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
             if (res.ok) {
               const data = await res.json();
+              if (data.skipped_for_daily_limit) {
+                showToast(`${data.skipped_for_daily_limit} skipped: today's application limit is reached.`, "warning");
+              }
               if (data.success && data.generated_count) {
                 generatedCount += data.generated_count;
                 if (data.pitches) {
@@ -2338,7 +2341,8 @@ document.addEventListener("DOMContentLoaded", () => {
               }
             } else {
               const errData = await res.json().catch(() => ({}));
-              showToast(errData.detail || "Failed to prepare applications for this batch.", "error");
+              showToast(errData.detail || "Failed to prepare applications for this batch.", res.status === 429 ? "warning" : "error");
+              if (res.status === 429) break;  // daily limit: later batches would fail the same way
             }
           } catch (err) {
             console.error("Bulk pitch error:", err);
@@ -2406,6 +2410,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             let pitchIdsToSend = alreadyPrepared.map(c => c.pitch_id);
             let authFailed = false;
+            let limitHit = false;
             const BATCH_SIZE = 20;
 
             // ONLY generate pitches for companies that don't have a prepared draft yet!
@@ -2445,6 +2450,11 @@ document.addEventListener("DOMContentLoaded", () => {
                         if (comp) comp.pitch_id = p.pitch_id;
                       });
                     }
+                  } else if (res.status === 429) {
+                    const errData = await res.json().catch(() => ({}));
+                    showToast(errData.detail || "Today's application limit is reached.", "warning");
+                    limitHit = true;
+                    break;
                   }
                 } catch (err) {
                   console.error("Failed to bulk prepare pitches for send:", err);
@@ -2455,7 +2465,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (authFailed || pitchIdsToSend.length === 0) {
               btnSendAllOutreach.disabled = false;
               btnSendAllOutreach.innerHTML = oldText;
-              if (!authFailed && pitchIdsToSend.length === 0) {
+              if (!authFailed && !limitHit && pitchIdsToSend.length === 0) {
                 showToast("Could not prepare the applications. Please try again.", "error");
               }
               return;

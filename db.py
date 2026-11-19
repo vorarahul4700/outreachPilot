@@ -51,7 +51,7 @@ class User(Base):
     subscription_status = Column(String(50), default="active")          # 'active', 'past_due', 'canceled'
     subscription_end_date = Column(DateTime, nullable=True)
 
-    # --- Pitch Quotas (Free: 10, Pro: 50, Premium+: 100, Admin: 999999) ---
+    # --- Pitch Quotas (Free: 10, Pro: 25, Premium+: 50, Admin: 999999) ---
     daily_pitch_limit = Column(Integer, default=10)
     pitches_sent_today = Column(Integer, default=0)
     last_pitch_reset_date = Column(DateTime, default=datetime.utcnow)
@@ -420,9 +420,9 @@ def init_db():
                             name="Job Seeker Pro",
                             subtitle="Growth Tier",
                             price_inr=499,
-                            daily_pitch_limit=50,
+                            daily_pitch_limit=25,
                             features=[
-                                "50 job applications / day",
+                                "25 job applications / day",
                                 "AI research of each company website",
                                 "Resume PDF attached automatically",
                                 "Each application written for that company"
@@ -435,9 +435,9 @@ def init_db():
                             name="Premium+",
                             subtitle="Maximum Velocity",
                             price_inr=999,
-                            daily_pitch_limit=100,
+                            daily_pitch_limit=50,
                             features=[
-                                "100 job applications / day",
+                                "50 job applications / day",
                                 "Highest priority email queue",
                                 "Matches your skills to each company's tech stack",
                                 "Unlimited AI rewrites of each application"
