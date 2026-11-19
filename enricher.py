@@ -5,7 +5,7 @@ import threading
 import time
 from datetime import datetime
 from typing import Any
-from urllib.parse import urljoin
+from urllib.parse import unquote, urljoin
 
 _AI_SEMAPHORE = threading.Semaphore(1)
 
@@ -49,7 +49,20 @@ IGNORED_DOMAINS = {
 
 def clean_email(email_str: str) -> str | None:
     """Validates and sanitizes email strings"""
-    email = email_str.strip().lower()
+    # mailto hrefs arrive URL-encoded, sometimes many times over (%20info@x.com, %252525...e2%80%8b);
+    # decode until stable, then keep only the address itself.
+    email = email_str or ""
+    for _ in range(10):
+        decoded = unquote(email)
+        if decoded == email:
+            break
+        email = decoded
+    match = EMAIL_REGEX.search(email.lower().replace("\\", ""))  # "info\@x.com" is a JS-escaped @
+    if not match:
+        return None
+    email = match.group(0).strip(".-")
+    if len(email) > 254:  # RFC 5321 limit; also fits company_emails.email_address VARCHAR(255)
+        return None
     if any(email.endswith(ext) for ext in IGNORED_EXTENSIONS):
         return None
     if "@" not in email:

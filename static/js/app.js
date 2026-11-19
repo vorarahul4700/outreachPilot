@@ -513,6 +513,12 @@ document.addEventListener("DOMContentLoaded", () => {
       { id: "invalid", el: statCardInvalid, activeRing: "ring-[#E06C75]/80", activeBorder: "border-[#E06C75]" }
     ];
 
+    document.querySelectorAll("[data-company-tab]").forEach(b => {
+      const on = b.dataset.companyTab === current;
+      b.classList.toggle("active", on);
+      b.setAttribute("aria-selected", String(on));
+    });
+
     cards.forEach(c => {
       if (!c.el) return;
       const isActive = (c.id === current);
@@ -663,6 +669,10 @@ document.addEventListener("DOMContentLoaded", () => {
       if (pillPitched) {
         pillPitched.textContent = (isLoggedIn && contacted !== null) ? fmtNum(contacted) : "0";
       }
+      const pillUncontacted = document.getElementById("pill-count-uncontacted");
+      if (pillUncontacted) pillUncontacted.textContent = fmtNum(Math.max(0, total - (contacted || 0)));
+      // Applied / Not applied only mean something for a signed-in user
+      document.getElementById("companies-apply-tabs")?.classList.toggle("hidden", !isLoggedIn);
       const pillExcluded = document.getElementById("pill-count-excluded");
       if (pillExcluded) pillExcluded.textContent = fmtNum(invalid);
 
@@ -1805,47 +1815,16 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  const filterTabAll = document.getElementById("filter-tab-all");
-  const filterTabUncontacted = document.getElementById("filter-tab-uncontacted");
-  const filterTabResearched = document.getElementById("filter-tab-researched");
-  const filterTabPitched = document.getElementById("filter-tab-pitched");
-  const filterTabExcludedBtn = document.getElementById("filter-tab-excluded");
-
-  function setSegmentedFilterTab(tab) {
-    [filterTabAll, filterTabUncontacted, filterTabResearched, filterTabPitched, filterTabExcludedBtn].forEach(b => {
-      if (!b) return;
-      b.classList.remove("active", "bg-surface-container-highest", "text-on-surface", "bg-error/20", "text-error");
-      b.classList.add("text-on-surface-variant");
+  // Companies tab: All / Not applied / Applied, same split as the Outreach Hub
+  document.querySelectorAll("[data-company-tab]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const tab = btn.dataset.companyTab;
+      activeMetricFilter = tab === "all" ? null : tab;
+      filterInvalidOnly = false;
+      updateMetricCardStyles();
+      applyCompanyFiltersAndRender(true);
     });
-    if (tab === "all" && filterTabAll) {
-      filterTabAll.classList.add("active", "bg-surface-container-highest", "text-on-surface");
-      filterTabAll.classList.remove("text-on-surface-variant");
-      activeMetricFilter = "";
-    } else if (tab === "uncontacted" && filterTabUncontacted) {
-      filterTabUncontacted.classList.add("active", "bg-surface-container-highest", "text-on-surface");
-      filterTabUncontacted.classList.remove("text-on-surface-variant");
-      activeMetricFilter = "uncontacted";
-    } else if (tab === "researched" && filterTabResearched) {
-      filterTabResearched.classList.add("active", "bg-surface-container-highest", "text-on-surface");
-      filterTabResearched.classList.remove("text-on-surface-variant");
-      activeMetricFilter = "enriched";
-    } else if (tab === "pitched" && filterTabPitched) {
-      filterTabPitched.classList.add("active", "bg-surface-container-highest", "text-on-surface");
-      filterTabPitched.classList.remove("text-on-surface-variant");
-      activeMetricFilter = "contacted";
-    } else if (tab === "excluded" && filterTabExcludedBtn) {
-      filterTabExcludedBtn.classList.add("active", "bg-error/20", "text-error");
-      filterTabExcludedBtn.classList.remove("text-on-surface-variant");
-      activeMetricFilter = "invalid";
-    }
-    applyCompanyFiltersAndRender(true);
-  }
-
-  filterTabAll?.addEventListener("click", () => setSegmentedFilterTab("all"));
-  filterTabUncontacted?.addEventListener("click", () => setSegmentedFilterTab("uncontacted"));
-  filterTabResearched?.addEventListener("click", () => setSegmentedFilterTab("researched"));
-  filterTabPitched?.addEventListener("click", () => setSegmentedFilterTab("pitched"));
-  filterTabExcludedBtn?.addEventListener("click", () => setSegmentedFilterTab("excluded"));
+  });
 
   // ⌘K / Ctrl+K keyboard shortcut to focus search
   document.addEventListener("keydown", (e) => {
@@ -2327,6 +2306,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
             if (res.ok) {
               const data = await res.json();
+              if (data.skipped_for_daily_limit) {
+                showToast(`${data.skipped_for_daily_limit} skipped: today's application limit is reached.`, "warning");
+              }
               if (data.success && data.generated_count) {
                 generatedCount += data.generated_count;
                 if (data.pitches) {
@@ -2338,7 +2320,8 @@ document.addEventListener("DOMContentLoaded", () => {
               }
             } else {
               const errData = await res.json().catch(() => ({}));
-              showToast(errData.detail || "Failed to prepare applications for this batch.", "error");
+              showToast(errData.detail || "Failed to prepare applications for this batch.", res.status === 429 ? "warning" : "error");
+              if (res.status === 429) break;  // daily limit: later batches would fail the same way
             }
           } catch (err) {
             console.error("Bulk pitch error:", err);
@@ -2406,6 +2389,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             let pitchIdsToSend = alreadyPrepared.map(c => c.pitch_id);
             let authFailed = false;
+            let limitHit = false;
             const BATCH_SIZE = 20;
 
             // ONLY generate pitches for companies that don't have a prepared draft yet!
@@ -2445,6 +2429,11 @@ document.addEventListener("DOMContentLoaded", () => {
                         if (comp) comp.pitch_id = p.pitch_id;
                       });
                     }
+                  } else if (res.status === 429) {
+                    const errData = await res.json().catch(() => ({}));
+                    showToast(errData.detail || "Today's application limit is reached.", "warning");
+                    limitHit = true;
+                    break;
                   }
                 } catch (err) {
                   console.error("Failed to bulk prepare pitches for send:", err);
@@ -2455,7 +2444,7 @@ document.addEventListener("DOMContentLoaded", () => {
             if (authFailed || pitchIdsToSend.length === 0) {
               btnSendAllOutreach.disabled = false;
               btnSendAllOutreach.innerHTML = oldText;
-              if (!authFailed && pitchIdsToSend.length === 0) {
+              if (!authFailed && !limitHit && pitchIdsToSend.length === 0) {
                 showToast("Could not prepare the applications. Please try again.", "error");
               }
               return;
