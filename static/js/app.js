@@ -1480,12 +1480,14 @@ document.addEventListener("DOMContentLoaded", () => {
     updateBulkActionBar();
     updateSelectAllCheckboxState(pagedList);
 
+    // Top pager: stay put so it can be clicked again. Bottom pager: bring the top pager back into view.
     const handleCompaniesPageChange = (newPage) => {
       companiesCurrentPage = newPage;
       fetchCompanies(true);
-      if (companiesContainer) {
-        companiesContainer.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
+    };
+    const handleCompaniesPageChangeBottom = (newPage) => {
+      handleCompaniesPageChange(newPage);
+      companiesPagination?.scrollIntoView({ behavior: "smooth", block: "start" });
     };
 
     renderPaginationControls({
@@ -1507,7 +1509,7 @@ document.addEventListener("DOMContentLoaded", () => {
       totalItems: totalItems,
       currentPage: companiesCurrentPage,
       pageSize: companiesPerPage,
-      onPageChange: handleCompaniesPageChange
+      onPageChange: handleCompaniesPageChangeBottom
     });
 
     refreshIcons();
@@ -3580,7 +3582,10 @@ document.addEventListener("DOMContentLoaded", () => {
     const handleOutreachPageChange = (newPage) => {
       outreachCurrentPage = newPage;
       fetchOutreachCompanies(true);
-      if (container) container.scrollIntoView({ behavior: "smooth", block: "start" });
+    };
+    const handleOutreachPageChangeBottom = (newPage) => {
+      handleOutreachPageChange(newPage);
+      outreachPagination?.scrollIntoView({ behavior: "smooth", block: "start" });
     };
 
     renderPaginationControls({
@@ -3602,7 +3607,7 @@ document.addEventListener("DOMContentLoaded", () => {
       totalItems: totalCount,
       currentPage: outreachCurrentPage,
       pageSize: outreachPerPage,
-      onPageChange: handleOutreachPageChange
+      onPageChange: handleOutreachPageChangeBottom
     });
 
     refreshIcons();
