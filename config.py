@@ -207,6 +207,9 @@ def is_safe_public_url(url: str) -> bool:
             return False
 
         def _ip_blocked(ipobj) -> bool:
+            # DNS64 networks add 64:ff9b::<ipv4> answers; Python flags that prefix reserved, so judge the embedded IPv4.
+            if ipobj.version == 6 and ipobj in ipaddress.ip_network("64:ff9b::/96"):
+                ipobj = ipaddress.IPv4Address(int(ipobj) & 0xFFFFFFFF)
             return (
                 ipobj.is_private or ipobj.is_loopback or ipobj.is_link_local
                 or ipobj.is_reserved or ipobj.is_multicast or ipobj.is_unspecified
