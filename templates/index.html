@@ -243,6 +243,18 @@
       </div>
     </section>
 
+    <div id="companies-apply-tabs" class="seg-tabs hub-tabs hidden" role="tablist" aria-label="Companies by application status">
+      <button type="button" role="tab" class="cmodal-tab-btn active" aria-selected="true" data-company-tab="all">
+        <span class="material-symbols-outlined">domain</span><span>All</span><span class="tab-count" id="pill-count-all">0</span>
+      </button>
+      <button type="button" role="tab" class="cmodal-tab-btn" aria-selected="false" data-company-tab="uncontacted">
+        <span class="material-symbols-outlined">send</span><span>Not applied</span><span class="tab-count" id="pill-count-uncontacted">0</span>
+      </button>
+      <button type="button" role="tab" class="cmodal-tab-btn" aria-selected="false" data-company-tab="contacted">
+        <span class="material-symbols-outlined">mark_email_read</span><span>Applied</span><span class="tab-count" id="pill-count-pitched">0</span>
+      </button>
+    </div>
+
     <div id="companies-pagination" class="hidden pager-bar">
       <div class="pager-left"><span>Showing <strong id="companies-page-range">0-0</strong> of <strong id="companies-page-total">0</strong> companies</span></div>
       <div class="pager-right">
