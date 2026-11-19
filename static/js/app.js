@@ -1097,7 +1097,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const domain = opts.domain !== undefined ? opts.domain : (isOutreach ? "" : (activeDomainFilter || "all"));
     const city = opts.city !== undefined ? opts.city : (isOutreach ? (outreachCitySelect?.value || outreachSelectedCity || "") : (filterCitySelect?.value || ""));
     const tech = opts.tech !== undefined ? opts.tech : (isOutreach ? (outreachTechSelect?.value || outreachSelectedTech || "") : (filterTechSelect?.value || ""));
-    const status = opts.status !== undefined ? opts.status : (isOutreach ? (outreachActiveFilter || "all") : (activeMetricFilter || "all"));
+    // Companies: the status tab/card filters the list only; counts always cover every status,
+    // otherwise picking "Applied" turns every stat and pill into the applied count.
+    const status = opts.status !== undefined ? opts.status : (isOutreach ? (outreachActiveFilter || "all") : "all");
     const search = opts.search !== undefined ? opts.search : (isOutreach ? (outreachSearchInput?.value || outreachSearchQuery || "") : (filterInput?.value || ""));
 
     const filterKey = `${context}|${domain}|${city}|${tech}|${status}|${search}`;
