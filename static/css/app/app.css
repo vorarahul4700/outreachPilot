@@ -250,13 +250,16 @@
 
 /* ---------- Pagination bars ---------- */
 .pager-bar {
-  display: flex; flex-direction: column; align-items: center; justify-content: space-between; gap: 10px;
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px;
   padding: 10px 14px; border-radius: var(--r-lg); background: var(--surface); border: 1px solid var(--line);
   font-size: .84rem; color: var(--text-2);
+  /* Layout follows the bar's own width, not the window: with the sidebar open a tablet window can still leave a narrow bar */
+  container-type: inline-size; container-name: pager;
 }
-@media (min-width: 640px) { .pager-bar { flex-direction: row; } }
 .pager-bar strong { color: var(--text); font-weight: 600; }
 .pager-left, .pager-right { display: flex; align-items: center; flex-wrap: wrap; gap: 10px 14px; justify-content: center; }
+.pager-left > span { white-space: nowrap; }
+@container pager (max-width: 600px) { .pager-left, .pager-right { flex-basis: 100%; } .pager-label { display: none; } }
 .pager-label { font-family: var(--font-mono); font-size: .72rem; color: var(--text-3); }
 .pg-mobile { display: flex; align-items: center; gap: 6px; }
 .pg-desktop { display: none; align-items: center; gap: 4px; }
