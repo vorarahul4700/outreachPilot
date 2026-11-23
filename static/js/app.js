@@ -2571,10 +2571,7 @@ document.addEventListener("DOMContentLoaded", () => {
     e.preventDefault();
     requireLogin(async () => {
       const inputTargetRole = document.getElementById("input-target-role");
-      const inputResumeLink = document.getElementById("input-resume-link");
-      const dropzoneEl = document.getElementById("dropzone");
       const hasFile = fileInput.files && fileInput.files.length > 0;
-      const resumeLink = (inputResumeLink?.value || "").trim();
       const targetRole = (inputTargetRole?.value || "").trim();
 
       if (!targetRole) {
@@ -2582,18 +2579,12 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
 
-      if (!hasFile && !resumeLink) {
-        highlightFieldWarning(inputResumeLink, "Please select a resume file (PDF or TXT) or enter a portfolio/resume link.");
-        dropzoneEl?.classList.add("input-warning-highlight");
-        setTimeout(() => dropzoneEl?.classList.remove("input-warning-highlight"), 3200);
-        return;
-      }
-
+      // No file is fine when a profile already exists (updates the role only); the server
+      // replies with a clear message when there is nothing to analyze.
       const formData = new FormData();
       if (hasFile) {
         formData.append("file", fileInput.files[0]);
       }
-      formData.append("resume_link", resumeLink);
       formData.append("target_role", targetRole);
 
       btnParseResume.innerHTML = `<i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i><span>Analyzing with AI...</span>`;

@@ -2863,7 +2863,7 @@ async def upload_resume(
     if not has_file and not resume_link_clean and not (user.resume_summary and user.resume_summary.get("elevator_pitch")):
         raise HTTPException(
             status_code=400,
-            detail="Please select a resume file (PDF or TXT) or enter a portfolio link."
+            detail="Please select a resume file (PDF or TXT)."
         )
 
     # Save portfolio/resume link if provided
