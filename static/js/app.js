@@ -2489,17 +2489,49 @@ document.addEventListener("DOMContentLoaded", () => {
 
               const bulkData = await bulkRes.json();
               if (bulkRes.status === 403 && showDailyLimitReached(bulkData.detail)) return;
-              const sent = bulkData.sent || 0;
+              if (!bulkRes.ok) {
+                showToast(bulkData.detail || "Could not queue the applications.", "error");
+                return;
+              }
+              const queuedIds = (bulkData.details || []).filter(d => d.status === "QUEUED").map(d => d.pitch_id);
               const skipped = (bulkData.skipped_no_email || 0) + noEmailCount;
+              const overLimit = bulkData.skipped_over_limit || 0;
+              withEmail.forEach(c => selectedOutreachCompanyIds.delete(c.id));
 
-              const resumeSuffix = (attachResumeInEmail && sessionResumeFile) ? " (with resume attached)" : " (without resume)";
-              showToast(`Success: Dispatched ${sent} emails via Gmail${resumeSuffix}! (${skipped} companies without email were skipped).`, "success");
-              btnSendAllOutreach.innerHTML = `<span class="material-symbols-outlined text-[16px] text-emerald-400">check</span><span>${sent} Dispatched!</span>`;
+              if (!queuedIds.length) {
+                showToast("Nothing was queued: these applications were already sent or have no email.", "warning");
+                return;
+              }
+              showToast(`Queued ${queuedIds.length} applications. They send one by one in the background, so you can leave this page.`, "success");
 
-              withEmail.forEach(c => {
-                c.already_contacted = true;
-                selectedOutreachCompanyIds.delete(c.id);
-              });
+              // Poll the send queue until every queued email is sent or has failed.
+              let finalStatus = null;
+              for (let tries = 0; tries < 400; tries++) {
+                await new Promise(r => setTimeout(r, 3000));
+                let st;
+                try {
+                  const sres = await fetch(`/api/pitch/queue-status?ids=${queuedIds.join(",")}`);
+                  if (!sres.ok) continue;
+                  st = await sres.json();
+                } catch (_) { continue; }
+                const done = (st.counts.SENT || 0) + (st.counts.FAILED || 0);
+                btnSendAllOutreach.innerHTML = `<span class="material-symbols-outlined text-[16px] animate-spin text-primary">progress_activity</span><span>Sending ${done}/${queuedIds.length}...</span>`;
+                if (st.done) { finalStatus = st; break; }
+              }
+
+              const sent = finalStatus ? (finalStatus.counts.SENT || 0) : 0;
+              const failed = finalStatus ? (finalStatus.counts.FAILED || 0) : 0;
+              if (!finalStatus) {
+                showToast("Still sending in the background. Check back in a few minutes.", "info");
+              } else {
+                const resumeSuffix = (attachResumeInEmail && sessionResumeFile) ? " with your resume attached" : "";
+                const extras = [];
+                if (failed) extras.push(`${failed} failed`);
+                if (skipped) extras.push(`${skipped} had no email`);
+                if (overLimit) extras.push(`${overLimit} over today's limit`);
+                showToast(`Sent ${sent} applications via Gmail${resumeSuffix}.${extras.length ? " " + extras.join(", ") + "." : ""}`, failed ? "warning" : "success");
+                btnSendAllOutreach.innerHTML = `<span class="material-symbols-outlined text-[16px] text-emerald-400">check</span><span>${sent} Sent</span>`;
+              }
 
               await fetchCompanies();
               renderPitchesList();

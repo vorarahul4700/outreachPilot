@@ -2,8 +2,9 @@ import asyncio
 import base64
 import html
 import random
+import time
 import urllib.parse
-from datetime import datetime
+from datetime import datetime, timedelta
 from email.mime.text import MIMEText
 from typing import Any
 
@@ -12,10 +13,11 @@ import os
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from itsdangerous import BadSignature, URLSafeSerializer
+from sqlalchemy import text
 from sqlalchemy.orm import Session
 
 import config
-from db import ColdPitch, DoNotContact, OutreachLog, User
+from db import ColdPitch, DoNotContact, OutreachLog, SendAttachment, SessionLocal, User
 
 # --- Opt-out (do-not-contact) ---
 # Every email carries a signed link; opening it adds the recipient to
@@ -260,95 +262,144 @@ async def send_via_google_oauth(
         return {"success": False, "error": str(e)}
 
 
-async def dispatch_batch_outreach(
-    pitch_ids: list[int],
-    user: User,
-    db: Session,
-    delay_min: float = 2.0,
-    delay_max: float = 4.0,
-    resume_attachment_bytes: bytes = None,
-    resume_attachment_name: str = None
-) -> dict[str, Any]:
-    """
-    Strict 1-to-1 sequential outreach batch dispatcher.
-    Applies human-like random jitter delays (2-4s) between individual sends.
-    """
-    results = []
-    sent_count = 0
-    failed_count = 0
-    skipped_no_email = 0
+# --- Send queue ---
+# Bulk sends are queued (ColdPitch.status = QUEUED) and sent here in the background, so a batch
+# survives a closed tab or a server restart. Rows are claimed with FOR UPDATE SKIP LOCKED, so no
+# two workers ever send the same email. One user's emails go out 2 to 3.5 s apart (human pace).
+QUEUE_MAX_ATTEMPTS = 3
+QUEUE_CONCURRENCY = 3          # different users sent in parallel
+QUEUE_POLL_SECONDS = 2.0
+QUEUE_USER_GAP = (2.0, 3.5)    # seconds between two emails of the same user
 
-    for idx, pitch_id in enumerate(pitch_ids):
+# Errors that will fail again on retry: stop and refund the quota.
+_PERMANENT_ERRORS = (
+    "not connected", "session expired", "invalid or unparseable", "email not found",
+    "opted out", "invalid to header", "invalid recipient", "invalid_grant", "not available for sending",
+)
+
+
+def refund_daily_pitches(db: Session, user_id: int, count: int) -> None:
+    """Give back reserved sends that did not go out (failed or skipped)."""
+    if count <= 0:
+        return
+    db.execute(text(
+        "UPDATE users SET pitches_sent_today = GREATEST(0, COALESCE(pitches_sent_today, 0) - :n) WHERE id = :uid"
+    ), {"uid": user_id, "n": int(count)})
+    db.commit()
+
+
+def recover_interrupted_sends() -> int:
+    """Run at startup. A row left in SENDING was cut off mid-send, so it may or may not have gone
+    out; mark it FAILED (never resend: a duplicate email to a company is worse than a missed one)."""
+    with SessionLocal() as db:
+        n = db.query(ColdPitch).filter(ColdPitch.status == "SENDING").update(
+            {ColdPitch.status: "FAILED",
+             ColdPitch.last_error: "Interrupted while sending. Check your Gmail Sent folder before sending again."},
+            synchronize_session=False)
+        db.commit()
+        return n or 0
+
+
+def _claim_next(busy_user_ids: list[int]) -> tuple[int, int] | None:
+    """Atomically move the oldest due QUEUED pitch (of a user not currently pacing) to SENDING.
+    Returns (pitch_id, user_id)."""
+    with SessionLocal() as db:
+        row = db.execute(text("""
+            UPDATE cold_pitches SET status = 'SENDING', send_attempts = COALESCE(send_attempts, 0) + 1
+            WHERE id = (
+                SELECT id FROM cold_pitches
+                WHERE status = 'QUEUED'
+                  AND (next_attempt_at IS NULL OR next_attempt_at <= :now)
+                  AND NOT (user_id = ANY(:busy))
+                ORDER BY queued_at NULLS FIRST, id
+                LIMIT 1
+                FOR UPDATE SKIP LOCKED
+            )
+            RETURNING id, user_id
+        """), {"now": datetime.utcnow(), "busy": busy_user_ids or [0]}).fetchone()
+        db.commit()
+        return (int(row[0]), int(row[1] or 0)) if row else None
+
+
+def _send_queued_pitch(pitch_id: int) -> str:
+    """Send one claimed pitch (runs in a worker thread). Returns SENT, RETRY, FAILED or GONE."""
+    with SessionLocal() as db:
         pitch = db.query(ColdPitch).filter(ColdPitch.id == pitch_id).first()
         if not pitch:
-            failed_count += 1
-            results.append({
-                "pitch_id": pitch_id,
-                "email": None,
-                "status": "FAILED",
-                "error": "Pitch record not found"
-            })
-            continue
+            return "GONE"
+        user = db.query(User).filter(User.id == pitch.user_id).first()
 
-        if not pitch.target_email or not str(pitch.target_email).strip():
-            skipped_no_email += 1
-            results.append({
-                "pitch_id": pitch_id,
-                "email": None,
-                "status": "SKIPPED",
-                "error": "Company email not found! Skipped sending."
-            })
-            continue
-
-        # IDOR Protection: verify user ownership unless Master Admin
-        if not config.is_master_admin(user.email) and pitch.user_id != user.id:
-            failed_count += 1
-            results.append({
-                "pitch_id": pitch_id,
-                "email": pitch.target_email,
-                "status": "FAILED",
-                "error": "Forbidden: You do not own this pitch record"
-            })
-            continue
-
-        import os
-        user_resume_path = os.path.join("uploads", "resumes", f"user_{user.id}_resume.pdf")
-        resume_att = user_resume_path if os.path.exists(user_resume_path) else None
-
-        res = await send_via_google_oauth(
-            user=user,
-            to_email=pitch.target_email,
-            subject=pitch.subject_line,
-            body=pitch.email_body,
-            db=db,
-            company_id=pitch.company_id,
-            resume_attachment_bytes=resume_attachment_bytes,
-            resume_attachment_name=resume_attachment_name,
-            resume_attachment_path=resume_att if not resume_attachment_bytes else None
-        )
+        if not user or getattr(user, "is_banned", False):
+            res = {"success": False, "error": "Account not available for sending (not connected or suspended)."}
+        else:
+            att = db.query(SendAttachment).filter(SendAttachment.user_id == user.id).first()
+            stored = os.path.join("uploads", "resumes", f"user_{user.id}_resume.pdf")
+            try:
+                res = asyncio.run(send_via_google_oauth(
+                    user=user, to_email=pitch.target_email, subject=pitch.subject_line, body=pitch.email_body,
+                    db=db, company_id=pitch.company_id,
+                    resume_attachment_bytes=att.data if att else None,
+                    resume_attachment_name=att.filename if att else None,
+                    resume_attachment_path=None if att else (stored if os.path.exists(stored) else None),
+                ))
+            except Exception as e:
+                res = {"success": False, "error": str(e)}
 
         if res.get("success"):
-            pitch.status = "SENT"
-            pitch.sent_at = datetime.utcnow()
-            pitch.delivery_method = "OAUTH_DIRECT"
-            sent_count += 1
-            results.append({"pitch_id": pitch.id, "email": pitch.target_email, "status": "SENT"})
-        else:
-            pitch.status = "FAILED"
-            failed_count += 1
-            results.append({"pitch_id": pitch.id, "email": pitch.target_email, "status": "FAILED", "error": res.get("error")})
+            pitch.status, pitch.sent_at, pitch.delivery_method = "SENT", datetime.utcnow(), "OAUTH_DIRECT"
+            pitch.last_error, pitch.next_attempt_at, pitch.quota_reserved = None, None, False
+            db.commit()
+            return "SENT"
 
+        err = str(res.get("error") or "Unknown send error")[:1000]
+        permanent = bool(res.get("blocked")) or any(k in err.lower() for k in _PERMANENT_ERRORS)
+        attempts = pitch.send_attempts or 1
+        pitch.last_error = err
+        if not permanent and attempts < QUEUE_MAX_ATTEMPTS:
+            # Temporary (Gmail rate limit, network): retry after 1, then 2 minutes.
+            pitch.status = "QUEUED"
+            pitch.next_attempt_at = datetime.utcnow() + timedelta(minutes=2 ** (attempts - 1))
+            db.commit()
+            return "RETRY"
+        pitch.status, pitch.next_attempt_at = "FAILED", None
+        refund = bool(pitch.quota_reserved)
+        pitch.quota_reserved = False
         db.commit()
+        # shortcut: a refund after midnight IST credits the new day, not the day it was queued; rare, fine at this scale
+        if refund and pitch.user_id:
+            refund_daily_pitches(db, pitch.user_id, 1)
+        return "FAILED"
 
-        # Apply random human jitter delay before next send (skip on last item)
-        if idx < len(pitch_ids) - 1:
-            jitter = random.uniform(delay_min, delay_max)
-            await asyncio.sleep(jitter)
 
-    return {
-        "total": len(pitch_ids),
-        "sent": sent_count,
-        "failed": failed_count,
-        "skipped_no_email": skipped_no_email,
-        "details": results
-    }
+async def run_send_queue() -> None:
+    """Background worker started from the app lifespan; runs until the app stops."""
+    try:
+        n = await asyncio.to_thread(recover_interrupted_sends)
+        if n:
+            print(f"[SendQueue] Marked {n} interrupted send(s) as FAILED.")
+    except Exception as e:
+        print(f"[SendQueue] Recovery failed: {e}")
+
+    next_allowed: dict[int, float] = {}   # user_id -> monotonic time their next email may go
+    in_flight: dict[asyncio.Task, int] = {}  # task -> user_id
+
+    while True:
+        try:
+            for task in [t for t in in_flight if t.done()]:
+                uid = in_flight.pop(task)
+                if task.exception():
+                    print(f"[SendQueue] Send crashed: {task.exception()}")
+                next_allowed[uid] = time.monotonic() + random.uniform(*QUEUE_USER_GAP)
+
+            while len(in_flight) < QUEUE_CONCURRENCY:
+                now = time.monotonic()
+                busy = [u for u, ts in next_allowed.items() if ts > now]
+                claimed = await asyncio.to_thread(_claim_next, busy)
+                if claimed is None:
+                    break
+                pid, uid = claimed
+                next_allowed[uid] = float("inf")  # no second email for this user until this one finishes
+                in_flight[asyncio.create_task(asyncio.to_thread(_send_queued_pitch, pid))] = uid
+        except Exception as e:
+            print(f"[SendQueue] Loop error: {e}")
+        await asyncio.sleep(QUEUE_POLL_SECONDS)
