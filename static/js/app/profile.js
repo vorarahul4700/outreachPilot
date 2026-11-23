@@ -7,10 +7,6 @@ async function loadCandidateProfile() {
     const res = await fetch("/api/resume/profile");
     if (res.status === 401) return;
     const data = await res.json();
-    if (data.resume_link) {
-      const linkEl = document.getElementById("input-resume-link");
-      if (linkEl) linkEl.value = data.resume_link;
-    }
     if (data.target_role) {
       const roleEl = document.getElementById("input-target-role");
       if (roleEl) roleEl.value = data.target_role;
