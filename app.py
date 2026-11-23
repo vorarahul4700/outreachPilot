@@ -82,6 +82,7 @@ from db import (
     Industry,
     OutreachLog,
     ScoutJob,
+    SendAttachment,
     SessionLocal,
     SubscriptionTier,
     SystemSetting,
@@ -94,9 +95,10 @@ from db import (
 from enricher import is_recruitment_email
 from outreach import (
     add_do_not_contact,
-    dispatch_batch_outreach,
     read_optout_token,
     generate_mailto_link,
+    refund_daily_pitches,
+    run_send_queue,
     send_via_google_oauth,
 )
 from scraper_engine import GoogleScraper, is_genuine_company_domain
@@ -307,16 +309,6 @@ def daily_limit_reached_error(user) -> HTTPException:
     )
 
 
-def refund_daily_pitches(db: Session, user_id: int, count: int) -> None:
-    """Give back reserved sends that did not go out (failed or skipped)."""
-    if count <= 0:
-        return
-    db.execute(text(
-        "UPDATE users SET pitches_sent_today = GREATEST(0, COALESCE(pitches_sent_today, 0) - :n) WHERE id = :uid"
-    ), {"uid": user_id, "n": int(count)})
-    db.commit()
-
-
 def _bulk_reset_daily_quotas() -> int:
     """Reset every user whose counter is from a previous IST day in one UPDATE.
     Idempotent, so it is safe with several workers or a late wake-up."""
@@ -353,8 +345,14 @@ async def lifespan(app: FastAPI):
     init_db()
     asyncio.create_task(asyncio.to_thread(_prewarm_cache))
     quota_task = asyncio.create_task(_daily_quota_reset_loop())
+    # Local dev shares the production DB: set SEND_QUEUE_WORKER=false there so only production sends.
+    send_queue_task = None
+    if os.getenv("SEND_QUEUE_WORKER", "true").lower() in ("true", "1", "yes"):
+        send_queue_task = asyncio.create_task(run_send_queue())
     yield
     quota_task.cancel()
+    if send_queue_task:
+        send_queue_task.cancel()
 
 
 app = FastAPI(
@@ -3390,6 +3388,8 @@ async def send_single_pitch_direct(
 
     if not is_master and pitch.user_id != user.id:
         raise HTTPException(status_code=403, detail="Forbidden: You do not own this application record.")
+    if pitch.status in ("QUEUED", "SENDING"):
+        raise HTTPException(status_code=409, detail="This application is already queued and will be sent shortly.")
 
     # Take this send from today's quota up front (atomic); refunded below if it fails.
     reserved = 0
@@ -3495,8 +3495,6 @@ async def bulk_send_outreach(
     resume_bytes = None
     resume_name = None
     pitch_ids = []
-    delay_min = 2.0
-    delay_max = 3.5
 
     if "multipart/form-data" in content_type:
         form = await request.form()
@@ -3509,12 +3507,6 @@ async def bulk_send_outreach(
         elif isinstance(raw_pitch_ids, list):
             pitch_ids = [int(x) for x in raw_pitch_ids if str(x).isdigit()]
 
-        try:
-            delay_min = float(form.get("delay_min", 2.0))
-            delay_max = float(form.get("delay_max", 3.5))
-        except (ValueError, TypeError):
-            delay_min, delay_max = 2.0, 3.5
-
         resume_file = form.get("resume_file")
         if resume_file and hasattr(resume_file, "read"):
             resume_bytes = await resume_file.read()
@@ -3522,47 +3514,73 @@ async def bulk_send_outreach(
     else:
         body = await request.json()
         pitch_ids = body.get("pitch_ids", [])
-        try:
-            delay_min = float(body.get("delay_min", 2.0))
-            delay_max = float(body.get("delay_max", 3.5))
-        except (ValueError, TypeError):
-            delay_min, delay_max = 2.0, 3.5
 
     is_unrestricted = is_master or is_subscription_kill_switch_active(db)
-    requested = len(pitch_ids)
-    reserved = 0
-    if not is_unrestricted and requested:
+
+    # Queue the batch; outreach.run_send_queue sends it in the background, so a closed tab
+    # or a server restart no longer cuts a batch off halfway.
+    ids = list(dict.fromkeys(int(x) for x in pitch_ids if str(x).isdigit()))[:500]
+    found = {pp.id: pp for pp in db.query(ColdPitch).filter(ColdPitch.id.in_(ids)).all()} if ids else {}
+    details, sendable = [], []
+    for pid in ids:
+        pp = found.get(pid)
+        if not pp or pp.user_id != user.id:
+            details.append({"pitch_id": pid, "status": "FAILED", "error": "Application not found."})
+        elif not (pp.target_email or "").strip():
+            details.append({"pitch_id": pid, "status": "SKIPPED", "error": "Company email not found! Skipped sending."})
+        elif pp.status in ("SENT", "QUEUED", "SENDING"):
+            details.append({"pitch_id": pid, "status": pp.status, "error": "Already sent or queued."})
+        else:
+            sendable.append(pp)
+
+    skipped_over_limit = 0
+    if sendable and not is_unrestricted:
         # Atomic: parallel requests cannot both spend the same remaining quota.
-        reserved = reserve_daily_pitches(db, user.id, requested)
+        reserved = reserve_daily_pitches(db, user.id, len(sendable))
         if reserved == 0:
             limit = getattr(user, "daily_pitch_limit", 10) or 10
             raise HTTPException(
                 status_code=403,
                 detail=f"Daily limit reached ({limit} emails a day on your plan). It resets at midnight IST."
             )
-        pitch_ids = pitch_ids[:reserved]
+        skipped_over_limit = len(sendable) - reserved
+        for pp in sendable[reserved:]:
+            details.append({"pitch_id": pp.id, "status": "SKIPPED", "error": "Over today's limit."})
+        sendable = sendable[:reserved]
 
-    try:
-        result = await dispatch_batch_outreach(
-            pitch_ids=pitch_ids,
-            user=user,
-            db=db,
-            delay_min=delay_min,
-            delay_max=delay_max,
-            resume_attachment_bytes=resume_bytes,
-            resume_attachment_name=resume_name
-        )
-    except Exception:
-        refund_daily_pitches(db, user.id, reserved)  # nothing went out
-        raise
+    if resume_bytes and sendable:
+        # Kept in the DB (not on disk) so it is still there if the server restarts mid-batch.
+        db.merge(SendAttachment(user_id=user.id, filename=(resume_name or "Resume.pdf")[:255],
+                                data=resume_bytes, updated_at=datetime.utcnow()))
 
-    # Give back reserved sends that did not go out.
-    sent_count = int((result or {}).get("sent") or 0)
-    refund_daily_pitches(db, user.id, reserved - sent_count)
-    if result is not None and reserved and requested > reserved:
-        result["skipped_over_limit"] = requested - reserved
+    now = datetime.utcnow()
+    for pp in sendable:
+        pp.status, pp.queued_at, pp.send_attempts = "QUEUED", now, 0
+        pp.next_attempt_at, pp.last_error, pp.quota_reserved = None, None, not is_unrestricted
+        details.append({"pitch_id": pp.id, "email": pp.target_email, "status": "QUEUED"})
+    db.commit()
 
-    return result
+    return {
+        "queued": len(sendable),
+        "skipped_no_email": sum(1 for d in details if d["status"] == "SKIPPED" and "email" in (d.get("error") or "").lower()),
+        "skipped_over_limit": skipped_over_limit,
+        "failed": sum(1 for d in details if d["status"] == "FAILED"),
+        "details": details,
+    }
+
+
+@app.get("/api/pitch/queue-status")
+def pitch_queue_status(request: Request, ids: str = "", db: Session = Depends(get_db)):
+    """Live status of the signed-in user's queued applications (the Outreach Hub polls this)."""
+    user = get_current_user(db, request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Sign in to see your sending progress.")
+    wanted = list(dict.fromkeys(int(x) for x in ids.split(",") if x.strip().isdigit()))[:500]
+    q = db.query(ColdPitch.id, ColdPitch.company_id, ColdPitch.status, ColdPitch.last_error).filter(ColdPitch.user_id == user.id)
+    q = q.filter(ColdPitch.id.in_(wanted)) if wanted else q.filter(ColdPitch.status.in_(["QUEUED", "SENDING"]))
+    rows = [{"pitch_id": r.id, "company_id": r.company_id, "status": r.status, "error": r.last_error} for r in q.all()]
+    counts = {k: sum(1 for r in rows if r["status"] == k) for k in ("QUEUED", "SENDING", "SENT", "FAILED")}
+    return {"pitches": rows, "counts": counts, "done": counts["QUEUED"] + counts["SENDING"] == 0}
 
 
 @app.get("/api/outreach/sent/{company_id}")

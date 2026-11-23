@@ -9,6 +9,7 @@ from sqlalchemy import (
     Float,
     ForeignKey,
     Integer,
+    LargeBinary,
     String,
     Text,
     create_engine,
@@ -184,13 +185,30 @@ class ColdPitch(Base):
     email_body = Column(Text, nullable=False)
     cover_letter = Column(Text, nullable=True)
     matched_skills = Column(JsonType, nullable=True)
-    status = Column(String(50), default="DRAFT")
+    status = Column(String(50), default="DRAFT")  # DRAFT, QUEUED, SENDING, SENT, FAILED
     delivery_method = Column(String(50), nullable=True)
     sent_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
+    # Send queue (outreach.run_send_queue): bulk sends are queued and sent by a background worker
+    queued_at = Column(DateTime, nullable=True)
+    send_attempts = Column(Integer, default=0)
+    next_attempt_at = Column(DateTime, nullable=True)
+    last_error = Column(Text, nullable=True)
+    quota_reserved = Column(Boolean, default=False)  # one daily send was reserved; refund it if this never goes out
 
     company = relationship("Company", back_populates="pitches")
     user = relationship("User", back_populates="cold_pitches")
+
+
+class SendAttachment(Base):
+    """The resume a user attached to their latest queued batch, kept in the DB so a restart
+    (Render's disk is not persistent) cannot drop the attachment from emails still queued."""
+    __tablename__ = "send_attachments"
+
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
+    filename = Column(String(255), nullable=False)
+    data = Column(LargeBinary, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
 class DoNotContact(Base):
@@ -334,7 +352,7 @@ def init_db():
                     (r[0], r[1]) for r in conn.execute(text(
                         "SELECT table_name, column_name FROM information_schema.columns "
                         "WHERE table_schema = current_schema() "
-                        "AND table_name IN ('companies','outreach_logs','users','scout_jobs')"
+                        "AND table_name IN ('companies','outreach_logs','users','scout_jobs','cold_pitches')"
                     ))
                 }
                 column_adds = [
@@ -349,6 +367,11 @@ def init_db():
                     ("companies", "category_id", "INTEGER REFERENCES categories(id)"),
                     ("outreach_logs", "email_body", "TEXT"),
                     ("users", "resume_link", "VARCHAR(500)"),
+                    ("cold_pitches", "queued_at", "TIMESTAMP"),
+                    ("cold_pitches", "send_attempts", "INTEGER DEFAULT 0"),
+                    ("cold_pitches", "next_attempt_at", "TIMESTAMP"),
+                    ("cold_pitches", "last_error", "TEXT"),
+                    ("cold_pitches", "quota_reserved", "BOOLEAN DEFAULT FALSE"),
                 ]
                 statements = [
                     f"ALTER TABLE {tbl} ADD COLUMN IF NOT EXISTS {col} {ddl};"
@@ -374,6 +397,8 @@ def init_db():
                     "CREATE INDEX IF NOT EXISTS ix_company_emails_company_id ON company_emails(company_id);",
                     "CREATE INDEX IF NOT EXISTS ix_company_profiles_company_id ON company_profiles(company_id);",
                     "CREATE INDEX IF NOT EXISTS ix_outreach_logs_user_company ON outreach_logs(user_id, company_id);",
+                    # Send queue worker scans only queued/sending rows
+                    "CREATE INDEX IF NOT EXISTS ix_cold_pitches_queue ON cold_pitches(status, next_attempt_at) WHERE status IN ('QUEUED','SENDING');",
                     "CREATE INDEX IF NOT EXISTS ix_companies_city_id ON companies(city_id);",
                     "CREATE INDEX IF NOT EXISTS ix_companies_category_id ON companies(category_id);",
                     # Search box is free text: trigram indexes make ILIKE '%x%' use an index.
