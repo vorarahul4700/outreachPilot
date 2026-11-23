@@ -3548,12 +3548,13 @@ async def bulk_send_outreach(
             details.append({"pitch_id": pp.id, "status": "SKIPPED", "error": "Over today's limit."})
         sendable = sendable[:reserved]
 
+    now = datetime.utcnow()  # same stamp on the attachment and the batch: cleanup keys on it
     if resume_bytes and sendable:
         # Kept in the DB (not on disk) so it is still there if the server restarts mid-batch.
+        # The worker deletes it once this user's queue is empty.
         db.merge(SendAttachment(user_id=user.id, filename=(resume_name or "Resume.pdf")[:255],
-                                data=resume_bytes, updated_at=datetime.utcnow()))
+                                data=resume_bytes, updated_at=now))
 
-    now = datetime.utcnow()
     for pp in sendable:
         pp.status, pp.queued_at, pp.send_attempts = "QUEUED", now, 0
         pp.next_attempt_at, pp.last_error, pp.quota_reserved = None, None, not is_unrestricted
