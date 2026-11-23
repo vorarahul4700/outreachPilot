@@ -297,7 +297,25 @@ def recover_interrupted_sends() -> int:
              ColdPitch.last_error: "Interrupted while sending. Check your Gmail Sent folder before sending again."},
             synchronize_session=False)
         db.commit()
+        # Resumes left over from finished batches (e.g. a crash before cleanup).
+        db.execute(text(
+            "DELETE FROM send_attachments a WHERE NOT EXISTS (SELECT 1 FROM cold_pitches p "
+            "WHERE p.user_id = a.user_id AND p.status IN ('QUEUED','SENDING'))"))
+        db.commit()
         return n or 0
+
+
+def _drop_finished_attachment(db: Session, user_id: int | None, batch_time: datetime | None) -> None:
+    """Delete the user's stored resume once nothing of theirs is queued or sending, so the DB only
+    holds resumes for batches in progress. updated_at <= batch_time keeps a resume that a newer
+    batch saved while this one was finishing."""
+    if not user_id or not batch_time:
+        return
+    db.execute(text(
+        "DELETE FROM send_attachments WHERE user_id = :u AND updated_at <= :t AND NOT EXISTS ("
+        "SELECT 1 FROM cold_pitches WHERE user_id = :u AND status IN ('QUEUED','SENDING'))"),
+        {"u": user_id, "t": batch_time})
+    db.commit()
 
 
 def _claim_next(busy_user_ids: list[int]) -> tuple[int, int] | None:
@@ -349,6 +367,7 @@ def _send_queued_pitch(pitch_id: int) -> str:
             pitch.status, pitch.sent_at, pitch.delivery_method = "SENT", datetime.utcnow(), "OAUTH_DIRECT"
             pitch.last_error, pitch.next_attempt_at, pitch.quota_reserved = None, None, False
             db.commit()
+            _drop_finished_attachment(db, pitch.user_id, pitch.queued_at)
             return "SENT"
 
         err = str(res.get("error") or "Unknown send error")[:1000]
@@ -368,6 +387,7 @@ def _send_queued_pitch(pitch_id: int) -> str:
         # shortcut: a refund after midnight IST credits the new day, not the day it was queued; rare, fine at this scale
         if refund and pitch.user_id:
             refund_daily_pitches(db, pitch.user_id, 1)
+        _drop_finished_attachment(db, pitch.user_id, pitch.queued_at)
         return "FAILED"
 
 
