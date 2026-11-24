@@ -7,7 +7,6 @@
 .legal-hero .container { position: relative; display: grid; gap: 16px; justify-items: start; }
 .legal-switch { margin-bottom: 8px; }
 .legal-switch a { display: inline-flex; align-items: center; }
-.legal-hero .lead { max-width: 64ch; }
 .legal-meta { display: flex; flex-wrap: wrap; gap: 8px; }
 .legal-meta .badge { height: 26px; padding: 0 10px; font-size: .74rem; }
 .legal-highlights { width: 100%; display: grid; gap: 12px; margin-top: 18px; grid-template-columns: 1fr; }
@@ -47,7 +46,7 @@
 .legal-section-head .left { display: flex; align-items: center; gap: 12px; }
 .legal-num { font-family: var(--font-display); font-size: 1.6rem; line-height: 1; color: var(--accent-text); }
 .legal-section h2 { font-size: clamp(1.25rem, 1.1rem + .6vw, 1.55rem); }
-.legal-section p { color: var(--text-2); line-height: 1.75; max-width: 72ch; }
+.legal-section p { color: var(--text-2); line-height: 1.75; }
 .legal-section a:not(.btn) { color: var(--text); text-decoration: underline; text-decoration-color: var(--accent-line); text-underline-offset: 3px; text-decoration-thickness: 1.5px; }
 .legal-section a:not(.btn):hover { text-decoration-color: var(--accent); }
 .legal-grid { display: grid; gap: 12px; grid-template-columns: 1fr; }

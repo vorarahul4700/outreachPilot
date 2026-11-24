@@ -223,7 +223,7 @@ ol.pipeline { /* ol. beats the base ol[role="list"] reset, which zeroed this pad
   line-height: 1.12; letter-spacing: -.02em; text-wrap: balance;
 }
 .manifesto .m-body {
-  display: block; max-width: 58ch; margin-top: 16px;
+  display: block; margin-top: 16px;
   font-size: clamp(1.08rem, 1rem + .45vw, 1.35rem); line-height: 1.55; color: var(--text-2);
   text-wrap: pretty;
 }
@@ -440,7 +440,7 @@ ol.pipeline { /* ol. beats the base ol[role="list"] reset, which zeroed this pad
 .final > * { position: relative; }
 .final-bg { position: absolute; inset: 0; -webkit-mask-image: radial-gradient(ellipse at center, #000 20%, transparent 70%); mask-image: radial-gradient(ellipse at center, #000 20%, transparent 70%); }
 .final h2 { max-width: 24ch; text-wrap: balance; }
-.final .lead { margin-inline: auto; }
+.final .lead { margin-inline: auto; max-width: 62ch; }
 .logo-mark.lg { width: 60px; height: 60px; border-radius: 18px; }
 .logo-mark.lg svg { width: 46px; height: 46px; }
 @media (max-width: 479px) { .final .cluster .btn { width: 100%; } }
@@ -456,5 +456,5 @@ ol.pipeline { /* ol. beats the base ol[role="list"] reset, which zeroed this pad
 .tile > *, .mini-search, .mini-bar { min-width: 0; max-width: 100%; }
 
 /* Wide feature tiles use their width */
-.tile.b-4 p { max-width: 64ch; }
+.tile.b-4 p { max-width: none; }
 .compare { margin-top: clamp(28px, 3.5vw, 44px); }

@@ -68,7 +68,7 @@ h5, h6, .h5 { font-family: var(--font-body); font-weight: 700; line-height: var(
 .h3 { font-size: var(--fs-h3); line-height: 1.2; }
 .h4 { font-family: var(--font-body); font-weight: 700; font-size: var(--fs-h4); letter-spacing: -.005em; }
 .em { color: var(--accent-text); font-style: normal; }
-.lead { font-size: var(--fs-lead); color: var(--text-2); line-height: 1.6; max-width: 62ch; text-wrap: pretty; }
+.lead { font-size: var(--fs-lead); color: var(--text-2); line-height: 1.6; text-wrap: pretty; }
 .muted { color: var(--text-2); }
 .subtle { color: var(--text-3); }
 .small { font-size: var(--fs-sm); }
@@ -110,7 +110,7 @@ h5, h6, .h5 { font-family: var(--font-body); font-weight: 700; line-height: var(
 }
 .link:hover { text-decoration-color: var(--accent); color: var(--accent-text); }
 
-.prose { color: var(--text-2); max-width: 70ch; }
+.prose { color: var(--text-2); }
 .prose > * + * { margin-top: 1em; }
 .prose h2 { font-size: var(--fs-h3); color: var(--text); margin-top: 2em; }
 .prose h3 { font-size: var(--fs-h4); color: var(--text); margin-top: 1.6em; }
