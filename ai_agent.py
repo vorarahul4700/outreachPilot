@@ -672,15 +672,18 @@ Deliverables (must return valid JSON matching this schema):
 
     def make_pitch_fallback():
         raw_proofs = candidate_profile.get("key_achievements") or candidate_profile.get("strong_points") or []
-        proof = raw_proofs[0] if raw_proofs else f"building production applications using {skills}"
+        # Template used only when every AI provider fails: it states nothing that is not in the resume.
+        proof = (raw_proofs[0] or "").strip().rstrip(".") if raw_proofs else ""
+        skills_txt = f" specializing in {skills}" if skills else ""
         resume_ref = f" (Portfolio / Resume: {resume_link})" if resume_link else " (Resume attached)"
-        comp_tech_focus = company_tech.split(',')[0].strip() if company_tech else (company_services.split(',')[0].strip() if company_services else "modern software engineering")
+        comp_tech_focus = company_tech.split(',')[0].strip() if company_tech else (company_services.split(',')[0].strip() if company_services else "")
 
         primary = (
             f"{greeting}\n\n"
             f"I am writing to inquire about open or upcoming {target_role} opportunities at {company_name}.\n\n"
-            f"As a {target_role} specializing in {skills}, my recent work includes {proof}. "
-            f"Given {company_name}'s focus on {comp_tech_focus}, I would love to contribute my experience to your engineering team.\n\n"
+            f"As a {target_role}{skills_txt}" + (f", my recent work includes {proof}. " if proof else ". ") +
+            (f"Given {company_name}'s focus on {comp_tech_focus}, I" if comp_tech_focus else "I") +
+            " would love to contribute my experience to your engineering team.\n\n" +
             f"I have shared my resume for your consideration{resume_ref}. Are you currently hiring for {target_role} roles, or open to a brief conversation if there might be a potential fit?\n\n"
             f"Best regards,\n"
             f"{candidate_name}"
@@ -689,7 +692,8 @@ Deliverables (must return valid JSON matching this schema):
         linkedin = (
             f"Hi {contact_name or company_name + ' team'},\n\n"
             f"I am reaching out to explore potential {target_role} opportunities at {company_name}. "
-            f"I specialize in {skills} and recently {proof}. Given your work with {comp_tech_focus}, "
+            + (f"I specialize in {skills}. " if skills else "") + (f"Recently: {proof}. " if proof else "") +
+            (f"Given your work with {comp_tech_focus}, " if comp_tech_focus else "") +
             f"I'd love to connect and share my resume{resume_ref} if you have any open engineering roles.\n\n"
             f"Best regards,\n{candidate_name}"
         )
@@ -697,8 +701,10 @@ Deliverables (must return valid JSON matching this schema):
         referral = (
             f"{greeting}\n\n"
             f"I have been following {company_name}'s work in {company_industry or 'technology'} and wanted to reach out regarding potential {target_role} openings.\n\n"
-            f"In my background as a {target_role}, I focus on {skills}, where I {proof}. "
-            f"I really admire the work your team is doing around {comp_tech_focus} and would welcome the chance to explore how my skills could add value to your projects.\n\n"
+            f"In my background as a {target_role}" + (f", I focus on {skills}" if skills else "") +
+            (f", where I {proof}. " if proof else ". ") +
+            (f"I really admire the work your team is doing around {comp_tech_focus} and would" if comp_tech_focus else "I would") +
+            " welcome the chance to explore how my skills could add value to your projects.\n\n" +
             f"I have attached my resume for your review{resume_ref}. Would you be open to considering my profile if an engineering opportunity arises?\n\n"
             f"Warm regards,\n"
             f"{candidate_name}"

@@ -2324,8 +2324,8 @@ document.addEventListener("DOMContentLoaded", () => {
               }
             } else {
               const errData = await res.json().catch(() => ({}));
-              showToast(errData.detail || "Failed to prepare applications for this batch.", res.status === 429 ? "warning" : "error");
-              if (res.status === 429) break;  // daily limit: later batches would fail the same way
+              showToast(errData.detail || "Failed to prepare applications for this batch.", (res.status === 429 || res.status === 400) ? "warning" : "error");
+              if (res.status === 429 || res.status === 400) break;  // daily limit or no resume: later batches fail the same way
             }
           } catch (err) {
             console.error("Bulk pitch error:", err);
@@ -2433,7 +2433,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         if (comp) comp.pitch_id = p.pitch_id;
                       });
                     }
-                  } else if (res.status === 429) {
+                  } else if (res.status === 429 || res.status === 400) {
                     const errData = await res.json().catch(() => ({}));
                     showToast(errData.detail || "Today's application limit is reached.", "warning");
                     limitHit = true;
