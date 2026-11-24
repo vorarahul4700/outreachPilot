@@ -106,7 +106,7 @@
 }
 .tile:hover { border-color: var(--line-2); box-shadow: var(--shadow-md); transform: translateY(-3px); }
 .tile h3 { font-size: 1.35rem; }
-.tile p { color: var(--text-2); font-size: var(--fs-sm); max-width: 46ch; }
+.tile p { color: var(--text-2); font-size: var(--fs-sm); }
 .tile .tile-visual { margin-top: auto; }
 
 /* Window frame: product screenshots and live demos */

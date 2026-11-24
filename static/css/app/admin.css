@@ -82,7 +82,7 @@
 .a-ic.warn { background: var(--warn-soft); color: var(--warn-text); }
 .a-ic .material-symbols-outlined { font-size: 22px; }
 .a-title { font-weight: 700; font-size: .95rem; }
-.a-desc { font-size: .82rem; color: var(--text-2); line-height: 1.55; max-width: 72ch; }
+.a-desc { font-size: .82rem; color: var(--text-2); line-height: 1.55; }
 .a-desc strong { color: var(--text); }
 .quick-grid { display: grid; gap: 12px; grid-template-columns: 1fr; }
 @media (min-width: 1100px) { .quick-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
@@ -92,7 +92,7 @@
 .section-bar { display: flex; flex-direction: column; gap: 12px; }
 @media (min-width: 720px) { .section-bar { flex-direction: row; align-items: flex-end; justify-content: space-between; } }
 .section-bar h2 { font-size: clamp(1.4rem, 1.15rem + .9vw, 1.9rem); display: flex; align-items: center; gap: 10px; }
-.section-bar p { margin-top: 6px; font-size: .86rem; color: var(--text-2); max-width: 70ch; }
+.section-bar p { margin-top: 6px; font-size: .86rem; color: var(--text-2); }
 .section-bar .acts { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .engine-grid { display: grid; gap: 14px; grid-template-columns: 1fr; }
 @media (min-width: 1000px) { .engine-grid { grid-template-columns: 1fr 1fr; } }
