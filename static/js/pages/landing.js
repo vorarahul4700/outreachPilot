@@ -15,7 +15,7 @@ const specimens = [
     tech: ["React.js", "TypeScript", "Tailwind CSS", "Next.js"],
     pitches: {
       architecture: {
-        subject: "Frontend development & web app architecture at ApexForge Systems",
+        subject: "Application: Front-end Developer role at ApexForge Systems",
         p1: "I came across ApexForge Systems while looking for software companies in Bengaluru that build web and mobile apps, and I would love to join your team.",
         p2: "I build fast, responsive web applications using React, TypeScript, and Tailwind CSS, which matches the stack your team works with.",
         p3: "I am looking for a full-time front-end developer role and have attached my resume. Are you hiring developers right now?",
@@ -27,10 +27,10 @@ const specimens = [
         p3: "If you have an opening for a front-end developer, I would welcome a short conversation. My resume is attached.",
       },
       peer: {
-        subject: "Quick hello from a front-end developer in Bengaluru",
-        p1: "Hey ApexForge team: I really admire the quality of web platforms your team has shipped over recent years.",
+        subject: "Application: Front-end Developer, Bengaluru",
+        p1: "Hi ApexForge team, I would love to join you as a front-end developer.",
         p2: "I'm a front-end developer working with React and TypeScript, and I love building clean, responsive interfaces. I'd love to be considered for any open developer roles on your team.",
-        p3: "Would you have 5 minutes this week for a quick chat?",
+        p3: "My resume is attached. Are you hiring front-end developers right now?",
       }
     }
   },
@@ -45,10 +45,10 @@ const specimens = [
     tech: ["Node.js", "Python", "FastAPI", "PostgreSQL"],
     pitches: {
       architecture: {
-        subject: "Backend API development & Python engineering at VortexLogic Labs",
-        p1: "I've been following VortexLogic Labs' work building custom software and scalable backend platforms in Pune.",
+        subject: "Application: Backend Engineer role at VortexLogic Labs",
+        p1: "I came across VortexLogic Labs while looking for software companies in Pune, and I would like to apply for a backend engineering role.",
         p2: "I specialize in backend engineering using Python, FastAPI, and Node.js with PostgreSQL. I build fast, reliable APIs and clean database architectures that handle heavy traffic smoothly.",
-        p3: "I'm looking for new software engineering roles where I can help build rock-solid systems. Do you have any openings on your core development team?",
+        p3: "My resume is attached. Do you have any openings for backend engineers?",
       },
       executive: {
         subject: "Backend engineer applying to VortexLogic Labs",
@@ -57,10 +57,10 @@ const specimens = [
         p3: "If you are hiring backend engineers, I would welcome a short conversation. My resume is attached.",
       },
       peer: {
-        subject: "Connecting with the VortexLogic engineering team",
-        p1: "Hi VortexLogic team: love the solid software foundation you've established across Python and Node.js backend systems.",
-        p2: "I'm a full-stack engineer passionate about clean code, reliable databases, and intuitive user experiences. Would love to introduce myself for upcoming opportunities.",
-        p3: "Happy to share my recent code projects and portfolio if you have 5 minutes.",
+        subject: "Application: Full-stack Engineer, Pune",
+        p1: "Hi VortexLogic team, I am applying for a full-stack engineering role on your team.",
+        p2: "I'm a full-stack engineer passionate about clean code, reliable databases, and intuitive user experiences. I would like to be considered for any open roles.",
+        p3: "My resume is attached, and I am happy to share my code projects too.",
       }
     }
   },
@@ -75,10 +75,10 @@ const specimens = [
     tech: ["Next.js", "PyTorch", "AWS", "PostgreSQL"],
     pitches: {
       architecture: {
-        subject: "Next.js & AI application development at NovaCrest AI",
-        p1: "I noticed NovaCrest AI is actively building smart SaaS products and modern cloud solutions in Hyderabad. Your portfolio looks fantastic.",
+        subject: "Application: Full-stack AI Developer role at NovaCrest AI",
+        p1: "I came across NovaCrest AI while looking for AI product companies in Hyderabad, and I would like to apply to join your team.",
         p2: "I work with Next.js, Python, and modern AI integrations. In my recent builds, I focused on building fast web interfaces that stream AI responses smoothly without delays.",
-        p3: "I'm eager to bring hands-on full-stack and AI development skills to NovaCrest AI. Would your technical team be open to a 10-minute introductory call?",
+        p3: "My resume is attached. Are you hiring full-stack or AI developers?",
       },
       executive: {
         subject: "Full-stack engineer applying to NovaCrest AI",
@@ -87,10 +87,10 @@ const specimens = [
         p3: "If NovaCrest AI is hiring full-stack engineers, I would welcome a chance to share my work. My resume is attached.",
       },
       peer: {
-        subject: "Fellow developer saying hello to the NovaCrest AI team",
-        p1: "Hey NovaCrest team: big fan of the AI-driven software products you've been launching.",
-        p2: "I'm a developer working with Next.js and Python, and I'm exploring new teams to build with. Would love to connect with fellow builders at NovaCrest.",
-        p3: "Are you open to an informal conversation about what you're working on?",
+        subject: "Application: Developer, Hyderabad",
+        p1: "Hi NovaCrest team, I am a developer applying to join your product team.",
+        p2: "I'm a developer working with Next.js and Python, and I would like to be considered for any open developer roles.",
+        p3: "My resume is attached. Are you hiring developers right now?",
       }
     }
   }
@@ -127,14 +127,14 @@ function updateSpecimenUI() {
     <p>${escapeHTML(pitchData.p3)}</p>
     <p class="text-on-surface-variant text-xs pt-1 font-mono">
       Best regards,<br/>
-      <strong class="text-primary">Rahul Vora</strong> / <span class="text-secondary">Portfolio &amp; GitHub Profile Attached</span>
+      <strong class="text-primary">Rahul Vora</strong> / <span class="text-secondary">Resume attached</span>
     </p>
   `;
 
   // Update tone badge
   const toneLabels = {
     architecture: "Skills & Experience",
-    executive: "Business & Results",
+    executive: "Results",
     peer: "Casual & Friendly"
   };
   document.getElementById("tone-badge").textContent = toneLabels[currentTone];
