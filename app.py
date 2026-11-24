@@ -301,6 +301,24 @@ def draft_allowance(db: Session, user) -> tuple[int, int]:
     return max(0, sends_left - open_drafts), sends_left
 
 
+def resume_profile_or_400(req, user) -> dict:
+    """The parsed resume drafts are written from. Without one we refuse rather than invent skills
+    or achievements (no fake data)."""
+    profile = dict(req.candidate_profile or user.resume_summary or {})
+    if not (profile.get("top_skills") or profile.get("key_achievements") or profile.get("strong_points")
+            or profile.get("elevator_pitch")):
+        raise HTTPException(
+            status_code=400,
+            detail="Add your resume in Candidate Profile first, so every email uses your real skills."
+        )
+    profile.setdefault("full_name", user.name or "")
+    if not profile.get("target_role"):
+        profile["target_role"] = req.target_role or user.target_role or ""
+    if user.resume_link and not profile.get("resume_link"):
+        profile["resume_link"] = user.resume_link
+    return profile
+
+
 def daily_limit_reached_error(user) -> HTTPException:
     return HTTPException(
         status_code=429,
@@ -2988,19 +3006,12 @@ async def generate_single_pitch(
 
     client_id = f"{user.id}_{request.client.host if request and request.client else 'unknown'}"
     enforce_rate_limit(f"pitch_gen_{client_id}", max_calls=30, window_seconds=60)
-    cand_profile = req.candidate_profile or user.resume_summary or {
-        "full_name": user.name or "Candidate",
-        "target_role": req.target_role or user.target_role or "",
-        "top_skills": ["Python", "FastAPI", "React", "PostgreSQL"],
-        "key_achievements": ["Built scalable web services and automated data workflows"]
-    }
-    if user.resume_link and not cand_profile.get("resume_link"):
-        cand_profile["resume_link"] = user.resume_link
+    cand_profile = resume_profile_or_400(req, user)
 
     comp_profile_data = {
         "summary": company.profile.summary_short if company.profile else "",
         "detailed_analysis": company.profile.detailed_analysis if company.profile else "",
-        "industry": company.profile.industry if company.profile else "Tech",
+        "industry": (company.profile.industry if company.profile else "") or "",
         "tech_stack": company.profile.tech_stack if company.profile else [],
         "tone": company.profile.tone if company.profile else "Professional"
     }
@@ -3190,14 +3201,7 @@ async def generate_bulk_pitches(
     if not req.company_ids:
         return {"success": True, "generated_count": 0, "total": 0, "pitches": []}
 
-    cand_profile = req.candidate_profile or user.resume_summary or {
-        "full_name": user.name or "Candidate",
-        "target_role": req.target_role or user.target_role or "Software Engineer",
-        "top_skills": ["Python", "FastAPI", "React", "PostgreSQL"],
-        "key_achievements": ["Built scalable web services and automated data workflows"]
-    }
-    if user.resume_link and not cand_profile.get("resume_link"):
-        cand_profile["resume_link"] = user.resume_link
+    cand_profile = resume_profile_or_400(req, user)
 
     # Batch load all requested companies in a single SQL query
     companies = db.query(Company).filter(Company.id.in_(req.company_ids)).all()
@@ -3249,18 +3253,33 @@ async def generate_bulk_pitches(
         comp_profile_data = {
             "summary": comp.profile.summary_short if comp.profile else "",
             "detailed_analysis": comp.profile.detailed_analysis if comp.profile else "",
-            "industry": comp.profile.industry if comp.profile else "Tech",
+            "industry": (comp.profile.industry if comp.profile else "") or "",
             "tech_stack": comp.profile.tech_stack if comp.profile else [],
             "tone": comp.profile.tone if comp.profile else "Professional"
         }
+        # Speed: an existing draft written for this candidate is kept as is (no AI call),
+        # the same rule the single generate endpoint uses. Only new companies are drafted.
+        reuse = None
+        old = existing_pitches.get(comp.id)
+        cand_name = (cand_profile.get("full_name") or "").strip().lower()
+        if old and (old.email_body or "").strip() and old.status != "SENT" and (
+                not cand_name or cand_name in (old.email_body or "").lower()):
+            reuse = {
+                "company_id": comp.id, "company_name": comp.name, "target_email": target_email or old.target_email,
+                "subject_line": old.subject_line, "email_body": old.email_body,
+                "cover_letter": old.cover_letter or "", "matched_skills": old.matched_skills or {},
+            }
         tasks.append({
             "company_id": comp.id,
             "company_name": comp.name,
             "target_email": target_email,
-            "profile": comp_profile_data
+            "profile": comp_profile_data,
+            "reuse": reuse,
         })
 
     def process_task(task):
+        if task.get("reuse"):
+            return task["reuse"]
         pitch_data = generate_personalized_pitch(
             candidate_profile=cand_profile,
             company_name=task["company_name"],
@@ -3269,34 +3288,6 @@ async def generate_bulk_pitches(
 
         subj = (pitch_data.get("subject_line") or "").strip()
         body = (pitch_data.get("email_body") or pitch_data.get("primary_email") or "").strip()
-        c_name = cand_profile.get("full_name") or (user.name if user and user.name else "Candidate")
-        t_role = cand_profile.get("target_role") or (user.target_role if user and user.target_role else "Professional")
-        c_name_clean = c_name.strip() if c_name else "Candidate"
-        if not subj:
-            subj = f"Application: {t_role} - {c_name_clean}"
-        if not body:
-            skills_str = ", ".join(cand_profile.get("top_skills", [])[:5]) or "Python, Flask, PostgreSQL, MySQL"
-            raw_proofs = cand_profile.get("key_achievements") or cand_profile.get("strong_points") or []
-            proof_text = ""
-            if raw_proofs:
-                proof_text = f"In my recent work, I {raw_proofs[0]}"
-                if len(raw_proofs) > 1:
-                    proof_text += f", and {raw_proofs[1]}"
-                proof_text += ".\n\n"
-            else:
-                proof_text = "In my recent projects, I developed high-throughput backend services, optimized database queries, and engineered automated workflow pipelines.\n\n"
-
-            resume_ref = f" (Portfolio / Code: {cand_profile.get('resume_link')})" if cand_profile.get('resume_link') else " (Resume attached)"
-            body = (
-                f"Hi {task['company_name']} team,\n\n"
-                f"I am writing to inquire about open or upcoming {t_role} opportunities on your engineering team at {task['company_name']}.\n\n"
-                f"As a {t_role} specializing in {skills_str}, I focus on building reliable, high-performance web systems and data-driven infrastructure.\n\n"
-                f"{proof_text}"
-                f"Given {task['company_name']}'s engineering focus, I would love to bring my technical experience to your team. "
-                f"I have shared my resume for your consideration{resume_ref}. Are you currently hiring for {t_role} roles, or open to considering my profile for upcoming engineering needs?\n\n"
-                f"Best regards,\n"
-                f"{c_name_clean}"
-            )
 
         matched_meta = {
             "skills": pitch_data.get("matched_skills", []),
