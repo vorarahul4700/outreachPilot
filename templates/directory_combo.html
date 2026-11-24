@@ -2,12 +2,12 @@
 {% import "macros/ui.html" as ui %}
 {% set page_css = ["directory.css"] %}
 {% set nav_cta_href = "/app?city=" ~ (city_name | urlencode) ~ "&tech=" ~ (tech_name | urlencode) %}
-{% set nav_cta_label = "Pitch These Leads" %}
+{% set nav_cta_label = "Apply to These Companies" %}
 
 {% block title %}Top {{ tech_name }} Companies &amp; Specialists in {{ city_name }} (2026 Directory) | OutreachPilot{% endblock %}
 
 {% block meta %}
-  <meta name="description" content="Explore top-rated {{ tech_name }} companies and specialists in {{ city_name }}, India. Verified business profiles, client reviews, Google ratings, and direct contact availability."/>
+  <meta name="description" content="Explore top-rated {{ tech_name }} companies and specialists in {{ city_name }}, India. Company profiles, Google ratings and public careers contacts for job seekers."/>
   <link rel="canonical" href="{{ canonical_url }}"/>
   <meta property="og:type" content="website"/>
   <meta property="og:url" content="{{ canonical_url }}"/>
@@ -50,7 +50,7 @@
           A directory of verified {{ tech_name }} companies and specialized firms in {{ city_name }}. Features verified operational capabilities, direct contacts, customer reviews, and local Google ratings.
         </p>
       <div class="hero-actions reveal" style="--d:.15s">
-        <a href="/app?city={{ city_name | urlencode }}&tech={{ tech_name | urlencode }}" class="btn btn-primary"><span class="material-symbols-outlined" aria-hidden="true">send</span><span>Pitch These Leads</span></a>
+        <a href="/app?city={{ city_name | urlencode }}&tech={{ tech_name | urlencode }}" class="btn btn-primary"><span class="material-symbols-outlined" aria-hidden="true">send</span><span>Apply to These Companies</span></a>
         <a href="/directory/tech/{{ tech_slug }}" class="btn btn-secondary">All {{ tech_name }} companies</a>
       </div>
     </div>
@@ -146,7 +146,7 @@
 
           <div class="co-actions">
             <a href="/company/{{ c.slug }}" class="btn btn-secondary btn-sm"><span>View profile</span></a>
-            <a href="/app?action=pitch&company_id={{ c.id }}&company_name={{ c.name | urlencode }}" class="btn btn-primary btn-sm"><span class="material-symbols-outlined" aria-hidden="true">send</span><span>Write a pitch</span></a>
+            <a href="/app?action=pitch&company_id={{ c.id }}&company_name={{ c.name | urlencode }}" class="btn btn-primary btn-sm"><span class="material-symbols-outlined" aria-hidden="true">send</span><span>Apply</span></a>
           </div>
         </article>
       </li>

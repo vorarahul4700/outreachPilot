@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% set page_css = ["directory.css"] %}
 {% set nav_cta_href = "/app?action=pitch&company_id=" ~ company.id ~ "&company_name=" ~ (company.name | urlencode) %}
-{% set nav_cta_label = "Write a pitch" %}
+{% set nav_cta_label = "Write an application" %}
 
 {% block title %}{{ company.name }}{% if company.city %} - {{ company.city }}{% endif %} | Company profile | OutreachPilot{% endblock %}
 
@@ -69,7 +69,7 @@
         </div>
       </div>
       <div class="profile-cta">
-        <a href="{{ pitch_url }}" class="btn btn-primary"><span class="material-symbols-outlined" aria-hidden="true">edit_note</span><span>Write a pitch</span></a>
+        <a href="{{ pitch_url }}" class="btn btn-primary"><span class="material-symbols-outlined" aria-hidden="true">edit_note</span><span>Write an application</span></a>
         {% if company.website_url %}
         <a href="{{ company.website_url }}" target="_blank" rel="nofollow noopener noreferrer" class="btn btn-secondary"><span>Visit website</span><span class="material-symbols-outlined" aria-hidden="true">open_in_new</span></a>
         {% endif %}
@@ -136,9 +136,9 @@
           <h2 id="empty-h">Not researched yet</h2>
           <p>
             We have not read this company's website yet, so there is no summary, service list or tech stack here.
-            The details on this page come from its public Google listing. When you write a pitch, OutreachPilot researches the company first.
+            The details on this page come from its public Google listing. When you write an application, OutreachPilot reads the company website first.
           </p>
-          <a href="{{ pitch_url }}" class="btn btn-primary"><span class="material-symbols-outlined" aria-hidden="true">edit_note</span><span>Research and write a pitch</span></a>
+          <a href="{{ pitch_url }}" class="btn btn-primary"><span class="material-symbols-outlined" aria-hidden="true">edit_note</span><span>Research and write an application</span></a>
         </section>
       {% endif %}
     </div>
@@ -162,7 +162,7 @@
           <div><dt>Contact emails</dt><dd>{% if company.emails_count %}{{ company.emails_count }} found{% else %}None found yet{% endif %}</dd></div>
           <div><dt>Website research</dt><dd>{% if has_research %}Done{% else %}Not yet{% endif %}</dd></div>
         </dl>
-        <a href="{{ pitch_url }}" class="btn btn-primary btn-block"><span class="material-symbols-outlined" aria-hidden="true">edit_note</span><span>Write a pitch</span></a>
+        <a href="{{ pitch_url }}" class="btn btn-primary btn-block"><span class="material-symbols-outlined" aria-hidden="true">edit_note</span><span>Write an application</span></a>
       </section>
     </aside>
   </div>
