@@ -2945,7 +2945,7 @@ document.addEventListener("DOMContentLoaded", () => {
         currentPitchData = data;
         currentPitchId = data.pitch_id;
         currentPitchTargetEmail = (data.target_email || "").trim();
-        modalCompanyName.textContent = `Personalized Outreach for ${data.company_name}`;
+        modalCompanyName.textContent = `Job application for ${data.company_name}`;
         if (currentPitchTargetEmail) {
           modalTargetEmail.innerHTML = `<span class="em">${escapeHTML(currentPitchTargetEmail)}</span>`;
         } else {
