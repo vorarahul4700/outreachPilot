@@ -1372,12 +1372,19 @@ def get_nearby_companies(db: Session, city: str | None, exclude_id: int, limit: 
 
 # --- GEO Generation: /robots.txt, /llms.txt, /llms-full.txt ---
 
+THROTTLED_BOTS = ["ShapBot"]  # bots that sent unwanted traffic; blocked in Cloudflare if they ignore this
+
+
 def generate_robots_txt(base_url: str) -> str:
     """
     Generates an AI-friendly, SEO-optimized robots.txt.
     Explicitly welcomes major AI search engines and search crawlers,
     while safeguarding sensitive internal application/auth routes.
     """
+    # A named group replaces the * group for that bot, so it repeats the disallows.
+    throttled = "".join(
+        f"User-agent: {bot}\nCrawl-delay: 15\nDisallow: /api/\nDisallow: /auth/\n\n" for bot in THROTTLED_BOTS
+    )
     return f"""# OutreachPilot Autonomous Company Directory & Recruiter Outreach Platform
 # Optimized for Web Search, Generative Search Engines (GEO) & Answer Engines (AEO)
 
@@ -1422,7 +1429,8 @@ Allow: /
 User-agent: Bytespider
 Allow: /
 
-# Canonical XML Sitemap
+# Bots that sent too many requests: slow down (15 s between requests)
+{throttled}# Canonical XML Sitemap
 Sitemap: {base_url}/sitemap.xml
 """
 
