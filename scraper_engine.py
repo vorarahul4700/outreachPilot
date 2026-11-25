@@ -716,50 +716,27 @@ class GoogleScraper:
         """
         Executes the scraping process.
         Attempts authenticated Fast-Path HTTP first, automatically falling back to Chromium browser.
-        With use_maps, also scrolls the full Google Maps feed and merges new domains in.
+        With use_maps, scrapes only the full Google Maps feed (Google Local is skipped).
         """
         self.is_running = True
         self.error = None
         self.results = []
         self.progress = 5
 
-        local_res: list[dict[str, Any]] = []
-        blocked = None
-        if not (direct_url and "google.com/maps" in direct_url):
-            try:
-                local_res = self._scrape_local(keyword, city, direct_url, max_pages, gl, hl)
-            except GoogleBlockedException as gbe:
-                if not use_maps:
-                    raise
-                blocked = gbe
-        if not use_maps:
-            return local_res
+        if not use_maps and not (direct_url and "google.com/maps" in direct_url):
+            return self._scrape_local(keyword, city, direct_url, max_pages, gl, hl)
 
-        maps_res: list[dict[str, Any]] = []
         try:
-            maps_res = self._scrape_maps(keyword, city, direct_url, hl)
+            self.results = self._scrape_maps(keyword, city, direct_url, hl)
         except GoogleBlockedException as gbe:
-            blocked = blocked or gbe
+            self.error = str(gbe)
+            raise
         except Exception as me:
-            self._log(f"Google Maps feed notice: {me}", 95)
-
-        merged = list(local_res)
-        seen = {(r.get("domain") or "").lower() for r in merged}
-        for item in maps_res:
-            if item["domain"] not in seen:
-                seen.add(item["domain"])
-                merged.append(item)
-
-        if not merged and blocked:
-            raise blocked
-        if blocked:
-            # One source got through, so this run is not a rate-limit failure
-            self.error = None
-        self._log(
-            f"Scraping completed! {len(local_res)} from Google Local + {len(merged) - len(local_res)} new from Google Maps = {len(merged)} companies.",
-            100,
-        )
-        self.results = merged
+            # Chrome crash etc.: cloud_worker sees the error and re-queues the job
+            self.error = str(me)
+            self._log(f"Google Maps feed error: {me}", 100)
+            return self.results
+        self._log(f"Scraping completed! {len(self.results)} companies from Google Maps.", 100)
         return self.results
 
     def _scrape_local(self, keyword, city, direct_url, max_pages, gl, hl) -> list[dict[str, Any]]:

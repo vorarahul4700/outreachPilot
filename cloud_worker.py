@@ -137,7 +137,7 @@ def execute_scout_job(job_id: int, auto_enrich: bool = False) -> bool:
             raise GoogleBlockedException(scraper.error or "Google verification challenge (sorry/index) active on runner IP")
 
         total_scraped = len(scraped_raw)
-        log_job(db, job_id, f"Google Local + Google Maps search complete. Located {total_scraped} candidate business locations.", 45)
+        log_job(db, job_id, f"Google Maps search complete. Located {total_scraped} candidate business locations.", 45)
 
         # Filter genuine company listings
         valid_items = []
