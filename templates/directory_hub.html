@@ -8,6 +8,7 @@
 
 {% block meta %}
   <meta name="description" content="{{ meta_description }}"/>
+  {% if meta_keywords %}<meta name="keywords" content="{{ meta_keywords }}"/>{% endif %}
   <link rel="canonical" href="{{ canonical_url }}"/>
   <meta property="og:type" content="website"/>
   <meta property="og:url" content="{{ canonical_url }}"/>

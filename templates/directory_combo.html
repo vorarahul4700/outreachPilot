@@ -4,19 +4,20 @@
 {% set nav_cta_href = "/app?city=" ~ (city_name | urlencode) ~ "&tech=" ~ (tech_name | urlencode) %}
 {% set nav_cta_label = "Apply to These Companies" %}
 
-{% block title %}Top {{ tech_name }} Companies &amp; Specialists in {{ city_name }} (2026 Directory) | OutreachPilot{% endblock %}
+{% block title %}{{ tech_name }} Companies in {{ city_name }} to Apply To ({{ seo_year }}): Jobs &amp; Careers Emails | OutreachPilot{% endblock %}
 
 {% block meta %}
-  <meta name="description" content="Explore top-rated {{ tech_name }} companies and specialists in {{ city_name }}, India. Company profiles, Google ratings and public careers contacts for job seekers."/>
+  <meta name="description" content="Looking for {{ tech_name }} jobs in {{ city_name }}? See {{ total_companies }} {{ tech_name }} companies in {{ city_name }} you can apply to directly, with the careers or contact email each one publishes. For freshers and experienced job seekers."/>
+  {% if meta_keywords %}<meta name="keywords" content="{{ meta_keywords }}"/>{% endif %}
   <link rel="canonical" href="{{ canonical_url }}"/>
   <meta property="og:type" content="website"/>
   <meta property="og:url" content="{{ canonical_url }}"/>
-  <meta property="og:title" content="Top {{ tech_name }} Companies &amp; Specialists in {{ city_name }} [2026 Directory]"/>
-  <meta property="og:description" content="Explore verified {{ tech_name }} companies to work for in {{ city_name }}, India."/>
+  <meta property="og:title" content="{{ tech_name }} Companies in {{ city_name }} to Apply To ({{ seo_year }})"/>
+  <meta property="og:description" content="{{ tech_name }} companies in {{ city_name }}, India, you can send your job application to directly."/>
   <meta property="og:site_name" content="OutreachPilot"/>
   <meta name="twitter:card" content="summary_large_image"/>
-  <meta name="twitter:title" content="Top {{ tech_name }} Companies in {{ city_name }}"/>
-  <meta name="twitter:description" content="Verified {{ tech_name }} companies and specialists in {{ city_name }}."/>
+  <meta name="twitter:title" content="{{ tech_name }} Companies in {{ city_name }} to Apply To ({{ seo_year }})"/>
+  <meta name="twitter:description" content="{{ tech_name }} jobs in {{ city_name }}: apply directly to companies by email."/>
   <script type="application/ld+json">
   {{ json_ld_schema | safe }}
   </script>
@@ -44,10 +45,10 @@
     <div class="hub-copy">
       <span class="hero-badge reveal"><span class="dot dot-live"></span><span>{{ city_name }} company directory</span></span>
       <h1 class="h1">
-          Top {{ tech_name }} Companies &amp; Specialists in {{ city_name }}
+          {{ tech_name }} Companies in {{ city_name }} You Can Apply To
         </h1>
       <p class="lead">
-          A directory of verified {{ tech_name }} companies and specialized firms in {{ city_name }}. Features verified operational capabilities, direct contacts, customer reviews, and local Google ratings.
+          {{ total_companies }} {{ tech_name }} companies in {{ city_name }}, with what each one does, its Google rating and the email it publishes for job applications. Send your resume directly, as a fresher or an experienced professional.
         </p>
       <div class="hero-actions reveal" style="--d:.15s">
         <a href="/app?city={{ city_name | urlencode }}&tech={{ tech_name | urlencode }}" class="btn btn-primary"><span class="material-symbols-outlined" aria-hidden="true">send</span><span>Apply to These Companies</span></a>
