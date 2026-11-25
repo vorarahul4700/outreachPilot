@@ -192,7 +192,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const companiesPageTotalBottom = document.getElementById("companies-page-total-bottom");
   const companiesPageButtonsBottom = document.getElementById("companies-page-buttons-bottom");
   let companiesCurrentPage = 1;
-  let companiesPerPage = 24; // multiples of 6 keep 2- and 3-column grids full
+  let companiesPerPage = 30; // multiples of 15 fill 3- and 5-column card grids
   let currentFilteredCompanies = [];
   const companyDetailCache = new Map();
 
@@ -203,7 +203,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const scoutPerPageSelect = document.getElementById("scout-per-page");
   const scoutPageButtons = document.getElementById("scout-page-buttons");
   let scoutCurrentPage = 1;
-  let scoutPerPage = 24;
+  let scoutPerPage = 30;
   let currentScoutList = [];
   let currentScoutQueryLabel = "";
   let liveScrapedResults = [];
@@ -213,7 +213,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let allOutreachCompanies = [];
   let isOutreachLoading = false;
   let outreachCurrentPage = 1;
-  let outreachPerPage = 24;
+  let outreachPerPage = 30;
 
   if (btnToggleLogs) {
     btnToggleLogs.addEventListener("click", () => {
@@ -885,7 +885,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const ddCompaniesPerPage = initCustomDropdown({
     containerId: "dropdown-companies-per-page",
     inputId: "companies-per-page",
-    defaultLabel: "24",
+    defaultLabel: "30",
     onSelect: (val) => {
       companiesPerPage = parseInt(val, 10);
       companiesCurrentPage = 1;
@@ -894,18 +894,20 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   if (ddCompaniesPerPage) {
     ddCompaniesPerPage.setOptions([
-      { value: "12", label: "12" },
-      { value: "24", label: "24" },
-      { value: "48", label: "48" },
-      { value: "96", label: "96" },
-      { value: "192", label: "192" }
+      { value: "15", label: "15" },
+      { value: "30", label: "30" },
+      { value: "45", label: "45" },
+      { value: "60", label: "60" },
+      { value: "90", label: "90" },
+      { value: "120", label: "120" },
+      { value: "180", label: "180" }
     ]);
   }
 
   const ddOutreachPerPage = initCustomDropdown({
     containerId: "dropdown-outreach-per-page",
     inputId: "outreach-per-page",
-    defaultLabel: "24",
+    defaultLabel: "30",
     onSelect: (val) => {
       outreachPerPage = parseInt(val, 10);
       outreachCurrentPage = 1;
@@ -914,18 +916,20 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   if (ddOutreachPerPage) {
     ddOutreachPerPage.setOptions([
-      { value: "12", label: "12" },
-      { value: "24", label: "24" },
-      { value: "48", label: "48" },
-      { value: "96", label: "96" },
-      { value: "192", label: "192" }
+      { value: "15", label: "15" },
+      { value: "30", label: "30" },
+      { value: "45", label: "45" },
+      { value: "60", label: "60" },
+      { value: "90", label: "90" },
+      { value: "120", label: "120" },
+      { value: "180", label: "180" }
     ]);
   }
 
   const ddScoutPerPage = initCustomDropdown({
     containerId: "dropdown-scout-per-page",
     inputId: "scout-per-page",
-    defaultLabel: "24",
+    defaultLabel: "30",
     onSelect: (val) => {
       scoutPerPage = parseInt(val, 10);
       scoutCurrentPage = 1;
@@ -934,11 +938,13 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   if (ddScoutPerPage) {
     ddScoutPerPage.setOptions([
-      { value: "12", label: "12" },
-      { value: "24", label: "24" },
-      { value: "48", label: "48" },
-      { value: "96", label: "96" },
-      { value: "192", label: "192" }
+      { value: "15", label: "15" },
+      { value: "30", label: "30" },
+      { value: "45", label: "45" },
+      { value: "60", label: "60" },
+      { value: "90", label: "90" },
+      { value: "120", label: "120" },
+      { value: "180", label: "180" }
     ]);
   }
 
@@ -1214,7 +1220,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const selectedCity = (filterCitySelect?.value || "").trim();
       const selectedSort = (sortSelect?.value || "newest").trim();
       const statusParam = activeMetricFilter || "all";
-      const pageSize = (companiesPerPage !== undefined && companiesPerPage !== null) ? companiesPerPage : 24;
+      const pageSize = (companiesPerPage !== undefined && companiesPerPage !== null) ? companiesPerPage : 30;
 
       const params = new URLSearchParams({
         page: companiesCurrentPage,
@@ -3182,7 +3188,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const q = (outreachSearchInput?.value || outreachSearchQuery || "").trim();
       const selectedTech = (outreachTechSelect?.value || outreachSelectedTech || "").trim();
       const selectedCity = (outreachCitySelect?.value || outreachSelectedCity || "").trim();
-      const pageSize = outreachPerPage > 0 ? outreachPerPage : 24;
+      const pageSize = outreachPerPage > 0 ? outreachPerPage : 30;
 
       const params = new URLSearchParams({
         page: outreachCurrentPage,

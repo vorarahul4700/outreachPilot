@@ -2219,7 +2219,7 @@ def get_companies_filters(
 def get_companies(
     request: Request,
     page: int = 1,
-    page_size: int = 24,
+    page_size: int = 30,
     search: str = "",
     tech: str = "",
     city: str = "",
@@ -2385,11 +2385,11 @@ def get_companies(
             cur_page = 1
             page_size = total_count
         else:
-            # Multiples of 6 (12/24/48/96/192) fill 2- and 3-column card grids evenly;
+            # Multiples of 15 (15..180) fill 3- and 5-column card grids evenly;
             # the older sizes stay accepted so existing links keep working.
-            ALLOWED_PAGE_SIZES = {12, 24, 48, 96, 192, 10, 20, 50, 100, 200, 500, 1000}
+            ALLOWED_PAGE_SIZES = {15, 30, 45, 60, 90, 120, 180, 12, 24, 48, 96, 192, 10, 20, 50, 100, 200, 500, 1000}
             if page_size not in ALLOWED_PAGE_SIZES:
-                page_size = 24
+                page_size = 30
 
             total_pages = max(1, (total_count + page_size - 1) // page_size) if total_count > 0 else 1
             cur_page = max(1, min(page, total_pages)) if total_count > 0 else 1
