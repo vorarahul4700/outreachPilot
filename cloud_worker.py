@@ -21,6 +21,7 @@ import os
 import sys
 import time
 from datetime import datetime
+
 from sqlalchemy import func
 
 # Prevent Windows console UnicodeEncodeError ('charmap' codec) on checkmarks or emojis
@@ -31,9 +32,13 @@ if hasattr(sys.stdout, "reconfigure"):
     except Exception:
         pass
 
-from db import Company, ScoutJob, SessionLocal
-from scraper_engine import GoogleBlockedException, GoogleScraper, is_genuine_company_domain
 from clean_db_company_names import clean_company_name
+from db import Company, ScoutJob, SessionLocal
+from scraper_engine import (
+    GoogleBlockedException,
+    GoogleScraper,
+    is_genuine_company_domain,
+)
 
 # Empty or errored searches go back to the queue this many times before the job is closed.
 MAX_REQUEUES = 3
@@ -123,7 +128,8 @@ def execute_scout_job(job_id: int, auto_enrich: bool = False) -> bool:
             city=city,
             max_pages=0,
             gl="in",
-            hl="en"
+            hl="en",
+            use_maps=True
         )
 
         # Defense-in-depth: if scraper recorded an anti-bot/rate-limit checkpoint or was blocked
@@ -131,7 +137,7 @@ def execute_scout_job(job_id: int, auto_enrich: bool = False) -> bool:
             raise GoogleBlockedException(scraper.error or "Google verification challenge (sorry/index) active on runner IP")
 
         total_scraped = len(scraped_raw)
-        log_job(db, job_id, f"Google Local search complete across all pages. Located {total_scraped} candidate business locations.", 45)
+        log_job(db, job_id, f"Google Local + Google Maps search complete. Located {total_scraped} candidate business locations.", 45)
 
         # Filter genuine company listings
         valid_items = []
@@ -486,17 +492,22 @@ def run_queue_consumer(
     Continuously claims and processes QUEUED jobs from Neon DB until batch_size
     is reached or no QUEUED jobs remain.
     """
-    print(f"\n=======================================================")
+    print("\n=======================================================")
     print(f"[Runner-{runner_id}] OutreachPilot Autonomous Queue Consumer Started")
     print(f"  - Batch Budget : {batch_size} jobs")
     print(f"  - Domain Filter: {domain_filter or 'All Queued Domains'}")
     print(f"  - City Filter  : {city_filter or 'All Indian Cities'}")
-    print(f"  - Pagination   : All Pages Mode (No max page limit)")
-    print(f"=======================================================\n")
+    print("  - Pagination   : All Pages Mode (No max page limit)")
+    print("=======================================================\n")
 
     processed_count = 0
+    # Stop claiming new jobs before the 150-min Actions timeout kills a job mid-run and strands it as RUNNING
+    deadline = time.time() + 110 * 60
 
     while processed_count < batch_size:
+        if time.time() > deadline:
+            print(f"[Runner-{runner_id}] Time budget used; leaving remaining jobs QUEUED for the next run.")
+            break
         job_id = claim_next_queued_job(domain_filter=domain_filter, city_filter=city_filter)
         if not job_id:
             print(f"[Runner-{runner_id}] No more QUEUED jobs available in Neon DB matching criteria.")
@@ -521,9 +532,9 @@ def run_queue_consumer(
         # Brief pause between jobs to be gentle on Google and connection pools
         time.sleep(2)
 
-    print(f"\n=======================================================")
+    print("\n=======================================================")
     print(f"[Runner-{runner_id}] Queue Consumer batch completed: Processed {processed_count} jobs.")
-    print(f"=======================================================\n")
+    print("=======================================================\n")
 
 
 def run_single_worker(job_id: int, keyword: str, city: str, auto_enrich: bool = False):

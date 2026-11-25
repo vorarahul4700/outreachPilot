@@ -334,6 +334,59 @@ def extract_card_website_and_goto(card: Any) -> tuple[str, str]:
     return direct_url, goto_url
 
 
+def parse_maps_feed(page_source: str) -> list[dict[str, Any]]:
+    """Parse every place card in a Google Maps search results feed (div[role=feed] > div[role=article])."""
+    soup = BeautifulSoup(page_source, "html.parser")
+    items = []
+    for card in soup.select('div[role="article"]'):
+        link = card.select_one("a.hfpxzc")
+        name = ((link.get("aria-label") if link else "") or "").strip()
+        if not name:
+            heading = card.select_one(".qBF1Pd")
+            name = heading.get_text(strip=True) if heading else ""
+        if not name:
+            continue
+
+        website = ""
+        web_a = card.select_one('a[data-value="Website"]') or card.select_one('a[aria-label^="Visit"]')
+        if web_a and web_a.get("href"):
+            website = web_a["href"].strip()
+            # Maps sometimes wraps outbound links as /url?q=<target>
+            if "/url?" in website:
+                website = (urllib.parse.parse_qs(urllib.parse.urlparse(website).query).get("q") or [""])[0]
+
+        rating_el = card.select_one("span.MW4etd")
+        try:
+            rating = float(rating_el.get_text(strip=True)) if rating_el else 0.0
+        except ValueError:
+            rating = 0.0
+        reviews_el = card.select_one("span.UY7F9")
+        reviews_count = int(re.sub(r"[^\d]", "", reviews_el.get_text()) or 0) if reviews_el else 0
+
+        phone_el = card.select_one("span.UsdlK")
+        phone = phone_el.get_text(strip=True) if phone_el else ""
+
+        # First detail row reads "<category> · <address>"; icon spans add empty parts
+        address = ""
+        rows = card.select("div.W4Efsd div.W4Efsd")
+        if rows:
+            parts = [p.strip() for p in rows[0].get_text(" ", strip=True).split("·") if p.strip()]
+            if len(parts) > 1:
+                address = parts[-1]
+
+        items.append({
+            "name": name,
+            "website_url": website,
+            "location_url": (link.get("href") or "").strip() if link else "",
+            "_goto_url": "",
+            "rating": rating,
+            "reviews_count": reviews_count,
+            "address": address,
+            "phone": phone,
+        })
+    return items
+
+
 class GoogleScraper:
     """
     High-performance Google Local Scraper engine with explicit DOM synchronization
@@ -657,17 +710,59 @@ class GoogleScraper:
         direct_url: str = "",
         max_pages: int = 0,
         gl: str = "in",
-        hl: str = "en"
+        hl: str = "en",
+        use_maps: bool = False
     ) -> list[dict[str, Any]]:
         """
         Executes the scraping process.
         Attempts authenticated Fast-Path HTTP first, automatically falling back to Chromium browser.
+        With use_maps, also scrolls the full Google Maps feed and merges new domains in.
         """
         self.is_running = True
         self.error = None
         self.results = []
         self.progress = 5
 
+        local_res: list[dict[str, Any]] = []
+        blocked = None
+        if not (direct_url and "google.com/maps" in direct_url):
+            try:
+                local_res = self._scrape_local(keyword, city, direct_url, max_pages, gl, hl)
+            except GoogleBlockedException as gbe:
+                if not use_maps:
+                    raise
+                blocked = gbe
+        if not use_maps:
+            return local_res
+
+        maps_res: list[dict[str, Any]] = []
+        try:
+            maps_res = self._scrape_maps(keyword, city, direct_url, hl)
+        except GoogleBlockedException as gbe:
+            blocked = blocked or gbe
+        except Exception as me:
+            self._log(f"Google Maps feed notice: {me}", 95)
+
+        merged = list(local_res)
+        seen = {(r.get("domain") or "").lower() for r in merged}
+        for item in maps_res:
+            if item["domain"] not in seen:
+                seen.add(item["domain"])
+                merged.append(item)
+
+        if not merged and blocked:
+            raise blocked
+        if blocked:
+            # One source got through, so this run is not a rate-limit failure
+            self.error = None
+        self._log(
+            f"Scraping completed! {len(local_res)} from Google Local + {len(merged) - len(local_res)} new from Google Maps = {len(merged)} companies.",
+            100,
+        )
+        self.results = merged
+        return self.results
+
+    def _scrape_local(self, keyword, city, direct_url, max_pages, gl, hl) -> list[dict[str, Any]]:
         # 1. Attempt Fast-Path HTTP Scraping with Anti-Abuse Cookies
         try:
             http_res = self._scrape_http(
@@ -697,6 +792,182 @@ class GoogleScraper:
             hl=hl
         )
 
+    def _scroll_maps_feed(self, driver) -> tuple[list[dict[str, Any]], bool]:
+        """Scroll the open Maps results feed until the end-of-list marker, then parse it."""
+        scroll_js = """
+            const feed = document.querySelector('div[role="feed"]');
+            if (!feed) return [-1, false];
+            // Small upward nudge first: Maps sometimes only loads more after a fresh scroll event
+            if (arguments[0]) feed.scrollTop = Math.max(0, feed.scrollTop - 400);
+            feed.scrollTop = feed.scrollHeight;
+            const end = !!document.querySelector('span.HlvSq')
+                || feed.innerText.includes("reached the end of the list");
+            return [feed.querySelectorAll('div[role="article"]').length, end];
+        """
+        last, stale, reached_end = -1, 0, False
+        # Hard cap ~12 min; one Maps search tops out at about 120 places well before that
+        for _ in range(500):
+            count, reached_end = driver.execute_script(scroll_js, stale > 0)
+            if reached_end:
+                break
+            stale = stale + 1 if count == last else 0
+            # No feed at all (single place page) or no new cards for ~36s: stop
+            if stale >= 25 or (count == -1 and stale >= 6):
+                break
+            last = count
+            time.sleep(1.4)
+        return parse_maps_feed(driver.page_source), reached_end
+
+    def _open_maps(self, driver, url: str) -> None:
+        driver.get(url)
+        time.sleep(3.0)
+        curr = (driver.current_url or "").lower()
+        if "consent.google.com" in curr:
+            for sel in ['button[aria-label^="Accept all"]', "form[action*='consent'] button"]:
+                try:
+                    if driver.is_element_visible(sel):
+                        driver.click(sel, timeout=2)
+                        time.sleep(2.0)
+                        break
+                except Exception:
+                    pass
+            curr = (driver.current_url or "").lower()
+        if "/sorry/" in curr:
+            raise GoogleBlockedException(f"Google Maps verification challenge active ({curr}).")
+
+    def _scrape_maps(self, keyword: str = "", city: str = "", direct_url: str = "", hl: str = "en") -> list[dict[str, Any]]:
+        """
+        Open a Google Maps search and scroll the feed to "You've reached the end of the list.".
+        Maps stops at about 120 places per search, so when a search hits that cap the same
+        query is re-run on a 3x3 grid around the map centre to reach the rest.
+        """
+        if direct_url and "google.com/maps" in direct_url:
+            url = direct_url
+            m = re.search(r"(https://www\.google\.[^/]+/maps/search/[^/?]+)", direct_url)
+            base = m.group(1) if m else ""
+        else:
+            query = format_local_query(keyword, city)
+            if not query:
+                return []
+            base = f"https://www.google.com/maps/search/{urllib.parse.quote_plus(query)}"
+            url = f"{base}?hl={hl}"
+
+        self._log(f"Opening Google Maps feed: {url}", 92)
+        driver = self._open_driver()
+        items: list[dict[str, Any]] = []
+        try:
+            self._open_maps(driver, url)
+            found, reached_end = self._scroll_maps_feed(driver)
+            items.extend(found)
+            self._log(f"Google Maps feed: {len(found)} places ({'end of list' if reached_end else 'feed stopped growing'}).", 93)
+
+            centre = re.search(r"@(-?\d+\.\d+),(-?\d+\.\d+)", driver.current_url or "")
+            if base and centre and len(found) >= 100:
+                lat, lng = float(centre.group(1)), float(centre.group(2))
+                step = 0.06  # ~6.5 km; 3x3 cells at zoom 13 cover a large Indian city
+                for dy in (-step, 0, step):
+                    for dx in (-step, 0, step):
+                        if dy == 0 and dx == 0:
+                            continue
+                        cell = f"{base}/@{lat + dy:.5f},{lng + dx:.5f},13z?hl={hl}"
+                        try:
+                            self._open_maps(driver, cell)
+                            cell_items, _ = self._scroll_maps_feed(driver)
+                        except GoogleBlockedException:
+                            raise
+                        except Exception as ce:
+                            self._log(f"Maps grid cell notice: {ce}", 94)
+                            continue
+                        items.extend(cell_items)
+                        self._log(f"Maps grid cell {lat + dy:.3f},{lng + dx:.3f}: {len(cell_items)} places (running total {len(items)}).", 94)
+        finally:
+            try:
+                driver.quit()
+            except Exception:
+                pass
+
+        genuine, seen = [], set()
+        for item in items:
+            dom = self._extract_domain_from_url(item["website_url"])
+            if dom and dom not in seen and is_genuine_company_domain(dom):
+                seen.add(dom)
+                item["domain"] = dom
+                genuine.append(item)
+        self._log(f"Google Maps total: {len(genuine)} unique companies with websites.", 95)
+        return genuine
+
+    def _open_driver(self):
+        """Start the UC Chromium driver and pre-load Google session cookies."""
+        driver = None
+        tmp_profile_dir = None
+        # Create a unique, isolated user profile directory to avoid Windows file locks [WinError 32]
+        for attempt in range(2):
+            try:
+                chrome_bin_path = None
+                for candidate in (
+                    "/opt/render/project/.render/chrome/opt/google/chrome/google-chrome",
+                    "/opt/render/project/.render/chrome/opt/google/chrome/chrome",
+                    "/usr/bin/google-chrome-stable",
+                    "/usr/bin/google-chrome",
+                    "/usr/bin/chromium",
+                    "/usr/bin/chromium-browser"
+                ):
+                    if os.path.exists(candidate):
+                        chrome_bin_path = candidate
+                        chrome_dir = os.path.dirname(candidate)
+                        if chrome_dir not in os.environ.get("PATH", ""):
+                            os.environ["PATH"] = f"{chrome_dir}:{os.environ.get('PATH', '')}"
+                        break
+
+                has_display = bool(os.environ.get("DISPLAY"))
+                # When running under Xvfb (xvfb-run on GitHub Actions or Linux display),
+                # run with headless=False in the virtual desktop with UC mode enabled.
+                # This completely avoids navigator.webdriver=true and Google bot challenges.
+                driver_kwargs = {
+                    "uc": True,
+                    "headless": False if has_display else self.headless,
+                    "user_data_dir": tmp_profile_dir,
+                    "disable_gpu": True,
+                    "no_sandbox": True,
+                    "chromium_arg": "--disable-dev-shm-usage,--disable-software-rasterizer,--no-first-run,--start-maximized,--window-size=1920,1080,--disable-blink-features=AutomationControlled",
+                }
+                if chrome_bin_path:
+                    driver_kwargs["binary_location"] = chrome_bin_path
+
+                driver = Driver(**driver_kwargs)
+                break
+            except Exception as init_err:
+                if tmp_profile_dir and os.path.exists(tmp_profile_dir):
+                    shutil.rmtree(tmp_profile_dir, ignore_errors=True)
+                if attempt == 1:
+                    raise init_err
+                time.sleep(1.2)
+
+        # Pre-inject anti-abuse Google session cookies into Chromium browser session
+        try:
+            active_cookie = (os.environ.get("GOOGLE_COOKIE") or "").strip() or VERIFIED_GOOGLE_COOKIE
+            if active_cookie:
+                driver.get("https://www.google.com/robots.txt")
+                time.sleep(0.4)
+                for c_part in active_cookie.split(";"):
+                    if "=" in c_part:
+                        c_k, c_v = c_part.split("=", 1)
+                        c_k, c_v = c_k.strip(), c_v.strip()
+                        if c_k and c_v:
+                            try:
+                                driver.add_cookie({
+                                    "name": c_k,
+                                    "value": c_v,
+                                    "domain": ".google.com",
+                                    "path": "/",
+                                })
+                            except Exception:
+                                pass
+        except Exception:
+            pass
+
+        return driver
+
     def _scrape_browser(
         self,
         keyword: str = "",
@@ -714,72 +985,7 @@ class GoogleScraper:
         tmp_profile_dir = None
 
         try:
-            # Create a unique, isolated user profile directory to avoid Windows file locks [WinError 32]
-            for attempt in range(2):
-                try:
-                    chrome_bin_path = None
-                    for candidate in (
-                        "/opt/render/project/.render/chrome/opt/google/chrome/google-chrome",
-                        "/opt/render/project/.render/chrome/opt/google/chrome/chrome",
-                        "/usr/bin/google-chrome-stable",
-                        "/usr/bin/google-chrome",
-                        "/usr/bin/chromium",
-                        "/usr/bin/chromium-browser"
-                    ):
-                        if os.path.exists(candidate):
-                            chrome_bin_path = candidate
-                            chrome_dir = os.path.dirname(candidate)
-                            if chrome_dir not in os.environ.get("PATH", ""):
-                                os.environ["PATH"] = f"{chrome_dir}:{os.environ.get('PATH', '')}"
-                            break
-
-                    has_display = bool(os.environ.get("DISPLAY"))
-                    # When running under Xvfb (xvfb-run on GitHub Actions or Linux display),
-                    # run with headless=False in the virtual desktop with UC mode enabled.
-                    # This completely avoids navigator.webdriver=true and Google bot challenges.
-                    driver_kwargs = {
-                        "uc": True,
-                        "headless": False if has_display else self.headless,
-                        "user_data_dir": tmp_profile_dir,
-                        "disable_gpu": True,
-                        "no_sandbox": True,
-                        "chromium_arg": "--disable-dev-shm-usage,--disable-software-rasterizer,--no-first-run,--start-maximized,--window-size=1920,1080,--disable-blink-features=AutomationControlled",
-                    }
-                    if chrome_bin_path:
-                        driver_kwargs["binary_location"] = chrome_bin_path
-
-                    driver = Driver(**driver_kwargs)
-                    break
-                except Exception as init_err:
-                    if tmp_profile_dir and os.path.exists(tmp_profile_dir):
-                        shutil.rmtree(tmp_profile_dir, ignore_errors=True)
-                    if attempt == 1:
-                        raise init_err
-                    time.sleep(1.2)
-
-            # Pre-inject anti-abuse Google session cookies into Chromium browser session
-            try:
-                active_cookie = (os.environ.get("GOOGLE_COOKIE") or "").strip() or VERIFIED_GOOGLE_COOKIE
-                if active_cookie:
-                    driver.get("https://www.google.com/robots.txt")
-                    time.sleep(0.4)
-                    for c_part in active_cookie.split(";"):
-                        if "=" in c_part:
-                            c_k, c_v = c_part.split("=", 1)
-                            c_k, c_v = c_k.strip(), c_v.strip()
-                            if c_k and c_v:
-                                try:
-                                    driver.add_cookie({
-                                        "name": c_k,
-                                        "value": c_v,
-                                        "domain": ".google.com",
-                                        "path": "/",
-                                    })
-                                except Exception:
-                                    pass
-            except Exception:
-                pass
-
+            driver = self._open_driver()
             use_uc_reconnect = hasattr(driver, "uc_open_with_reconnect") and not bool(os.environ.get("GITHUB_ACTIONS"))
             self._log(f"Navigating to Google Local: {target_url}", 20)
             if use_uc_reconnect:
