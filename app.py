@@ -1386,11 +1386,11 @@ def directory_city_hub(city_slug: str, request: Request, db: Session = Depends(g
     # stays general (it used to fall back to "Software & IT").
     if dom_info:
         dom_display = dom_info["name"]
-        page_heading = f"Top {dom_display} Companies in {city_name}"
+        page_heading = f"{dom_display} Companies in {city_name} You Can Apply To"
         hub_badge = f"Verified companies in {city_name} ({dom_display})"
         companies_noun = f"{dom_display} companies"
     else:
-        page_heading = f"Top Companies in {city_name}"
+        page_heading = f"Companies in {city_name} You Can Apply To"
         hub_badge = f"Verified companies in {city_name}"
         companies_noun = "companies"
 
@@ -1428,9 +1428,13 @@ def directory_city_hub(city_slug: str, request: Request, db: Session = Depends(g
     faq_schema = seo_engine.build_faq_schema(faqs)
     combined_schema = json.dumps([bc_schema, itemlist_schema, faq_schema], ensure_ascii=False)
 
-    page_title = f"{page_heading} (2026 Directory)"
-    page_subtitle = f"Websites, Google ratings and contact details for {total_count:,} {companies_noun} in {city_name}, India."
-    meta_description = f"Browse {total_count:,} {companies_noun} in {city_name}, India, with their websites, Google ratings and contact details."
+    field_label = dom_info["name"] if dom_info else ""
+    page_title = (f"{field_label} " if field_label else "") + f"Companies in {city_name} to Apply To ({seo_engine.SEO_YEAR}): Jobs & Careers Emails"
+    page_subtitle = (f"{total_count:,} {companies_noun} in {city_name}, India, with what each one does, its Google rating "
+                     f"and the email it publishes for job applications. Send your resume directly, as a fresher or an experienced professional.")
+    meta_description = (f"Looking for jobs in {city_name}? Browse {total_count:,} {companies_noun} in {city_name} you can apply to directly, "
+                        f"with the careers or contact email each one publishes. For freshers and experienced job seekers.")
+    meta_keywords = seo_engine.job_seeker_keywords(city=city_name, field=field_label)
 
     response = templates.TemplateResponse(
         request=request,
@@ -1442,6 +1446,7 @@ def directory_city_hub(city_slug: str, request: Request, db: Session = Depends(g
             "page_heading": page_heading,
             "page_subtitle": page_subtitle,
             "meta_description": meta_description,
+            "meta_keywords": meta_keywords,
             "hub_name": city_name,
             "hub_badge": hub_badge,
             "workspace_url": workspace_url,
@@ -1494,9 +1499,12 @@ def directory_tech_hub(tech_slug: str, request: Request, db: Session = Depends(g
     faq_schema = seo_engine.build_faq_schema(faqs)
     combined_schema = json.dumps([bc_schema, itemlist_schema, faq_schema], ensure_ascii=False)
 
-    page_title = f"Top {tech_name} Companies to Work For in India (2026)"
-    page_subtitle = f"Directory of {total_count}+ verified {tech_name} firms and specialists across India's top commercial and technology hubs."
-    meta_description = f"Explore {total_count}+ {tech_name} companies across India you can apply to. See what each company does, its Google rating and the email it publishes for job applications."
+    page_title = f"{tech_name} Companies in India to Apply To ({seo_engine.SEO_YEAR}): Jobs & Careers Emails"
+    page_subtitle = (f"{total_count:,} {tech_name} companies across India, with what each one does, its Google rating "
+                     f"and the email it publishes for job applications.")
+    meta_description = (f"Find {tech_name} jobs in India: {total_count:,} {tech_name} companies you can apply to directly, "
+                        f"with the careers or contact email each one publishes. For freshers and experienced professionals.")
+    meta_keywords = seo_engine.job_seeker_keywords(field=tech_name)
 
     response = templates.TemplateResponse(
         request=request,
@@ -1505,9 +1513,10 @@ def directory_tech_hub(tech_slug: str, request: Request, db: Session = Depends(g
             "project_name": config.PROJECT_NAME,
             "canonical_url": canonical_url,
             "page_title": page_title,
-            "page_heading": f"Top {tech_name} Companies in India",
+            "page_heading": f"{tech_name} Companies in India You Can Apply To",
             "page_subtitle": page_subtitle,
             "meta_description": meta_description,
+            "meta_keywords": meta_keywords,
             "hub_name": tech_name,
             "hub_badge": f"Verified {tech_name} companies",
             "workspace_url": "/app?" + urllib.parse.urlencode({"tech": tech_name}),
@@ -1599,6 +1608,8 @@ def directory_companies(
                 "related_techs": related_techs,
                 "related_cities": related_cities,
                 "faqs": faqs,
+                "seo_year": seo_engine.SEO_YEAR,
+                "meta_keywords": seo_engine.job_seeker_keywords(city=city_name, field=tech_name),
                 "json_ld_schema": combined_schema
             }
         )

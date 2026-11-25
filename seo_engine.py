@@ -21,6 +21,47 @@ from collections import OrderedDict, defaultdict
 from typing import Any, Optional
 from urllib.parse import quote, urlparse
 from fastapi import Request
+
+# Year shown in search titles. Pages are refreshed for the coming hiring year.
+SEO_YEAR = 2027
+
+
+def job_seeker_keywords(city: str = "", field: str = "") -> str:
+    """Search phrases job seekers use, for the meta keywords tag. Only phrases the page answers."""
+    y = SEO_YEAR
+    where = f" in {city}" if city else " in India"
+    what = f"{field} " if field else ""
+    phrases = [
+        f"{what}companies{where}",
+        f"{what}jobs{where}",
+        f"{what}jobs{where} for freshers",
+        f"{what}companies{where} for freshers",
+        f"{what}companies hiring{where}",
+        f"{what}companies{where} {y}",
+        f"{what}jobs{where} {y}",
+        f"list of {what}companies{where}",
+        f"{what}companies{where} careers email",
+        f"{what}companies{where} hr email",
+        f"{what}companies{where} contact email",
+        f"apply to {what}companies{where}",
+        f"send resume to {what}companies{where}",
+        f"{what}company jobs{where} for experienced",
+        f"{what}internships{where}",
+        "apply directly to companies",
+        "cold email job application",
+        "job application email",
+    ]
+    if field:
+        phrases += [f"{field} jobs", f"{field} careers", f"{field} developer jobs{where}" if "develop" in field.lower() else f"{field} roles{where}"]
+    if city:
+        phrases += [f"it companies in {city}", f"software companies in {city}", f"mnc companies in {city}", f"startups in {city}"]
+    seen, out = set(), []
+    for ph in phrases:
+        k = " ".join(ph.lower().split())
+        if k not in seen:
+            seen.add(k)
+            out.append(k)
+    return ", ".join(out)
 from sqlalchemy import String, func, or_, text
 from sqlalchemy.orm import Session, joinedload
 
@@ -1690,58 +1731,66 @@ def build_local_business_schema(comp: dict[str, Any], base_url: str) -> dict[str
 # --- Programmatic FAQ Generators for AEO ---
 
 def generate_city_faqs(city_name: str, count: int, top_techs: list[str]) -> list[dict[str, str]]:
-    tech_str = ", ".join(top_techs[:4]) if top_techs else "Information Technology, Digital Marketing, Healthcare, and Professional Services"
-    return [
+    tech_str = ", ".join(top_techs[:4]) if top_techs else ""
+    faqs = [
         {
-            "question": f"How many verified companies and businesses are in {city_name}?",
-            "answer": f"OutreachPilot has indexed and verified {count}+ active companies located in {city_name}, India."
+            "question": f"How many companies in {city_name} can I apply to?",
+            "answer": f"OutreachPilot lists {count:,} companies in {city_name}, India, each with what it does, its Google rating and the email it publishes for enquiries and job applications."
         },
-        {
-            "question": f"What are the top commercial industries and specializations in {city_name}?",
-            "answer": f"Based on live business intelligence across {city_name} enterprises, the most prominent commercial sectors include {tech_str}."
-        },
-        {
-            "question": f"How can I apply to companies in {city_name}?",
-            "answer": f"Find {city_name} companies you want to work for on OutreachPilot, upload your resume, and send each company a personal job application to the email it publishes for enquiries and job applications, from your own Gmail."
-        }
     ]
+    if tech_str:
+        faqs.append({
+            "question": f"Which fields have the most companies in {city_name}?",
+            "answer": f"In {city_name}, the fields with the most listed companies are {tech_str}. Open a field to see only those companies."
+        })
+    faqs += [
+        {
+            "question": f"How do I apply to companies in {city_name} directly by email?",
+            "answer": f"Pick the {city_name} companies you want to work for, upload your resume once, and OutreachPilot writes a job application for each company. You review it and send it from your own Gmail to the email the company publishes."
+        },
+        {
+            "question": f"Can freshers apply to companies in {city_name}?",
+            "answer": "Yes. Freshers and experienced professionals can both apply. Each application is written from your own resume, so it only mentions skills and projects you really have."
+        },
+        {
+            "question": f"How do I find the careers or HR email of a company in {city_name}?",
+            "answer": "Each company page shows the email the company publishes on its website or Google listing for enquiries and job applications, so you know where to send your resume."
+        },
+        {
+            "question": "Is OutreachPilot free for job seekers?",
+            "answer": "Yes. Searching the directory is free, and the free plan includes a set number of job applications every day. Paid plans raise the daily limit."
+        },
+    ]
+    return faqs
 
 
 def generate_tech_faqs(tech_name: str, count: int, top_cities: list[str]) -> list[dict[str, str]]:
-    city_str = ", ".join(top_cities[:4]) if top_cities else "Surat, Ahmedabad, Mumbai, Pune, and Bengaluru"
-    domain = get_category_domain(tech_name)
-
-    if domain == "Information Technology & Software":
-        firm_type = f"{tech_name} software firms and engineering teams"
-    elif domain == "Marketing, Advertising & PR":
-        firm_type = f"{tech_name} agencies and marketing consultants"
-    elif domain == "Sales & Business Development":
-        firm_type = f"{tech_name} companies and sales teams"
-    elif domain == "Pharmaceuticals & Healthcare":
-        firm_type = f"{tech_name} manufacturers, labs, and healthcare providers"
-    elif domain == "Finance, Accounting & Legal":
-        firm_type = f"{tech_name} firms and advisory consultancies"
-    elif domain == "Real Estate & Construction":
-        firm_type = f"{tech_name} agencies, builders, and architecture firms"
-    elif domain == "Manufacturing & Logistics":
-        firm_type = f"{tech_name} manufacturers, suppliers, and logistics providers"
-    else:
-        firm_type = f"{tech_name} companies and specialized firms"
-
-    return [
+    city_str = ", ".join(top_cities[:4]) if top_cities else ""
+    faqs = []
+    if city_str:
+        faqs.append({
+            "question": f"Which Indian cities have the most {tech_name} companies?",
+            "answer": f"The cities with the most listed {tech_name} companies are {city_str}."
+        })
+    faqs += [
         {
-            "question": f"Which Indian cities have the highest concentration of {tech_name} companies?",
-            "answer": f"The top Indian commercial and industrial hubs with verified {firm_type} include {city_str}."
+            "question": f"How many {tech_name} companies in India can I apply to?",
+            "answer": f"OutreachPilot lists {count:,} {tech_name} companies across India, each with what it does, its Google rating and the email it publishes for job applications."
         },
         {
-            "question": f"How many verified {tech_name} companies are indexed across India?",
-            "answer": f"OutreachPilot indexes over {count}+ verified {firm_type} with active operations across India."
+            "question": f"How do I apply for {tech_name} jobs directly at companies?",
+            "answer": f"Choose the {tech_name} companies you want to work for, upload your resume, and send each one a job application written for that company from your own Gmail. You review every email before it is sent."
         },
         {
-            "question": f"How does OutreachPilot verify {tech_name} company capabilities?",
-            "answer": f"Our multi-pass engine crawls official company web domains, parsing service offerings, production frameworks, certifications, client reviews, and active operational signals to confirm authentic {tech_name} expertise."
-        }
+            "question": f"Can freshers apply to {tech_name} companies?",
+            "answer": f"Yes. Freshers, experienced professionals and career switchers can all apply to {tech_name} companies. Each email uses only the skills in your own resume."
+        },
+        {
+            "question": f"Where do the {tech_name} company emails come from?",
+            "answer": "OutreachPilot reads each company's own website and public Google listing and shows the email the company publishes for enquiries and job applications."
+        },
     ]
+    return faqs
 
 
 def generate_combo_faqs(city_name: str, tech_name: str, count: int, avg_rating: float) -> list[dict[str, str]]:
@@ -1760,20 +1809,24 @@ def generate_combo_faqs(city_name: str, tech_name: str, count: int, avg_rating: 
         firm_label = f"{tech_name} companies and service providers"
 
     # Ratings are only mentioned when the database has a real average.
-    rating_text = f", with an average client satisfaction rating of {avg_rating}★." if avg_rating is not None else "."
+    rating_text = f", with an average Google rating of {avg_rating}." if avg_rating is not None else "."
     faqs = [
         {
-            "question": f"Which companies in {city_name} specialize in {tech_name}?",
-            "answer": f"OutreachPilot lists {count} verified {firm_label} in {city_name} specializing in {tech_name}{rating_text}"
+            "question": f"Which {tech_name} companies in {city_name} can I apply to?",
+            "answer": f"OutreachPilot lists {count} {firm_label} in {city_name}{rating_text}"
         },
     ]
     if avg_rating is not None:
         faqs.append({
-            "question": f"What is the average Google rating for {tech_name} providers in {city_name}?",
-            "answer": f"Verified {firm_label} in {city_name} maintain an average customer review score of {avg_rating} out of 5 stars based on verified Google Local reviews."
+            "question": f"What is the average Google rating of {tech_name} companies in {city_name}?",
+            "answer": f"{tech_name} companies in {city_name} have an average Google rating of {avg_rating} out of 5."
         })
     faqs.append({
         "question": f"Can I apply to {tech_name} companies in {city_name}?",
         "answer": f"Yes. OutreachPilot shows the email {tech_name} companies in {city_name} publish for enquiries and job applications, so you can send your own job application with your resume from your own Gmail."
+    })
+    faqs.append({
+        "question": f"Are there {tech_name} jobs in {city_name} for freshers?",
+        "answer": f"You can apply to any listed {tech_name} company in {city_name} as a fresher or an experienced professional. Your application is written from your own resume and sent from your own Gmail."
     })
     return faqs
