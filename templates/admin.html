@@ -439,17 +439,23 @@
           </div>
         </div>
         <div class="grid gap-4" style="max-width:640px">
-          <div><label class="lbl" for="scout-domain">Domain</label>
-            <select id="scout-domain" class="recessed-well">
-              <option value="it">IT &amp; Software</option>
-              <option value="sales">Sales, Lead Gen &amp; BPO</option>
-              <option value="marketing">Marketing, Advertising &amp; PR</option>
-              <option value="pharma">Pharma, Biotech &amp; Healthcare</option>
-              <option value="finance">Finance, Accounting, Tax &amp; Legal</option>
-              <option value="realestate">Real Estate, Architecture &amp; Construction</option>
-              <option value="manufacturing">Manufacturing &amp; Logistics</option>
-              <option value="hr">HR, Staffing &amp; Recruitment</option>
-            </select>
+          <div><span class="lbl" id="scout-domain-label">Domain</span>
+            <div class="custom-dropdown" id="dropdown-scout-domain">
+              <input type="hidden" id="scout-domain" value="it">
+              <button type="button" class="custom-dropdown-btn" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="scout-domain-label"><span class="custom-dropdown-label">IT &amp; Software</span><span class="material-symbols-outlined dropdown-chevron">expand_more</span></button>
+              <div class="custom-dropdown-menu">
+                <div class="custom-dropdown-list" role="listbox">
+                  <div class="custom-dropdown-item is-selected" data-value="it" role="option"><span class="truncate">IT &amp; Software</span><span class="material-symbols-outlined check-icon">check</span></div>
+                  <div class="custom-dropdown-item" data-value="sales" role="option"><span class="truncate">Sales, Lead Gen &amp; BPO</span><span class="material-symbols-outlined check-icon">check</span></div>
+                  <div class="custom-dropdown-item" data-value="marketing" role="option"><span class="truncate">Marketing, Advertising &amp; PR</span><span class="material-symbols-outlined check-icon">check</span></div>
+                  <div class="custom-dropdown-item" data-value="pharma" role="option"><span class="truncate">Pharma, Biotech &amp; Healthcare</span><span class="material-symbols-outlined check-icon">check</span></div>
+                  <div class="custom-dropdown-item" data-value="finance" role="option"><span class="truncate">Finance, Accounting, Tax &amp; Legal</span><span class="material-symbols-outlined check-icon">check</span></div>
+                  <div class="custom-dropdown-item" data-value="realestate" role="option"><span class="truncate">Real Estate, Architecture &amp; Construction</span><span class="material-symbols-outlined check-icon">check</span></div>
+                  <div class="custom-dropdown-item" data-value="manufacturing" role="option"><span class="truncate">Manufacturing &amp; Logistics</span><span class="material-symbols-outlined check-icon">check</span></div>
+                  <div class="custom-dropdown-item" data-value="hr" role="option"><span class="truncate">HR, Staffing &amp; Recruitment</span><span class="material-symbols-outlined check-icon">check</span></div>
+                </div>
+              </div>
+            </div>
           </div>
           <div><label class="lbl" for="scout-places">Cities or areas (one per line)</label>
             <textarea id="scout-places" rows="6" class="recessed-well" placeholder="Ahmedabad&#10;Thaltej, Ahmedabad&#10;Koramangala, Bengaluru"></textarea>
