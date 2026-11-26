@@ -299,16 +299,29 @@
           <div class="flex items-center gap-2"><span class="material-symbols-outlined text-amber-500">verified_user</span><b>Quarantined / Excluded Entities</b></div>
           <div class="app-search" style="max-width:320px"><span class="material-symbols-outlined">search</span><input type="text" id="invalid-search" placeholder="Search invalid queue..." aria-label="Search quarantine"></div>
         </div>
+        <div id="invalid-bulk-bar" class="filters-bar" role="region" aria-label="Selection and bulk actions for quarantined leads">
+          <div class="flex items-center gap-2 flex-wrap">
+            <button id="btn-inv-select-visible" type="button" class="btn btn-secondary btn-sm">Select visible</button>
+            <button id="btn-inv-select-all" type="button" class="btn btn-secondary btn-sm">Select all <span id="invalid-match-count"></span></button>
+            <button id="btn-inv-clear" type="button" class="btn btn-ghost btn-sm">Unselect all</button>
+            <span class="text-sm" aria-live="polite"><b id="invalid-bulk-count">0</b> selected</span>
+          </div>
+          <div class="f-right flex items-center gap-2">
+            <button id="btn-inv-restore" type="button" class="btn btn-secondary btn-sm" disabled><span class="material-symbols-outlined">restore</span><span>Restore</span></button>
+            <button id="btn-inv-delete" type="button" class="btn btn-danger-soft btn-sm" disabled><span class="material-symbols-outlined">delete</span><span>Delete</span></button>
+          </div>
+        </div>
         <div class="a-table-wrap">
           <div class="scroll">
             <table class="a-table">
               <thead><tr>
+                <th style="width:40px"><span class="sr-only">Select</span></th>
                 <th class="sortable sortable-invalid-header" data-sort="name" title="Click to sort by Entity Name"><span class="th"><span>Entity Name</span><span class="material-symbols-outlined sort-icon">unfold_more</span></span></th>
                 <th class="sortable sortable-invalid-header" data-sort="domain" title="Click to sort by Domain"><span class="th"><span>Domain</span><span class="material-symbols-outlined sort-icon">unfold_more</span></span></th>
                 <th class="sortable sortable-invalid-header" data-sort="reason" title="Click to sort by Exclusion Reason"><span class="th"><span>Exclusion Reason</span><span class="material-symbols-outlined sort-icon">unfold_more</span></span></th>
                 <th class="num">Actions</th>
               </tr></thead>
-              <tbody id="invalid-table-body"><tr><td colspan="4" class="px-4 py-8 text-center text-on-surface-variant">Loading quarantined records...</td></tr></tbody>
+              <tbody id="invalid-table-body"><tr><td colspan="5" class="px-4 py-8 text-center text-on-surface-variant">Loading quarantined records...</td></tr></tbody>
             </table>
           </div>
           <div class="a-pager">
