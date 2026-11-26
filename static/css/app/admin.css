@@ -107,7 +107,7 @@
 .subtabs { display: flex; gap: 8px; flex-wrap: wrap; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
 .companies-subtab-btn, .pitch-filter-btn { display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 14px; border-radius: var(--r-pill); font-size: .85rem; font-weight: 650; color: var(--text-2); border: 1px solid var(--line); background: var(--surface); transition: background-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease); }
 .companies-subtab-btn:hover, .pitch-filter-btn:hover { color: var(--text); border-color: var(--line-3); }
-.companies-subtab-btn.active, .pitch-filter-btn.active { background: var(--text); border-color: var(--text); color: var(--text-inverse); }
+.companies-subtab-btn.active, .pitch-filter-btn.active { background: var(--active-bg); border-color: var(--active-bg); color: var(--active-fg); }
 .companies-subtab-btn .n { font-family: var(--font-mono); font-size: .7rem; padding: 1px 8px; border-radius: var(--r-pill); background: var(--surface-3); color: var(--text-2); }
 .companies-subtab-btn.active .n { background: var(--accent); color: var(--on-accent); }
 .seg-pill { display: inline-flex; padding: 4px; gap: 4px; border-radius: var(--r-pill); background: var(--surface-3); border: 1px solid var(--line); }
@@ -152,6 +152,7 @@
   .a-table tbody td[data-role="field"] > * { justify-self: start; max-width: 100%; }
   .a-table tbody td.truncate { white-space: normal; overflow: visible; }
   .a-table tbody td[colspan] { grid-column: 1 / -1; display: block; text-align: center !important; }
+  .a-table-wrap .a-pager { margin-top: 12px; border: 1px solid var(--line); border-radius: var(--r-lg); }
 }
 .a-pager { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 16px; background: var(--surface-2); border-top: 1px solid var(--line); font-family: var(--font-mono); font-size: .76rem; color: var(--text-2); }
 .a-pager .btns { display: flex; align-items: center; gap: 8px; }

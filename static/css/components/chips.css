@@ -23,7 +23,7 @@
 button.chip:hover, a.chip:hover { border-color: var(--line-3); background: var(--surface-2); }
 button.chip:active, a.chip:active { transform: scale(.97); }
 .chip.is-active, .chip[aria-pressed="true"] {
-  background: var(--text); color: var(--text-inverse); border-color: var(--text);
+  background: var(--active-bg); color: var(--active-fg); border-color: var(--active-bg);
 }
 .chip.is-active em, .chip[aria-pressed="true"] em { color: inherit; opacity: .7; }
 .chip-sm { height: 24px; padding: 0 9px; font-size: .74rem; gap: 5px; }

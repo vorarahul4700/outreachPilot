@@ -709,7 +709,7 @@ document.addEventListener("DOMContentLoaded", () => {
     function sync() {
       if (countEl) countEl.textContent = ids.size.toLocaleString();
       tbody.querySelectorAll(".comp-select").forEach(b => { b.checked = ids.has(Number(b.dataset.id)); });
-      Object.keys(actions).forEach(btnId => {
+      [...Object.keys(actions), clearBtnId].forEach(btnId => {
         const btn = document.getElementById(btnId);
         if (btn) btn.disabled = ids.size === 0;
       });

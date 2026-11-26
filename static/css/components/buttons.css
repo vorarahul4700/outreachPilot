@@ -65,6 +65,19 @@
 }
 .btn-quiet:hover { background: var(--line); }
 
+.btn-soft {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  border-color: var(--accent-line);
+}
+.btn-soft:hover { filter: brightness(.97); }
+
+.btn-warn-soft {
+  background: var(--warn-soft);
+  color: var(--warn-text);
+}
+.btn-warn-soft:hover { filter: brightness(.97); }
+
 .btn-danger {
   background: var(--danger);
   color: #fff;
