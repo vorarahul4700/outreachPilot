@@ -57,6 +57,7 @@
       <button data-tab="categories" class="admin-tab-btn tab-btn"><span class="material-symbols-outlined">category</span><span>Categories</span><span id="badge-hidden-categories" class="count{% if not hidden_categories_count %} hidden{% endif %}" title="Categories hidden from users">{{ hidden_categories_count or 0 }} hidden</span></button>
       <button data-tab="pitches" class="admin-tab-btn tab-btn"><span class="material-symbols-outlined">send</span><span>Sent Pitches</span><span id="badge-pitches-count" class="count">0</span></button>
       <button data-tab="subscriptions" class="admin-tab-btn tab-btn"><span class="material-symbols-outlined">loyalty</span><span>Tiers & Plans</span></button>
+      <button data-tab="scout" class="admin-tab-btn tab-btn"><span class="material-symbols-outlined">travel_explore</span><span>Scout Leads</span></button>
       <button data-tab="github" class="admin-tab-btn tab-btn"><span class="material-symbols-outlined">integration_instructions</span><span>GitHub Actions</span></button>
     </nav>
 
@@ -429,6 +430,45 @@
     </section>
 
     <!-- ========== GitHub Actions ========== -->
+    <section id="tab-content-scout" class="admin-tab-panel hidden">
+      <div class="a-card">
+        <div class="section-bar">
+          <div>
+            <h2>Scout Leads</h2>
+            <p>Pick a domain and enter cities or areas. Each of the domain's search keywords is queued once per place. The cloud_scout workflow scrapes Google Maps for them and saves the companies; enrichment stays on your machine.</p>
+          </div>
+        </div>
+        <div class="grid gap-4" style="max-width:640px">
+          <div><label class="lbl" for="scout-domain">Domain</label>
+            <select id="scout-domain" class="recessed-well">
+              <option value="it">IT &amp; Software</option>
+              <option value="sales">Sales, Lead Gen &amp; BPO</option>
+              <option value="marketing">Marketing, Advertising &amp; PR</option>
+              <option value="pharma">Pharma, Biotech &amp; Healthcare</option>
+              <option value="finance">Finance, Accounting, Tax &amp; Legal</option>
+              <option value="realestate">Real Estate, Architecture &amp; Construction</option>
+              <option value="manufacturing">Manufacturing &amp; Logistics</option>
+              <option value="hr">HR, Staffing &amp; Recruitment</option>
+            </select>
+          </div>
+          <div><label class="lbl" for="scout-places">Cities or areas (one per line)</label>
+            <textarea id="scout-places" rows="6" class="recessed-well" placeholder="Ahmedabad&#10;Thaltej, Ahmedabad&#10;Koramangala, Bengaluru"></textarea>
+            <span class="app-field-hint">For an area, add its city after a comma so leads are filed under that city. Up to 100 places.</span>
+          </div>
+          <label class="check-card"><input type="checkbox" id="scout-requeue"><span>Run again for keyword and place pairs that were already scraped</span></label>
+          <label class="check-card"><input type="checkbox" id="scout-start-now" checked><span>Start cloud runners now (otherwise the hourly run picks the jobs up)</span></label>
+          <div class="flex gap-2">
+            <button id="btn-scout-preview" type="button" class="btn btn-secondary btn-sm"><span class="material-symbols-outlined">visibility</span><span>Preview jobs</span></button>
+            <button id="btn-scout-queue" type="button" class="btn btn-primary btn-sm" disabled><span class="material-symbols-outlined">play_arrow</span><span>Queue jobs</span></button>
+          </div>
+          <div id="scout-result" class="hidden log-box">
+            <div class="h"><span id="scout-result-heading"></span></div>
+            <div id="scout-result-body" class="samples" style="max-height:320px;overflow:auto"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <section id="tab-content-github" class="admin-tab-panel hidden">
       <div class="section-bar">
         <div><h2>GitHub Actions CI/CD Telemetry</h2><p>Select an autonomous workflow to inspect its latest 10 runs or trigger execution directly.</p></div>

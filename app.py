@@ -4706,6 +4706,109 @@ def purge_non_companies_admin(
             "message": f"{len(flagged)} of {scanned:,} active companies look like non-companies."}
 
 
+# --- Scout Leads: queue keyword x place jobs for the cloud_scout.yml runners ---
+SCOUT_DOMAINS = ("it", "sales", "marketing", "pharma", "finance", "realestate", "manufacturing", "hr")
+SCOUT_MAX_PLACES = 100
+SCOUT_MAX_JOBS = 5000
+
+
+class ScoutQueueRequest(BaseModel):
+    domain: str
+    places: str  # one city or area per line ("Thaltej, Ahmedabad" keeps its comma)
+    mode: str = "preview"  # "preview" | "queue"
+    requeue_done: bool = False
+    start_now: bool = True
+
+
+@app.post("/api/admin/scout/queue")
+def admin_scout_queue(payload: ScoutQueueRequest, db: Session = Depends(get_db), admin: User = Depends(require_master_admin)):
+    """preview: how many jobs the domain's keywords x places would create. queue: insert them
+    as QUEUED ScoutJobs (the hourly cloud_scout.yml run claims them) and optionally start runners now."""
+    # Same keyword list the queue consumer's --domain filter matches.
+    from cloud_worker import resolve_domain_keywords
+    domain = payload.domain.strip().lower()
+    if domain not in SCOUT_DOMAINS:
+        raise HTTPException(status_code=400, detail="Unknown domain.")
+    if payload.mode not in ("preview", "queue"):
+        raise HTTPException(status_code=400, detail="mode must be preview or queue.")
+    keywords = resolve_domain_keywords(domain)
+    places = list({" ".join(p.split()).lower(): " ".join(p.split()) for p in payload.places.splitlines() if p.strip()}.values())
+    if not places:
+        raise HTTPException(status_code=400, detail="Enter at least one city or area.")
+    if len(places) > SCOUT_MAX_PLACES:
+        raise HTTPException(status_code=400, detail=f"At most {SCOUT_MAX_PLACES} places per run.")
+    if any(len(p) > 100 for p in places):
+        raise HTTPException(status_code=400, detail="Each place must be 100 characters or fewer.")
+
+    targets = [(kw, place) for place in places for kw in keywords]
+    if len(targets) > SCOUT_MAX_JOBS:
+        raise HTTPException(status_code=400, detail=f"{len(targets):,} jobs is over the {SCOUT_MAX_JOBS:,} limit. Use fewer places.")
+
+    lowered = {p.lower() for p in places}
+    existing = {}
+    for j_id, j_kw, j_city, j_status in (
+        db.query(ScoutJob.id, ScoutJob.keyword, ScoutJob.city, ScoutJob.status)
+        .filter(func.lower(func.trim(ScoutJob.city)).in_(lowered))
+        .order_by(ScoutJob.id)
+        .all()
+    ):
+        existing[((j_kw or "").strip().lower(), (j_city or "").strip().lower())] = (j_id, (j_status or "").upper())
+
+    new, active, done_ids = [], 0, []
+    for kw, place in targets:
+        hit = existing.get((kw.lower(), place.lower()))
+        if not hit:
+            new.append((kw, place))
+        elif hit[1] in ("QUEUED", "RUNNING"):
+            active += 1
+        else:
+            done_ids.append(hit[0])
+
+    summary = {"keywords": len(keywords), "places": len(places), "total": len(targets),
+               "new": len(new), "active": active, "done": len(done_ids)}
+    if payload.mode == "preview":
+        return {"success": True, "mode": "preview", **summary, "keyword_list": keywords}
+
+    requeue = done_ids if payload.requeue_done else []
+    stamp = datetime.utcnow().strftime("%H:%M:%S")
+    db.add_all([
+        ScoutJob(keyword=kw, city=place, max_pages=0, status="QUEUED", progress=0,
+                 status_message=f"Queued from admin for '{kw}' in '{place}'",
+                 logs=[f"[{stamp}] Queued from admin panel."], results=[])
+        for kw, place in new
+    ])
+    for i in range(0, len(requeue), 500):
+        db.query(ScoutJob).filter(ScoutJob.id.in_(requeue[i:i + 500])).update(
+            {ScoutJob.status: "QUEUED", ScoutJob.progress: 0, ScoutJob.status_message: "Re-queued from admin panel"},
+            synchronize_session=False)
+    db.commit()
+    queued = len(new) + len(requeue)
+
+    started, start_note = False, ""
+    if payload.start_now and queued:
+        token = os.getenv("GITHUB_TOKEN") or os.getenv("GH_TOKEN")
+        if not token:
+            start_note = " GITHUB_TOKEN is not set on the server, so the hourly run will pick them up."
+        else:
+            try:
+                resp = requests.post(
+                    "https://api.github.com/repos/vorarahul4700/outreachPilot/actions/workflows/cloud_scout.yml/dispatches",
+                    headers={"Authorization": f"Bearer {token}", "Accept": "application/vnd.github.v3+json",
+                             "User-Agent": "OutreachPilot-MasterAdmin"},
+                    json={"ref": "main", "inputs": {"mode": "queue", "domain": domain, "city": "", "batch_size": "50"}},
+                    timeout=15,
+                )
+                started = resp.status_code in (200, 201, 204)
+                if not started:
+                    start_note = f" Starting runners failed (GitHub {resp.status_code}); the hourly run will pick them up."
+            except Exception as e:
+                start_note = f" Starting runners failed ({e}); the hourly run will pick them up."
+
+    msg = f"Queued {queued:,} jobs ({len(new):,} new, {len(requeue):,} re-queued)."
+    msg += " Cloud runners started." if started else (start_note or " The hourly cloud_scout run will pick them up.")
+    return {"success": True, "mode": "queue", **summary, "queued": queued, "started": started, "message": msg}
+
+
 # --- GitHub CI/CD Workflows Telemetry ---
 
 def get_local_workflow_definitions() -> list[dict]:
