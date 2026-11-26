@@ -25,18 +25,6 @@
 .admin-tab-btn.active .count { background: var(--surface); color: var(--accent-ink); }
 .admin-tab-btn.active { background: var(--accent-soft); color: var(--accent-ink); }
 .admin-tab-btn.active::before { content: ""; position: absolute; left: -14px; top: 10px; bottom: 10px; width: 3px; border-radius: 0 3px 3px 0; background: var(--accent); }
-.profile-btn { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: var(--on-accent); font-family: var(--font-display); font-size: .95rem; box-shadow: var(--shadow-btn); }
-.profile-btn:hover { background: var(--accent-hover); }
-#admin-profile-menu { position: absolute; right: 0; top: calc(100% + 8px); width: 240px; z-index: 80; padding: 6px; border-radius: var(--r-lg); background: var(--surface); border: 1px solid var(--line-2); box-shadow: var(--shadow-lg); animation: rise-in var(--t-base) var(--ease-out) both; }
-.pm-head { display: flex; align-items: center; gap: 10px; padding: 10px; }
-.pm-head b { display: block; font-size: .88rem; }
-.pm-head span { display: block; font-family: var(--font-mono); font-size: .7rem; color: var(--text-3); word-break: break-all; }
-.pm-sep { height: 1px; margin: 4px 6px; background: var(--line); }
-.pm-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 9px 10px; border-radius: 9px; font-size: .88rem; color: var(--text); text-align: left; }
-.pm-item:hover { background: var(--surface-3); }
-.pm-item .material-symbols-outlined { font-size: 19px; color: var(--text-3); }
-.pm-item.danger { color: var(--danger-text); }
-.pm-item.danger .material-symbols-outlined { color: var(--danger-text); }
 
 /* ---------- Main ---------- */
 #admin-main { min-width: 0; }
