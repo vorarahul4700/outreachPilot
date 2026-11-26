@@ -609,6 +609,8 @@ document.addEventListener("DOMContentLoaded", () => {
       updateHeaderSortIcons(".sortable-comp-header", activeCompsSortBy, activeCompsSortOrder);
 
       if (badgeActiveCompsCount) badgeActiveCompsCount.textContent = Number(data.total_count).toLocaleString();
+      const matchCount = document.getElementById("active-comps-match-count");
+      if (matchCount) matchCount.textContent = Number(data.total_count).toLocaleString();
 
       if (!data.companies || data.companies.length === 0) {
         activeCompsTableBody.innerHTML = `<tr><td colspan="6" class="px-4 py-8 text-center text-on-surface-variant">No active companies found matching filters.</td></tr>`;
@@ -677,19 +679,15 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // --- Bulk selection (kept across pages and searches until cleared) ---
-  const bulkBar = document.getElementById("active-comps-bulk-bar");
   const bulkCount = document.getElementById("active-comps-bulk-count");
-  const selectAllComps = document.getElementById("active-comps-select-all");
 
   function syncBulkBar() {
     if (bulkCount) bulkCount.textContent = selectedCompIds.size.toLocaleString();
-    bulkBar?.classList.toggle("hidden", selectedCompIds.size === 0);
-    const boxes = [...activeCompsTableBody.querySelectorAll(".comp-select")];
-    if (selectAllComps) {
-      const checked = boxes.filter(b => b.checked).length;
-      selectAllComps.checked = boxes.length > 0 && checked === boxes.length;
-      selectAllComps.indeterminate = checked > 0 && checked < boxes.length;
-    }
+    activeCompsTableBody.querySelectorAll(".comp-select").forEach(b => { b.checked = selectedCompIds.has(Number(b.dataset.id)); });
+    ["btn-bulk-quarantine", "btn-bulk-delete"].forEach(id => {
+      const btn = document.getElementById(id);
+      if (btn) btn.disabled = selectedCompIds.size === 0;
+    });
   }
 
   activeCompsTableBody?.addEventListener("change", (e) => {
@@ -700,18 +698,30 @@ document.addEventListener("DOMContentLoaded", () => {
     syncBulkBar();
   });
 
-  selectAllComps?.addEventListener("change", () => {
-    activeCompsTableBody.querySelectorAll(".comp-select").forEach(box => {
-      box.checked = selectAllComps.checked;
-      const id = Number(box.dataset.id);
-      box.checked ? selectedCompIds.add(id) : selectedCompIds.delete(id);
-    });
+  document.getElementById("btn-select-visible")?.addEventListener("click", () => {
+    activeCompsTableBody.querySelectorAll(".comp-select").forEach(b => selectedCompIds.add(Number(b.dataset.id)));
     syncBulkBar();
+  });
+
+  document.getElementById("btn-select-all-matching")?.addEventListener("click", async () => {
+    const search = activeCompsSearchInput ? activeCompsSearchInput.value.trim() : "";
+    const category = activeCompsFilterCat ? activeCompsFilterCat.value.trim() : "";
+    try {
+      const res = await fetch(`/api/admin/companies?ids_only=true&status=valid&search=${encodeURIComponent(search)}&category=${encodeURIComponent(category)}`);
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Could not load matching companies");
+      data.ids.forEach(id => selectedCompIds.add(id));
+      syncBulkBar();
+      if (data.total_count > data.ids.length) {
+        showToast(`Selected the first ${data.ids.length.toLocaleString()} of ${Number(data.total_count).toLocaleString()} matches (500 per action). Narrow the search to reach the rest.`, "error");
+      }
+    } catch (err) {
+      showToast(err.message, "error");
+    }
   });
 
   document.getElementById("btn-bulk-clear")?.addEventListener("click", () => {
     selectedCompIds.clear();
-    activeCompsTableBody.querySelectorAll(".comp-select").forEach(b => { b.checked = false; });
     syncBulkBar();
   });
 
