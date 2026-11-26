@@ -95,6 +95,7 @@ document.addEventListener("DOMContentLoaded", () => {
     categories: { title: "Categories", heading: "Category Visibility" },
     subscriptions: { title: "Subscriptions", heading: "Tier Quotas & Monetization Architecture" },
     pitches: { title: "Sent Pitches", heading: "Cold Outreach Pitches & Delivery Telemetry" },
+    scout: { title: "Scout Leads", heading: "Queue Google Maps Scouting Jobs" },
     github: { title: "GitHub Actions", heading: "CI/CD Telemetry & Workflows" }
   };
 
@@ -1142,6 +1143,68 @@ document.addEventListener("DOMContentLoaded", () => {
       btnUploadCsv.textContent = "Start Import";
     }
   });
+
+  // --- Scout Leads: queue domain keywords x places for the cloud_scout runners ---
+  (() => {
+    const $ = (id) => document.getElementById(id);
+    const btnPreview = $("btn-scout-preview"), btnQueue = $("btn-scout-queue");
+    const box = $("scout-result"), heading = $("scout-result-heading"), body = $("scout-result-body");
+    if (!btnPreview) return;
+    const escHtml = (v) => String(v ?? "").replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
+    let lastPreview = null;
+
+    const form = () => ({
+      domain: $("scout-domain").value,
+      places: $("scout-places").value,
+      requeue_done: $("scout-requeue").checked,
+      start_now: $("scout-start-now").checked,
+    });
+    const willQueue = (d) => d.new + ($("scout-requeue").checked ? d.done : 0);
+    // Any edit invalidates the preview, so Queue always runs on what was just previewed.
+    ["scout-domain", "scout-places", "scout-requeue"].forEach(id => $(id).addEventListener("input", () => {
+      lastPreview = null;
+      btnQueue.disabled = true;
+    }));
+
+    async function call(mode) {
+      const res = await fetch("/api/admin/scout/queue", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...form(), mode }) });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Request failed");
+      return data;
+    }
+
+    btnPreview.addEventListener("click", async () => {
+      btnPreview.disabled = true;
+      try {
+        const d = await call("preview");
+        lastPreview = d;
+        box.classList.remove("hidden");
+        heading.innerHTML = `<strong>${willQueue(d).toLocaleString()}</strong> jobs will be queued (${d.keywords} keywords x ${d.places} places = ${d.total.toLocaleString()})`;
+        body.innerHTML = `<div>${d.new.toLocaleString()} new, ${d.active.toLocaleString()} already queued or running (skipped), ${d.done.toLocaleString()} already scraped (${$("scout-requeue").checked ? "run again" : "skipped"}).</div>` +
+          `<div class="pt-2 font-semibold">Keywords</div><div>${d.keyword_list.map(escHtml).join(", ")}</div>`;
+        btnQueue.disabled = willQueue(d) === 0;
+      } catch (err) {
+        showToast(err.message, "error");
+      } finally {
+        btnPreview.disabled = false;
+      }
+    });
+
+    btnQueue.addEventListener("click", async () => {
+      if (!lastPreview || !confirm(`Queue ${willQueue(lastPreview).toLocaleString()} scouting jobs?`)) return;
+      btnQueue.disabled = true;
+      try {
+        const d = await call("queue");
+        showToast(d.message);
+        heading.textContent = d.message;
+        body.innerHTML = `<a class="text-primary underline" href="https://github.com/vorarahul4700/outreachPilot/actions/workflows/cloud_scout.yml" target="_blank" rel="noopener">Watch the cloud_scout runs on GitHub</a>`;
+        lastPreview = null;
+      } catch (err) {
+        showToast(err.message, "error");
+        btnQueue.disabled = false;
+      }
+    });
+  })();
 
   // --- System Maintenance: Name Sanitation & Non-Company Purge ---
   // Preview scans every company and lists each proposed change. Apply sends only the
