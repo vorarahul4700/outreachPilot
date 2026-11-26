@@ -715,11 +715,9 @@ document.addEventListener("DOMContentLoaded", () => {
         const res = await fetch(idsUrl());
         const data = await res.json();
         if (!res.ok) throw new Error(data.detail || "Could not load matching companies");
+        ids.clear();
         data.ids.forEach(id => ids.add(id));
         sync();
-        if (data.total_count > data.ids.length) {
-          showToast(`Selected the first ${data.ids.length.toLocaleString()} of ${Number(data.total_count).toLocaleString()} matches (500 per action). Narrow the search to reach the rest.`, "error");
-        }
       } catch (err) {
         showToast(err.message, "error");
       }
@@ -735,9 +733,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const n = ids.size;
     if (!n) return;
     const msg = {
-      delete: `Permanently delete ${n} companies and their emails, profiles, pitches and outreach logs? This cannot be undone.`,
-      quarantine: `Quarantine ${n} companies? They move to the exclusion queue and can be restored later.`,
-      restore: `Restore ${n} companies to the active directory?`,
+      delete: `Permanently delete ${n.toLocaleString()} companies and their emails, profiles, pitches and outreach logs? This cannot be undone.`,
+      quarantine: `Quarantine ${n.toLocaleString()} companies? They move to the exclusion queue and can be restored later.`,
+      restore: `Restore ${n.toLocaleString()} companies to the active directory?`,
     }[action];
     if (!confirm(msg)) return;
     try {

@@ -4340,8 +4340,8 @@ def list_companies_admin(
         total_count = q.with_entities(func.count(Company.id)).scalar() or 0
 
     if ids_only:
-        # "Select all matching" in the admin bulk bar; capped at the bulk-action limit.
-        ids = [r[0] for r in q.with_entities(Company.id).order_by(Company.id).limit(500).all()]
+        # "Select all" in the admin bulk bar: every matching id.
+        ids = [r[0] for r in q.with_entities(Company.id).order_by(Company.id).all()]
         return {"ids": ids, "total_count": total_count}
 
     total_pages = max(1, (total_count + page_size - 1) // page_size)
@@ -4560,32 +4560,35 @@ def bulk_company_action_admin(
     ids = list({int(i) for i in payload.ids})
     if not ids:
         raise HTTPException(status_code=400, detail="No companies selected.")
-    if len(ids) > 500:
-        raise HTTPException(status_code=400, detail="Select at most 500 companies per action.")
     if payload.action not in ("quarantine", "restore", "delete"):
         raise HTTPException(status_code=400, detail="Action must be 'quarantine', 'restore' or 'delete'.")
 
-    if payload.action == "quarantine":
-        count = db.query(Company).filter(Company.id.in_(ids)).update(
-            {Company.is_invalid: True,
-             Company.invalid_reason: payload.reason or "Quarantined by Master Admin",
-             Company.invalid_at: datetime.utcnow()},
-            synchronize_session=False,
-        )
-    elif payload.action == "restore":
-        count = db.query(Company).filter(Company.id.in_(ids)).update(
-            {Company.is_invalid: False, Company.invalid_reason: None, Company.invalid_at: None},
-            synchronize_session=False,
-        )
-    else:
-        # Same child-first order as the single delete endpoint.
-        for model in (CompanyEmail, CompanyProfile, ColdPitch, OutreachLog):
-            db.query(model).filter(model.company_id.in_(ids)).delete(synchronize_session=False)
-        count = db.query(Company).filter(Company.id.in_(ids)).delete(synchronize_session=False)
+    count = 0
+    now = datetime.utcnow()
+    # Chunked so "Select all" (100k+ ids) stays within sane IN-list sizes; one commit at the end.
+    for i in range(0, len(ids), 5000):
+        chunk = ids[i:i + 5000]
+        if payload.action == "quarantine":
+            count += db.query(Company).filter(Company.id.in_(chunk)).update(
+                {Company.is_invalid: True,
+                 Company.invalid_reason: payload.reason or "Quarantined by Master Admin",
+                 Company.invalid_at: now},
+                synchronize_session=False,
+            )
+        elif payload.action == "restore":
+            count += db.query(Company).filter(Company.id.in_(chunk)).update(
+                {Company.is_invalid: False, Company.invalid_reason: None, Company.invalid_at: None},
+                synchronize_session=False,
+            )
+        else:
+            # Same child-first order as the single delete endpoint.
+            for model in (CompanyEmail, CompanyProfile, ColdPitch, OutreachLog):
+                db.query(model).filter(model.company_id.in_(chunk)).delete(synchronize_session=False)
+            count += db.query(Company).filter(Company.id.in_(chunk)).delete(synchronize_session=False)
     db.commit()
     invalidate_filter_cache()
     verb = {"quarantine": "quarantined", "restore": "restored", "delete": "permanently deleted"}[payload.action]
-    return {"success": True, "count": count, "message": f"{count} companies {verb}."}
+    return {"success": True, "count": count, "message": f"{count:,} companies {verb}."}
 
 
 @app.post("/api/admin/companies/{company_id}/restore")

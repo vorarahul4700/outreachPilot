@@ -25,7 +25,7 @@
 .sb-brand { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 2px 0 2px 6px; }
 .sb-brand .logo-word { font-size: 1.12rem; }
 /* Account menu: round initials button at the top of the sidebar (/app and /admin). */
-.profile-btn { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: var(--on-accent); font-family: var(--font-display); font-size: .95rem; box-shadow: var(--shadow-btn); }
+.profile-btn { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: var(--on-accent); font-family: var(--font-display); font-size: .8rem; line-height: 1; letter-spacing: .02em; box-shadow: var(--shadow-btn); }
 .profile-btn:hover { background: var(--accent-hover); }
 .profile-menu { position: absolute; right: 0; top: calc(100% + 8px); width: 240px; z-index: 80; padding: 6px; border-radius: var(--r-lg); background: var(--surface); border: 1px solid var(--line-2); box-shadow: var(--shadow-lg); animation: rise-in var(--t-base) var(--ease-out) both; }
 .pm-head { display: flex; align-items: center; gap: 10px; padding: 10px; }
