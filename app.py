@@ -669,6 +669,12 @@ class QuarantineCompanyRequest(BaseModel):
     reason: str = "Quarantined by Master Admin"
 
 
+class BulkCompanyActionRequest(BaseModel):
+    ids: list[int]
+    action: str  # "quarantine" | "delete"
+    reason: str = "Quarantined by Master Admin"
+
+
 class UpdateTierRequest(BaseModel):
     name: str
     subtitle: str | None = None
@@ -4530,6 +4536,38 @@ def quarantine_company_admin(
     db.commit()
     invalidate_filter_cache()
     return {"success": True, "message": f"Company '{c.name}' quarantined."}
+
+
+@app.post("/api/admin/companies/bulk-action")
+def bulk_company_action_admin(
+    payload: BulkCompanyActionRequest,
+    admin: User = Depends(require_master_admin),
+    db: Session = Depends(get_db)
+):
+    ids = list({int(i) for i in payload.ids})
+    if not ids:
+        raise HTTPException(status_code=400, detail="No companies selected.")
+    if len(ids) > 500:
+        raise HTTPException(status_code=400, detail="Select at most 500 companies per action.")
+    if payload.action not in ("quarantine", "delete"):
+        raise HTTPException(status_code=400, detail="Action must be 'quarantine' or 'delete'.")
+
+    if payload.action == "quarantine":
+        count = db.query(Company).filter(Company.id.in_(ids)).update(
+            {Company.is_invalid: True,
+             Company.invalid_reason: payload.reason or "Quarantined by Master Admin",
+             Company.invalid_at: datetime.utcnow()},
+            synchronize_session=False,
+        )
+    else:
+        # Same child-first order as the single delete endpoint.
+        for model in (CompanyEmail, CompanyProfile, ColdPitch, OutreachLog):
+            db.query(model).filter(model.company_id.in_(ids)).delete(synchronize_session=False)
+        count = db.query(Company).filter(Company.id.in_(ids)).delete(synchronize_session=False)
+    db.commit()
+    invalidate_filter_cache()
+    verb = "quarantined" if payload.action == "quarantine" else "permanently deleted"
+    return {"success": True, "count": count, "message": f"{count} companies {verb}."}
 
 
 @app.post("/api/admin/companies/{company_id}/restore")
