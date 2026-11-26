@@ -1161,10 +1161,12 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     const willQueue = (d) => d.new + ($("scout-requeue").checked ? d.done : 0);
     // Any edit invalidates the preview, so Queue always runs on what was just previewed.
-    ["scout-domain", "scout-places", "scout-requeue"].forEach(id => $(id).addEventListener("input", () => {
+    const resetPreview = () => {
       lastPreview = null;
       btnQueue.disabled = true;
-    }));
+    };
+    ["scout-places", "scout-requeue"].forEach(id => $(id).addEventListener("input", resetPreview));
+    initStaticCustomDropdown("dropdown-scout-domain", resetPreview);
 
     async function call(mode) {
       const res = await fetch("/api/admin/scout/queue", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ...form(), mode }) });
