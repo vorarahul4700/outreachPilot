@@ -368,7 +368,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const tier = usersFilterTier ? usersFilterTier.value : "";
     const role = usersFilterRole ? usersFilterRole.value : "";
 
-    usersTableBody.innerHTML = `<tr><td colspan="6" class="px-4 py-8 text-center text-on-surface-variant">Loading user directory...</td></tr>`;
+    usersTableBody.innerHTML = `<tr><td colspan="7" class="px-4 py-8 text-center text-on-surface-variant">Loading user directory...</td></tr>`;
 
     try {
       const url = `/api/admin/users?page=${page}&page_size=15&search=${encodeURIComponent(search)}&tier=${encodeURIComponent(tier)}&role=${encodeURIComponent(role)}&sort_by=${encodeURIComponent(usersSortBy)}&sort_order=${encodeURIComponent(usersSortOrder)}`;
@@ -378,7 +378,7 @@ document.addEventListener("DOMContentLoaded", () => {
       updateHeaderSortIcons(".sortable-user-header", usersSortBy, usersSortOrder);
 
       if (!data.users || data.users.length === 0) {
-        usersTableBody.innerHTML = `<tr><td colspan="6" class="px-4 py-8 text-center text-on-surface-variant">No matching users found.</td></tr>`;
+        usersTableBody.innerHTML = `<tr><td colspan="7" class="px-4 py-8 text-center text-on-surface-variant">No matching users found.</td></tr>`;
         usersPageInfo.textContent = `Page ${page} of 1`;
         usersBtnPrev.disabled = true;
         usersBtnNext.disabled = true;
@@ -394,10 +394,10 @@ document.addEventListener("DOMContentLoaded", () => {
         const isBanned = u.is_banned;
         const tierName = u.subscription_tier || "free";
         const tierBadge = tierName === "premium_plus"
-          ? `<span class="px-2 py-0.5 rounded text-[11px] font-mono font-semibold bg-emerald-500/20 text-emerald-400">Premium+ (100)</span>`
+          ? `<span class="whitespace-nowrap px-2 py-0.5 rounded text-[11px] font-mono font-semibold bg-emerald-500/20 text-emerald-400">Premium+ (100)</span>`
           : tierName === "pro"
-          ? `<span class="px-2 py-0.5 rounded text-[11px] font-mono font-semibold bg-blue-500/20 text-blue-400">Pro (50)</span>`
-          : `<span class="px-2 py-0.5 rounded text-[11px] font-mono font-semibold bg-surface-container-highest text-on-surface-variant">Free (10)</span>`;
+          ? `<span class="whitespace-nowrap px-2 py-0.5 rounded text-[11px] font-mono font-semibold bg-blue-500/20 text-blue-400">Pro (50)</span>`
+          : `<span class="whitespace-nowrap px-2 py-0.5 rounded text-[11px] font-mono font-semibold bg-surface-container-highest text-on-surface-variant">Free (10)</span>`;
 
         const roleBadge = isAdmin
           ? `<span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-amber-500/20 text-amber-500 border border-amber-500/40">★ Master Admin</span>`
@@ -427,13 +427,16 @@ document.addEventListener("DOMContentLoaded", () => {
             <td class="px-4 py-3">${roleBadge}</td>
             <td class="px-4 py-3">${tierBadge}</td>
             <td class="px-4 py-3">${quotaDisplay}</td>
+            <td class="px-4 py-3">${u.pitches_sent_total
+              ? `<button type="button" onclick="viewUserPitches(${u.id}, '${u.email.replace(/'/g, "\\'")}')" class="font-mono text-xs font-semibold text-primary underline underline-offset-2 hover:opacity-80 cursor-pointer" title="View pitches sent by ${u.email}">${u.pitches_sent_total.toLocaleString()} sent</button>`
+              : `<span class="font-mono text-xs text-on-surface-variant">0</span>`}</td>
             <td class="px-4 py-3">${statusBadge}</td>
             <td class="px-4 py-3 text-right">
               <div class="flex items-center justify-end gap-1.5">
-                <button onclick="toggleUserAdmin(${u.id}, ${isAdmin})" class="px-2 py-1 rounded text-[11px] font-medium border border-outline-variant/40 hover:bg-surface-container transition" title="${isAdmin ? 'Revoke Admin' : 'Promote to Master Admin'}">
+                <button onclick="toggleUserAdmin(${u.id}, ${isAdmin})" class="whitespace-nowrap px-2 py-1 rounded text-[11px] font-medium border border-outline-variant/40 hover:bg-surface-container transition" title="${isAdmin ? 'Revoke Admin' : 'Promote to Master Admin'}">
                   ${isAdmin ? 'Demote' : 'Make Admin'}
                 </button>
-                <button onclick="openEditPlanModal(${u.id}, '${u.email}', '${tierName}')" class="px-2 py-1 rounded text-[11px] font-medium border border-outline-variant/40 hover:bg-surface-container transition">
+                <button onclick="openEditPlanModal(${u.id}, '${u.email}', '${tierName}')" class="whitespace-nowrap px-2 py-1 rounded text-[11px] font-medium border border-outline-variant/40 hover:bg-surface-container transition">
                   Plan
                 </button>
                 <button onclick="toggleUserBan(${u.id}, ${isBanned})" class="px-2 py-1 rounded text-[11px] font-medium border ${isBanned ? 'border-emerald-500/40 text-emerald-500' : 'border-rose-500/40 text-rose-500'} hover:bg-surface-container transition">
@@ -447,7 +450,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     } catch (err) {
       console.error("Error loading users:", err);
-      usersTableBody.innerHTML = `<tr><td colspan="6" class="px-4 py-8 text-center text-rose-500">Failed to load users: ${err.message}</td></tr>`;
+      usersTableBody.innerHTML = `<tr><td colspan="7" class="px-4 py-8 text-center text-rose-500">Failed to load users: ${err.message}</td></tr>`;
     }
   }
 
@@ -1422,6 +1425,19 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentPitchesPage = 1;
   let cachedPitchesList = [];
   let pitchSearchDebounceTimer = null;
+  let pitchUserFilter = null; // { id, email } when opened from a user's "N sent" link
+
+  window.viewUserPitches = function(id, email) {
+    pitchUserFilter = { id, email };
+    activePitchFilter = "all";
+    updatePitchFilterTabsUI();
+    switchTab("pitches");
+  };
+
+  document.getElementById("btn-clear-pitch-user")?.addEventListener("click", () => {
+    pitchUserFilter = null;
+    loadAdminPitches(1);
+  });
 
   function updatePitchFilterTabsUI() {
     document.querySelectorAll(".pitch-filter-btn").forEach(btn => {
@@ -1446,7 +1462,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     try {
-      const url = `/api/admin/pitches?filter=${encodeURIComponent(activePitchFilter)}&page=${page}&page_size=25&search=${encodeURIComponent(searchVal)}`;
+      const userParam = pitchUserFilter ? `&user_id=${pitchUserFilter.id}` : "";
+      const url = `/api/admin/pitches?filter=${encodeURIComponent(activePitchFilter)}&page=${page}&page_size=25&search=${encodeURIComponent(searchVal)}${userParam}`;
+      const chip = document.getElementById("pitches-user-filter");
+      chip?.classList.toggle("hidden", !pitchUserFilter);
+      const chipEmail = document.getElementById("pitches-user-filter-email");
+      if (chipEmail) chipEmail.textContent = pitchUserFilter ? pitchUserFilter.email : "";
       const res = await fetch(url);
       if (!res.ok) throw new Error("Failed to load sent pitches telemetry");
       const data = await res.json();
@@ -1461,8 +1482,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (todayPill) todayPill.textContent = data.today_count ?? 0;
       if (allPill) allPill.textContent = data.total_count_all ?? 0;
-      if (badgePitchesCount) badgePitchesCount.textContent = `${data.today_count ?? 0} today`;
-      if (metricPitches) metricPitches.textContent = data.today_count ?? 0;
+      // Sidebar badge and KPI are global; don't overwrite them with one user's numbers.
+      if (!pitchUserFilter) {
+        if (badgePitchesCount) badgePitchesCount.textContent = `${data.today_count ?? 0} today`;
+        if (metricPitches) metricPitches.textContent = data.today_count ?? 0;
+      }
 
       // Render table rows
       renderPitchesTable(cachedPitchesList);

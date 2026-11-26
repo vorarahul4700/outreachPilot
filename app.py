@@ -3969,6 +3969,12 @@ def list_admin_users(
 
     users = q.order_by(order_target, User.id.desc()).offset((page - 1) * page_size).limit(page_size).all()
     _quota_start = quota_day_start_utc()
+    sent_totals = dict(
+        db.query(OutreachLog.user_id, func.count(OutreachLog.id))
+        .filter(OutreachLog.user_id.in_([u.id for u in users]))
+        .group_by(OutreachLog.user_id)
+        .all()
+    ) if users else {}
 
     return {
         "total_count": total_count,
@@ -3986,6 +3992,7 @@ def list_admin_users(
                 "daily_pitch_limit": 999999 if (u.is_admin or config.is_master_admin(u.email)) else (u.daily_pitch_limit or 10),
                 "pitches_sent_today": (u.pitches_sent_today or 0)
                     if (u.last_pitch_reset_date and u.last_pitch_reset_date >= _quota_start) else 0,
+                "pitches_sent_total": sent_totals.get(u.id, 0),
                 "is_banned": bool(u.is_banned),
                 "ban_reason": u.ban_reason or "",
                 "created_at": u.created_at.strftime("%Y-%m-%d %H:%M") if hasattr(u, "created_at") and u.created_at else None
@@ -5180,6 +5187,7 @@ def list_pitches_admin(
     search: str = Query(""),
     sort_by: str = Query("sent_at"),
     sort_order: str = Query("desc"),
+    user_id: Optional[int] = Query(None),
     admin: User = Depends(require_master_admin),
     db: Session = Depends(get_db)
 ):
@@ -5197,9 +5205,13 @@ def list_pitches_admin(
         joinedload(OutreachLog.user)
     )
 
-    # Pre-calculate counts
-    today_count = db.query(func.count(OutreachLog.id)).filter(OutreachLog.sent_at >= today_start).scalar() or 0
-    total_count_all = db.query(func.count(OutreachLog.id)).scalar() or 0
+    # Pre-calculate counts (scoped to one sender when user_id is given)
+    count_q = db.query(func.count(OutreachLog.id))
+    if user_id is not None:
+        query = query.filter(OutreachLog.user_id == user_id)
+        count_q = count_q.filter(OutreachLog.user_id == user_id)
+    today_count = count_q.filter(OutreachLog.sent_at >= today_start).scalar() or 0
+    total_count_all = count_q.scalar() or 0
 
     if filter == "today":
         query = query.filter(OutreachLog.sent_at >= today_start)
