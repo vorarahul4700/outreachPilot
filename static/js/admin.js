@@ -198,23 +198,25 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("btn-open-csv-upload-modal")?.addEventListener("click", () => openModal("modal-bulk-csv"));
 
   // --- Account menu (round profile button at the top of the sidebar) ---
-  const btnProfile = document.getElementById("btn-admin-profile");
+  // One menu, opened from the sidebar button (desktop) or the top-bar button (phones).
+  const profileBtns = document.querySelectorAll(".js-profile-btn");
   const profileMenu = document.getElementById("admin-profile-menu");
 
-  function setProfileMenu(open) {
-    if (!btnProfile || !profileMenu) return;
+  function setProfileMenu(open, btn) {
+    if (!profileMenu) return;
+    if (open && btn) (btn.closest(".sb-brand") || btn.parentElement).appendChild(profileMenu);
     profileMenu.classList.toggle("hidden", !open);
-    btnProfile.setAttribute("aria-expanded", open ? "true" : "false");
+    profileBtns.forEach(b => b.setAttribute("aria-expanded", open && b === btn ? "true" : "false"));
   }
 
-  btnProfile?.addEventListener("click", (e) => {
+  profileBtns.forEach(btn => btn.addEventListener("click", (e) => {
     e.stopPropagation();
-    setProfileMenu(profileMenu?.classList.contains("hidden"));
-  });
+    setProfileMenu(profileMenu?.classList.contains("hidden"), btn);
+  }));
   // Close on any click outside the menu, or on Escape.
   document.addEventListener("click", (e) => {
     if (!profileMenu || profileMenu.classList.contains("hidden")) return;
-    if (!profileMenu.contains(e.target) && !btnProfile?.contains(e.target)) setProfileMenu(false);
+    if (!profileMenu.contains(e.target)) setProfileMenu(false);
   });
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") setProfileMenu(false);
