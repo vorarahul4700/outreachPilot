@@ -1981,6 +1981,17 @@ def _domain_id_cond(domain: str):
     return None if ids is None else Company.category_id.in_(ids or [-1])
 
 
+def _user_contacted_count(db: Session, user) -> int:
+    """Companies this user has pitched, excluding quarantined ones (restoring brings them back)."""
+    return (
+        db.query(OutreachLog.company_id)
+        .join(Company, Company.id == OutreachLog.company_id)
+        .filter(OutreachLog.status == "SENT", OutreachLog.user_id == user.id, Company.is_invalid.is_(False))
+        .distinct()
+        .count()
+    )
+
+
 def _status_cond(db: Session, user, status_val: str):
     if status_val == "enriched":
         return Company.is_enriched.is_(True)
@@ -2042,12 +2053,7 @@ def get_companies_filters(
         # Per-user contacted count
         user_contacted_count = None
         if user:
-            user_contacted_count = (
-                db.query(OutreachLog.company_id)
-                .filter(OutreachLog.status == "SENT", OutreachLog.user_id == user.id)
-                .distinct()
-                .count()
-            )
+            user_contacted_count = _user_contacted_count(db, user)
 
         # 1. Global Cache hit
         if is_global:
@@ -2481,12 +2487,7 @@ def get_companies(
         base_stats = _filter_cache.get("data", {}).get("stats", {}) if _filter_cache.get("data") else {}
         user_contacted_count = 0
         if user:
-            user_contacted_count = (
-                db.query(OutreachLog.company_id)
-                .filter(OutreachLog.status == "SENT", OutreachLog.user_id == user.id)
-                .distinct()
-                .count()
-            )
+            user_contacted_count = _user_contacted_count(db, user)
 
         if dom_clean and dom_clean not in ("all", ""):
             cached_domains = _filter_cache.get("data", {}).get("domains", []) if _filter_cache.get("data") else []
