@@ -4305,6 +4305,7 @@ def list_companies_admin(
     category: str = Query(""),
     sort_by: str = Query("id"),
     sort_order: str = Query("desc"),
+    ids_only: bool = Query(False),
     admin: User = Depends(require_master_admin),
     db: Session = Depends(get_db)
 ):
@@ -4330,6 +4331,11 @@ def list_companies_admin(
         total_count = _admin_metrics_cache["data"]["companies_invalid"]
     else:
         total_count = q.with_entities(func.count(Company.id)).scalar() or 0
+
+    if ids_only:
+        # "Select all matching" in the admin bulk bar; capped at the bulk-action limit.
+        ids = [r[0] for r in q.with_entities(Company.id).order_by(Company.id).limit(500).all()]
+        return {"ids": ids, "total_count": total_count}
 
     total_pages = max(1, (total_count + page_size - 1) // page_size)
 
