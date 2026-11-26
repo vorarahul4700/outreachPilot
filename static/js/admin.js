@@ -1141,22 +1141,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- System Maintenance: Name Sanitation & Non-Company Purge ---
   // Preview scans every company and lists each proposed change. Apply sends only the
-  // ticked ids (the server re-checks each one). Undo reverses the last apply.
+  // ticked ids (the server re-checks each one).
   const esc = (v) => String(v ?? "").replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
 
   function setupMaintenanceEngine(cfg) {
     const $ = (id) => document.getElementById(id);
-    const btnPreview = $(cfg.previewBtn), btnApply = $(cfg.applyBtn), btnCsv = $(cfg.csvBtn), btnUndo = $(cfg.undoBtn);
+    const btnPreview = $(cfg.previewBtn), btnApply = $(cfg.applyBtn), btnCsv = $(cfg.csvBtn);
     const box = $(cfg.box), heading = $(cfg.heading), timeEl = $(cfg.time), list = $(cfg.list);
     let candidates = [];
     const picked = new Set();
-
-    function setUndo(undo) {
-      if (!btnUndo) return;
-      btnUndo.classList.toggle("hidden", !undo);
-      const lbl = btnUndo.querySelector(".undo-label");
-      if (lbl && undo) lbl.textContent = `Undo last run (${undo.count.toLocaleString()})`;
-    }
 
     function syncApply() {
       if (btnApply) {
@@ -1222,7 +1215,6 @@ document.addEventListener("DOMContentLoaded", () => {
         heading.innerHTML = `<strong>${candidates.length.toLocaleString()}</strong> ${esc(cfg.foundText)} (${Number(data.scanned).toLocaleString()} scanned)`;
         timeEl.textContent = `${data.elapsed_seconds}s`;
         if (btnCsv) btnCsv.disabled = candidates.length === 0;
-        setUndo(data.undo);
         render();
       } catch (err) {
         heading.textContent = "Preview failed";
@@ -1242,28 +1234,11 @@ document.addEventListener("DOMContentLoaded", () => {
         heading.textContent = data.message;
         candidates = candidates.filter(c => !picked.has(c.id));
         picked.clear();
-        setUndo(data.undo);
         render();
         cfg.afterChange();
       } catch (err) {
         showToast(err.message, "error");
         syncApply();
-      }
-    });
-
-    btnUndo?.addEventListener("click", async () => {
-      if (!confirm(cfg.confirmUndo)) return;
-      btnUndo.disabled = true;
-      try {
-        const data = await call({ mode: "undo" });
-        showToast(data.message);
-        heading.textContent = `${data.message} Run Preview again to see the current state.`;
-        setUndo(null);
-        cfg.afterChange();
-      } catch (err) {
-        showToast(err.message, "error");
-      } finally {
-        btnUndo.disabled = false;
       }
     });
 
@@ -1282,15 +1257,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   setupMaintenanceEngine({
     endpoint: "/api/admin/maintenance/sanitize-names",
-    previewBtn: "btn-sanitize-preview", applyBtn: "btn-sanitize-execute", csvBtn: "btn-sanitize-csv", undoBtn: "btn-sanitize-undo",
+    previewBtn: "btn-sanitize-preview", applyBtn: "btn-sanitize-execute", csvBtn: "btn-sanitize-csv",
     box: "sanitize-result-box", heading: "sanitize-status-heading", time: "sanitize-status-time", list: "sanitize-samples",
     applyVerb: "Clean",
     scanningText: "Checking every company name for SEO slogans...",
     foundText: "names would change",
     emptyText: "No company names need cleaning.",
     row: (c) => `<span class="text-rose-400 line-through">${esc(c.before)}</span> <span class="text-on-surface-variant" aria-label="becomes">&rarr;</span> <span class="text-emerald-500 font-semibold">${esc(c.after)}</span> <span class="text-on-surface-variant font-mono text-[11px]">${esc(c.domain)}</span>`,
-    confirmApply: (n) => `Rename ${n} companies to their cleaned names? You can undo this run afterwards.`,
-    confirmUndo: "Put back the original names from the last cleanup run? Names edited since that run are left as they are.",
+    confirmApply: (n) => `Rename ${n} companies to their cleaned names? This cannot be undone.`,
     csvColumns: ["id", "before", "after", "domain"],
     csvName: "name-cleanup-preview.csv",
     afterChange: () => { loadActiveCompanies(activeCompsCurrentPage); loadMetrics(); },
@@ -1298,15 +1272,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
   setupMaintenanceEngine({
     endpoint: "/api/admin/maintenance/purge-non-companies",
-    previewBtn: "btn-purge-preview", applyBtn: "btn-purge-execute", csvBtn: "btn-purge-csv", undoBtn: "btn-purge-undo",
+    previewBtn: "btn-purge-preview", applyBtn: "btn-purge-execute", csvBtn: "btn-purge-csv",
     box: "purge-result-box", heading: "purge-status-heading", time: "purge-status-time", list: "purge-samples",
     applyVerb: "Quarantine",
     scanningText: "Checking every active company for institutes, academies and portfolios. This takes about 30 seconds...",
     foundText: "look like non-companies",
     emptyText: "No non-company entities found.",
     row: (c) => `<span class="font-semibold text-on-surface">${esc(c.name)}</span> <span class="font-mono text-[11px] text-on-surface-variant">${esc(c.domain)}</span><br><span class="text-amber-500 text-[11px]">${esc(c.reason)}</span> <span class="text-on-surface-variant text-[11px]">${esc(c.city)}</span>`,
-    confirmApply: (n) => `Move ${n} companies to Quarantine? You can undo this run afterwards.`,
-    confirmUndo: "Move the companies from the last run back to the active directory?",
+    confirmApply: (n) => `Move ${n} companies to Quarantine? You can restore them from the Quarantined Leads tab.`,
     csvColumns: ["id", "name", "domain", "city", "source_query", "reason"],
     csvName: "non-company-preview.csv",
     afterChange: () => { loadActiveCompanies(activeCompsCurrentPage); loadInvalidCompanies(1); loadMetrics(); },
