@@ -88,6 +88,30 @@ document.addEventListener("DOMContentLoaded", () => {
   const currentViewTitle = document.getElementById("current-view-title");
   const headerHeading = document.getElementById("header-heading");
 
+  // Phone card layout: tag each cell with its column name so CSS can label it.
+  document.querySelectorAll(".a-table").forEach(table => {
+    // Screen-reader-only headers (the checkbox column) get no visible label.
+    const labels = [...table.querySelectorAll("thead th")].map(th => {
+      if (th.querySelector(".sr-only")) return "";
+      const c = th.cloneNode(true);
+      c.querySelectorAll(".material-symbols-outlined").forEach(i => i.remove());  // sort icons
+      return c.textContent.trim();
+    });
+    const tbody = table.querySelector("tbody");
+    const label = () => tbody.querySelectorAll("tr").forEach(tr => {
+      let titled = false;
+      [...tr.children].forEach((td, i) => {
+        if (td.hasAttribute("colspan")) return;
+        td.dataset.label = labels[i] || "";
+        if (!labels[i]) td.dataset.role = "check";
+        else if (labels[i] === "Actions") td.dataset.role = "actions";
+        else if (!titled) { td.dataset.role = "title"; titled = true; }
+        else td.dataset.role = "field";
+      });
+    });
+    if (tbody) new MutationObserver(label).observe(tbody, { childList: true });
+  });
+
   const tabMeta = {
     overview: { title: "Overview", heading: "Telemetry & System Controls" },
     users: { title: "Users", heading: "User Accounts & Role Governance" },
@@ -436,15 +460,9 @@ document.addEventListener("DOMContentLoaded", () => {
             <td class="px-4 py-3">${statusBadge}</td>
             <td class="px-4 py-3 text-right">
               <div class="flex items-center justify-end gap-1.5">
-                <button onclick="toggleUserAdmin(${u.id}, ${isAdmin})" class="whitespace-nowrap px-2 py-1 rounded text-[11px] font-medium border border-outline-variant/40 hover:bg-surface-container transition" title="${isAdmin ? 'Revoke Admin' : 'Promote to Master Admin'}">
-                  ${isAdmin ? 'Demote' : 'Make Admin'}
-                </button>
-                <button onclick="openEditPlanModal(${u.id}, '${u.email}', '${tierName}')" class="whitespace-nowrap px-2 py-1 rounded text-[11px] font-medium border border-outline-variant/40 hover:bg-surface-container transition">
-                  Plan
-                </button>
-                <button onclick="toggleUserBan(${u.id}, ${isBanned})" class="px-2 py-1 rounded text-[11px] font-medium border ${isBanned ? 'border-emerald-500/40 text-emerald-500' : 'border-rose-500/40 text-rose-500'} hover:bg-surface-container transition">
-                  ${isBanned ? 'Unban' : 'Ban'}
-                </button>
+                <button onclick="toggleUserAdmin(${u.id}, ${isAdmin})" class="rounded transition cursor-pointer ${isAdmin ? 'bg-primary/15 text-primary hover:bg-primary/25' : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'}" title="${isAdmin ? 'Remove admin' : 'Make admin'}" aria-label="${isAdmin ? 'Remove admin' : 'Make admin'}"><span class="material-symbols-outlined text-[16px]">admin_panel_settings</span></button>
+                <button onclick="openEditPlanModal(${u.id}, '${u.email}', '${tierName}')" class="rounded bg-surface-container text-on-surface-variant hover:bg-surface-container-high transition cursor-pointer" title="Change plan" aria-label="Change plan"><span class="material-symbols-outlined text-[16px]">loyalty</span></button>
+                <button onclick="toggleUserBan(${u.id}, ${isBanned})" class="rounded transition cursor-pointer ${isBanned ? 'bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20' : 'bg-rose-500/10 text-rose-500 hover:bg-rose-500/20'}" title="${isBanned ? 'Unban user' : 'Ban user'}" aria-label="${isBanned ? 'Unban user' : 'Ban user'}"><span class="material-symbols-outlined text-[16px]">${isBanned ? 'check_circle' : 'block'}</span></button>
               </div>
             </td>
           </tr>
@@ -664,10 +682,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <td class="px-4 py-3"><div class="flex flex-wrap items-center gap-1">${techBadges || '<span class="text-[11px] text-on-surface-variant/60">--</span>'}</div></td>
             <td class="px-4 py-3 text-right">
               <div class="flex items-center justify-end gap-1.5">
-                <button onclick="openEditCompanyModal(${c.id})" class="px-2.5 py-1 rounded text-xs font-semibold bg-primary/10 text-primary hover:bg-primary/20 transition cursor-pointer flex items-center gap-1">
-                  <span class="material-symbols-outlined text-[14px]">edit</span>
-                  <span>Edit</span>
-                </button>
+                <button onclick="openEditCompanyModal(${c.id})" class="rounded bg-primary/10 text-primary hover:bg-primary/20 transition cursor-pointer" title="Edit company" aria-label="Edit company"><span class="material-symbols-outlined text-[14px]">edit</span></button>
                 <button onclick="openQuarantineModal(${c.id}, '${c.name.replace(/'/g, "\\'")}')" class="px-2 py-1 rounded text-xs font-semibold bg-amber-500/10 text-amber-500 hover:bg-amber-500/20 transition cursor-pointer" title="Quarantine / Exclude Lead">
                   <span class="material-symbols-outlined text-[14px]">block</span>
                 </button>
@@ -807,7 +822,7 @@ document.addEventListener("DOMContentLoaded", () => {
     invalidCurrentPage = page;
     const search = invalidSearchInput ? invalidSearchInput.value.trim() : "";
 
-    invalidTableBody.innerHTML = `<tr><td colspan="5" class="px-4 py-8 text-center text-on-surface-variant">Loading quarantined records...</td></tr>`;
+    invalidTableBody.innerHTML = `<tr><td colspan="4" class="px-4 py-8 text-center text-on-surface-variant">Loading quarantined records...</td></tr>`;
 
     try {
       const url = `/api/admin/companies/invalid?page=${page}&page_size=15&search=${encodeURIComponent(search)}&sort_by=${encodeURIComponent(invalidSortBy)}&sort_order=${encodeURIComponent(invalidSortOrder)}`;
@@ -824,7 +839,7 @@ document.addEventListener("DOMContentLoaded", () => {
       // Page went out of range (rows moved by an action on a later page): show the last real page.
       if ((!data.companies || data.companies.length === 0) && page > data.total_pages && data.total_count > 0) return loadInvalidCompanies(data.total_pages);
       if (!data.companies || data.companies.length === 0) {
-        invalidTableBody.innerHTML = `<tr><td colspan="5" class="px-4 py-8 text-center text-on-surface-variant">No quarantined companies found.</td></tr>`;
+        invalidTableBody.innerHTML = `<tr><td colspan="4" class="px-4 py-8 text-center text-on-surface-variant">No quarantined companies found.</td></tr>`;
         invalidPageInfo.textContent = `Page 1 of 1`;
         invalidBtnPrev.disabled = true;
         invalidBtnNext.disabled = true;
@@ -839,17 +854,17 @@ document.addEventListener("DOMContentLoaded", () => {
         return `
           <tr class="hover:bg-surface-container/50 transition">
             <td class="px-4 py-3"><input type="checkbox" class="comp-select" data-id="${c.id}" aria-label="Select ${c.name.replace(/"/g, '&quot;')}" ${selectedInvalidIds.has(c.id) ? "checked" : ""}></td>
-            <td class="px-4 py-3 font-semibold text-xs text-on-surface">${c.name}</td>
-            <td class="px-4 py-3 font-mono text-xs text-on-surface-variant">${c.domain}</td>
+            <td class="px-4 py-3">
+              <div class="flex flex-col">
+                <span class="font-semibold text-xs text-on-surface">${c.name}</span>
+                <span class="font-mono text-[11px] text-on-surface-variant">${c.domain}</span>
+              </div>
+            </td>
             <td class="px-4 py-3 text-xs text-on-surface-variant max-w-xs truncate">${c.invalid_reason || "Flagged as non-company"}</td>
             <td class="px-4 py-3 text-right">
               <div class="flex items-center justify-end gap-2">
-                <button onclick="restoreCompany(${c.id}, '${c.name.replace(/'/g, "\\'")}')" class="px-2.5 py-1 rounded text-xs font-semibold bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 transition cursor-pointer">
-                  Restore Lead
-                </button>
-                <button onclick="deleteCompanyPermanently(${c.id}, '${c.name.replace(/'/g, "\\'")}')" class="px-2.5 py-1 rounded text-xs font-semibold bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 transition cursor-pointer">
-                  Delete
-                </button>
+                <button onclick="restoreCompany(${c.id}, '${c.name.replace(/'/g, "\\'")}')" class="rounded bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20 transition cursor-pointer" title="Restore lead" aria-label="Restore lead"><span class="material-symbols-outlined text-[14px]">restore</span></button>
+                <button onclick="deleteCompanyPermanently(${c.id}, '${c.name.replace(/'/g, "\\'")}')" class="rounded bg-rose-500/10 text-rose-500 hover:bg-rose-500/20 transition cursor-pointer" title="Delete permanently" aria-label="Delete permanently"><span class="material-symbols-outlined text-[14px]">delete</span></button>
               </div>
             </td>
           </tr>
@@ -859,7 +874,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     } catch (err) {
       console.error("Error loading quarantined companies:", err);
-      invalidTableBody.innerHTML = `<tr><td colspan="5" class="px-4 py-8 text-center text-rose-500">Failed to load: ${err.message}</td></tr>`;
+      invalidTableBody.innerHTML = `<tr><td colspan="4" class="px-4 py-8 text-center text-rose-500">Failed to load: ${err.message}</td></tr>`;
     }
   }
 
@@ -1572,7 +1587,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const searchVal = document.getElementById("pitches-search-input")?.value || "";
 
     if (tableBody) {
-      tableBody.innerHTML = `<tr><td colspan="8" class="px-4 py-8 text-center text-on-surface-variant"><span class="animate-pulse">Loading ${activePitchFilter === 'today' ? "today's" : "all"} pitch records...</span></td></tr>`;
+      tableBody.innerHTML = `<tr><td colspan="6" class="px-4 py-8 text-center text-on-surface-variant"><span class="animate-pulse">Loading ${activePitchFilter === 'today' ? "today's" : "all"} pitch records...</span></td></tr>`;
     }
 
     try {
@@ -1623,7 +1638,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     } catch (err) {
       if (tableBody) {
-        tableBody.innerHTML = `<tr><td colspan="8" class="px-4 py-8 text-center text-rose-500 font-semibold">Error loading pitches: ${err.message}</td></tr>`;
+        tableBody.innerHTML = `<tr><td colspan="6" class="px-4 py-8 text-center text-rose-500 font-semibold">Error loading pitches: ${err.message}</td></tr>`;
       }
     }
   }
@@ -1635,7 +1650,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!pitches || pitches.length === 0) {
       tableBody.innerHTML = `
         <tr>
-          <td colspan="8" class="px-4 py-12 text-center text-on-surface-variant">
+          <td colspan="6" class="px-4 py-12 text-center text-on-surface-variant">
             <div class="flex flex-col items-center gap-2">
               <span class="material-symbols-outlined text-3xl opacity-40">mark_email_read</span>
               <p class="font-medium text-xs">No cold outreach pitch records found for ${activePitchFilter === 'today' ? "today" : "the current filter"}.</p>
@@ -1661,11 +1676,8 @@ document.addEventListener("DOMContentLoaded", () => {
         ? (p.subject.length > 36 ? p.subject.slice(0, 36) + "..." : p.subject)
         : "(No Subject)";
 
-      const methodBadge = `<span class="px-1.5 py-0.5 rounded text-[10px] font-mono bg-surface-container text-on-surface-variant border border-outline-variant/30">${p.delivery_method || "GMAIL_OAUTH"}</span>`;
-
       return `
         <tr class="hover:bg-surface-container/50 transition cursor-pointer" onclick="openAdminPitchModal(${p.id})">
-          <td class="px-4 py-3 font-mono text-xs text-on-surface-variant font-semibold">#${p.id}</td>
           <td class="px-4 py-3">
             <div class="flex flex-col">
               <span class="font-semibold text-xs text-on-surface">${p.company_name || "Unknown"}</span>
@@ -1684,14 +1696,10 @@ document.addEventListener("DOMContentLoaded", () => {
               <span class="text-[11px] text-on-surface-variant truncate">${(p.email_body || "").replace(/\\n/g, " ").slice(0, 45)}...</span>
             </div>
           </td>
-          <td class="px-4 py-3">${methodBadge}</td>
           <td class="px-4 py-3">${statusBadge}</td>
           <td class="px-4 py-3 font-mono text-xs text-on-surface-variant whitespace-nowrap">${p.sent_at || "--"}</td>
           <td class="px-4 py-3 text-right">
-            <button type="button" onclick="event.stopPropagation(); openAdminPitchModal(${p.id});" class="px-2.5 py-1 rounded-md bg-surface-container hover:bg-surface-container-high border border-outline-variant/40 text-on-surface text-xs font-medium transition cursor-pointer flex items-center gap-1 inline-flex">
-              <span class="material-symbols-outlined text-[14px]">visibility</span>
-              <span>View</span>
-            </button>
+            <button type="button" onclick="event.stopPropagation(); openAdminPitchModal(${p.id});" class="rounded bg-surface-container hover:bg-surface-container-high text-on-surface-variant transition cursor-pointer" title="View pitch" aria-label="View pitch"><span class="material-symbols-outlined text-[14px]">visibility</span></button>
           </td>
         </tr>
       `;
@@ -1881,7 +1889,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     if (runsTableBody) {
-      runsTableBody.innerHTML = `<tr><td colspan="7" class="px-4 py-8 text-center text-on-surface-variant">Syncing live GitHub Actions runs for <strong>${selectedTitle}</strong>...</td></tr>`;
+      runsTableBody.innerHTML = `<tr><td colspan="6" class="px-4 py-8 text-center text-on-surface-variant">Syncing live GitHub Actions runs for <strong>${selectedTitle}</strong>...</td></tr>`;
     }
 
     try {
@@ -1898,7 +1906,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!runsTableBody) return;
 
       if (!data.runs || data.runs.length === 0) {
-        runsTableBody.innerHTML = `<tr><td colspan="7" class="px-4 py-8 text-center text-on-surface-variant">No execution history recorded for this workflow yet. Click "Run Selected Workflow" to trigger.</td></tr>`;
+        runsTableBody.innerHTML = `<tr><td colspan="6" class="px-4 py-8 text-center text-on-surface-variant">No execution history recorded for this workflow yet. Click "Run Selected Workflow" to trigger.</td></tr>`;
         return;
       }
 
@@ -1931,12 +1939,6 @@ document.addEventListener("DOMContentLoaded", () => {
               </div>
             </td>
             <td class="px-4 py-3 font-mono text-xs text-on-surface-variant">${r.duration}</td>
-            <td class="px-4 py-3 text-right">
-              <a href="${r.html_url}" target="_blank" onclick="event.stopPropagation()" class="px-2.5 py-1 rounded bg-surface-container hover:bg-surface-container-high border border-outline-variant/30 text-xs font-semibold text-primary transition inline-flex items-center gap-1">
-                <span>Inspect</span>
-                <span class="material-symbols-outlined text-[13px]">open_in_new</span>
-              </a>
-            </td>
           </tr>
         `;
       }).join("");
@@ -1944,7 +1946,7 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch (err) {
       console.error("Error loading GitHub telemetry:", err);
       if (runsTableBody) {
-        runsTableBody.innerHTML = `<tr><td colspan="7" class="px-4 py-8 text-center text-rose-500">Failed to load GitHub telemetry: ${err.message}</td></tr>`;
+        runsTableBody.innerHTML = `<tr><td colspan="6" class="px-4 py-8 text-center text-rose-500">Failed to load GitHub telemetry: ${err.message}</td></tr>`;
       }
     }
   }
