@@ -696,14 +696,9 @@ class CreateTierRequest(BaseModel):
     badge: str | None = None
 
 
-class SanitizeNamesRequest(BaseModel):
-    dry_run: bool = False
-    limit: int = 2000
-
-
-class PurgeNonCompaniesRequest(BaseModel):
-    dry_run: bool = False
-    limit: int = 5000
+class MaintenanceRequest(BaseModel):
+    mode: str = "preview"  # "preview" | "apply" | "undo"
+    ids: list[int] = []
 
 
 class DispatchWorkflowRequest(BaseModel):
@@ -4612,149 +4607,171 @@ def restore_company_admin(
 
 # --- Live Database Maintenance Engines ---
 
+_NAME_DELIMITERS = [' - ', ' | ', ' : ', ' – ', ' — ', ' • ', ' · ', '|']
+_PURGE_REASON = "Automated Non-Company Filter: Institute / Academy / Coaching / Portfolio / Education"
+
+
+def _undo_record(db: Session, key: str):
+    row = db.query(SystemSetting).filter(SystemSetting.key == key).first()
+    return json.loads(row.value) if row else None
+
+
+def _save_undo_record(db: Session, key: str, data):
+    row = db.query(SystemSetting).filter(SystemSetting.key == key).first()
+    if data is None:
+        if row:
+            db.delete(row)
+        return
+    if not row:
+        row = SystemSetting(key=key, value="", description="Undo data for the last admin maintenance run")
+        db.add(row)
+    row.value = json.dumps(data)
+
+
+def _undo_summary(record):
+    return {"count": len(record["items"]), "at": record["at"]} if record else None
+
+
+def _maintenance_ids(payload: MaintenanceRequest):
+    if payload.mode not in ("preview", "apply", "undo"):
+        raise HTTPException(status_code=400, detail="mode must be preview, apply or undo.")
+    ids = list({int(i) for i in payload.ids})
+    if payload.mode == "apply" and not ids:
+        raise HTTPException(status_code=400, detail="Select at least one row from the preview to apply.")
+    return ids
+
+
 @app.post("/api/admin/maintenance/sanitize-names")
 def sanitize_names_admin(
-    payload: SanitizeNamesRequest,
+    payload: MaintenanceRequest,
     admin: User = Depends(require_master_admin),
     db: Session = Depends(get_db)
 ):
+    """preview: every company name that would change. apply: clean only the given ids
+    (recomputed server-side, so nothing outside the preview changes). undo: put back
+    the names changed by the last apply, unless they were edited since."""
     t0 = time.time()
-    delimiters = [' - ', ' | ', ' : ', ' – ', ' — ', ' • ', ' · ', '|']
-    chunk_size = 1000
-    last_id = 0
-    scanned = 0
-    cleaned = 0
-    samples = []
+    ids = _maintenance_ids(payload)
+    undo_key = "maintenance_undo_sanitize_names"
 
-    limit = max(100, min(10000, payload.limit or 2000))
-
-    while scanned < limit:
-        rows = (
-            db.query(Company.id, Company.name, Company.domain)
-            .filter(Company.id > last_id)
-            .order_by(Company.id.asc())
-            .limit(chunk_size)
-            .all()
-        )
-        if not rows:
-            break
-        last_id = rows[-1][0]
-        scanned += len(rows)
-
-        updates = []
-        for cid, cname, cdomain in rows:
-            if not cname:
-                continue
-            if any(d in cname for d in delimiters):
-                cleaned_name = clean_company_name(cname, cdomain)
-                if cleaned_name and cleaned_name != cname:
-                    cleaned += 1
-                    if len(samples) < 15:
-                        samples.append({"before": cname, "after": cleaned_name, "domain": cdomain})
-                    updates.append({"id": cid, "name": cleaned_name})
-
-        if not payload.dry_run and updates:
-            db.bulk_update_mappings(Company, updates)
-            db.commit()
-
-    if not payload.dry_run and cleaned > 0:
+    if payload.mode == "undo":
+        record = _undo_record(db, undo_key)
+        if not record:
+            raise HTTPException(status_code=404, detail="Nothing to undo.")
+        by_id = {it["id"]: it for it in record["items"]}
+        restored = skipped = 0
+        for cid, cname in db.query(Company.id, Company.name).filter(Company.id.in_(list(by_id))).all():
+            it = by_id[cid]
+            if cname == it["after"]:
+                db.query(Company).filter(Company.id == cid).update({Company.name: it["before"]}, synchronize_session=False)
+                restored += 1
+            else:
+                skipped += 1  # renamed again since; leave the newer name alone
+        _save_undo_record(db, undo_key, None)
+        db.commit()
         invalidate_filter_cache()
+        msg = f"Restored {restored} original names" + (f" ({skipped} skipped, edited since)" if skipped else "") + "."
+        return {"success": True, "mode": "undo", "restored": restored, "skipped": skipped, "message": msg, "undo": None}
 
-    return {
-        "success": True,
-        "dry_run": payload.dry_run,
-        "scanned": scanned,
-        "cleaned": cleaned,
-        "elapsed_seconds": round(time.time() - t0, 2),
-        "samples": samples,
-        "message": f"{'Previewed' if payload.dry_run else 'Sanitized'} {cleaned} company names out of {scanned} scanned records."
-    }
+    q = db.query(Company.id, Company.name, Company.domain).filter(
+        or_(*[Company.name.contains(d, autoescape=True) for d in _NAME_DELIMITERS])
+    )
+    if payload.mode == "apply":
+        q = q.filter(Company.id.in_(ids))
+    changes = []
+    for cid, cname, cdomain in q.order_by(Company.id.asc()).all():
+        cleaned = clean_company_name(cname, cdomain)
+        if cleaned and cleaned != cname:
+            changes.append({"id": cid, "before": cname, "after": cleaned, "domain": cdomain})
+
+    if payload.mode == "apply":
+        for i in range(0, len(changes), 500):
+            db.bulk_update_mappings(Company, [{"id": c["id"], "name": c["after"]} for c in changes[i:i + 500]])
+        record = {"at": datetime.utcnow().isoformat(timespec="seconds") + "Z", "items": changes} if changes else None
+        if record:  # an apply that changed nothing must not erase the previous run's undo
+            _save_undo_record(db, undo_key, record)
+        db.commit()
+        invalidate_filter_cache()
+        return {"success": True, "mode": "apply", "changed": len(changes), "elapsed_seconds": round(time.time() - t0, 2),
+                "message": f"Cleaned {len(changes)} company names.", "undo": _undo_summary(record or _undo_record(db, undo_key))}
+
+    total = db.query(func.count(Company.id)).scalar() or 0
+    return {"success": True, "mode": "preview", "scanned": total, "candidates": changes,
+            "elapsed_seconds": round(time.time() - t0, 2),
+            "message": f"{len(changes)} of {total:,} company names would change.",
+            "undo": _undo_summary(_undo_record(db, undo_key))}
 
 
 @app.post("/api/admin/maintenance/purge-non-companies")
 def purge_non_companies_admin(
-    payload: PurgeNonCompaniesRequest,
+    payload: MaintenanceRequest,
     admin: User = Depends(require_master_admin),
     db: Session = Depends(get_db)
 ):
+    """preview: every active company the non-company filter flags. apply: quarantine only
+    the given ids that are still active and still flagged. undo: un-quarantine the last
+    apply's companies that are still in quarantine with this filter's reason."""
     from filter_non_companies import is_non_company
     t0 = time.time()
-    os.makedirs("logs", exist_ok=True)
-    csv_path = os.path.join("logs", "removed_non_companies_log.csv")
+    ids = _maintenance_ids(payload)
+    undo_key = "maintenance_undo_purge_non_companies"
 
-    batch_size = 2000
-    last_id = 0
+    if payload.mode == "undo":
+        record = _undo_record(db, undo_key)
+        if not record:
+            raise HTTPException(status_code=404, detail="Nothing to undo.")
+        undo_ids = [it["id"] for it in record["items"]]
+        restored = 0
+        for i in range(0, len(undo_ids), 500):
+            restored += db.query(Company).filter(
+                Company.id.in_(undo_ids[i:i + 500]), Company.is_invalid.is_(True), Company.invalid_reason == _PURGE_REASON
+            ).update({Company.is_invalid: False, Company.invalid_reason: None, Company.invalid_at: None}, synchronize_session=False)
+        _save_undo_record(db, undo_key, None)
+        db.commit()
+        invalidate_filter_cache()
+        return {"success": True, "mode": "undo", "restored": restored,
+                "message": f"Restored {restored} companies to the active directory.", "undo": None}
+
+    flagged = []
     scanned = 0
-    flagged_records = []
-    limit = max(500, min(15000, payload.limit or 5000))
-
-    while scanned < limit:
-        rows = (
-            db.query(Company.id, Company.name, Company.domain, Company.city, Company.source_query)
-            .filter(Company.is_invalid == False, Company.id > last_id)
-            .order_by(Company.id.asc())
-            .limit(batch_size)
-            .all()
+    last_id = 0
+    while True:
+        q = db.query(Company.id, Company.name, Company.domain, Company.city, Company.source_query).filter(
+            Company.is_invalid.is_(False), Company.id > last_id
         )
+        if payload.mode == "apply":
+            q = q.filter(Company.id.in_(ids))
+        rows = q.order_by(Company.id.asc()).limit(5000).all()
         if not rows:
             break
         last_id = rows[-1][0]
         scanned += len(rows)
-
         for cid, cname, cdom, ccity, cquery in rows:
-            flagged, reason = is_non_company(cname, cdom)
-            if flagged:
-                flagged_records.append({
-                    "id": cid,
-                    "name": cname,
-                    "domain": cdom,
-                    "city": ccity or "",
-                    "source_query": cquery or "",
-                    "reason": reason
-                })
+            is_flagged, reason = is_non_company(cname, cdom)
+            if is_flagged:
+                flagged.append({"id": cid, "name": cname, "domain": cdom, "city": ccity or "",
+                                "source_query": cquery or "", "reason": reason})
 
-    if flagged_records:
-        with open(csv_path, "w", newline="", encoding="utf-8") as f:
-            writer = csv.DictWriter(f, fieldnames=["id", "name", "domain", "city", "source_query", "reason"])
-            writer.writeheader()
-            writer.writerows(flagged_records)
-
-    if not payload.dry_run and flagged_records:
-        flagged_ids = [r["id"] for r in flagged_records]
+    if payload.mode == "apply":
         now = datetime.utcnow()
+        flagged_ids = [r["id"] for r in flagged]
         for i in range(0, len(flagged_ids), 500):
-            chunk = flagged_ids[i:i + 500]
-            db.query(Company).filter(Company.id.in_(chunk)).update(
-                {
-                    Company.is_invalid: True,
-                    Company.invalid_reason: "Automated Non-Company Filter: Institute / Academy / Coaching / Portfolio / Education",
-                    Company.invalid_at: now
-                },
+            db.query(Company).filter(Company.id.in_(flagged_ids[i:i + 500])).update(
+                {Company.is_invalid: True, Company.invalid_reason: _PURGE_REASON, Company.invalid_at: now},
                 synchronize_session=False
             )
-            db.commit()
+        record = {"at": now.isoformat(timespec="seconds") + "Z", "items": [{"id": i} for i in flagged_ids]} if flagged_ids else None
+        if record:  # an apply that changed nothing must not erase the previous run's undo
+            _save_undo_record(db, undo_key, record)
+        db.commit()
         invalidate_filter_cache()
+        return {"success": True, "mode": "apply", "changed": len(flagged_ids), "elapsed_seconds": round(time.time() - t0, 2),
+                "message": f"Quarantined {len(flagged_ids)} non-company leads.", "undo": _undo_summary(record or _undo_record(db, undo_key))}
 
-    return {
-        "success": True,
-        "dry_run": payload.dry_run,
-        "scanned": scanned,
-        "flagged": len(flagged_records),
-        "elapsed_seconds": round(time.time() - t0, 2),
-        "samples": flagged_records[:20],
-        "csv_download_url": "/api/admin/maintenance/download-non-companies-csv" if flagged_records else None,
-        "message": f"{'Identified' if payload.dry_run else 'Quarantined'} {len(flagged_records)} non-company leads out of {scanned} scanned records."
-    }
-
-
-@app.get("/api/admin/maintenance/download-non-companies-csv")
-def download_non_companies_csv(
-    admin: User = Depends(require_master_admin)
-):
-    csv_path = os.path.join("logs", "removed_non_companies_log.csv")
-    if not os.path.exists(csv_path):
-        raise HTTPException(status_code=404, detail="No audit CSV generated yet. Run the non-company filter first.")
-    return FileResponse(csv_path, filename="removed_non_companies_log.csv", media_type="text/csv")
+    return {"success": True, "mode": "preview", "scanned": scanned, "candidates": flagged,
+            "elapsed_seconds": round(time.time() - t0, 2),
+            "message": f"{len(flagged)} of {scanned:,} active companies look like non-companies.",
+            "undo": _undo_summary(_undo_record(db, undo_key))}
 
 
 # --- GitHub CI/CD Workflows Telemetry ---

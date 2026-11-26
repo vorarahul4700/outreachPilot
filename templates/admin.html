@@ -139,28 +139,31 @@
           <div class="engine">
             <div class="k"><span>Name Sanitation Engine</span><span class="material-symbols-outlined">spellcheck</span></div>
             <h3>Auto-Clean Taglines & SEO Clutter</h3>
-            <p>Scans company names across Neon PostgreSQL and strips SEO marketing slogans (e.g. <em>"iRoid Solutions - Best IT Company in India"</em> becomes <em>"iRoid Solutions"</em>).</p>
+            <p>Strips SEO slogans from company names (e.g. <em>"iRoid Solutions - Best IT Company in India"</em> becomes <em>"iRoid Solutions"</em>). Preview scans every company; nothing changes until you apply, and the last run can be undone.</p>
             <div class="btns">
-              <button id="btn-sanitize-preview" type="button" class="btn btn-secondary btn-sm"><span class="material-symbols-outlined">visibility</span><span>Dry Run Preview</span></button>
-              <button id="btn-sanitize-execute" type="button" class="btn btn-primary btn-sm"><span class="material-symbols-outlined">play_arrow</span><span>Run Live Sanitation</span></button>
+              <button id="btn-sanitize-preview" type="button" class="btn btn-secondary btn-sm"><span class="material-symbols-outlined">visibility</span><span>Preview changes</span></button>
+              <button id="btn-sanitize-execute" type="button" class="btn btn-primary btn-sm" disabled><span class="material-symbols-outlined">play_arrow</span><span class="apply-label">Apply selected</span></button>
+              <button id="btn-sanitize-csv" type="button" class="btn btn-secondary btn-sm" disabled><span class="material-symbols-outlined">download</span><span>CSV</span></button>
+              <button id="btn-sanitize-undo" type="button" class="btn btn-ghost btn-sm hidden"><span class="material-symbols-outlined">undo</span><span class="undo-label">Undo last run</span></button>
             </div>
             <div id="sanitize-result-box" class="hidden log-box">
-              <div class="h"><span id="sanitize-status-heading">Sanitation Results</span><span id="sanitize-status-time"></span></div>
-              <div id="sanitize-samples" class="samples"></div>
+              <div class="h"><span id="sanitize-status-heading">Preview</span><span id="sanitize-status-time"></span></div>
+              <div id="sanitize-samples" class="samples" style="max-height:320px;overflow:auto"></div>
             </div>
           </div>
           <div class="engine">
             <div class="k warn"><span>Lead Quality Auditor</span><span class="material-symbols-outlined">filter_alt</span></div>
             <h3>Purge Coaching Institutes & Portfolios</h3>
-            <p>Detects coaching centers, tuition classes, academies, schools, universities, and personal developer portfolios (.github.io, etc.) and moves them to Quarantine.</p>
+            <p>Finds coaching centers, academies, schools, universities and personal portfolios (.github.io, etc.) among active companies. Preview first, untick anything that is a real company, then quarantine the rest. The last run can be undone.</p>
             <div class="btns">
-              <button id="btn-purge-preview" type="button" class="btn btn-secondary btn-sm"><span class="material-symbols-outlined">search</span><span>Audit Preview</span></button>
-              <button id="btn-purge-execute" type="button" class="btn btn-warn btn-sm"><span class="material-symbols-outlined">delete_sweep</span><span>Quarantine Non-Companies</span></button>
-              <a id="btn-download-audit-csv" href="/api/admin/maintenance/download-non-companies-csv" target="_blank" class="btn btn-secondary btn-sm"><span class="material-symbols-outlined">download</span><span>Audit CSV Log</span></a>
+              <button id="btn-purge-preview" type="button" class="btn btn-secondary btn-sm"><span class="material-symbols-outlined">search</span><span>Preview changes</span></button>
+              <button id="btn-purge-execute" type="button" class="btn btn-warn btn-sm" disabled><span class="material-symbols-outlined">delete_sweep</span><span class="apply-label">Quarantine selected</span></button>
+              <button id="btn-purge-csv" type="button" class="btn btn-secondary btn-sm" disabled><span class="material-symbols-outlined">download</span><span>CSV</span></button>
+              <button id="btn-purge-undo" type="button" class="btn btn-ghost btn-sm hidden"><span class="material-symbols-outlined">undo</span><span class="undo-label">Undo last run</span></button>
             </div>
             <div id="purge-result-box" class="hidden log-box">
-              <div class="h"><span id="purge-status-heading">Audit Results</span><span id="purge-status-time"></span></div>
-              <div id="purge-samples" class="samples"></div>
+              <div class="h"><span id="purge-status-heading">Preview</span><span id="purge-status-time"></span></div>
+              <div id="purge-samples" class="samples" style="max-height:320px;overflow:auto"></div>
             </div>
           </div>
         </div>
