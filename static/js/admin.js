@@ -616,6 +616,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const matchCount = document.getElementById("active-comps-match-count");
       if (matchCount) matchCount.textContent = Number(data.total_count).toLocaleString();
 
+      // Page went out of range (rows moved by an action on a later page): show the last real page.
+      if ((!data.companies || data.companies.length === 0) && page > data.total_pages && data.total_count > 0) return loadActiveCompanies(data.total_pages);
       if (!data.companies || data.companies.length === 0) {
         activeCompsTableBody.innerHTML = `<tr><td colspan="6" class="px-4 py-8 text-center text-on-surface-variant">No active companies found matching filters.</td></tr>`;
         activeCompsPageInfo.textContent = `Page 1 of 1`;
@@ -818,6 +820,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const invMatch = document.getElementById("invalid-match-count");
       if (invMatch) invMatch.textContent = Number(data.total_count).toLocaleString();
 
+      // Page went out of range (rows moved by an action on a later page): show the last real page.
+      if ((!data.companies || data.companies.length === 0) && page > data.total_pages && data.total_count > 0) return loadInvalidCompanies(data.total_pages);
       if (!data.companies || data.companies.length === 0) {
         invalidTableBody.innerHTML = `<tr><td colspan="5" class="px-4 py-8 text-center text-on-surface-variant">No quarantined companies found.</td></tr>`;
         invalidPageInfo.textContent = `Page 1 of 1`;
