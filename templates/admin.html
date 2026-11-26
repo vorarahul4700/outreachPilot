@@ -206,10 +206,11 @@
               <th class="sortable sortable-user-header" data-sort="role" title="Click to sort by Role"><span class="th"><span>Role</span><span class="material-symbols-outlined sort-icon">unfold_more</span></span></th>
               <th class="sortable sortable-user-header" data-sort="tier" title="Click to sort by Subscription Tier"><span class="th"><span>Subscription</span><span class="material-symbols-outlined sort-icon">unfold_more</span></span></th>
               <th class="sortable sortable-user-header" data-sort="pitches" title="Click to sort by Pitches Sent Today"><span class="th"><span>Pitch Quota</span><span class="material-symbols-outlined sort-icon">unfold_more</span></span></th>
+              <th title="All pitches this user has sent">Pitches Sent</th>
               <th class="sortable sortable-user-header" data-sort="status" title="Click to sort by Ban Status"><span class="th"><span>Status</span><span class="material-symbols-outlined sort-icon">unfold_more</span></span></th>
               <th class="num">Actions</th>
             </tr></thead>
-            <tbody id="users-table-body"><tr><td colspan="6" class="px-4 py-8 text-center text-on-surface-variant">Loading user directory...</td></tr></tbody>
+            <tbody id="users-table-body"><tr><td colspan="7" class="px-4 py-8 text-center text-on-surface-variant">Loading user directory...</td></tr></tbody>
           </table>
         </div>
         <div class="a-pager">
@@ -395,6 +396,7 @@
           <button type="button" class="pitch-filter-btn active" data-pitch-filter="today">Today's Pitches (<span id="pitches-today-pill-count">0</span>)</button>
           <button type="button" class="pitch-filter-btn" data-pitch-filter="all">All Sent Pitches (<span id="pitches-all-pill-count">0</span>)</button>
         </div>
+        <div id="pitches-user-filter" class="hidden flex items-center gap-2 text-sm">Sent by <b id="pitches-user-filter-email"></b><button id="btn-clear-pitch-user" type="button" class="btn btn-ghost btn-xs">Clear</button></div>
         <div class="app-search" style="max-width:360px"><span class="material-symbols-outlined">search</span><input type="text" id="pitches-search-input" placeholder="Search company, recipient, sender, subject..." aria-label="Search pitches"></div>
       </div>
 
