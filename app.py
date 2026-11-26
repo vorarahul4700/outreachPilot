@@ -697,7 +697,7 @@ class CreateTierRequest(BaseModel):
 
 
 class MaintenanceRequest(BaseModel):
-    mode: str = "preview"  # "preview" | "apply" | "undo"
+    mode: str = "preview"  # "preview" | "apply"
     ids: list[int] = []
 
 
@@ -4611,30 +4611,9 @@ _NAME_DELIMITERS = [' - ', ' | ', ' : ', ' – ', ' — ', ' • ', ' · ', '|']
 _PURGE_REASON = "Automated Non-Company Filter: Institute / Academy / Coaching / Portfolio / Education"
 
 
-def _undo_record(db: Session, key: str):
-    row = db.query(SystemSetting).filter(SystemSetting.key == key).first()
-    return json.loads(row.value) if row else None
-
-
-def _save_undo_record(db: Session, key: str, data):
-    row = db.query(SystemSetting).filter(SystemSetting.key == key).first()
-    if data is None:
-        if row:
-            db.delete(row)
-        return
-    if not row:
-        row = SystemSetting(key=key, value="", description="Undo data for the last admin maintenance run")
-        db.add(row)
-    row.value = json.dumps(data)
-
-
-def _undo_summary(record):
-    return {"count": len(record["items"]), "at": record["at"]} if record else None
-
-
 def _maintenance_ids(payload: MaintenanceRequest):
-    if payload.mode not in ("preview", "apply", "undo"):
-        raise HTTPException(status_code=400, detail="mode must be preview, apply or undo.")
+    if payload.mode not in ("preview", "apply"):
+        raise HTTPException(status_code=400, detail="mode must be preview or apply.")
     ids = list({int(i) for i in payload.ids})
     if payload.mode == "apply" and not ids:
         raise HTTPException(status_code=400, detail="Select at least one row from the preview to apply.")
@@ -4648,30 +4627,9 @@ def sanitize_names_admin(
     db: Session = Depends(get_db)
 ):
     """preview: every company name that would change. apply: clean only the given ids
-    (recomputed server-side, so nothing outside the preview changes). undo: put back
-    the names changed by the last apply, unless they were edited since."""
+    (recomputed server-side, so nothing outside the preview changes)."""
     t0 = time.time()
     ids = _maintenance_ids(payload)
-    undo_key = "maintenance_undo_sanitize_names"
-
-    if payload.mode == "undo":
-        record = _undo_record(db, undo_key)
-        if not record:
-            raise HTTPException(status_code=404, detail="Nothing to undo.")
-        by_id = {it["id"]: it for it in record["items"]}
-        restored = skipped = 0
-        for cid, cname in db.query(Company.id, Company.name).filter(Company.id.in_(list(by_id))).all():
-            it = by_id[cid]
-            if cname == it["after"]:
-                db.query(Company).filter(Company.id == cid).update({Company.name: it["before"]}, synchronize_session=False)
-                restored += 1
-            else:
-                skipped += 1  # renamed again since; leave the newer name alone
-        _save_undo_record(db, undo_key, None)
-        db.commit()
-        invalidate_filter_cache()
-        msg = f"Restored {restored} original names" + (f" ({skipped} skipped, edited since)" if skipped else "") + "."
-        return {"success": True, "mode": "undo", "restored": restored, "skipped": skipped, "message": msg, "undo": None}
 
     q = db.query(Company.id, Company.name, Company.domain).filter(
         or_(*[Company.name.contains(d, autoescape=True) for d in _NAME_DELIMITERS])
@@ -4687,19 +4645,15 @@ def sanitize_names_admin(
     if payload.mode == "apply":
         for i in range(0, len(changes), 500):
             db.bulk_update_mappings(Company, [{"id": c["id"], "name": c["after"]} for c in changes[i:i + 500]])
-        record = {"at": datetime.utcnow().isoformat(timespec="seconds") + "Z", "items": changes} if changes else None
-        if record:  # an apply that changed nothing must not erase the previous run's undo
-            _save_undo_record(db, undo_key, record)
         db.commit()
         invalidate_filter_cache()
         return {"success": True, "mode": "apply", "changed": len(changes), "elapsed_seconds": round(time.time() - t0, 2),
-                "message": f"Cleaned {len(changes)} company names.", "undo": _undo_summary(record or _undo_record(db, undo_key))}
+                "message": f"Cleaned {len(changes)} company names."}
 
     total = db.query(func.count(Company.id)).scalar() or 0
     return {"success": True, "mode": "preview", "scanned": total, "candidates": changes,
             "elapsed_seconds": round(time.time() - t0, 2),
-            "message": f"{len(changes)} of {total:,} company names would change.",
-            "undo": _undo_summary(_undo_record(db, undo_key))}
+            "message": f"{len(changes)} of {total:,} company names would change."}
 
 
 @app.post("/api/admin/maintenance/purge-non-companies")
@@ -4709,28 +4663,10 @@ def purge_non_companies_admin(
     db: Session = Depends(get_db)
 ):
     """preview: every active company the non-company filter flags. apply: quarantine only
-    the given ids that are still active and still flagged. undo: un-quarantine the last
-    apply's companies that are still in quarantine with this filter's reason."""
+    the given ids that are still active and still flagged."""
     from filter_non_companies import is_non_company
     t0 = time.time()
     ids = _maintenance_ids(payload)
-    undo_key = "maintenance_undo_purge_non_companies"
-
-    if payload.mode == "undo":
-        record = _undo_record(db, undo_key)
-        if not record:
-            raise HTTPException(status_code=404, detail="Nothing to undo.")
-        undo_ids = [it["id"] for it in record["items"]]
-        restored = 0
-        for i in range(0, len(undo_ids), 500):
-            restored += db.query(Company).filter(
-                Company.id.in_(undo_ids[i:i + 500]), Company.is_invalid.is_(True), Company.invalid_reason == _PURGE_REASON
-            ).update({Company.is_invalid: False, Company.invalid_reason: None, Company.invalid_at: None}, synchronize_session=False)
-        _save_undo_record(db, undo_key, None)
-        db.commit()
-        invalidate_filter_cache()
-        return {"success": True, "mode": "undo", "restored": restored,
-                "message": f"Restored {restored} companies to the active directory.", "undo": None}
 
     flagged = []
     scanned = 0
@@ -4760,18 +4696,14 @@ def purge_non_companies_admin(
                 {Company.is_invalid: True, Company.invalid_reason: _PURGE_REASON, Company.invalid_at: now},
                 synchronize_session=False
             )
-        record = {"at": now.isoformat(timespec="seconds") + "Z", "items": [{"id": i} for i in flagged_ids]} if flagged_ids else None
-        if record:  # an apply that changed nothing must not erase the previous run's undo
-            _save_undo_record(db, undo_key, record)
         db.commit()
         invalidate_filter_cache()
         return {"success": True, "mode": "apply", "changed": len(flagged_ids), "elapsed_seconds": round(time.time() - t0, 2),
-                "message": f"Quarantined {len(flagged_ids)} non-company leads.", "undo": _undo_summary(record or _undo_record(db, undo_key))}
+                "message": f"Quarantined {len(flagged_ids)} non-company leads."}
 
     return {"success": True, "mode": "preview", "scanned": scanned, "candidates": flagged,
             "elapsed_seconds": round(time.time() - t0, 2),
-            "message": f"{len(flagged)} of {scanned:,} active companies look like non-companies.",
-            "undo": _undo_summary(_undo_record(db, undo_key))}
+            "message": f"{len(flagged)} of {scanned:,} active companies look like non-companies."}
 
 
 # --- GitHub CI/CD Workflows Telemetry ---
