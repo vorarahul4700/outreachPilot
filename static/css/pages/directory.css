@@ -110,13 +110,26 @@
 }
 .place-card:hover { border-color: var(--accent-line); transform: translateY(-3px); box-shadow: var(--shadow-md); }
 .place-card .pc-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; }
-.place-card .pc-name { font-family: var(--font-display); font-size: 1rem; line-height: 1.22; color: var(--text); overflow-wrap: anywhere; min-width: 0; }
+.place-card .pc-name { font-family: var(--font-display); font-size: 1rem; line-height: 1.22; color: var(--text); overflow-wrap: break-word; hyphens: auto; min-width: 0; }
 .place-card .pc-go { width: 26px; height: 26px; flex: none; border-radius: 50%; display: grid; place-items: center; background: var(--surface-3); color: var(--text-3); font-size: 16px; transition: background-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease), transform var(--t-base) var(--ease-out); }
 .place-card:hover .pc-go { background: var(--accent); color: var(--on-accent); transform: rotate(-45deg); }
 .place-card .pc-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-top: 10px; border-top: 1px dashed var(--line-2); font-family: var(--font-mono); font-size: .72rem; color: var(--text-3); }
 .place-card .pc-tag { padding: 2px 7px; border-radius: 6px; background: var(--surface-3); color: var(--text-2); text-transform: uppercase; letter-spacing: .05em; font-size: .64rem; }
 .place-card .pc-pin { display: inline-flex; align-items: center; gap: 4px; }
 .place-card .pc-pin .material-symbols-outlined { font-size: 14px; color: var(--accent-text); }
+/* Narrow cards (2 per row on phones, 6 per row on laptops): long words like
+   Pharmaceuticals must fit whole, and the firm count never splits. */
+.place-card .pc-foot { flex-wrap: wrap; row-gap: 6px; }
+.place-card .pc-foot > span { white-space: nowrap; }
+@media (max-width: 479px) {
+  .place-card .pc-name { font-size: .9rem; }
+  .place-card .pc-go { display: none; }  /* the whole card is the link */
+}
+@media (min-width: 1024px) {
+  .place-card .pc-name { font-size: .9rem; }
+  .place-card .pc-top { gap: 6px; }
+  .place-card .pc-go { width: 22px; height: 22px; font-size: 14px; }
+}
 .opacity-40 { opacity: .4; }
 .opacity-100 { opacity: 1; }
 /* Show the biggest cards first: phone 8, tablet 12, laptop 18. JS keeps ranks current. */
