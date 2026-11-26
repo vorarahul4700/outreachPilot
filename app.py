@@ -671,7 +671,7 @@ class QuarantineCompanyRequest(BaseModel):
 
 class BulkCompanyActionRequest(BaseModel):
     ids: list[int]
-    action: str  # "quarantine" | "delete"
+    action: str  # "quarantine" | "restore" | "delete"
     reason: str = "Quarantined by Master Admin"
 
 
@@ -2966,11 +2966,8 @@ async def upload_resume(
     elif parsed_profile.get("target_role"):
         user.target_role = parsed_profile.get("target_role")
 
-    cand_name = (parsed_profile.get("full_name") or "").strip()
-    if cand_name and cand_name.lower() != "candidate":
-        # Keep user.name synchronized if current user name is empty, generic, or Pilot User
-        if not user.name or "Pilot" in user.name or user.name == "Candidate":
-            user.name = cand_name
+    # The resume's name stays in resume_summary (used for pitches); the account name
+    # comes only from the Google sign-in, so an uploaded resume can't rename the account.
 
     if user.resume_link:
         parsed_profile["resume_link"] = user.resume_link
@@ -3747,9 +3744,11 @@ async def google_callback(code: str, request: Request, db: Session = Depends(get
         credentials = flow.credentials
 
         user_email = None
+        google_name = None  # Verified display name from Google; the account name's only source
         if hasattr(credentials, "id_token") and credentials.id_token:
             if isinstance(credentials.id_token, dict):
                 user_email = credentials.id_token.get("email")
+                google_name = credentials.id_token.get("name")
             else:
                 import google.oauth2.id_token
                 from google.auth.transport import requests as google_requests
@@ -3758,6 +3757,7 @@ async def google_callback(code: str, request: Request, db: Session = Depends(get
                         credentials.id_token, google_requests.Request(), config.GOOGLE_CLIENT_ID
                     )
                     user_email = id_info.get("email")
+                    google_name = id_info.get("name")
                 except Exception as id_err:
                     print(f"[OAuth Warning] verify_oauth2_token failed: {id_err}")
 
@@ -3768,6 +3768,7 @@ async def google_callback(code: str, request: Request, db: Session = Depends(get
                 user_service = build("oauth2", "v2", credentials=credentials)
                 user_info = user_service.userinfo().get().execute()
                 user_email = user_info.get("email")
+                google_name = user_info.get("name")
             except Exception as user_err:
                 print(f"[OAuth Warning] Google userinfo API failed: {user_err}")
 
@@ -3786,7 +3787,7 @@ async def google_callback(code: str, request: Request, db: Session = Depends(get
         if not user:
             user = User(
                 email=user_email_clean,
-                name="Master Admin (Rahul Vora)" if is_admin else "Pilot User",
+                name=(google_name or "").strip() or ("Master Admin" if is_admin else "Pilot User"),
                 target_role="",
                 is_admin=is_admin,
                 daily_pitch_limit=999999 if is_admin else 10,
@@ -3800,6 +3801,9 @@ async def google_callback(code: str, request: Request, db: Session = Depends(get
             user.is_admin = True
             user.daily_pitch_limit = 999999
             user.subscription_tier = "premium_plus"
+            db.commit()
+        if user and (google_name or "").strip() and user.name != google_name.strip():
+            user.name = google_name.strip()
             db.commit()
 
         # Encrypt OAuth credentials before persisting in PostgreSQL
@@ -4562,14 +4566,19 @@ def bulk_company_action_admin(
         raise HTTPException(status_code=400, detail="No companies selected.")
     if len(ids) > 500:
         raise HTTPException(status_code=400, detail="Select at most 500 companies per action.")
-    if payload.action not in ("quarantine", "delete"):
-        raise HTTPException(status_code=400, detail="Action must be 'quarantine' or 'delete'.")
+    if payload.action not in ("quarantine", "restore", "delete"):
+        raise HTTPException(status_code=400, detail="Action must be 'quarantine', 'restore' or 'delete'.")
 
     if payload.action == "quarantine":
         count = db.query(Company).filter(Company.id.in_(ids)).update(
             {Company.is_invalid: True,
              Company.invalid_reason: payload.reason or "Quarantined by Master Admin",
              Company.invalid_at: datetime.utcnow()},
+            synchronize_session=False,
+        )
+    elif payload.action == "restore":
+        count = db.query(Company).filter(Company.id.in_(ids)).update(
+            {Company.is_invalid: False, Company.invalid_reason: None, Company.invalid_at: None},
             synchronize_session=False,
         )
     else:
@@ -4579,7 +4588,7 @@ def bulk_company_action_admin(
         count = db.query(Company).filter(Company.id.in_(ids)).delete(synchronize_session=False)
     db.commit()
     invalidate_filter_cache()
-    verb = "quarantined" if payload.action == "quarantine" else "permanently deleted"
+    verb = {"quarantine": "quarantined", "restore": "restored", "delete": "permanently deleted"}[payload.action]
     return {"success": True, "count": count, "message": f"{count} companies {verb}."}
 
 

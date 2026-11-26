@@ -587,6 +587,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // --- API: Load Active Verified Directory Companies ---
   let activeCompsCurrentPage = 1;
   const selectedCompIds = new Set();
+  let syncBulkBar = () => {};
   let activeCompsSortBy = "id";
   let activeCompsSortOrder = "desc";
   const activeCompsTableBody = document.getElementById("active-comps-table-body");
@@ -682,78 +683,86 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   // --- Bulk selection (kept across pages and searches until cleared) ---
-  const bulkCount = document.getElementById("active-comps-bulk-count");
-
-  function syncBulkBar() {
-    if (bulkCount) bulkCount.textContent = selectedCompIds.size.toLocaleString();
-    activeCompsTableBody.querySelectorAll(".comp-select").forEach(b => { b.checked = selectedCompIds.has(Number(b.dataset.id)); });
-    ["btn-bulk-quarantine", "btn-bulk-delete"].forEach(id => {
-      const btn = document.getElementById(id);
-      if (btn) btn.disabled = selectedCompIds.size === 0;
+  // One helper drives both the Active and the Quarantined tables.
+  function setupBulkSelection({ ids, tbody, countId, visibleBtnId, allBtnId, clearBtnId, actions, idsUrl }) {
+    const countEl = document.getElementById(countId);
+    function sync() {
+      if (countEl) countEl.textContent = ids.size.toLocaleString();
+      tbody.querySelectorAll(".comp-select").forEach(b => { b.checked = ids.has(Number(b.dataset.id)); });
+      Object.keys(actions).forEach(btnId => {
+        const btn = document.getElementById(btnId);
+        if (btn) btn.disabled = ids.size === 0;
+      });
+    }
+    tbody?.addEventListener("change", (e) => {
+      const box = e.target.closest(".comp-select");
+      if (!box) return;
+      const id = Number(box.dataset.id);
+      box.checked ? ids.add(id) : ids.delete(id);
+      sync();
     });
+    document.getElementById(visibleBtnId)?.addEventListener("click", () => {
+      tbody.querySelectorAll(".comp-select").forEach(b => ids.add(Number(b.dataset.id)));
+      sync();
+    });
+    document.getElementById(allBtnId)?.addEventListener("click", async () => {
+      try {
+        const res = await fetch(idsUrl());
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || "Could not load matching companies");
+        data.ids.forEach(id => ids.add(id));
+        sync();
+        if (data.total_count > data.ids.length) {
+          showToast(`Selected the first ${data.ids.length.toLocaleString()} of ${Number(data.total_count).toLocaleString()} matches (500 per action). Narrow the search to reach the rest.`, "error");
+        }
+      } catch (err) {
+        showToast(err.message, "error");
+      }
+    });
+    document.getElementById(clearBtnId)?.addEventListener("click", () => { ids.clear(); sync(); });
+    Object.entries(actions).forEach(([btnId, action]) => {
+      document.getElementById(btnId)?.addEventListener("click", () => runBulkCompanyAction(ids, action));
+    });
+    return sync;
   }
 
-  activeCompsTableBody?.addEventListener("change", (e) => {
-    const box = e.target.closest(".comp-select");
-    if (!box) return;
-    const id = Number(box.dataset.id);
-    box.checked ? selectedCompIds.add(id) : selectedCompIds.delete(id);
-    syncBulkBar();
-  });
-
-  document.getElementById("btn-select-visible")?.addEventListener("click", () => {
-    activeCompsTableBody.querySelectorAll(".comp-select").forEach(b => selectedCompIds.add(Number(b.dataset.id)));
-    syncBulkBar();
-  });
-
-  document.getElementById("btn-select-all-matching")?.addEventListener("click", async () => {
-    const search = activeCompsSearchInput ? activeCompsSearchInput.value.trim() : "";
-    const category = activeCompsFilterCat ? activeCompsFilterCat.value.trim() : "";
-    try {
-      const res = await fetch(`/api/admin/companies?ids_only=true&status=valid&search=${encodeURIComponent(search)}&category=${encodeURIComponent(category)}`);
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || "Could not load matching companies");
-      data.ids.forEach(id => selectedCompIds.add(id));
-      syncBulkBar();
-      if (data.total_count > data.ids.length) {
-        showToast(`Selected the first ${data.ids.length.toLocaleString()} of ${Number(data.total_count).toLocaleString()} matches (500 per action). Narrow the search to reach the rest.`, "error");
-      }
-    } catch (err) {
-      showToast(err.message, "error");
-    }
-  });
-
-  document.getElementById("btn-bulk-clear")?.addEventListener("click", () => {
-    selectedCompIds.clear();
-    syncBulkBar();
-  });
-
-  async function runBulkCompanyAction(action) {
-    const n = selectedCompIds.size;
+  async function runBulkCompanyAction(ids, action) {
+    const n = ids.size;
     if (!n) return;
-    const msg = action === "delete"
-      ? `Permanently delete ${n} companies and their emails, profiles, pitches and outreach logs? This cannot be undone.`
-      : `Quarantine ${n} companies? They move to the exclusion queue and can be restored later.`;
+    const msg = {
+      delete: `Permanently delete ${n} companies and their emails, profiles, pitches and outreach logs? This cannot be undone.`,
+      quarantine: `Quarantine ${n} companies? They move to the exclusion queue and can be restored later.`,
+      restore: `Restore ${n} companies to the active directory?`,
+    }[action];
     if (!confirm(msg)) return;
     try {
       const res = await fetch("/api/admin/companies/bulk-action", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ids: [...selectedCompIds], action, reason: "Bulk quarantined by Master Admin" })
+        body: JSON.stringify({ ids: [...ids], action, reason: "Bulk quarantined by Master Admin" })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || "Bulk action failed");
       showToast(data.message);
-      selectedCompIds.clear();
+      ids.clear();
       loadActiveCompanies(activeCompsCurrentPage);
-      loadInvalidCompanies(1);
+      loadInvalidCompanies(invalidCurrentPage);
       loadMetrics();
     } catch (err) {
       showToast(err.message, "error");
     }
   }
-  document.getElementById("btn-bulk-quarantine")?.addEventListener("click", () => runBulkCompanyAction("quarantine"));
-  document.getElementById("btn-bulk-delete")?.addEventListener("click", () => runBulkCompanyAction("delete"));
+
+  syncBulkBar = setupBulkSelection({
+    ids: selectedCompIds,
+    tbody: activeCompsTableBody,
+    countId: "active-comps-bulk-count",
+    visibleBtnId: "btn-select-visible",
+    allBtnId: "btn-select-all-matching",
+    clearBtnId: "btn-bulk-clear",
+    actions: { "btn-bulk-quarantine": "quarantine", "btn-bulk-delete": "delete" },
+    idsUrl: () => `/api/admin/companies?ids_only=true&status=valid&search=${encodeURIComponent(activeCompsSearchInput ? activeCompsSearchInput.value.trim() : "")}&category=${encodeURIComponent(activeCompsFilterCat ? activeCompsFilterCat.value.trim() : "")}`,
+  });
 
   activeCompsSearchInput?.addEventListener("input", () => {
     clearTimeout(searchTimeout);
@@ -781,6 +790,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- API: Load Quarantined / Invalid Companies ---
   let invalidCurrentPage = 1;
+  const selectedInvalidIds = new Set();
+  let syncInvalidBulk = () => {};
   let invalidSortBy = "id";
   let invalidSortOrder = "desc";
   const invalidTableBody = document.getElementById("invalid-table-body");
@@ -793,7 +804,7 @@ document.addEventListener("DOMContentLoaded", () => {
     invalidCurrentPage = page;
     const search = invalidSearchInput ? invalidSearchInput.value.trim() : "";
 
-    invalidTableBody.innerHTML = `<tr><td colspan="4" class="px-4 py-8 text-center text-on-surface-variant">Loading quarantined records...</td></tr>`;
+    invalidTableBody.innerHTML = `<tr><td colspan="5" class="px-4 py-8 text-center text-on-surface-variant">Loading quarantined records...</td></tr>`;
 
     try {
       const url = `/api/admin/companies/invalid?page=${page}&page_size=15&search=${encodeURIComponent(search)}&sort_by=${encodeURIComponent(invalidSortBy)}&sort_order=${encodeURIComponent(invalidSortOrder)}`;
@@ -804,9 +815,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
       const badgeInv = document.getElementById("badge-invalid-count");
       if (badgeInv) badgeInv.textContent = Number(data.total_count).toLocaleString();
+      const invMatch = document.getElementById("invalid-match-count");
+      if (invMatch) invMatch.textContent = Number(data.total_count).toLocaleString();
 
       if (!data.companies || data.companies.length === 0) {
-        invalidTableBody.innerHTML = `<tr><td colspan="4" class="px-4 py-8 text-center text-on-surface-variant">No quarantined companies found.</td></tr>`;
+        invalidTableBody.innerHTML = `<tr><td colspan="5" class="px-4 py-8 text-center text-on-surface-variant">No quarantined companies found.</td></tr>`;
         invalidPageInfo.textContent = `Page 1 of 1`;
         invalidBtnPrev.disabled = true;
         invalidBtnNext.disabled = true;
@@ -820,6 +833,7 @@ document.addEventListener("DOMContentLoaded", () => {
       invalidTableBody.innerHTML = data.companies.map(c => {
         return `
           <tr class="hover:bg-surface-container/50 transition">
+            <td class="px-4 py-3"><input type="checkbox" class="comp-select" data-id="${c.id}" aria-label="Select ${c.name.replace(/"/g, '&quot;')}" ${selectedInvalidIds.has(c.id) ? "checked" : ""}></td>
             <td class="px-4 py-3 font-semibold text-xs text-on-surface">${c.name}</td>
             <td class="px-4 py-3 font-mono text-xs text-on-surface-variant">${c.domain}</td>
             <td class="px-4 py-3 text-xs text-on-surface-variant max-w-xs truncate">${c.invalid_reason || "Flagged as non-company"}</td>
@@ -836,10 +850,11 @@ document.addEventListener("DOMContentLoaded", () => {
           </tr>
         `;
       }).join("");
+      syncInvalidBulk();
 
     } catch (err) {
       console.error("Error loading quarantined companies:", err);
-      invalidTableBody.innerHTML = `<tr><td colspan="4" class="px-4 py-8 text-center text-rose-500">Failed to load: ${err.message}</td></tr>`;
+      invalidTableBody.innerHTML = `<tr><td colspan="5" class="px-4 py-8 text-center text-rose-500">Failed to load: ${err.message}</td></tr>`;
     }
   }
 
@@ -849,6 +864,17 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   invalidBtnPrev?.addEventListener("click", () => { if (invalidCurrentPage > 1) loadInvalidCompanies(invalidCurrentPage - 1); });
   invalidBtnNext?.addEventListener("click", () => { loadInvalidCompanies(invalidCurrentPage + 1); });
+
+  syncInvalidBulk = setupBulkSelection({
+    ids: selectedInvalidIds,
+    tbody: invalidTableBody,
+    countId: "invalid-bulk-count",
+    visibleBtnId: "btn-inv-select-visible",
+    allBtnId: "btn-inv-select-all",
+    clearBtnId: "btn-inv-clear",
+    actions: { "btn-inv-restore": "restore", "btn-inv-delete": "delete" },
+    idsUrl: () => `/api/admin/companies?ids_only=true&status=invalid&search=${encodeURIComponent(invalidSearchInput ? invalidSearchInput.value.trim() : "")}`,
+  });
 
   // Quarantined Leads Sortable Headers Listener
   document.querySelectorAll(".sortable-invalid-header").forEach(th => {
