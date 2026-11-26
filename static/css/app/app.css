@@ -22,8 +22,21 @@
 #app-sidebar.mobile-open { transform: none; box-shadow: var(--shadow-xl); }
 @media (min-width: 768px) { #app-sidebar { transform: none; } }
 .sb-inner { display: flex; flex-direction: column; gap: 22px; padding: 18px 14px 24px; min-height: 100%; }
-.sb-brand { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 2px 6px; }
+.sb-brand { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 2px 0 2px 6px; }
 .sb-brand .logo-word { font-size: 1.12rem; }
+/* Account menu: round initials button at the top of the sidebar (/app and /admin). */
+.profile-btn { width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; background: var(--accent); color: var(--on-accent); font-family: var(--font-display); font-size: .95rem; box-shadow: var(--shadow-btn); }
+.profile-btn:hover { background: var(--accent-hover); }
+.profile-menu { position: absolute; right: 0; top: calc(100% + 8px); width: 240px; z-index: 80; padding: 6px; border-radius: var(--r-lg); background: var(--surface); border: 1px solid var(--line-2); box-shadow: var(--shadow-lg); animation: rise-in var(--t-base) var(--ease-out) both; }
+.pm-head { display: flex; align-items: center; gap: 10px; padding: 10px; }
+.pm-head b { display: block; font-size: .88rem; }
+.pm-head div > span { display: block; font-family: var(--font-mono); font-size: .7rem; color: var(--text-3); word-break: break-all; }
+.pm-sep { height: 1px; margin: 4px 6px; background: var(--line); }
+.pm-item { display: flex; align-items: center; gap: 10px; width: 100%; padding: 9px 10px; border-radius: 9px; font-size: .88rem; color: var(--text); text-align: left; }
+.pm-item:hover { background: var(--surface-3); }
+.pm-item .material-symbols-outlined { font-size: 19px; color: var(--text-3); }
+.pm-item.danger { color: var(--danger-text); }
+.pm-item.danger .material-symbols-outlined { color: var(--danger-text); }
 .sb-section-label { padding: 0 10px; font-family: var(--font-mono); font-size: var(--fs-2xs); letter-spacing: var(--track-mono); text-transform: uppercase; color: var(--text-3); }
 .sb-nav { display: grid; gap: 4px; }
 .tab-btn, .sb-link {
@@ -56,10 +69,6 @@
 .quota-card:hover .quota-link { color: var(--accent-text); }
 .meter-sm { height: 6px; border-radius: 99px; background: var(--surface-3); overflow: hidden; }
 .meter-sm > div { height: 100%; border-radius: inherit; background: var(--accent); transition: width var(--t-slow) var(--ease-out); }
-.sb-user { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 0 4px; }
-.sb-user .who { display: flex; align-items: center; gap: 10px; min-width: 0; }
-.sb-user .email { font-size: .84rem; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.sb-user .status { display: flex; align-items: center; gap: 6px; font-size: .74rem; color: var(--ok-text); }
 .temp-tag { font-family: var(--font-mono); font-size: .6rem; padding: 1px 6px; border-radius: 5px; background: var(--warn-soft); color: var(--warn-text); }
 .sb-guest { display: grid; gap: 10px; }
 .sb-guest .who { display: flex; align-items: center; gap: 10px; }
@@ -105,6 +114,9 @@
 }
 @media (min-width: 768px) { .mobile-bar { display: none; } }
 .mobile-bar .left, .mobile-bar .right { display: flex; align-items: center; gap: 8px; }
+.mobile-bar .right { position: relative; }
+/* Phones reach the account menu from the top bar, not from inside the drawer. */
+@media (max-width: 767px) { #btn-app-profile { display: none !important; } }
 .tab-section { display: grid; gap: 22px; }
 .tab-section.hidden { display: none !important; }
 

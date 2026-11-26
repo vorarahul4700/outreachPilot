@@ -2083,7 +2083,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   const sidebarAdminBadge = document.getElementById("sidebar-admin-badge");
   const btnLogout = document.getElementById("btn-logout");
-  const authBoxLoggedIn = document.getElementById("auth-box-logged-in");
+  const profileBtns = document.querySelectorAll(".js-profile-btn");
   const authBoxLoggedOut = document.getElementById("auth-box-logged-out");
   const userDisplayEmail = document.getElementById("user-display-email");
 
@@ -2121,17 +2121,18 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       if (currentUser.is_logged_in) {
-        authBoxLoggedIn?.classList.remove("hidden");
+        profileBtns.forEach(b => b.classList.remove("hidden"));
         authBoxLoggedOut?.classList.add("hidden");
-        if (userDisplayEmail) userDisplayEmail.textContent = currentUser.email || "Verified User";
-        const avatarEl = document.getElementById("user-avatar-initials");
-        if (avatarEl) {
-          const raw = (currentUser.name || currentUser.email || "U").trim();
-          const initials = raw.includes("@")
-            ? raw.slice(0, 2).toUpperCase()
-            : raw.split(/\s+/).map(p => p[0]).join("").slice(0, 2).toUpperCase();
-          avatarEl.textContent = initials || "U";
-        }
+        // Placeholder names from sign-up are not real names; fall back to the email.
+        const rawName = (currentUser.name || "").trim();
+        const realName = ["Pilot User", "Master Admin"].includes(rawName) ? "" : rawName;
+        if (userDisplayEmail) userDisplayEmail.textContent = currentUser.email || "";
+        const nameEl = document.getElementById("user-display-name");
+        if (nameEl) nameEl.textContent = realName || currentUser.email || "Signed in";
+        const initials = realName
+          ? realName.split(/\s+/).map(p => p[0]).join("").slice(0, 2).toUpperCase()
+          : (currentUser.email || "U").slice(0, 1).toUpperCase();
+        document.querySelectorAll(".js-user-initials").forEach(el => { el.textContent = initials; });
         if (isMasterAdmin) {
           sidebarAdminBadge?.classList.remove("hidden");
           setAdminViewMode(adminViewMode || "admin");
@@ -2143,7 +2144,7 @@ document.addEventListener("DOMContentLoaded", () => {
           statCardInvalid?.classList.add("hidden");
         }
       } else {
-        authBoxLoggedIn?.classList.add("hidden");
+        profileBtns.forEach(b => b.classList.add("hidden"));
         authBoxLoggedOut?.classList.remove("hidden");
         sidebarAdminBadge?.classList.add("hidden");
         adminModeToggleGroup?.classList.add("hidden");
@@ -2248,8 +2249,27 @@ document.addEventListener("DOMContentLoaded", () => {
     btnSidebarDemoLogin.addEventListener("click", () => performDemoLogin({ as_admin: false, email: "demo_user@outreachpilot.ai" }));
   }
 
+  // --- Account menu (round initials button at the top of the sidebar) ---
+  // One menu, opened from the sidebar button (desktop) or the top-bar button (phones).
+  const profileMenu = document.getElementById("app-profile-menu");
+  const setProfileMenu = (open, btn) => {
+    if (!profileMenu) return;
+    if (open && btn) (btn.closest(".sb-brand") || btn.parentElement).appendChild(profileMenu);
+    profileMenu.classList.toggle("hidden", !open);
+    profileBtns.forEach(b => b.setAttribute("aria-expanded", open && b === btn ? "true" : "false"));
+  };
+  profileBtns.forEach(btn => btn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    setProfileMenu(profileMenu?.classList.contains("hidden"), btn);
+  }));
+  document.addEventListener("click", (e) => {
+    if (profileMenu && !profileMenu.classList.contains("hidden") && !profileMenu.contains(e.target)) setProfileMenu(false);
+  });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") setProfileMenu(false); });
+
   if (btnLogout) {
     btnLogout.addEventListener("click", async () => {
+      setProfileMenu(false);
       try {
         await fetch("/auth/logout", { method: "POST" });
         document.cookie = "pilot_user_email=; path=/; max-age=0; SameSite=Lax";

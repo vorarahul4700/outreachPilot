@@ -20,22 +20,24 @@
 <!-- ===================== Sidebar ===================== -->
 <aside id="admin-sidebar" aria-label="Admin menu">
   <div class="sb-inner">
-    {% set account_initial = (user.email[0] if user and user.email else "A")|upper %}
+    {%- set account_name = (user.name or "")|trim if user else "" -%}
+    {%- if account_name in ("Pilot User", "Master Admin") %}{% set account_name = "" %}{% endif -%}
+    {%- set account_initials = ((account_name.split()|map("first")|join)[:2] if account_name else (user.email[:1] if user and user.email else "U"))|upper -%}
     <div class="sb-brand" style="position:relative">
       <a href="/admin" class="logo">
         <span class="logo-mark"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#logo-plane"/></svg></span>
         <span><span class="logo-word block">{{ project_name }}</span><span class="admin-brand-sub">Master Admin</span></span>
       </a>
       <div class="flex items-center gap-1.5">
-        <button id="btn-admin-profile" type="button" class="profile-btn" aria-label="Account menu" aria-haspopup="menu" aria-expanded="false" aria-controls="admin-profile-menu" title="{{ user.email if user and user.email else 'Account' }}">{{ account_initial }}</button>
+        <button id="btn-admin-profile" type="button" class="profile-btn" aria-label="Account menu" aria-haspopup="menu" aria-expanded="false" aria-controls="admin-profile-menu" title="{{ user.email if user and user.email else 'Account' }}">{{ account_initials }}</button>
         <button id="btn-admin-sidebar-close" type="button" aria-label="Close menu" class="icon-btn sm bare sm:hidden"><span class="material-symbols-outlined">close</span></button>
       </div>
 
-      <div id="admin-profile-menu" role="menu" aria-labelledby="btn-admin-profile" class="hidden">
+      <div id="admin-profile-menu" role="menu" aria-labelledby="btn-admin-profile" class="profile-menu hidden">
         <div class="pm-head">
-          <span class="profile-btn" aria-hidden="true">{{ account_initial }}</span>
+          <span class="profile-btn" aria-hidden="true">{{ account_initials }}</span>
           <div class="min-w-0">
-            <b>{{ user.name if user and user.name else "Master Admin" }}</b>
+            <b>{{ account_name or "Master Admin" }}</b>
             {% if user and user.email %}<span>{{ user.email }}</span>{% endif %}
           </div>
         </div>

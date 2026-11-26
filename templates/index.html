@@ -24,18 +24,33 @@
 <!-- ===================== Sidebar ===================== -->
 <aside id="app-sidebar" aria-label="Workspace navigation">
   <div class="sb-inner">
-    <div class="sb-brand">
+    {%- set account_name = (user.name or "")|trim if user else "" -%}
+    {%- if account_name in ("Pilot User", "Master Admin") %}{% set account_name = "" %}{% endif -%}
+    {%- set account_initials = ((account_name.split()|map("first")|join)[:2] if account_name else (user.email[:1] if user and user.email else "U"))|upper -%}
+    <div class="sb-brand" style="position:relative">
       <a href="/" class="logo" title="{{ project_name }} - Home">
         <span class="logo-mark"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#logo-plane"/></svg></span>
         <span class="logo-word sidebar-text">{{ project_name }}</span>
       </a>
-      <div class="flex items-center gap-1.5 sidebar-full-only">
-        <button id="btn-theme-toggle" type="button" aria-label="Toggle Light / Dark Mode" class="icon-btn sm hidden-xs" title="Toggle Light / Dark Mode">
-          <span id="theme-toggle-icon" class="material-symbols-outlined">light_mode</span>
-        </button>
+      <div class="flex items-center gap-1 sidebar-full-only">
+        <button id="btn-app-profile" type="button" class="profile-btn js-user-initials js-profile-btn{% if not is_logged_in %} hidden{% endif %}" aria-label="Account menu" aria-haspopup="menu" aria-expanded="false" aria-controls="app-profile-menu" title="{{ user.email if user and is_logged_in else 'Account' }}">{{ account_initials }}</button>
         <button id="btn-close-sidebar-mobile" type="button" class="icon-btn sm bare sm:hidden" title="Close Menu" aria-label="Close menu">
           <span class="material-symbols-outlined">close</span>
         </button>
+      </div>
+
+      <div id="app-profile-menu" role="menu" aria-labelledby="btn-app-profile" class="profile-menu hidden">
+        <div class="pm-head">
+          <span class="profile-btn js-user-initials" aria-hidden="true">{{ account_initials }}</span>
+          <div class="min-w-0">
+            <b id="user-display-name">{{ account_name or (user.email if user and is_logged_in else "") }}</b>
+            <span id="user-display-email">{{ user.email if user and is_logged_in else "" }}</span>
+          </div>
+        </div>
+        {% if subscription_kill_switch and not is_master_admin %}<div class="px-2.5 pb-2"><span class="temp-tag">TEMP USER</span></div>{% endif %}
+        <div class="pm-sep"></div>
+        <button id="btn-theme-toggle" type="button" role="menuitem" class="pm-item"><span id="theme-toggle-icon" class="material-symbols-outlined">light_mode</span><span>Light / dark mode</span></button>
+        <button id="btn-logout" type="button" role="menuitem" class="pm-item danger"><span class="material-symbols-outlined">logout</span><span>Sign out</span></button>
       </div>
     </div>
 
@@ -84,22 +99,6 @@
       </div>
       {% endif %}
 
-      <div id="auth-box-logged-in" class="{% if not is_logged_in %}hidden{% endif %} sb-user">
-        <div class="who">
-          <div id="user-avatar-initials" class="avatar avatar-sm avatar-round">
-            {{ (user.name[:2] if user.name else user.email[:2])|upper if user else "U" }}
-          </div>
-          <div class="min-w-0">
-            <span class="email block" id="user-display-email">{{ user.email if user and is_logged_in else "" }}</span>
-            <span class="status"><span class="dot dot-ok"></span>Google Connected
-              {% if subscription_kill_switch and not is_master_admin %}<span class="temp-tag">TEMP USER</span>{% endif %}
-            </span>
-          </div>
-        </div>
-        <button id="btn-logout" type="button" class="icon-btn sm bare" title="Disconnect / Sign Out" aria-label="Sign out">
-          <span class="material-symbols-outlined" data-icon="logout">logout</span>
-        </button>
-      </div>
 
       <div id="auth-box-logged-out" class="{% if is_logged_in %}hidden{% endif %} sb-guest">
         <div class="who">
@@ -136,6 +135,7 @@
       <button id="btn-quick-refresh" type="button" class="icon-btn sm" title="Refresh directory data" aria-label="Refresh">
         <span class="material-symbols-outlined">refresh</span>
       </button>
+      <button id="btn-app-profile-mobile" type="button" class="profile-btn js-user-initials js-profile-btn{% if not is_logged_in %} hidden{% endif %}" aria-label="Account menu" aria-haspopup="menu" aria-expanded="false" aria-controls="app-profile-menu">{{ account_initials }}</button>
     </div>
   </div>
 
