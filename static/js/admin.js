@@ -1139,131 +1139,177 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // --- System Maintenance: Name Sanitation & Purging Engines ---
-  const btnSanitizePrev = document.getElementById("btn-sanitize-preview");
-  const btnSanitizeExec = document.getElementById("btn-sanitize-execute");
-  const sanitizeResultBox = document.getElementById("sanitize-result-box");
-  const sanitizeStatusHeading = document.getElementById("sanitize-status-heading");
-  const sanitizeStatusTime = document.getElementById("sanitize-status-time");
-  const sanitizeSamples = document.getElementById("sanitize-samples");
+  // --- System Maintenance: Name Sanitation & Non-Company Purge ---
+  // Preview scans every company and lists each proposed change. Apply sends only the
+  // ticked ids (the server re-checks each one). Undo reverses the last apply.
+  const esc = (v) => String(v ?? "").replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
 
-  async function triggerNameSanitation(dryRun = false) {
-    const btn = dryRun ? btnSanitizePrev : btnSanitizeExec;
-    if (btn) btn.disabled = true;
-    if (sanitizeResultBox) {
-      sanitizeResultBox.classList.remove("hidden");
-      sanitizeStatusHeading.textContent = dryRun ? "Running Dry-Run Preview..." : "Executing Live Sanitation Migration...";
-      sanitizeStatusTime.textContent = "";
-      sanitizeSamples.innerHTML = `<span class="italic text-on-surface-variant">Scanning primary-key index across Neon PostgreSQL...</span>`;
+  function setupMaintenanceEngine(cfg) {
+    const $ = (id) => document.getElementById(id);
+    const btnPreview = $(cfg.previewBtn), btnApply = $(cfg.applyBtn), btnCsv = $(cfg.csvBtn), btnUndo = $(cfg.undoBtn);
+    const box = $(cfg.box), heading = $(cfg.heading), timeEl = $(cfg.time), list = $(cfg.list);
+    let candidates = [];
+    const picked = new Set();
+
+    function setUndo(undo) {
+      if (!btnUndo) return;
+      btnUndo.classList.toggle("hidden", !undo);
+      const lbl = btnUndo.querySelector(".undo-label");
+      if (lbl && undo) lbl.textContent = `Undo last run (${undo.count.toLocaleString()})`;
     }
 
-    try {
-      const res = await fetch("/api/admin/maintenance/sanitize-names", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ dry_run: dryRun, limit: 3000 })
-      });
+    function syncApply() {
+      if (btnApply) {
+        btnApply.disabled = picked.size === 0;
+        const lbl = btnApply.querySelector(".apply-label");
+        if (lbl) lbl.textContent = `${cfg.applyVerb} ${picked.size.toLocaleString()} selected`;
+      }
+      const all = list.querySelector(".mx-all");
+      if (all) {
+        all.checked = picked.size === candidates.length && candidates.length > 0;
+        all.indeterminate = picked.size > 0 && picked.size < candidates.length;
+      }
+    }
+
+    function render() {
+      if (!candidates.length) {
+        list.innerHTML = `<span>${esc(cfg.emptyText)}</span>`;
+        syncApply();
+        return;
+      }
+      list.innerHTML = `
+        <label class="flex items-center gap-2 pb-1 border-b border-outline-variant/20 font-semibold">
+          <input type="checkbox" class="mx-all" checked aria-label="Select all rows in this preview"> Select all ${candidates.length.toLocaleString()}
+        </label>` +
+        candidates.map(c => `
+          <label class="flex items-start gap-2 border-b border-outline-variant/20 py-1">
+            <input type="checkbox" class="mx-row mt-0.5" data-id="${c.id}" ${picked.has(c.id) ? "checked" : ""}>
+            <span class="min-w-0">${cfg.row(c)}</span>
+          </label>`).join("");
+      syncApply();
+    }
+
+    list?.addEventListener("change", (e) => {
+      if (e.target.classList.contains("mx-all")) {
+        picked.clear();
+        if (e.target.checked) candidates.forEach(c => picked.add(c.id));
+        list.querySelectorAll(".mx-row").forEach(b => { b.checked = e.target.checked; });
+      } else if (e.target.classList.contains("mx-row")) {
+        const id = Number(e.target.dataset.id);
+        e.target.checked ? picked.add(id) : picked.delete(id);
+      }
+      syncApply();
+    });
+
+    async function call(body) {
+      const res = await fetch(cfg.endpoint, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || "Sanitation failed");
-
-      sanitizeStatusHeading.innerHTML = dryRun
-        ? `Preview: <strong class="text-primary">${data.cleaned}</strong> candidates identified out of ${data.scanned} scanned`
-        : `Migration complete: <strong class="text-emerald-500">${data.cleaned}</strong> records cleaned in DB`;
-      sanitizeStatusTime.textContent = `${data.elapsed_seconds}s`;
-
-      if (data.samples && data.samples.length > 0) {
-        sanitizeSamples.innerHTML = data.samples.map(s => `
-          <div class="border-b border-outline-variant/20 pb-1">
-            <span class="text-rose-400 line-through">${s.before}</span> <span class="material-symbols-outlined text-[14px] align-middle text-on-surface-variant" aria-label="becomes">arrow_forward</span> <span class="text-emerald-400 font-semibold">${s.after}</span>
-          </div>
-        `).join("");
-      } else {
-        sanitizeSamples.innerHTML = `<span>No companies required name sanitation in this batch.</span>`;
-      }
-
-      showToast(data.message);
-      if (!dryRun) {
-        loadActiveCompanies(activeCompsCurrentPage);
-        loadMetrics();
-      }
-    } catch (err) {
-      sanitizeStatusHeading.textContent = "Sanitation Error";
-      sanitizeSamples.textContent = err.message;
-      showToast(err.message, "error");
-    } finally {
-      if (btn) btn.disabled = false;
+      if (!res.ok) throw new Error(data.detail || "Request failed");
+      return data;
     }
+
+    btnPreview?.addEventListener("click", async () => {
+      btnPreview.disabled = true;
+      box?.classList.remove("hidden");
+      heading.textContent = "Scanning every company...";
+      timeEl.textContent = "";
+      list.innerHTML = `<span class="italic text-on-surface-variant">${esc(cfg.scanningText)}</span>`;
+      try {
+        const data = await call({ mode: "preview" });
+        candidates = data.candidates || [];
+        picked.clear();
+        candidates.forEach(c => picked.add(c.id));
+        heading.innerHTML = `<strong>${candidates.length.toLocaleString()}</strong> ${esc(cfg.foundText)} (${Number(data.scanned).toLocaleString()} scanned)`;
+        timeEl.textContent = `${data.elapsed_seconds}s`;
+        if (btnCsv) btnCsv.disabled = candidates.length === 0;
+        setUndo(data.undo);
+        render();
+      } catch (err) {
+        heading.textContent = "Preview failed";
+        list.textContent = err.message;
+        showToast(err.message, "error");
+      } finally {
+        btnPreview.disabled = false;
+      }
+    });
+
+    btnApply?.addEventListener("click", async () => {
+      if (!picked.size || !confirm(cfg.confirmApply(picked.size))) return;
+      btnApply.disabled = true;
+      try {
+        const data = await call({ mode: "apply", ids: [...picked] });
+        showToast(data.message);
+        heading.textContent = data.message;
+        candidates = candidates.filter(c => !picked.has(c.id));
+        picked.clear();
+        setUndo(data.undo);
+        render();
+        cfg.afterChange();
+      } catch (err) {
+        showToast(err.message, "error");
+        syncApply();
+      }
+    });
+
+    btnUndo?.addEventListener("click", async () => {
+      if (!confirm(cfg.confirmUndo)) return;
+      btnUndo.disabled = true;
+      try {
+        const data = await call({ mode: "undo" });
+        showToast(data.message);
+        heading.textContent = `${data.message} Run Preview again to see the current state.`;
+        setUndo(null);
+        cfg.afterChange();
+      } catch (err) {
+        showToast(err.message, "error");
+      } finally {
+        btnUndo.disabled = false;
+      }
+    });
+
+    btnCsv?.addEventListener("click", () => {
+      const cell = (v) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+      const csv = [cfg.csvColumns.join(",")]
+        .concat(candidates.map(c => cfg.csvColumns.map(k => cell(c[k])).join(",")))
+        .join("\r\n");
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+      a.download = cfg.csvName;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
   }
 
-  btnSanitizePrev?.addEventListener("click", () => triggerNameSanitation(true));
-  btnSanitizeExec?.addEventListener("click", () => {
-    if (confirm("Run live company name cleanup on Neon PostgreSQL? Taglines and SEO slogans will be stripped.")) {
-      triggerNameSanitation(false);
-    }
+  setupMaintenanceEngine({
+    endpoint: "/api/admin/maintenance/sanitize-names",
+    previewBtn: "btn-sanitize-preview", applyBtn: "btn-sanitize-execute", csvBtn: "btn-sanitize-csv", undoBtn: "btn-sanitize-undo",
+    box: "sanitize-result-box", heading: "sanitize-status-heading", time: "sanitize-status-time", list: "sanitize-samples",
+    applyVerb: "Clean",
+    scanningText: "Checking every company name for SEO slogans...",
+    foundText: "names would change",
+    emptyText: "No company names need cleaning.",
+    row: (c) => `<span class="text-rose-400 line-through">${esc(c.before)}</span> <span class="text-on-surface-variant" aria-label="becomes">&rarr;</span> <span class="text-emerald-500 font-semibold">${esc(c.after)}</span> <span class="text-on-surface-variant font-mono text-[11px]">${esc(c.domain)}</span>`,
+    confirmApply: (n) => `Rename ${n} companies to their cleaned names? You can undo this run afterwards.`,
+    confirmUndo: "Put back the original names from the last cleanup run? Names edited since that run are left as they are.",
+    csvColumns: ["id", "before", "after", "domain"],
+    csvName: "name-cleanup-preview.csv",
+    afterChange: () => { loadActiveCompanies(activeCompsCurrentPage); loadMetrics(); },
   });
 
-  const btnPurgePrev = document.getElementById("btn-purge-preview");
-  const btnPurgeExec = document.getElementById("btn-purge-execute");
-  const purgeResultBox = document.getElementById("purge-result-box");
-  const purgeStatusHeading = document.getElementById("purge-status-heading");
-  const purgeStatusTime = document.getElementById("purge-status-time");
-  const purgeSamples = document.getElementById("purge-samples");
-
-  async function triggerNonCompanyPurge(dryRun = false) {
-    const btn = dryRun ? btnPurgePrev : btnPurgeExec;
-    if (btn) btn.disabled = true;
-    if (purgeResultBox) {
-      purgeResultBox.classList.remove("hidden");
-      purgeStatusHeading.textContent = dryRun ? "Auditing Directory for Institutes & Portfolios..." : "Executing Quarantine Migration...";
-      purgeStatusTime.textContent = "";
-      purgeSamples.innerHTML = `<span class="italic text-on-surface-variant">Scanning entity names and TLDs for academic and portfolio terms...</span>`;
-    }
-
-    try {
-      const res = await fetch("/api/admin/maintenance/purge-non-companies", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ dry_run: dryRun, limit: 5000 })
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.detail || "Purge audit failed");
-
-      purgeStatusHeading.innerHTML = dryRun
-        ? `Audit: <strong class="text-amber-500">${data.flagged}</strong> non-company leads flagged out of ${data.scanned} scanned`
-        : `Quarantined <strong class="text-rose-500">${data.flagged}</strong> non-company leads in DB`;
-      purgeStatusTime.textContent = `${data.elapsed_seconds}s`;
-
-      if (data.samples && data.samples.length > 0) {
-        purgeSamples.innerHTML = data.samples.map(s => `
-          <div class="border-b border-outline-variant/20 pb-1 flex items-center justify-between">
-            <span class="font-semibold text-on-surface">${s.name} (${s.domain})</span>
-            <span class="text-amber-400 text-[10px]">${s.reason}</span>
-          </div>
-        `).join("");
-      } else {
-        purgeSamples.innerHTML = `<span>Zero non-company entities detected in this batch.</span>`;
-      }
-
-      showToast(data.message);
-      if (!dryRun) {
-        loadActiveCompanies(activeCompsCurrentPage);
-        loadInvalidCompanies(1);
-        loadMetrics();
-      }
-    } catch (err) {
-      purgeStatusHeading.textContent = "Purge Error";
-      purgeSamples.textContent = err.message;
-      showToast(err.message, "error");
-    } finally {
-      if (btn) btn.disabled = false;
-    }
-  }
-
-  btnPurgePrev?.addEventListener("click", () => triggerNonCompanyPurge(true));
-  btnPurgeExec?.addEventListener("click", () => {
-    if (confirm("Move all detected coaching institutes, academies, and portfolios to the Quarantine queue?")) {
-      triggerNonCompanyPurge(false);
-    }
+  setupMaintenanceEngine({
+    endpoint: "/api/admin/maintenance/purge-non-companies",
+    previewBtn: "btn-purge-preview", applyBtn: "btn-purge-execute", csvBtn: "btn-purge-csv", undoBtn: "btn-purge-undo",
+    box: "purge-result-box", heading: "purge-status-heading", time: "purge-status-time", list: "purge-samples",
+    applyVerb: "Quarantine",
+    scanningText: "Checking every active company for institutes, academies and portfolios. This takes about 30 seconds...",
+    foundText: "look like non-companies",
+    emptyText: "No non-company entities found.",
+    row: (c) => `<span class="font-semibold text-on-surface">${esc(c.name)}</span> <span class="font-mono text-[11px] text-on-surface-variant">${esc(c.domain)}</span><br><span class="text-amber-500 text-[11px]">${esc(c.reason)}</span> <span class="text-on-surface-variant text-[11px]">${esc(c.city)}</span>`,
+    confirmApply: (n) => `Move ${n} companies to Quarantine? You can undo this run afterwards.`,
+    confirmUndo: "Move the companies from the last run back to the active directory?",
+    csvColumns: ["id", "name", "domain", "city", "source_query", "reason"],
+    csvName: "non-company-preview.csv",
+    afterChange: () => { loadActiveCompanies(activeCompsCurrentPage); loadInvalidCompanies(1); loadMetrics(); },
   });
 
   // --- API: Load & Manage Subscription Tiers ---
