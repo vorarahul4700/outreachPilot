@@ -63,7 +63,7 @@
   transition: border-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease), background-color var(--t-fast) var(--ease);
 }
 .pager a:hover, .pager button:hover { border-color: var(--line-3); color: var(--text); }
-.pager .is-current, .pager [aria-current="page"] { background: var(--text); border-color: var(--text); color: var(--text-inverse); }
+.pager .is-current, .pager [aria-current="page"] { background: var(--active-bg); border-color: var(--active-bg); color: var(--active-fg); }
 
 /* FAQ accordion built on <details> */
 .faq { display: grid; gap: 10px; }

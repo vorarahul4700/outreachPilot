@@ -269,13 +269,13 @@
 
         <div id="active-comps-bulk-bar" class="filters-bar" role="region" aria-label="Selection and bulk actions">
           <div class="flex items-center gap-2 flex-wrap">
-            <button id="btn-select-visible" type="button" class="btn btn-secondary btn-sm">Select visible</button>
-            <button id="btn-select-all-matching" type="button" class="btn btn-secondary btn-sm">Select all <span id="active-comps-match-count"></span></button>
-            <button id="btn-bulk-clear" type="button" class="btn btn-secondary btn-sm">Unselect all</button>
+            <button id="btn-select-visible" type="button" class="btn btn-soft btn-sm">Select visible</button>
+            <button id="btn-select-all-matching" type="button" class="btn btn-primary btn-sm">Select all <span id="active-comps-match-count"></span></button>
+            <button id="btn-bulk-clear" type="button" class="btn btn-quiet btn-sm" disabled>Unselect all</button>
             <span class="text-sm" aria-live="polite"><b id="active-comps-bulk-count">0</b> selected</span>
           </div>
           <div class="f-right flex items-center gap-2">
-            <button id="btn-bulk-quarantine" type="button" class="btn btn-secondary btn-sm" disabled><span class="material-symbols-outlined">block</span><span>Quarantine</span></button>
+            <button id="btn-bulk-quarantine" type="button" class="btn btn-warn-soft btn-sm" disabled><span class="material-symbols-outlined">block</span><span>Quarantine</span></button>
             <button id="btn-bulk-delete" type="button" class="btn btn-danger-soft btn-sm" disabled><span class="material-symbols-outlined">delete</span><span>Delete</span></button>
           </div>
         </div>
@@ -308,13 +308,13 @@
         </div>
         <div id="invalid-bulk-bar" class="filters-bar" role="region" aria-label="Selection and bulk actions for quarantined leads">
           <div class="flex items-center gap-2 flex-wrap">
-            <button id="btn-inv-select-visible" type="button" class="btn btn-secondary btn-sm">Select visible</button>
-            <button id="btn-inv-select-all" type="button" class="btn btn-secondary btn-sm">Select all <span id="invalid-match-count"></span></button>
-            <button id="btn-inv-clear" type="button" class="btn btn-secondary btn-sm">Unselect all</button>
+            <button id="btn-inv-select-visible" type="button" class="btn btn-soft btn-sm">Select visible</button>
+            <button id="btn-inv-select-all" type="button" class="btn btn-primary btn-sm">Select all <span id="invalid-match-count"></span></button>
+            <button id="btn-inv-clear" type="button" class="btn btn-quiet btn-sm" disabled>Unselect all</button>
             <span class="text-sm" aria-live="polite"><b id="invalid-bulk-count">0</b> selected</span>
           </div>
           <div class="f-right flex items-center gap-2">
-            <button id="btn-inv-restore" type="button" class="btn btn-secondary btn-sm" disabled><span class="material-symbols-outlined">restore</span><span>Restore</span></button>
+            <button id="btn-inv-restore" type="button" class="btn btn-soft btn-sm" disabled><span class="material-symbols-outlined">restore</span><span>Restore</span></button>
             <button id="btn-inv-delete" type="button" class="btn btn-danger-soft btn-sm" disabled><span class="material-symbols-outlined">delete</span><span>Delete</span></button>
           </div>
         </div>

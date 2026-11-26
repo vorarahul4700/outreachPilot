@@ -81,7 +81,7 @@
 .domain-pill:active { transform: scale(.97); }
 .domain-pill .material-symbols-outlined { font-size: 18px; width: 26px; height: 26px; border-radius: 50%; background: var(--surface-3); color: var(--text-2); }
 .domain-pill .n { font-family: var(--font-mono); font-size: .72rem; font-weight: 500; color: var(--text-3); }
-.domain-pill.active { background: var(--text); border-color: var(--text); color: var(--text-inverse); }
+.domain-pill.active { background: var(--active-bg); border-color: var(--active-bg); color: var(--active-fg); }
 .domain-pill.active .material-symbols-outlined { background: var(--accent); color: var(--on-accent); }
 .domain-pill.active .n { color: inherit; opacity: .7; }
 /* Phone: one row that swipes sideways, fade on the right until the end */

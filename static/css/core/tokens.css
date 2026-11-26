@@ -89,6 +89,9 @@
   --text-2: #4E4F43;
   --text-3: #66675C;
   --text-inverse: #FBF9F3;
+  /* Selected pill / tab / current page. */
+  --active-bg: #1F2018;
+  --active-fg: #FBF9F3;
 
   --accent-soft: #E2E8D0;
   --accent-line: #BCC79A;
@@ -138,6 +141,8 @@ html.dark {
   --text-2: #B4B7C0;
   --text-3: #9295A0;
   --text-inverse: #07080B;
+  --active-bg: #607037;
+  --active-fg: #FFFFFF;
 
   --accent-soft: rgba(150, 172, 92, .12);
   --accent-line: rgba(150, 172, 92, .38);
