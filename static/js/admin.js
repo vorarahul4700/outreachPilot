@@ -583,6 +583,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // --- API: Load Active Verified Directory Companies ---
   let activeCompsCurrentPage = 1;
+  const selectedCompIds = new Set();
   let activeCompsSortBy = "id";
   let activeCompsSortOrder = "desc";
   const activeCompsTableBody = document.getElementById("active-comps-table-body");
@@ -598,7 +599,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const search = activeCompsSearchInput ? activeCompsSearchInput.value.trim() : "";
     const category = activeCompsFilterCat ? activeCompsFilterCat.value.trim() : "";
 
-    activeCompsTableBody.innerHTML = `<tr><td colspan="5" class="px-4 py-8 text-center text-on-surface-variant">Loading genuine companies...</td></tr>`;
+    activeCompsTableBody.innerHTML = `<tr><td colspan="6" class="px-4 py-8 text-center text-on-surface-variant">Loading genuine companies...</td></tr>`;
 
     try {
       const url = `/api/admin/companies?page=${page}&page_size=15&search=${encodeURIComponent(search)}&category=${encodeURIComponent(category)}&status=valid&sort_by=${encodeURIComponent(activeCompsSortBy)}&sort_order=${encodeURIComponent(activeCompsSortOrder)}`;
@@ -610,7 +611,7 @@ document.addEventListener("DOMContentLoaded", () => {
       if (badgeActiveCompsCount) badgeActiveCompsCount.textContent = Number(data.total_count).toLocaleString();
 
       if (!data.companies || data.companies.length === 0) {
-        activeCompsTableBody.innerHTML = `<tr><td colspan="5" class="px-4 py-8 text-center text-on-surface-variant">No active companies found matching filters.</td></tr>`;
+        activeCompsTableBody.innerHTML = `<tr><td colspan="6" class="px-4 py-8 text-center text-on-surface-variant">No active companies found matching filters.</td></tr>`;
         activeCompsPageInfo.textContent = `Page 1 of 1`;
         activeCompsBtnPrev.disabled = true;
         activeCompsBtnNext.disabled = true;
@@ -632,6 +633,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         return `
           <tr class="hover:bg-surface-container/50 transition">
+            <td class="px-4 py-3"><input type="checkbox" class="comp-select" data-id="${c.id}" aria-label="Select ${c.name.replace(/"/g, '&quot;')}" ${selectedCompIds.has(c.id) ? "checked" : ""}></td>
             <td class="px-4 py-3">
               <div class="flex flex-col">
                 <a href="${c.website_url}" target="_blank" class="font-semibold text-xs text-on-surface hover:text-primary transition flex items-center gap-1">
@@ -666,12 +668,79 @@ document.addEventListener("DOMContentLoaded", () => {
           </tr>
         `;
       }).join("");
+      syncBulkBar();
 
     } catch (err) {
       console.error("Error loading active companies:", err);
-      activeCompsTableBody.innerHTML = `<tr><td colspan="5" class="px-4 py-8 text-center text-rose-500">Failed to load: ${err.message}</td></tr>`;
+      activeCompsTableBody.innerHTML = `<tr><td colspan="6" class="px-4 py-8 text-center text-rose-500">Failed to load: ${err.message}</td></tr>`;
     }
   }
+
+  // --- Bulk selection (kept across pages and searches until cleared) ---
+  const bulkBar = document.getElementById("active-comps-bulk-bar");
+  const bulkCount = document.getElementById("active-comps-bulk-count");
+  const selectAllComps = document.getElementById("active-comps-select-all");
+
+  function syncBulkBar() {
+    if (bulkCount) bulkCount.textContent = selectedCompIds.size.toLocaleString();
+    bulkBar?.classList.toggle("hidden", selectedCompIds.size === 0);
+    const boxes = [...activeCompsTableBody.querySelectorAll(".comp-select")];
+    if (selectAllComps) {
+      const checked = boxes.filter(b => b.checked).length;
+      selectAllComps.checked = boxes.length > 0 && checked === boxes.length;
+      selectAllComps.indeterminate = checked > 0 && checked < boxes.length;
+    }
+  }
+
+  activeCompsTableBody?.addEventListener("change", (e) => {
+    const box = e.target.closest(".comp-select");
+    if (!box) return;
+    const id = Number(box.dataset.id);
+    box.checked ? selectedCompIds.add(id) : selectedCompIds.delete(id);
+    syncBulkBar();
+  });
+
+  selectAllComps?.addEventListener("change", () => {
+    activeCompsTableBody.querySelectorAll(".comp-select").forEach(box => {
+      box.checked = selectAllComps.checked;
+      const id = Number(box.dataset.id);
+      box.checked ? selectedCompIds.add(id) : selectedCompIds.delete(id);
+    });
+    syncBulkBar();
+  });
+
+  document.getElementById("btn-bulk-clear")?.addEventListener("click", () => {
+    selectedCompIds.clear();
+    activeCompsTableBody.querySelectorAll(".comp-select").forEach(b => { b.checked = false; });
+    syncBulkBar();
+  });
+
+  async function runBulkCompanyAction(action) {
+    const n = selectedCompIds.size;
+    if (!n) return;
+    const msg = action === "delete"
+      ? `Permanently delete ${n} companies and their emails, profiles, pitches and outreach logs? This cannot be undone.`
+      : `Quarantine ${n} companies? They move to the exclusion queue and can be restored later.`;
+    if (!confirm(msg)) return;
+    try {
+      const res = await fetch("/api/admin/companies/bulk-action", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ids: [...selectedCompIds], action, reason: "Bulk quarantined by Master Admin" })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Bulk action failed");
+      showToast(data.message);
+      selectedCompIds.clear();
+      loadActiveCompanies(activeCompsCurrentPage);
+      loadInvalidCompanies(1);
+      loadMetrics();
+    } catch (err) {
+      showToast(err.message, "error");
+    }
+  }
+  document.getElementById("btn-bulk-quarantine")?.addEventListener("click", () => runBulkCompanyAction("quarantine"));
+  document.getElementById("btn-bulk-delete")?.addEventListener("click", () => runBulkCompanyAction("delete"));
 
   activeCompsSearchInput?.addEventListener("input", () => {
     clearTimeout(searchTimeout);

@@ -259,17 +259,27 @@
           </div>
         </div>
 
+        <div id="active-comps-bulk-bar" class="hidden filters-bar" role="region" aria-label="Bulk actions">
+          <b><span id="active-comps-bulk-count">0</span> selected</b>
+          <div class="f-right">
+            <button id="btn-bulk-clear" type="button" class="btn btn-ghost btn-sm">Clear selection</button>
+            <button id="btn-bulk-quarantine" type="button" class="btn btn-secondary btn-sm"><span class="material-symbols-outlined">block</span><span>Quarantine selected</span></button>
+            <button id="btn-bulk-delete" type="button" class="btn btn-danger-soft btn-sm"><span class="material-symbols-outlined">delete</span><span>Delete selected</span></button>
+          </div>
+        </div>
+
         <div class="a-table-wrap">
           <div class="scroll">
             <table class="a-table">
               <thead><tr>
+                <th style="width:40px"><input type="checkbox" id="active-comps-select-all" aria-label="Select all companies on this page"></th>
                 <th class="sortable sortable-comp-header" data-sort="name" title="Click to sort by Company Name"><span class="th"><span>Company &amp; Domain</span><span class="material-symbols-outlined sort-icon">unfold_more</span></span></th>
                 <th class="sortable sortable-comp-header" data-sort="city" title="Click to sort by Location / City"><span class="th"><span>Industry / Location</span><span class="material-symbols-outlined sort-icon">unfold_more</span></span></th>
                 <th class="sortable sortable-comp-header" data-sort="has_email" title="Click to sort by Contact Email"><span class="th"><span>Contact Email</span><span class="material-symbols-outlined sort-icon">unfold_more</span></span></th>
                 <th class="sortable sortable-comp-header" data-sort="created_at" title="Click to sort by Date Discovered"><span class="th"><span>Tech Stack</span><span class="material-symbols-outlined sort-icon">unfold_more</span></span></th>
                 <th class="num">Actions</th>
               </tr></thead>
-              <tbody id="active-comps-table-body"><tr><td colspan="5" class="px-4 py-8 text-center text-on-surface-variant">Loading verified companies...</td></tr></tbody>
+              <tbody id="active-comps-table-body"><tr><td colspan="6" class="px-4 py-8 text-center text-on-surface-variant">Loading verified companies...</td></tr></tbody>
             </table>
           </div>
           <div class="a-pager">
