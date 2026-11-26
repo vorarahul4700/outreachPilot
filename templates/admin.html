@@ -29,7 +29,7 @@
         <span><span class="logo-word block">{{ project_name }}</span><span class="admin-brand-sub">Master Admin</span></span>
       </a>
       <div class="flex items-center gap-1.5">
-        <button id="btn-admin-profile" type="button" class="profile-btn" aria-label="Account menu" aria-haspopup="menu" aria-expanded="false" aria-controls="admin-profile-menu" title="{{ user.email if user and user.email else 'Account' }}">{{ account_initials }}</button>
+        <button id="btn-admin-profile" type="button" class="profile-btn js-profile-btn" aria-label="Account menu" aria-haspopup="menu" aria-expanded="false" aria-controls="admin-profile-menu" title="{{ user.email if user and user.email else 'Account' }}">{{ account_initials }}</button>
         <button id="btn-admin-sidebar-close" type="button" aria-label="Close menu" class="icon-btn sm bare sm:hidden"><span class="material-symbols-outlined">close</span></button>
       </div>
 
@@ -75,6 +75,9 @@
     <div class="admin-mobile-bar">
       <button id="btn-admin-mobile-menu" type="button" aria-label="Open menu" aria-controls="admin-sidebar" aria-expanded="false" class="icon-btn sm"><span class="material-symbols-outlined">menu</span></button>
       <a href="/admin" class="logo"><span class="logo-word">{{ project_name }} Admin</span></a>
+      <div class="ml-auto" style="position:relative">
+        <button id="btn-admin-profile-mobile" type="button" class="profile-btn js-profile-btn" aria-label="Account menu" aria-haspopup="menu" aria-expanded="false" aria-controls="admin-profile-menu">{{ account_initials }}</button>
+      </div>
     </div>
 
     <header class="app-head">
