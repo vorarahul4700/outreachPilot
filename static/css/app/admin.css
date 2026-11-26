@@ -99,11 +99,11 @@
 
 /* ---------- Filters bar ---------- */
 .filters-bar { display: flex; flex-direction: column; gap: 10px; }
-@media (min-width: 720px) { .filters-bar { flex-direction: row; align-items: center; justify-content: space-between; } }
+@media (min-width: 1101px) { .filters-bar { flex-direction: row; align-items: center; justify-content: space-between; } }
 .filters-bar .app-search { max-width: 460px; }
 .filters-bar .f-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .filters-bar .custom-dropdown { width: 200px; }
-@media (max-width: 719px) { .filters-bar .custom-dropdown { flex: 1; width: auto; } }
+@media (max-width: 1100px) { .filters-bar .custom-dropdown { flex: 1; width: auto; } .filters-bar .app-search { max-width: none; } }
 .subtabs { display: flex; gap: 8px; flex-wrap: wrap; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
 .companies-subtab-btn, .pitch-filter-btn { display: inline-flex; align-items: center; gap: 8px; height: 40px; padding: 0 14px; border-radius: var(--r-pill); font-size: .85rem; font-weight: 650; color: var(--text-2); border: 1px solid var(--line); background: var(--surface); transition: background-color var(--t-fast) var(--ease), color var(--t-fast) var(--ease), border-color var(--t-fast) var(--ease); }
 .companies-subtab-btn:hover, .pitch-filter-btn:hover { color: var(--text); border-color: var(--line-3); }
@@ -132,27 +132,29 @@
 /* Icon-only buttons in table rows: icon centered in its tinted square. */
 .a-table td button:has(> .material-symbols-outlined:only-child) { width: 28px; height: 28px; padding: 0 !important; display: inline-grid; place-items: center; }
 .a-table td button .material-symbols-outlined { line-height: 1; }
-/* Phones: each row is its own card. Header line = checkbox + main cell + actions;
+/* Wide screens: tighter cells so 7 columns fit a 1280px laptop without sideways scroll. */
+@media (min-width: 1101px) { .a-table th, .a-table td { padding-left: 12px !important; padding-right: 12px !important; } }
+/* Phones, tablets and small laptops: each row is its own card. Header line = checkbox + main cell + actions;
    the other cells are label / value lines (roles and labels are set in admin.js). */
-@media (max-width: 767px) {
-  .a-table-wrap { background: transparent; border: 0; border-radius: 0; overflow: visible; }
-  .a-table-wrap .scroll { overflow: visible; }
-  .a-table { min-width: 0; }
-  .a-table thead { display: none; }
-  .a-table tbody { display: grid; gap: 12px; }
-  .a-table tbody tr { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; column-gap: 10px; align-items: center; padding: 6px 14px; border: 1px solid var(--line); border-radius: var(--r-lg); background: var(--surface); }
-  .a-table tbody tr:last-child { border-bottom: 1px solid var(--line); }
-  .a-table tbody td { padding: 9px 0 !important; text-align: left !important; overflow-wrap: anywhere; }
-  .a-table tbody td[data-role="check"] { grid-column: 1; grid-row: 1; }
-  .a-table tbody td[data-role="title"] { grid-column: 2; grid-row: 1; }
-  .a-table tbody td[data-role="title"]:first-child { grid-column: 1 / 3; }
-  .a-table tbody td[data-role="actions"] { grid-column: 3; grid-row: 1; }
-  .a-table tbody td[data-role="field"] { grid-column: 1 / -1; display: grid; grid-template-columns: 36% minmax(0, 1fr); gap: 10px; align-items: center; border-top: 1px solid var(--line); }
-  .a-table tbody td[data-role="field"]::before { content: attr(data-label); font-size: .76rem; color: var(--text-3); }
-  .a-table tbody td[data-role="field"] > * { justify-self: start; max-width: 100%; }
-  .a-table tbody td.truncate { white-space: normal; overflow: visible; }
-  .a-table tbody td[colspan] { grid-column: 1 / -1; display: block; text-align: center !important; }
-  .a-table-wrap .a-pager { margin-top: 12px; border: 1px solid var(--line); border-radius: var(--r-lg); }
+@media (max-width: 1100px) {
+  .a-table-wrap:not(.catvis-group) { background: transparent; border: 0; border-radius: 0; overflow: visible; }
+  .a-table-wrap:not(.catvis-group) .scroll { overflow: visible; }
+  .a-table:not(.catvis-table) { min-width: 0; }
+  .a-table:not(.catvis-table) thead { display: none; }
+  .a-table:not(.catvis-table) tbody { display: grid; gap: 12px; }
+  .a-table:not(.catvis-table) tbody tr { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; column-gap: 10px; align-items: center; padding: 6px 14px; border: 1px solid var(--line); border-radius: var(--r-lg); background: var(--surface); }
+  .a-table:not(.catvis-table) tbody tr:last-child { border-bottom: 1px solid var(--line); }
+  .a-table:not(.catvis-table) tbody td { padding: 9px 0 !important; text-align: left !important; overflow-wrap: anywhere; }
+  .a-table:not(.catvis-table) tbody td[data-role="check"] { grid-column: 1; grid-row: 1; }
+  .a-table:not(.catvis-table) tbody td[data-role="title"] { grid-column: 2; grid-row: 1; }
+  .a-table:not(.catvis-table) tbody td[data-role="title"]:first-child { grid-column: 1 / 3; }
+  .a-table:not(.catvis-table) tbody td[data-role="actions"] { grid-column: 3; grid-row: 1; }
+  .a-table:not(.catvis-table) tbody td[data-role="field"] { grid-column: 1 / -1; display: grid; grid-template-columns: 36% minmax(0, 1fr); gap: 10px; align-items: center; border-top: 1px solid var(--line); }
+  .a-table:not(.catvis-table) tbody td[data-role="field"]::before { content: attr(data-label); font-size: .76rem; color: var(--text-3); }
+  .a-table:not(.catvis-table) tbody td[data-role="field"] > * { justify-self: start; max-width: 100%; }
+  .a-table:not(.catvis-table) tbody td.truncate { white-space: normal; overflow: visible; }
+  .a-table:not(.catvis-table) tbody td[colspan] { grid-column: 1 / -1; display: block; text-align: center !important; }
+  .a-table-wrap:not(.catvis-group) .a-pager { margin-top: 12px; border: 1px solid var(--line); border-radius: var(--r-lg); }
 }
 .a-pager { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding: 12px 16px; background: var(--surface-2); border-top: 1px solid var(--line); font-family: var(--font-mono); font-size: .76rem; color: var(--text-2); }
 .a-pager .btns { display: flex; align-items: center; gap: 8px; }

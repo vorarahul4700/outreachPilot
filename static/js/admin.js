@@ -445,9 +445,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 <div class="w-8 h-8 rounded-full bg-primary/20 text-primary font-bold flex items-center justify-center text-xs shrink-0">
                   ${(u.name || u.email)[0].toUpperCase()}
                 </div>
-                <div class="flex flex-col min-w-0">
+                <div class="flex flex-col min-w-0" style="max-width:150px">
                   <span class="font-semibold text-on-surface truncate text-xs">${u.name || "User"}</span>
-                  <span class="text-[11px] font-mono text-on-surface-variant truncate">${u.email}</span>
+                  <span class="text-[11px] font-mono text-on-surface-variant truncate" title="${u.email}">${u.email}</span>
                 </div>
               </div>
             </td>
@@ -460,7 +460,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <td class="px-4 py-3">${statusBadge}</td>
             <td class="px-4 py-3 text-right">
               <div class="flex items-center justify-end gap-1.5">
-                <button onclick="toggleUserAdmin(${u.id}, ${isAdmin})" class="rounded transition cursor-pointer ${isAdmin ? 'bg-primary/15 text-primary hover:bg-primary/25' : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'}" title="${isAdmin ? 'Remove admin' : 'Make admin'}" aria-label="${isAdmin ? 'Remove admin' : 'Make admin'}"><span class="material-symbols-outlined text-[16px]">admin_panel_settings</span></button>
+                <button onclick="toggleUserAdmin(${u.id}, ${isAdmin})" class="rounded transition cursor-pointer ${isAdmin ? 'bg-primary/10 text-primary hover:bg-primary/20' : 'bg-surface-container text-on-surface-variant hover:bg-surface-container-high'}" title="${isAdmin ? 'Remove admin' : 'Make admin'}" aria-label="${isAdmin ? 'Remove admin' : 'Make admin'}"><span class="material-symbols-outlined text-[16px]">admin_panel_settings</span></button>
                 <button onclick="openEditPlanModal(${u.id}, '${u.email}', '${tierName}')" class="rounded bg-surface-container text-on-surface-variant hover:bg-surface-container-high transition cursor-pointer" title="Change plan" aria-label="Change plan"><span class="material-symbols-outlined text-[16px]">loyalty</span></button>
                 <button onclick="toggleUserBan(${u.id}, ${isBanned})" class="rounded transition cursor-pointer ${isBanned ? 'bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20' : 'bg-rose-500/10 text-rose-500 hover:bg-rose-500/20'}" title="${isBanned ? 'Unban user' : 'Ban user'}" aria-label="${isBanned ? 'Unban user' : 'Ban user'}"><span class="material-symbols-outlined text-[16px]">${isBanned ? 'check_circle' : 'block'}</span></button>
               </div>
@@ -1931,11 +1931,11 @@ document.addEventListener("DOMContentLoaded", () => {
               </div>
             </td>
             <td class="px-4 py-3">${badgeHtml}</td>
-            <td class="px-4 py-3 font-mono text-xs text-on-surface-variant">${r.event || "schedule"}</td>
+            <td class="px-4 py-3 font-mono text-xs text-on-surface-variant">${({ workflow_dispatch: "manual", schedule: "schedule", push: "push" })[r.event] || r.event || "schedule"}</td>
             <td class="px-4 py-3">
               <div class="flex flex-col font-mono text-xs">
                 <span class="text-on-surface">${r.branch} (<span class="text-primary">${r.commit_sha}</span>)</span>
-                <span class="text-[11px] text-on-surface-variant truncate max-w-xs" title="${catvisEscape(r.commit_msg)}">${catvisEscape(r.commit_msg)}</span>
+                <span class="text-[11px] text-on-surface-variant truncate" style="max-width:220px" title="${catvisEscape(r.commit_msg)}">${catvisEscape(r.commit_msg)}</span>
               </div>
             </td>
             <td class="px-4 py-3 font-mono text-xs text-on-surface-variant">${r.duration}</td>
