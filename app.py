@@ -91,13 +91,14 @@ from db import (
     SystemSetting,
     Tech,
     User,
+    UserResume,
     engine,
     get_db,
     init_db,
 )
 from enricher import is_recruitment_email
 from plan_features import EMAIL_STYLES, plan_features
-from resumes import resume_pdf, save_main_resume
+from resumes import all_resumes, pick_resume, resume_pdf, save_main_resume, usable_resumes
 from outreach import (
     add_do_not_contact,
     read_optout_token,
@@ -306,10 +307,10 @@ def draft_allowance(db: Session, user) -> tuple[int, int]:
     return max(0, sends_left - open_drafts), sends_left
 
 
-def resume_profile_or_400(req, user) -> dict:
+def resume_profile_or_400(req, user, summary: dict | None = None) -> dict:
     """The parsed resume drafts are written from. Without one we refuse rather than invent skills
-    or achievements (no fake data)."""
-    profile = dict(req.candidate_profile or user.resume_summary or {})
+    or achievements (no fake data). `summary` is a chosen resume's analysis (multiple resumes)."""
+    profile = dict(req.candidate_profile or summary or user.resume_summary or {})
     if not (profile.get("top_skills") or profile.get("key_achievements") or profile.get("strong_points")
             or profile.get("elevator_pitch")):
         raise HTTPException(
@@ -612,6 +613,7 @@ class PitchGenRequest(BaseModel):
     target_role: str | None = ""
     candidate_profile: dict[str, Any] | None = None
     force_regenerate: bool = False
+    resume_id: int | None = None  # write with this resume instead of the auto-picked one
 
 
 class BulkPitchRequest(BaseModel):
@@ -2169,7 +2171,7 @@ def _tech_id_cond(db: Session, terms: list[str]):
 def resume_match_terms(resume_summary: dict | None) -> dict:
     """Resume skills mapped to the directory's tech and category IDs (exact taxonomy matches only)."""
     skills = [str(s).strip() for s in ((resume_summary or {}).get("top_skills") or []) if str(s).strip()]
-    tech_ids, tech_names, cat_ids = {}, {}, set()
+    tech_ids, cat_ids = {}, set()
     for s in skills:
         tid = taxonomy.tech_id_for(s)
         if tid and tid not in tech_ids:
@@ -2442,6 +2444,7 @@ def get_companies(
     domain: str = "",
     status: str = "all",
     sort: str = "newest",
+    match_resume: str = "all",
     db: Session = Depends(get_db)
 ):
     """
@@ -2545,7 +2548,10 @@ def get_companies(
             elif not feats.get("best_matches"):
                 best_match = "locked"
             else:
-                match_terms = resume_match_terms(user.resume_summary)
+                rows = usable_resumes(db, user.id, feats.get("resume_slots", 1))
+                picked = [r for r in rows if str(r.id) == match_resume] or rows
+                skills = [k for r in picked for k in ((r.summary or {}).get("top_skills") or [])] if picked else None
+                match_terms = resume_match_terms({"top_skills": skills} if skills is not None else user.resume_summary)
                 best_match = "ok" if (match_terms["tech_ids"] or match_terms["cat_ids"]) else ("no_match" if match_terms["has_skills"] else "no_resume")
                 if best_match != "ok":
                     match_terms = None
@@ -3117,6 +3123,123 @@ def get_candidate_profile(request: Request, db: Session = Depends(get_db)):
     }
 
 
+async def read_resume_upload(file: UploadFile) -> tuple[str, bytes | None]:
+    """Validate an uploaded resume and return (text, PDF bytes or None for text files)."""
+    contents = await file.read()
+    if len(contents) > MAX_RESUME_SIZE:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail="File too large. Maximum resume size is 5MB."
+        )
+    filename_lower = (file.filename or "").lower()
+    if not any(filename_lower.endswith(ext) for ext in (".pdf", ".txt", ".md")):
+        raise HTTPException(
+            status_code=400,
+            detail="Unsupported file format. Please upload a PDF, TXT, or MD resume."
+        )
+    if not filename_lower.endswith(".pdf"):
+        return contents.decode("utf-8", errors="ignore"), None
+    raw_text = ""
+    try:
+        reader = PdfReader(io.BytesIO(contents))
+        if len(reader.pages) > MAX_PDF_PAGES:
+            raise HTTPException(
+                status_code=400,
+                detail=f"PDF exceeds maximum page limit of {MAX_PDF_PAGES} pages."
+            )
+        for page in reader.pages:
+            raw_text += (page.extract_text() or "") + "\n"
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to parse PDF: {e!s}")
+    return raw_text, contents  # stored in user_resumes (the server disk is wiped on deploy)
+
+
+def resume_list_payload(db: Session, user) -> dict:
+    slots = plan_features(db, user, kill_switch=is_subscription_kill_switch_active(db)).get("resume_slots", 1)
+    rows = all_resumes(db, user.id)
+    return {
+        "slots": slots,
+        "resumes": [{
+            "id": r.id, "label": r.label or "Main", "filename": r.filename or "", "is_main": bool(r.is_main),
+            "skills": [str(k) for k in ((r.summary or {}).get("top_skills") or [])[:6]],
+            "locked": i >= max(1, slots),
+        } for i, r in enumerate(rows)],
+    }
+
+
+def _resume_user(db: Session, request: Request):
+    user = get_current_user(db, request)
+    if not user or not user.oauth_tokens:
+        raise HTTPException(status_code=401, detail="Sign in to manage your resumes.")
+    return user
+
+
+@app.get("/api/resumes")
+def list_resumes(request: Request, db: Session = Depends(get_db)):
+    return resume_list_payload(db, _resume_user(db, request))
+
+
+@app.post("/api/resumes")
+async def add_resume(file: UploadFile = File(...), label: str = Form(""), request: Request = None, db: Session = Depends(get_db)):
+    """An extra resume for another kind of role (plans with more than one resume slot)."""
+    user = _resume_user(db, request)
+    enforce_rate_limit(f"resume_upload_{user.id}", max_calls=15, window_seconds=60)
+    label_clean = " ".join((label or "").split())[:60]
+    if not label_clean:
+        raise HTTPException(status_code=400, detail="Add the role this resume is for, e.g. QA Engineer.")
+    rows = all_resumes(db, user.id)
+    if not rows:
+        raise HTTPException(status_code=400, detail="Add your main resume first.")
+    slots = plan_features(db, user, kill_switch=is_subscription_kill_switch_active(db)).get("resume_slots", 1)
+    if len(rows) >= slots:
+        raise HTTPException(status_code=403, detail=(
+            f"Your plan allows {slots} resume{'s' if slots != 1 else ''}. Upgrade or remove one to add another."))
+    raw_text, pdf = await read_resume_upload(file)
+    try:
+        summary = parse_resume_text(resume_text=raw_text, target_role=label_clean)
+    except Exception as e:
+        print(f"[Resume Analysis Error] {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to analyze resume with AI: {e!s}. Please try again.")
+    if user.resume_link:
+        summary["resume_link"] = user.resume_link
+    db.add(UserResume(user_id=user.id, label=label_clean, filename=file.filename or "Resume.pdf", pdf=pdf, summary=summary, is_main=False))
+    db.commit()
+    return resume_list_payload(db, user)
+
+
+class ResumeLabelRequest(BaseModel):
+    label: str
+
+
+@app.patch("/api/resumes/{resume_id}")
+def rename_resume(resume_id: int, req: ResumeLabelRequest, request: Request, db: Session = Depends(get_db)):
+    user = _resume_user(db, request)
+    row = db.query(UserResume).filter(UserResume.id == resume_id, UserResume.user_id == user.id).first()
+    if not row:
+        raise HTTPException(status_code=404, detail="Resume not found.")
+    label_clean = " ".join((req.label or "").split())[:60]
+    if not label_clean:
+        raise HTTPException(status_code=400, detail="The name can't be empty.")
+    row.label = label_clean
+    db.commit()
+    return resume_list_payload(db, user)
+
+
+@app.delete("/api/resumes/{resume_id}")
+def delete_resume(resume_id: int, request: Request, db: Session = Depends(get_db)):
+    user = _resume_user(db, request)
+    row = db.query(UserResume).filter(UserResume.id == resume_id, UserResume.user_id == user.id).first()
+    if not row:
+        raise HTTPException(status_code=404, detail="Resume not found.")
+    if row.is_main:
+        raise HTTPException(status_code=400, detail="Your main resume can't be removed. Upload a new one to replace it.")
+    db.delete(row)  # drafts that used it fall back to the main resume
+    db.commit()
+    return resume_list_payload(db, user)
+
+
 @app.post("/api/resume/upload")
 async def upload_resume(
     file: UploadFile = File(None),
@@ -3165,40 +3288,7 @@ async def upload_resume(
 
     # If file was attached, process and store local copy
     if file and file.filename:
-        contents = await file.read()
-        if len(contents) > MAX_RESUME_SIZE:
-            raise HTTPException(
-                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-                detail="File too large. Maximum resume size is 5MB."
-            )
-
-        filename_lower = (file.filename or "").lower()
-        allowed_exts = (".pdf", ".txt", ".md")
-        if not any(filename_lower.endswith(ext) for ext in allowed_exts):
-            raise HTTPException(
-                status_code=400,
-                detail="Unsupported file format. Please upload a PDF, TXT, or MD resume."
-            )
-
-        raw_text = ""
-        if filename_lower.endswith(".pdf"):
-            try:
-                reader = PdfReader(io.BytesIO(contents))
-                if len(reader.pages) > MAX_PDF_PAGES:
-                    raise HTTPException(
-                        status_code=400,
-                        detail=f"PDF exceeds maximum page limit of {MAX_PDF_PAGES} pages."
-                    )
-                for page in reader.pages:
-                    raw_text += (page.extract_text() or "") + "\n"
-            except HTTPException:
-                raise
-            except Exception as e:
-                raise HTTPException(status_code=400, detail=f"Failed to parse PDF: {e!s}")
-
-            uploaded_pdf = contents  # stored in user_resumes below (the server disk is wiped on deploy)
-        else:
-            raw_text = contents.decode("utf-8", errors="ignore")
+        raw_text, uploaded_pdf = await read_resume_upload(file)
 
         try:
             parsed_profile = parse_resume_text(resume_text=raw_text, target_role=target_role)
@@ -3246,6 +3336,27 @@ async def upload_resume(
 
 
 # --- Stage 4: Personalized 1-to-1 Pitch Generator ---
+def choose_draft_resume(db: Session, user, feats: dict, company_profile: dict, resume_id: int | None = None):
+    """(resume row or None, usable rows). An explicit resume_id must be one the plan allows."""
+    rows = usable_resumes(db, user.id, feats.get("resume_slots", 1))
+    if resume_id:
+        row = next((r for r in rows if r.id == resume_id), None)
+        if not row:
+            raise HTTPException(status_code=400, detail="That resume isn't available on your plan.")
+        return row, rows
+    return pick_resume(rows, company_profile), rows
+
+
+def draft_resume_fields(db: Session, user, feats: dict, resume_id: int | None) -> dict:
+    """Which resume a draft used, and the others the user can switch to (only with 2+ usable)."""
+    rows = usable_resumes(db, user.id, feats.get("resume_slots", 1))
+    used = next((r for r in rows if r.id == resume_id), None) or (rows[0] if rows else None)
+    return {
+        "resume": {"id": used.id, "label": used.label or "Main"} if used else None,
+        "resume_options": [{"id": r.id, "label": r.label or "Main"} for r in rows] if len(rows) > 1 else [],
+    }
+
+
 def draft_extra_fields(pitch: ColdPitch, feats: dict) -> dict:
     """Style label and the LinkedIn/referral messages for a draft. The messages are always saved,
     but only sent to users whose plan includes them (server-side gate)."""
@@ -3306,6 +3417,12 @@ async def generate_single_pitch(
         "services": (company.profile.services if company.profile else []) or [],
         "tone": company.profile.tone if company.profile else "Professional"
     }
+    feats = plan_features(db, user, kill_switch=is_subscription_kill_switch_active(db))
+    chosen_resume, _ = choose_draft_resume(db, user, feats, comp_profile_data, req.resume_id)
+    if chosen_resume and not chosen_resume.is_main and chosen_resume.summary:
+        cand_profile = resume_profile_or_400(req, user, chosen_resume.summary)
+    if req.resume_id:
+        req.force_regenerate = True  # switching resume always rewrites
 
     target_email = None
     if company.emails:
@@ -3361,11 +3478,11 @@ async def generate_single_pitch(
                 "primary_email": existing_pitch.email_body,
                 "cover_letter": existing_pitch.cover_letter or "",
                 "matched_skills": existing_pitch.matched_skills if isinstance(existing_pitch.matched_skills, list) else [],
-                **draft_extra_fields(existing_pitch, plan_features(db, user, kill_switch=is_subscription_kill_switch_active(db))),
+                **draft_extra_fields(existing_pitch, feats),
+                **draft_resume_fields(db, user, feats, existing_pitch.resume_id),
                 "mailto_url": mailto_url
             }
 
-    feats = plan_features(db, user, kill_switch=is_subscription_kill_switch_active(db))
     pitch_data = generate_personalized_pitch(
         candidate_profile=cand_profile,
         company_name=company.name,
@@ -3413,6 +3530,7 @@ async def generate_single_pitch(
     }
 
     draft_extras = {
+        "resume_id": chosen_resume.id if chosen_resume else None,
         "email_style": feats["email_style"],
         "linkedin_message": (pitch_data.get("variant_a_linkedin") or "").strip() or None,
         "referral_message": (pitch_data.get("variant_b_referral") or "").strip() or None,
@@ -3459,6 +3577,7 @@ async def generate_single_pitch(
         "email_body": pitch_obj.email_body,
         "primary_email": pitch_data.get("primary_email", pitch_obj.email_body),
         **draft_extra_fields(pitch_obj, feats),
+        **draft_resume_fields(db, user, feats, pitch_obj.resume_id),
         "cover_letter": pitch_obj.cover_letter,
         "personalization_notes": pitch_data.get("personalization_notes", []),
         "what_to_change_if": pitch_data.get("what_to_change_if", {}),
@@ -3528,6 +3647,9 @@ async def generate_bulk_pitches(
         raise daily_limit_reached_error(user)
     companies = kept
 
+    feats = plan_features(db, user, kill_switch=is_subscription_kill_switch_active(db))
+    usable = usable_resumes(db, user.id, feats.get("resume_slots", 1))
+
     # Extract plain dicts in main thread for complete thread safety
     tasks = []
     for comp in companies:
@@ -3564,21 +3686,22 @@ async def generate_bulk_pitches(
                 "subject_line": old.subject_line, "email_body": old.email_body,
                 "cover_letter": old.cover_letter or "", "matched_skills": old.matched_skills or {},
             }
+        chosen = pick_resume(usable, comp_profile_data)
         tasks.append({
             "company_id": comp.id,
             "company_name": comp.name,
             "target_email": target_email,
             "profile": comp_profile_data,
             "reuse": reuse,
+            "resume_id": chosen.id if chosen else None,
+            "candidate": resume_profile_or_400(req, user, chosen.summary) if (chosen and not chosen.is_main and chosen.summary) else cand_profile,
         })
-
-    feats = plan_features(db, user, kill_switch=is_subscription_kill_switch_active(db))
 
     def process_task(task):
         if task.get("reuse"):
             return task["reuse"]
         pitch_data = generate_personalized_pitch(
-            candidate_profile=cand_profile,
+            candidate_profile=task["candidate"],
             company_name=task["company_name"],
             company_profile=task["profile"],
             email_style=feats["email_style"],
@@ -3602,6 +3725,7 @@ async def generate_bulk_pitches(
             "cover_letter": pitch_data.get("cover_letter", ""),
             "matched_skills": matched_meta,
             "extras": {
+                "resume_id": task["resume_id"],
                 "email_style": feats["email_style"],
                 "linkedin_message": (pitch_data.get("variant_a_linkedin") or "").strip() or None,
                 "referral_message": (pitch_data.get("variant_b_referral") or "").strip() or None,
@@ -3736,7 +3860,7 @@ async def send_single_pitch_direct(
 
     # Fallback to saved resume if attachment requested but no temp file was passed in request
     if attach_resume and not resume_bytes:
-        resume_bytes, resume_filename = resume_pdf(db, user.id)
+        resume_bytes, resume_filename = resume_pdf(db, user.id, pitch.resume_id)
 
     result = await send_via_google_oauth(
         user=user,
