@@ -2605,6 +2605,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (skipped) extras.push(`${skipped} had no email`);
                 if (overLimit) extras.push(`${overLimit} over today's limit`);
                 showToast(`Sent ${sent} applications via Gmail${resumeSuffix}.${extras.length ? " " + extras.join(", ") + "." : ""}`, failed ? "warning" : "success");
+                if (sent && currentUser.features && currentUser.features.linkedin) {
+                  setTimeout(() => showToast(`LinkedIn and referral messages are ready for ${sent} ${sent === 1 ? "company" : "companies"}. Open them from the LinkedIn button on each sent company in Outreach Hub.`, "info"), 1800);
+                }
                 btnSendAllOutreach.innerHTML = `<span class="material-symbols-outlined text-[16px] text-emerald-400">check</span><span>${sent} Sent</span>`;
               }
 
@@ -2731,6 +2734,89 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnCopyPitch = document.getElementById("btn-copy-pitch");
   let currentPitchId = null;
   let currentPitchTargetEmail = null;
+
+  // ---- LinkedIn message + referral request (draft window tabs and the Outreach Hub popup) ----
+  const EMAIL_STYLE_LABELS = {
+    standard: "Standard application",
+    tailored: "Company-tailored application",
+    tailored_fit: "Tailored application + fit summary",
+  };
+  const MSG_COPY = {
+    linkedin: { title: "LinkedIn message", hint: "Send this as a LinkedIn connection note to someone at the company." },
+    referral: { title: "Referral request", hint: "Send this to someone you know at the company to ask for a referral." },
+  };
+
+  function renderMessagePanels(root, data) {
+    root.querySelectorAll("[data-msg-panel]").forEach((panel) => {
+      const kind = panel.dataset.msgPanel;
+      const copy = MSG_COPY[kind];
+      if (data.linkedin_locked) {
+        panel.innerHTML = `<div class="msg-locked"><span><b>${copy.title}s are not in your plan.</b> Upgrade to get a ready ${copy.title.toLowerCase()} with every application.</span><button type="button" class="btn btn-primary btn-sm" data-open-plans>See plans</button></div>`;
+        return;
+      }
+      const text = (kind === "linkedin" ? data.variant_a_linkedin : data.variant_b_referral) || "";
+      if (!text) {
+        panel.innerHTML = `<div class="msg-locked"><span>No ${copy.title.toLowerCase()} was written for this application. Click Regenerate to write one.</span></div>`;
+        return;
+      }
+      panel.innerHTML = `<div class="msg-panel"><div class="field-row"><label>${copy.title}</label><p class="recipient-line">${copy.hint}</p><textarea readonly rows="7"></textarea></div><div class="msg-actions"><button type="button" class="btn btn-secondary btn-sm" data-copy-msg><span class="material-symbols-outlined">content_copy</span><span>Copy</span></button></div></div>`;
+      panel.querySelector("textarea").value = text;
+    });
+  }
+
+  function selectMessageTab(root, attr, name) {
+    root.querySelectorAll(`[${attr}]`).forEach((b) => {
+      const on = b.getAttribute(attr) === name;
+      b.classList.toggle("active", on);
+      b.setAttribute("aria-selected", on ? "true" : "false");
+    });
+    root.querySelectorAll(".am-body > [id]").forEach((p) => {
+      if (p.matches("[data-msg-panel], .pitch-tab-panel")) p.classList.toggle("hidden", !p.id.endsWith("-" + name));
+    });
+  }
+
+  document.addEventListener("click", async (e) => {
+    const tab = e.target.closest("[data-pitch-tab], [data-msg-tab]");
+    if (tab) {
+      const attr = tab.hasAttribute("data-pitch-tab") ? "data-pitch-tab" : "data-msg-tab";
+      const name = tab.getAttribute(attr);
+      selectMessageTab(tab.closest(".am-card"), attr, name);
+      if (attr === "data-pitch-tab") document.getElementById("pitch-modal-foot")?.classList.toggle("hidden", name !== "email");
+      return;
+    }
+    const copyBtn = e.target.closest("[data-copy-msg]");
+    if (copyBtn) {
+      const text = copyBtn.closest(".msg-panel")?.querySelector("textarea")?.value || "";
+      try { await navigator.clipboard.writeText(text); showToast("Copied.", "success"); }
+      catch (_) { showToast("Could not copy. Select the text and copy it yourself.", "warning"); }
+      return;
+    }
+    if (e.target.closest("[data-open-plans]")) {
+      document.getElementById("messages-modal")?.classList.add("hidden");
+      openSubscriptionModal(false);
+      return;
+    }
+    if (e.target.closest("[data-close-messages]") || e.target.id === "messages-modal") {
+      document.getElementById("messages-modal")?.classList.add("hidden");
+    }
+  });
+
+  async function openMessagesModal(companyId) {
+    const box = document.getElementById("messages-modal");
+    if (!box) return;
+    try {
+      const res = await fetch(`/api/pitch/messages/${companyId}`);
+      const data = await res.json();
+      if (!res.ok) { showToast(data.detail || "Could not load the messages.", "error"); return; }
+      document.getElementById("messages-modal-title").textContent = `Messages for ${data.company_name || "this company"}`;
+      renderMessagePanels(box, data);
+      selectMessageTab(box.querySelector(".am-card"), "data-msg-tab", "linkedin");
+      box.classList.remove("hidden");
+    } catch (err) {
+      showToast("Could not load the messages: " + err.message, "error");
+    }
+  }
+  window.openMessagesModal = openMessagesModal;
 
   // Temporary session resume attachment state (cleared upon tab/session close)
   let sessionResumeFile = null;
@@ -3029,6 +3115,15 @@ document.addEventListener("DOMContentLoaded", () => {
 
         modalSubject.value = data.subject_line || "";
         modalBody.value = data.email_body || data.primary_email || "";
+        const styleChip = document.getElementById("pitch-modal-style");
+        if (styleChip) {
+          styleChip.textContent = EMAIL_STYLE_LABELS[data.email_style] || "";
+          styleChip.classList.toggle("hidden", !EMAIL_STYLE_LABELS[data.email_style]);
+          styleChip.classList.toggle("is-standard", data.email_style === "standard");
+        }
+        renderMessagePanels(modal, data);
+        selectMessageTab(modal.querySelector(".am-card"), "data-pitch-tab", "email");
+        document.getElementById("pitch-modal-foot")?.classList.remove("hidden");
         updatePitchWordCount();
         updateResumeAttachmentUI();
         modal.classList.remove("hidden");
@@ -3563,6 +3658,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 <span class="material-symbols-outlined">history</span>
                 <span>Sent Log</span>
               </button>
+              <button type="button" onclick="window.openMessagesModal(${c.id})" class="btn btn-secondary btn-sm" title="LinkedIn message and referral request">
+                <span class="material-symbols-outlined">chat</span>
+                <span>LinkedIn</span>
+              </button>
             ` : `
               <button type="button" class="btn-gen-pitch-row btn btn-primary btn-sm" data-id="${c.id}">
                 <span class="material-symbols-outlined">send</span>
@@ -3606,6 +3705,10 @@ document.addEventListener("DOMContentLoaded", () => {
               <button type="button" onclick="window.viewSentEmailForCompany(${c.id})" class="btn btn-secondary btn-sm">
                 <span class="material-symbols-outlined">history</span>
                 <span>Sent</span>
+              </button>
+              <button type="button" onclick="window.openMessagesModal(${c.id})" class="btn btn-secondary btn-sm" title="LinkedIn message and referral request">
+                <span class="material-symbols-outlined">chat</span>
+                <span>LinkedIn</span>
               </button>
             ` : `
               <button type="button" class="btn-gen-pitch-row btn btn-primary btn-sm" data-id="${c.id}">

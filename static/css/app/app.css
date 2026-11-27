@@ -351,6 +351,16 @@
 .ac-contact .has { color: var(--ok-text); }
 .ac-contact .none { color: var(--warn-text); }
 .ac-contact .loc { color: var(--text-3); flex: none; max-width: 45%; }
+/* Draft window: email style label, message tabs, LinkedIn/referral panels */
+.style-chip { display: inline-flex; align-items: center; margin-top: 4px; padding: 2px 9px; border-radius: 6px; font-family: var(--font-mono); font-size: .68rem; font-weight: 600; background: var(--accent-soft); color: var(--accent-ink); border: 1px solid var(--accent-line); }
+.style-chip.is-standard { background: var(--surface-3); color: var(--text-2); border-color: var(--line); }
+.pitch-tabs { margin-bottom: 12px; }
+.pitch-tabs .cmodal-tab-btn .material-symbols-outlined { font-size: 17px; }
+.pitch-tabs .cmodal-tab-btn .lock { font-size: 14px; opacity: .7; }
+.msg-panel textarea { width: 100%; min-height: 150px; }
+.msg-panel .msg-actions { display: flex; justify-content: flex-end; margin-top: 10px; }
+.msg-locked { display: grid; gap: 10px; justify-items: start; padding: 18px; border-radius: var(--r-lg); background: var(--surface-2); border: 1px dashed var(--line-2); color: var(--text-2); font-size: .9rem; }
+.msg-locked b { color: var(--text); }
 /* Phones: full email on its own line rather than cut with an ellipsis. */
 @media (max-width: 640px) {
   .ac-contact { flex-wrap: wrap; row-gap: 6px; }

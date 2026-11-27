@@ -3201,6 +3201,20 @@ def draft_extra_fields(pitch: ColdPitch, feats: dict) -> dict:
     }
 
 
+@app.get("/api/pitch/messages/{company_id}")
+def pitch_messages(company_id: int, request: Request, db: Session = Depends(get_db)):
+    """LinkedIn message and referral note saved with this user's draft or sent email for a company."""
+    user = get_current_user(db, request)
+    if not user or not user.oauth_tokens:
+        raise HTTPException(status_code=401, detail="Sign in to see your messages.")
+    pitch = (db.query(ColdPitch).filter(ColdPitch.user_id == user.id, ColdPitch.company_id == company_id)
+             .order_by(ColdPitch.id.desc()).first())
+    if not pitch:
+        raise HTTPException(status_code=404, detail="No application for this company yet.")
+    company = db.query(Company.name).filter(Company.id == company_id).scalar()
+    return {"company_name": company, **draft_extra_fields(pitch, plan_features(db, user, kill_switch=is_subscription_kill_switch_active(db)))}
+
+
 @app.post("/api/pitch/generate")
 async def generate_single_pitch(
     req: PitchGenRequest,
