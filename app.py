@@ -720,6 +720,11 @@ class DispatchWorkflowRequest(BaseModel):
 
 
 # --- Helper to get or create current user ---
+def free_plan_limit(db: Session) -> int:
+    """Daily limit of the Free plan as set in admin (new accounts and expired plans get this)."""
+    return db.query(SubscriptionTier.daily_pitch_limit).filter(SubscriptionTier.code == "free").scalar() or 10
+
+
 def get_current_user(db: Session, request: Request | None = None) -> User | None:
     email = None
     if request:
@@ -751,7 +756,7 @@ def get_current_user(db: Session, request: Request | None = None) -> User | None
                 name="Master Admin" if is_admin else "Pilot User",
                 target_role="",
                 is_admin=is_admin,
-                daily_pitch_limit=999999 if is_admin else 10,
+                daily_pitch_limit=999999 if is_admin else free_plan_limit(db),
                 subscription_tier="premium_plus" if is_admin else "free",
                 daily_send_limit=100 if is_admin else 50
             )
@@ -778,9 +783,8 @@ def get_current_user(db: Session, request: Request | None = None) -> User | None
         # A paid plan past its end date drops back to Free.
         end = getattr(user, "subscription_end_date", None)
         if end and end < datetime.utcnow() and not getattr(user, "is_admin", False):
-            free = db.query(SubscriptionTier.daily_pitch_limit).filter(SubscriptionTier.code == "free").scalar()
             user.subscription_tier = "free"
-            user.daily_pitch_limit = free or 10
+            user.daily_pitch_limit = free_plan_limit(db)
             user.subscription_end_date = None
             needs_commit = True
 
@@ -1269,9 +1273,10 @@ def refund_policy_page(request: Request):
 
 
 @app.api_route("/contact", methods=["GET", "HEAD"], response_class=HTMLResponse)
-def contact_page(request: Request):
+def contact_page(request: Request, db: Session = Depends(get_db)):
     """Contact and about page (Razorpay website requirement)."""
-    return templates.TemplateResponse(request=request, name="contact.html", context={"project_name": config.PROJECT_NAME})
+    return templates.TemplateResponse(request=request, name="contact.html",
+                                      context={"project_name": config.PROJECT_NAME, "free_limit": free_plan_limit(db)})
 
 
 @app.api_route("/terms", methods=["GET", "HEAD"], response_class=HTMLResponse)
@@ -2949,7 +2954,7 @@ async def demo_login(
             name=name,
             target_role="",
             is_admin=is_admin_flag,
-            daily_pitch_limit=999999 if is_admin_flag else 10,
+            daily_pitch_limit=999999 if is_admin_flag else free_plan_limit(db),
             subscription_tier="premium_plus" if is_admin_flag else "free",
             daily_send_limit=100 if is_admin_flag else 50
         )
@@ -3946,7 +3951,7 @@ async def google_callback(code: str, request: Request, db: Session = Depends(get
                 name=(google_name or "").strip() or ("Master Admin" if is_admin else "Pilot User"),
                 target_role="",
                 is_admin=is_admin,
-                daily_pitch_limit=999999 if is_admin else 10,
+                daily_pitch_limit=999999 if is_admin else free_plan_limit(db),
                 subscription_tier="premium_plus" if is_admin else "free",
                 daily_send_limit=100 if is_admin else 50
             )
@@ -4025,6 +4030,10 @@ def admin_dashboard_page(request: Request, db: Session = Depends(get_db)):
             "dev_mode": config.DEV_MODE,
             # Sidebar badge on the Categories tab (cached one-row read)
             "hidden_categories_count": len(seo_engine.get_hidden_category_slugs(db)),
+            # Users tab plan filter, straight from the plans table
+            "plan_options": db.query(SubscriptionTier.code, SubscriptionTier.name)
+                .filter(SubscriptionTier.code != "master_admin")
+                .order_by(SubscriptionTier.price_inr, SubscriptionTier.id).all(),
         }
     )
 
@@ -4050,6 +4059,16 @@ def get_admin_metrics(
         func.coalesce(func.sum(User.pitches_sent_today), 0).label("pitches")
     ).first()
 
+    # Paid subscribers per plan, by the plans table (no fixed plan codes).
+    paid_rows = (
+        db.query(SubscriptionTier.name, func.count(User.id))
+        .join(User, User.subscription_tier == SubscriptionTier.code)
+        .filter(SubscriptionTier.price_inr > 0, User.is_admin.is_(False), ~User.email.in_(config.MASTER_ADMIN_EMAILS))
+        .group_by(SubscriptionTier.name, SubscriptionTier.price_inr)
+        .order_by(SubscriptionTier.price_inr)
+        .all()
+    )
+
     # 2. Single aggregate query for companies
     comp_row = db.query(
         func.count(Company.id).filter(Company.is_invalid == False).label("valid"),
@@ -4073,6 +4092,8 @@ def get_admin_metrics(
         "subscribers_free": user_row.free if user_row else 0,
         "subscribers_pro": user_row.pro if user_row else 0,
         "subscribers_premium_plus": user_row.premium_plus if user_row else 0,
+        "subscribers_paid": sum(c for _, c in paid_rows),
+        "subscribers_by_plan": [{"name": n, "count": c} for n, c in paid_rows],
         "pitches_sent_today": pitches_today,
         "companies_valid": comp_row.valid if comp_row else 0,
         "companies_invalid": comp_row.invalid if comp_row else 0,
