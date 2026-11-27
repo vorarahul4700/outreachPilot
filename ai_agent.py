@@ -732,13 +732,64 @@ Candidate Resume:
     return parsed
 
 
+def build_fit_points(raw: Any, candidate_profile: dict[str, Any]) -> list[str]:
+    """Keep only fit pairs whose resume side is really in the resume, and write the bullet ourselves,
+    so the AI can't invent or embellish a claim. Achievements are quoted; skills become "I work with X"."""
+    def norm(t: Any) -> str:
+        return re.sub(r"[^a-z0-9%+#.]+", " ", str(t).lower()).strip(" .")
+
+    achievements = {norm(a): str(a).strip().rstrip(".") for a in (candidate_profile.get("key_achievements") or candidate_profile.get("strong_points") or []) if str(a).strip()}
+    skills = {norm(k): str(k).strip() for k in (candidate_profile.get("top_skills") or []) if str(k).strip()}
+    points, used = [], set()
+    for item in raw if isinstance(raw, list) else []:
+        if not isinstance(item, dict):
+            continue
+        company = re.sub(r"\[.*?\]", "", str(item.get("company_fact") or "")).strip(" .-:")
+        key = norm(item.get("resume_fact") or "")
+        if not company or not key or key in used or len(company.split()) > 12:
+            continue
+        if key in achievements:
+            resume_text = achievements[key]
+        elif key in skills:
+            resume_text = f"I work with {skills[key]}"
+        else:
+            # A list of skills ("Python, FastAPI, PostgreSQL") counts if every item is a real resume skill;
+            # name the ones the company side mentions, else the first two.
+            parts = [norm(x) for x in re.split(r",|/|and", str(item.get("resume_fact") or "")) if norm(x)]
+            if not parts or any(x not in skills for x in parts):
+                continue  # not word for word from the resume: drop it
+            named = [skills[x] for x in parts if skills[x].lower() in company.lower()] or [skills[x] for x in parts[:2]]
+            resume_text = "I work with " + " and ".join(named[:2])
+        used.add(key)
+        points.append(f"{company[0].upper() + company[1:]}: {resume_text[0].upper() + resume_text[1:]}")
+        if len(points) == 3:
+            break
+    return points
+
+
+def add_fit_section(body: str, company_name: str, points: list[str]) -> str:
+    """Put a "Why I fit <company>" list above the sign-off (or at the end if there is none)."""
+    if not points:
+        return body
+    section = f"Why I fit {company_name}:\n" + "\n".join(f"- {p}" for p in points)
+    m = re.search(r"\n\s*(Best regards|Warm regards|Kind regards|Regards|Thanks|Thank you)\b", body, flags=re.IGNORECASE)
+    if m:
+        return body[:m.start()].rstrip() + "\n\n" + section + "\n\n" + body[m.start():].lstrip("\n")
+    return body.rstrip() + "\n\n" + section
+
+
 def generate_personalized_pitch(
     candidate_profile: dict[str, Any],
     company_name: str,
     company_profile: dict[str, Any],
-    contact_name: str = ""
+    contact_name: str = "",
+    email_style: str = "tailored",
 ) -> dict[str, Any]:
     """
+    email_style (from the user's plan): "standard" = short, general application using only the
+    company's name and category; "tailored" = written around the company's research;
+    "tailored_fit" = tailored plus a "Why I fit <company>" section (same AI call).
+
     Synthesizes candidate's structured technical assessment (Input A) with company profile
     and intelligence (Input B) acting as a Senior Career Coach and Outbound Sales Copywriter.
     Produces 3 subject line angles (curiosity, specificity, benefit-led), primary cold email (< 120 words),
@@ -841,6 +892,36 @@ Deliverables (must return valid JSON matching this schema):
   }},
   "matched_skills": ["Skill1", "Skill2", "Skill3"]
 }}"""
+
+    if email_style == "tailored_fit":
+        prompt += f"""
+
+ADDITIONAL DELIVERABLE "fit_points" (a JSON list of up to 3 objects, add it to the same JSON object):
+Each object pairs one thing about {company_name} with one thing from the candidate's resume:
+{{"company_fact": "a short phrase about {company_name} from its industry, services, tech or what it builds above, starting with 'Your', at most 8 words",
+  "resume_fact": "COPIED EXACTLY, word for word, from the candidate's Core Verified Skills or Evidence-Backed Achievements above"}}
+Example: {{"company_fact": "Your payment APIs for merchants", "resume_fact": "Built payment APIs handling 2M requests a day"}}
+Only pair things that genuinely relate. Return an empty list if the company information above is too thin.
+Do NOT put these points inside the email body."""
+    elif email_style == "standard":
+        # Short general application: company name and category only, no company research.
+        prompt = f"""Write a short, polite cold JOB APPLICATION email from a job seeker to {company_name}.
+
+Candidate: {candidate_name}, {target_role}. Skills: {skills}.
+One resume achievement to mention if present: {(raw_strong[0] if raw_strong else '')}
+Company: {company_name} ({company_industry or 'their industry'}).
+
+Rules:
+- Greet strictly with "{greeting}". Never use bracket placeholders.
+- Say who the candidate is, their role and 2-3 top skills, and ask whether {company_name} has open or upcoming {target_role} roles.
+- {resume_instruction}
+- Do not describe the company's products, services or tech; this is a general application.
+- Never invent numbers or projects. Under 80 words. No sales language, no "quick call".
+- Sign off with:
+  Best regards,
+  {candidate_name}
+
+Return pure JSON: {{"subject_line": "Application: {target_role} - {candidate_name}", "primary_email": "...", "email_body": "same as primary_email", "matched_skills": ["..."]}}"""
 
     def make_pitch_fallback():
         raw_proofs = candidate_profile.get("key_achievements") or candidate_profile.get("strong_points") or []
@@ -948,6 +1029,10 @@ Deliverables (must return valid JSON matching this schema):
 
         if not subj or not body:
             return make_pitch_fallback()
+
+        if email_style == "tailored_fit":
+            parsed["fit_points"] = build_fit_points(parsed.get("fit_points"), candidate_profile)
+            body = add_fit_section(body, company_name, parsed["fit_points"])
 
         parsed["subject_line"] = subj
         parsed["primary_email"] = body

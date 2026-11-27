@@ -198,6 +198,10 @@ class ColdPitch(Base):
     next_attempt_at = Column(DateTime, nullable=True)
     last_error = Column(Text, nullable=True)
     quota_reserved = Column(Boolean, default=False)  # one daily send was reserved; refund it if this never goes out
+    email_style = Column(String(20), nullable=True)  # standard | tailored | tailored_fit (plan at draft time)
+    linkedin_message = Column(Text, nullable=True)
+    referral_message = Column(Text, nullable=True)
+    resume_id = Column(Integer, nullable=True)  # user_resumes.id used for this draft
 
     company = relationship("Company", back_populates="pitches")
     user = relationship("User", back_populates="cold_pitches")
@@ -419,6 +423,10 @@ def init_db():
                     ("subscription_tiers", "resume_slots", "INTEGER DEFAULT 1"),
                     ("subscription_tiers", "has_bulk", "BOOLEAN DEFAULT FALSE"),
                     ("users", "trial_started_at", "TIMESTAMP"),
+                    ("cold_pitches", "email_style", "VARCHAR(20)"),
+                    ("cold_pitches", "linkedin_message", "TEXT"),
+                    ("cold_pitches", "referral_message", "TEXT"),
+                    ("cold_pitches", "resume_id", "INTEGER"),
                     ("users", "trial_ends_at", "TIMESTAMP"),
                 ]
                 statements = [

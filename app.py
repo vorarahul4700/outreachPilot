@@ -3189,6 +3189,18 @@ async def upload_resume(
 
 
 # --- Stage 4: Personalized 1-to-1 Pitch Generator ---
+def draft_extra_fields(pitch: ColdPitch, feats: dict) -> dict:
+    """Style label and the LinkedIn/referral messages for a draft. The messages are always saved,
+    but only sent to users whose plan includes them (server-side gate)."""
+    allowed = bool(feats.get("linkedin"))
+    return {
+        "email_style": pitch.email_style or "tailored",
+        "linkedin_locked": not allowed,
+        "variant_a_linkedin": (pitch.linkedin_message or "") if allowed else "",
+        "variant_b_referral": (pitch.referral_message or "") if allowed else "",
+    }
+
+
 @app.post("/api/pitch/generate")
 async def generate_single_pitch(
     req: PitchGenRequest,
@@ -3220,6 +3232,7 @@ async def generate_single_pitch(
         "detailed_analysis": company.profile.detailed_analysis if company.profile else "",
         "industry": (company.profile.industry if company.profile else "") or "",
         "tech_stack": company.profile.tech_stack if company.profile else [],
+        "services": (company.profile.services if company.profile else []) or [],
         "tone": company.profile.tone if company.profile else "Professional"
     }
 
@@ -3277,13 +3290,16 @@ async def generate_single_pitch(
                 "primary_email": existing_pitch.email_body,
                 "cover_letter": existing_pitch.cover_letter or "",
                 "matched_skills": existing_pitch.matched_skills if isinstance(existing_pitch.matched_skills, list) else [],
+                **draft_extra_fields(existing_pitch, plan_features(db, user, kill_switch=is_subscription_kill_switch_active(db))),
                 "mailto_url": mailto_url
             }
 
+    feats = plan_features(db, user, kill_switch=is_subscription_kill_switch_active(db))
     pitch_data = generate_personalized_pitch(
         candidate_profile=cand_profile,
         company_name=company.name,
-        company_profile=comp_profile_data
+        company_profile=comp_profile_data,
+        email_style=feats["email_style"],
     )
 
     subj = (pitch_data.get("subject_line") or "").strip()
@@ -3294,14 +3310,8 @@ async def generate_single_pitch(
 
     if not body:
         skills_str = ", ".join(cand_profile.get("top_skills", [])[:6]) or "Python, JavaScript, PostgreSQL, FastAPI, React"
+        # Only the resume's own achievements; never invented ones.
         raw_proofs = cand_profile.get("key_achievements") or cand_profile.get("strong_points") or []
-        if not raw_proofs:
-            raw_proofs = [
-                f"Architected scalable backend microservices and high-throughput REST API endpoints utilizing {skills_str}",
-                "Rewrote and optimized complex database queries and indexing strategies, significantly decreasing runtime and memory overhead",
-                "Built automated data pipelines, continuous integration (CI/CD) workflows, and automated regression testing suites",
-                "Engineered responsive user interfaces with modular component architectures and real-time state synchronization"
-            ]
 
         proof_bullets = []
         for p in raw_proofs[:4]:
@@ -3317,9 +3327,8 @@ async def generate_single_pitch(
             f"Hi {company.name} team,\n\n"
             f"I am writing to inquire about open or upcoming {t_role} opportunities at {company.name}. "
             f"Given your focus on {comp_tech_focus}, my technical experience across {skills_str} aligns directly with your engineering requirements.\n\n"
-            f"As a {t_role}, here are key highlights and verified technical achievements from my recent experience:\n\n"
-            f"{achievements_block}\n\n"
-            f"My core stack encompasses {skills_str}, enabling me to contribute immediately across your architecture and product feature roadmap. "
+            + (f"As a {t_role}, here are highlights from my recent experience:\n\n{achievements_block}\n\n" if achievements_block else "")
+            + f"My core stack encompasses {skills_str}, enabling me to contribute immediately across your architecture and product feature roadmap. "
             f"My detailed resume is attached for your review{resume_ref}.\n\n"
             f"Are you currently hiring for {t_role} positions, or open to considering my profile for upcoming engineering needs?\n\n"
             f"Best regards,\n"
@@ -3332,12 +3341,19 @@ async def generate_single_pitch(
         "email_body": body
     }
 
+    draft_extras = {
+        "email_style": feats["email_style"],
+        "linkedin_message": (pitch_data.get("variant_a_linkedin") or "").strip() or None,
+        "referral_message": (pitch_data.get("variant_b_referral") or "").strip() or None,
+    }
     if existing_pitch:
         existing_pitch.subject_line = subj
         existing_pitch.email_body = body
         existing_pitch.cover_letter = pitch_data.get("cover_letter", "")
         existing_pitch.matched_skills = matched_meta
         existing_pitch.target_email = target_email
+        for k, v in draft_extras.items():
+            setattr(existing_pitch, k, v)
         db.commit()
         pitch_obj = existing_pitch
     else:
@@ -3349,7 +3365,8 @@ async def generate_single_pitch(
             email_body=body,
             cover_letter=pitch_data.get("cover_letter", ""),
             matched_skills=matched_meta,
-            status="DRAFT"
+            status="DRAFT",
+            **draft_extras,
         )
         db.add(pitch_obj)
         db.commit()
@@ -3370,8 +3387,7 @@ async def generate_single_pitch(
         "subject_lines": pitch_data.get("subject_lines", {}),
         "email_body": pitch_obj.email_body,
         "primary_email": pitch_data.get("primary_email", pitch_obj.email_body),
-        "variant_a_linkedin": pitch_data.get("variant_a_linkedin", ""),
-        "variant_b_referral": pitch_data.get("variant_b_referral", ""),
+        **draft_extra_fields(pitch_obj, feats),
         "cover_letter": pitch_obj.cover_letter,
         "personalization_notes": pitch_data.get("personalization_notes", []),
         "what_to_change_if": pitch_data.get("what_to_change_if", {}),
@@ -3462,6 +3478,7 @@ async def generate_bulk_pitches(
             "detailed_analysis": comp.profile.detailed_analysis if comp.profile else "",
             "industry": (comp.profile.industry if comp.profile else "") or "",
             "tech_stack": comp.profile.tech_stack if comp.profile else [],
+            "services": (comp.profile.services if comp.profile else []) or [],
             "tone": comp.profile.tone if comp.profile else "Professional"
         }
         # Speed: an existing draft written for this candidate is kept as is (no AI call),
@@ -3484,13 +3501,16 @@ async def generate_bulk_pitches(
             "reuse": reuse,
         })
 
+    feats = plan_features(db, user, kill_switch=is_subscription_kill_switch_active(db))
+
     def process_task(task):
         if task.get("reuse"):
             return task["reuse"]
         pitch_data = generate_personalized_pitch(
             candidate_profile=cand_profile,
             company_name=task["company_name"],
-            company_profile=task["profile"]
+            company_profile=task["profile"],
+            email_style=feats["email_style"],
         )
 
         subj = (pitch_data.get("subject_line") or "").strip()
@@ -3509,7 +3529,12 @@ async def generate_bulk_pitches(
             "subject_line": subj,
             "email_body": body,
             "cover_letter": pitch_data.get("cover_letter", ""),
-            "matched_skills": matched_meta
+            "matched_skills": matched_meta,
+            "extras": {
+                "email_style": feats["email_style"],
+                "linkedin_message": (pitch_data.get("variant_a_linkedin") or "").strip() or None,
+                "referral_message": (pitch_data.get("variant_b_referral") or "").strip() or None,
+            },
         }
 
     # Parallelize generation across threadpool workers (up to 10 concurrent threads)
@@ -3528,6 +3553,8 @@ async def generate_bulk_pitches(
             pitch_obj.cover_letter = res["cover_letter"]
             pitch_obj.matched_skills = res["matched_skills"]
             pitch_obj.target_email = res["target_email"]
+            for k, v in (res.get("extras") or {}).items():
+                setattr(pitch_obj, k, v)
         else:
             pitch_obj = ColdPitch(
                 company_id=cid,
@@ -3537,7 +3564,8 @@ async def generate_bulk_pitches(
                 email_body=res["email_body"],
                 cover_letter=res["cover_letter"],
                 matched_skills=res["matched_skills"],
-                status="DRAFT"
+                status="DRAFT",
+                **(res.get("extras") or {}),
             )
             db.add(pitch_obj)
         db.flush()
