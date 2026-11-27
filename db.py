@@ -214,6 +214,21 @@ class SendAttachment(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
+class UserResume(Base):
+    """A user's resume: the PDF itself (kept in the DB so a deploy can't lose it) and its analysis."""
+    __tablename__ = "user_resumes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
+    label = Column(String(60), default="Main")  # e.g. Backend, QA, Full Stack
+    filename = Column(String(255), nullable=True)
+    pdf = Column(LargeBinary, nullable=True)  # None for text/markdown uploads
+    summary = Column(JsonType, nullable=True)  # parsed profile, same shape as users.resume_summary
+    is_main = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
 class Payment(Base):
     """A Razorpay order for a plan. status: created -> paid (activated once)."""
     __tablename__ = "payments"
