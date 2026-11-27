@@ -3033,9 +3033,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ---- LinkedIn message + referral request (draft window tabs and the Outreach Hub popup) ----
   const EMAIL_STYLE_LABELS = {
-    standard: "Standard application",
-    tailored: "Company-tailored application",
-    tailored_fit: "Tailored application + fit summary",
+    standard: "Simple application email",
+    tailored: "Email written for this company",
+    tailored_fit: "Email written for this company, with why you fit",
   };
   const MSG_COPY = {
     linkedin: { title: "LinkedIn message", hint: "Send this as a LinkedIn connection note to someone at the company." },

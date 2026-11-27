@@ -98,7 +98,7 @@ from db import (
 )
 from enricher import is_recruitment_email
 from plan_features import DEFAULT_PLAN_EXAMPLES, EMAIL_STYLES, EXAMPLE_KEYS, plan_card_lines, plan_features
-from resumes import all_resumes, pick_resume, resume_pdf, save_main_resume, usable_resumes
+from resumes import all_resumes, ensure_main_resume, pick_resume, resume_pdf, save_main_resume, usable_resumes
 from outreach import (
     add_do_not_contact,
     read_optout_token,
@@ -3284,6 +3284,8 @@ async def read_resume_upload(file: UploadFile) -> tuple[str, bytes | None]:
 
 def resume_list_payload(db: Session, user) -> dict:
     slots = plan_features(db, user, kill_switch=is_subscription_kill_switch_active(db)).get("resume_slots", 1)
+    ensure_main_resume(db, user)
+    db.commit()
     rows = all_resumes(db, user.id)
     return {
         "slots": slots,
@@ -3315,6 +3317,7 @@ async def add_resume(file: UploadFile = File(...), label: str = Form(""), reques
     label_clean = " ".join((label or "").split())[:60]
     if not label_clean:
         raise HTTPException(status_code=400, detail="Add the role this resume is for, e.g. QA Engineer.")
+    ensure_main_resume(db, user)
     rows = all_resumes(db, user.id)
     if not rows:
         raise HTTPException(status_code=400, detail="Add your main resume first.")
