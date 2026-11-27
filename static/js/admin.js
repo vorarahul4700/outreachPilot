@@ -88,6 +88,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const currentViewTitle = document.getElementById("current-view-title");
   const headerHeading = document.getElementById("header-heading");
 
+  // Lets a long email wrap after the @ (name@ / gmail.com) instead of mid-word.
+  const wbrEmail = (e) => String(e).replace("@", "@<wbr>");
+
   // Phone card layout: tag each cell with its column name so CSS can label it.
   document.querySelectorAll(".a-table").forEach(table => {
     // Screen-reader-only headers (the checkbox column) get no visible label.
@@ -447,7 +450,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 </div>
                 <div class="flex flex-col min-w-0" style="max-width:150px">
                   <span class="font-semibold text-on-surface truncate text-xs">${u.name || "User"}</span>
-                  <span class="text-[11px] font-mono text-on-surface-variant truncate" title="${u.email}">${u.email}</span>
+                  <span class="text-[11px] font-mono text-on-surface-variant truncate" title="${u.email}">${wbrEmail(u.email)}</span>
                 </div>
               </div>
             </td>
@@ -1686,8 +1689,8 @@ document.addEventListener("DOMContentLoaded", () => {
           </td>
           <td class="px-4 py-3">
             <div class="flex flex-col font-mono text-xs">
-              <span class="text-on-surface font-semibold">${p.recipient_email || "--"}</span>
-              <span class="text-[11px] text-on-surface-variant truncate max-w-[160px]">by ${p.sender_email || "System"}</span>
+              <span class="text-on-surface font-semibold">${wbrEmail(p.recipient_email || "--")}</span>
+              <span class="text-[11px] text-on-surface-variant truncate max-w-[160px]">by ${wbrEmail(p.sender_email || "System")}</span>
             </div>
           </td>
           <td class="px-4 py-3">
