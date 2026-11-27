@@ -1,6 +1,8 @@
 import asyncio
 import copy
 import csv
+import hashlib
+import hmac
 import io
 import json
 import mimetypes
@@ -81,6 +83,7 @@ from db import (
     CompanyTech,
     Industry,
     OutreachLog,
+    Payment,
     ScoutJob,
     SendAttachment,
     SessionLocal,
@@ -1022,6 +1025,128 @@ def get_user_subscription_info(user: User | None, db: Session) -> dict:
     }
 
 
+# --- Billing: Razorpay one-time payments for plans (no auto-renewal) ---
+# Keys come from the environment only (test keys in test mode, live keys in live mode).
+RAZORPAY_API = "https://api.razorpay.com/v1"
+
+
+def billing_enabled() -> bool:
+    return bool(os.getenv("RAZORPAY_KEY_ID") and os.getenv("RAZORPAY_KEY_SECRET"))
+
+
+def _hmac_hex(secret: str, message: bytes) -> str:
+    return hmac.new(secret.encode(), message, hashlib.sha256).hexdigest()
+
+
+def activate_paid_plan(db: Session, payment: Payment, payment_id: str) -> bool:
+    """Mark the order paid and give the user the plan. Safe to call twice (browser + webhook)."""
+    if payment.status == "paid":
+        return False
+    tier = db.query(SubscriptionTier).filter(SubscriptionTier.code == payment.tier_code).first()
+    user = db.query(User).filter(User.id == payment.user_id).first()
+    if not tier or not user:
+        raise HTTPException(status_code=400, detail="Plan or user no longer exists.")
+    now = datetime.utcnow()
+    # Buying the plan you already have extends it from its current end date.
+    start = user.subscription_end_date if (user.subscription_tier == tier.code and user.subscription_end_date and user.subscription_end_date > now) else now
+    user.subscription_tier = tier.code
+    user.daily_pitch_limit = tier.daily_pitch_limit
+    user.subscription_status = "active"
+    user.subscription_end_date = start + timedelta(days=tier.period_days or 30)
+    payment.status = "paid"
+    payment.payment_id = payment_id
+    payment.paid_at = now
+    db.commit()
+    return True
+
+
+class BillingOrderRequest(BaseModel):
+    tier_code: str
+
+
+class BillingVerifyRequest(BaseModel):
+    razorpay_order_id: str
+    razorpay_payment_id: str
+    razorpay_signature: str
+
+
+@app.post("/api/billing/order")
+def billing_create_order(payload: BillingOrderRequest, request: Request, db: Session = Depends(get_db)):
+    user = get_current_user(db, request)
+    if not user or not user.oauth_tokens:
+        raise HTTPException(status_code=401, detail="Sign in to buy a plan.")
+    if not billing_enabled():
+        raise HTTPException(status_code=503, detail="Online payments are not set up yet.")
+    tier = db.query(SubscriptionTier).filter(
+        SubscriptionTier.code == payload.tier_code.strip().lower(),
+        SubscriptionTier.is_active.is_(True),
+    ).first()
+    if not tier or (tier.price_inr or 0) <= 0 or tier.code == "master_admin":
+        raise HTTPException(status_code=400, detail="This plan can't be bought.")
+
+    amount = int(tier.price_inr) * 100  # paise, always from our own DB, never from the browser
+    try:
+        resp = requests.post(
+            f"{RAZORPAY_API}/orders",
+            auth=(os.getenv("RAZORPAY_KEY_ID"), os.getenv("RAZORPAY_KEY_SECRET")),
+            json={"amount": amount, "currency": "INR", "receipt": f"u{user.id}-{tier.code}-{int(time.time())}",
+                  "notes": {"user_id": str(user.id), "tier_code": tier.code}},
+            timeout=15,
+        )
+    except requests.RequestException as e:
+        raise HTTPException(status_code=502, detail=f"Could not reach Razorpay: {e}")
+    if resp.status_code not in (200, 201):
+        print(f"[Billing] Razorpay order failed {resp.status_code}: {resp.text[:300]}")
+        raise HTTPException(status_code=502, detail="Razorpay could not create the order. Please try again.")
+    order = resp.json()
+    db.add(Payment(user_id=user.id, tier_code=tier.code, amount_paise=amount, order_id=order["id"]))
+    db.commit()
+    return {
+        "key_id": os.getenv("RAZORPAY_KEY_ID"),
+        "order_id": order["id"],
+        "amount": amount,
+        "currency": "INR",
+        "plan_name": tier.name,
+        "period": "7 days" if tier.period_days == 7 else "30 days",
+        "prefill": {"name": (user.name or "").strip(), "email": user.email},
+    }
+
+
+@app.post("/api/billing/verify")
+def billing_verify(payload: BillingVerifyRequest, request: Request, db: Session = Depends(get_db)):
+    user = get_current_user(db, request)
+    if not user:
+        raise HTTPException(status_code=401, detail="Sign in again to finish the payment.")
+    # Our own order row, owned by this user: never trust the order id alone.
+    payment = db.query(Payment).filter(Payment.order_id == payload.razorpay_order_id, Payment.user_id == user.id).first()
+    if not payment:
+        raise HTTPException(status_code=404, detail="Order not found.")
+    expected = _hmac_hex(os.getenv("RAZORPAY_KEY_SECRET", ""), f"{payment.order_id}|{payload.razorpay_payment_id}".encode())
+    if not hmac.compare_digest(expected, payload.razorpay_signature):
+        raise HTTPException(status_code=400, detail="Payment could not be verified.")
+    activate_paid_plan(db, payment, payload.razorpay_payment_id)
+    return {"success": True, "tier": user.subscription_tier,
+            "ends": user.subscription_end_date.strftime("%d %b %Y") if user.subscription_end_date else None,
+            "message": "Payment received. Your plan is active."}
+
+
+@app.post("/api/billing/webhook")
+async def billing_webhook(request: Request, db: Session = Depends(get_db)):
+    """Backup for payments whose browser never came back (closed tab, lost network)."""
+    secret = os.getenv("RAZORPAY_WEBHOOK_SECRET", "")
+    body = await request.body()  # raw bytes: the signature is over the exact body
+    sig = request.headers.get("X-Razorpay-Signature", "")
+    if not secret or not hmac.compare_digest(_hmac_hex(secret, body), sig):
+        raise HTTPException(status_code=400, detail="Bad signature")
+    event = json.loads(body)
+    if event.get("event") in ("payment.captured", "order.paid"):
+        entity = ((event.get("payload") or {}).get("payment") or {}).get("entity") or {}
+        payment = db.query(Payment).filter(Payment.order_id == entity.get("order_id")).first()
+        if payment and int(entity.get("amount") or 0) == payment.amount_paise:
+            activate_paid_plan(db, payment, entity.get("id") or "")
+    return {"ok": True}
+
+
 # --- UI Routes ---
 @app.api_route("/", methods=["GET", "HEAD"], response_class=HTMLResponse)
 @app.api_route("/home", methods=["GET", "HEAD"], response_class=HTMLResponse)
@@ -1106,6 +1231,7 @@ def workspace_page(request: Request, db: Session = Depends(get_db)):
             "total_companies": total_valid,
             # Plan cards in the subscription window, as set in the admin panel
             "tiers": [] if kill_switch else load_public_tiers(db),
+            "billing_enabled": billing_enabled(),
         }
     )
 
