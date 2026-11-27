@@ -129,6 +129,12 @@
 .a-table tbody tr:hover { background: var(--surface-2); }
 .a-table td { vertical-align: middle; }
 .a-table .num { text-align: right; }
+/* Plan badges in the users table: Free neutral, 7-Day Pass amber, Pro green, top plans solid. */
+.plan-badge { display: inline-flex; align-items: center; white-space: nowrap; padding: 2px 8px; border-radius: 6px; font-family: var(--font-mono); font-size: .7rem; font-weight: 600; border: 1px solid transparent; }
+.plan-free { background: var(--surface-3); color: var(--text-2); }
+.plan-week { background: var(--warn-soft); color: var(--warn-text); border-color: color-mix(in srgb, var(--warn-text) 30%, transparent); }
+.plan-pro { background: var(--accent-soft); color: var(--accent-ink); border-color: var(--accent-line); }
+.plan-top { background: var(--active-bg); color: var(--active-fg); }
 /* Icon-only buttons in table rows: icon centered in its tinted square. */
 .a-table td button:has(> .material-symbols-outlined:only-child) { width: 28px; height: 28px; padding: 0 !important; display: inline-grid; place-items: center; }
 .a-table td button .material-symbols-outlined { line-height: 1; }

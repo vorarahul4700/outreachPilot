@@ -423,11 +423,10 @@ document.addEventListener("DOMContentLoaded", () => {
         const isAdmin = u.is_admin;
         const isBanned = u.is_banned;
         const tierName = u.subscription_tier || "free";
-        const tierBadge = tierName === "premium_plus"
-          ? `<span class="whitespace-nowrap px-2 py-0.5 rounded text-[11px] font-mono font-semibold bg-emerald-500/20 text-emerald-400">Premium+ (100)</span>`
-          : tierName === "pro"
-          ? `<span class="whitespace-nowrap px-2 py-0.5 rounded text-[11px] font-mono font-semibold bg-blue-500/20 text-blue-400">Pro (50)</span>`
-          : `<span class="whitespace-nowrap px-2 py-0.5 rounded text-[11px] font-mono font-semibold bg-surface-container-highest text-on-surface-variant">Free (10)</span>`;
+        // One color per plan so plans stand out at a glance; name and limit come from the DB.
+        const planClass = { free: "plan-free", week_pass: "plan-week", pro: "plan-pro" }[tierName] || "plan-top";
+        const tierBadge = `<span class="plan-badge ${planClass}">${u.subscription_tier_name}${isAdmin ? "" : ` (${u.daily_pitch_limit})`}</span>`
+          + (u.subscription_end && !isAdmin ? `<span class="block text-[11px] text-on-surface-variant mt-1">until ${u.subscription_end}</span>` : "");
 
         const roleBadge = isAdmin
           ? `<span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-amber-500/20 text-amber-500 border border-amber-500/40">★ Master Admin</span>`
