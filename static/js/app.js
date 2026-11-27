@@ -1193,6 +1193,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let companiesAbortController = null;
 
+  // Best matches for your resume (server sort; plan feature)
+  let bestMatchesOn = false;
+  const btnBestMatches = document.getElementById("btn-best-matches");
+  function setBestMatches(on) {
+    bestMatchesOn = on;
+    btnBestMatches?.classList.toggle("btn-primary", on);
+    btnBestMatches?.classList.toggle("btn-secondary", !on);
+    btnBestMatches?.setAttribute("aria-pressed", on ? "true" : "false");
+  }
+  function refreshBestMatchesLock() {
+    const locked = !(currentUser && currentUser.features && currentUser.features.best_matches);
+    btnBestMatches?.querySelector(".lock")?.classList.toggle("hidden", !locked);
+  }
+  btnBestMatches?.addEventListener("click", () => {
+    setBestMatches(!bestMatchesOn);
+    fetchCompanies(false);
+  });
+  refreshBestMatchesLock();
+
   async function fetchCompanies(preservePage = true) {
     try {
       if (companiesAbortController) {
@@ -1212,7 +1231,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const q = (filterInput?.value || "").trim();
       const selectedTech = (filterTechSelect?.value || "").trim();
       const selectedCity = (filterCitySelect?.value || "").trim();
-      const selectedSort = (sortSelect?.value || "newest").trim();
+      const selectedSort = bestMatchesOn ? "best_match" : (sortSelect?.value || "newest").trim();
       const statusParam = activeMetricFilter || "all";
       const pageSize = (companiesPerPage !== undefined && companiesPerPage !== null) ? companiesPerPage : 24;
 
@@ -1233,6 +1252,17 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
       const data = await res.json();
+      if (bestMatchesOn && data.best_match && data.best_match !== "ok") {
+        setBestMatches(false);
+        const why = {
+          locked: "Best matches for your resume are in a paid plan.",
+          no_resume: "Upload your resume first to see the companies that match it.",
+          no_match: "None of your resume skills match the tech we track yet. Showing all companies.",
+          signed_out: "Sign in to see companies that match your resume.",
+        }[data.best_match];
+        if (why) showToast(why, data.best_match === "no_match" ? "info" : "warning");
+        if (data.best_match === "locked") openSubscriptionModal(false);
+      }
       companies = data.companies || [];
       totalServerCount = data.total_count || 0;
       totalServerPages = data.total_pages || 1;
@@ -1439,6 +1469,7 @@ document.addEventListener("DOMContentLoaded", () => {
               </span>
             </div>
 
+            ${c.match_label ? `<div class="ac-match"><span class="material-symbols-outlined">target</span><span>${escapeHTML(c.match_label)}</span></div>` : ""}
             <div class="ac-tags">${techPillsHtml}</div>
 
             <div class="ac-actions">
@@ -2102,6 +2133,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await res.json();
       currentUser = data;
       isMasterAdmin = !!data.is_master_admin;
+      refreshBestMatchesLock();
       if (typeof data.dev_mode === "boolean") {
         isDevMode = data.dev_mode;
       }
