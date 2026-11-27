@@ -60,6 +60,24 @@ def all_resumes(db: Session, user_id: int) -> list[UserResume]:
             .order_by(UserResume.is_main.desc(), UserResume.id.asc()).all())
 
 
+def ensure_main_resume(db: Session, user) -> None:
+    """Profiles analyzed before resumes were kept in the database have no row yet: add their main
+    one from the saved analysis (and the old disk PDF if it is still there). Caller commits."""
+    if not user.resume_summary or db.query(UserResume.id).filter(UserResume.user_id == user.id).first():
+        return
+    pdf = None
+    path = legacy_resume_path(user.id)
+    if os.path.exists(path):
+        try:
+            with open(path, "rb") as f:
+                pdf = f.read()
+        except OSError:
+            pdf = None
+    db.add(UserResume(user_id=user.id, label="Main", filename="Resume.pdf" if pdf else None,
+                      pdf=pdf, summary=user.resume_summary, is_main=True))
+    db.flush()
+
+
 def usable_resumes(db: Session, user_id: int, slots: int) -> list[UserResume]:
     """The resumes the plan allows. After a downgrade the extras past the limit stay saved but locked."""
     return all_resumes(db, user_id)[:max(1, int(slots or 1))]

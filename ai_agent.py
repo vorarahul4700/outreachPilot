@@ -738,7 +738,8 @@ def build_fit_points(raw: Any, candidate_profile: dict[str, Any]) -> list[str]:
     def norm(t: Any) -> str:
         return re.sub(r"[^a-z0-9%+#.]+", " ", str(t).lower()).strip(" .")
 
-    achievements = {norm(a): str(a).strip().rstrip(".") for a in (candidate_profile.get("key_achievements") or candidate_profile.get("strong_points") or []) if str(a).strip()}
+    # Both lists: the prompt shows strong_points first, key_achievements otherwise.
+    achievements = {norm(a): str(a).strip().rstrip(".") for a in (list(candidate_profile.get("strong_points") or []) + list(candidate_profile.get("key_achievements") or [])) if str(a).strip()}
     skills = {norm(k): str(k).strip() for k in (candidate_profile.get("top_skills") or []) if str(k).strip()}
     points, used = [], set()
     for item in raw if isinstance(raw, list) else []:
@@ -821,6 +822,8 @@ def generate_personalized_pitch(
     else:
         pain_points_str = ""
 
+    fit_schema = ('\n  "fit_points": [{"company_fact": "Your ...", "resume_fact": "exact skill or achievement from (A)"}],'
+                  if email_style == "tailored_fit" else "")
     greeting = f"Hi {contact_name}," if contact_name and contact_name.strip() else f"Hi {company_name} team,"
     resume_instruction = f"Explicitly mention that the candidate's resume/portfolio is available at ({resume_link}) or attached." if resume_link else "Mention that the candidate's resume is attached for review."
 
@@ -879,8 +882,8 @@ Deliverables (must return valid JSON matching this schema):
   "subject_line": "The best recommended subject line out of the 3 above",
   "primary_email": "Primary cold job outreach email under 110 words",
   "email_body": "Same content as primary_email",
-  "variant_a_linkedin": "Short LinkedIn message under 75 words to an engineering manager or founder regarding open roles",
-  "variant_b_referral": "Warmer referral/networking note under 125 words expressing admiration for their tech stack and asking about team growth",
+  "variant_a_linkedin": "LinkedIn connection note to one person who works at {company_name}, UNDER 280 CHARACTERS (LinkedIn's limit). Start with 'Hi,' (the sender adds the name). Say who {candidate_name} is ({target_role}), name one skill that matches {company_name}'s work, say they are interested in {target_role} roles there, and ask to connect. No subject, no resume mention, no 'team' greeting, end with just the first name.",
+  "variant_b_referral": "Message to one employee at {company_name} asking for a referral, under 90 words. Start with 'Hi,'. Say {candidate_name} is applying for {target_role} roles at {company_name}, give one verified resume achievement, ask if they would be open to referring them or pointing them to the right person, and offer to share the resume. Polite, no pressure. Sign off with {candidate_name}.",{fit_schema}
   "cover_letter": "Concise tailored candidate cover letter paragraph for application portals",
   "personalization_notes": [
     "Specific company tech or service aligned with candidate experience",
@@ -896,13 +899,10 @@ Deliverables (must return valid JSON matching this schema):
     if email_style == "tailored_fit":
         prompt += f"""
 
-ADDITIONAL DELIVERABLE "fit_points" (a JSON list of up to 3 objects, add it to the same JSON object):
-Each object pairs one thing about {company_name} with one thing from the candidate's resume:
-{{"company_fact": "a short phrase about {company_name} from its industry, services, tech or what it builds above, starting with 'Your', at most 8 words",
-  "resume_fact": "COPIED EXACTLY, word for word, from the candidate's Core Verified Skills or Evidence-Backed Achievements above"}}
-Example: {{"company_fact": "Your payment APIs for merchants", "resume_fact": "Built payment APIs handling 2M requests a day"}}
-Only pair things that genuinely relate. Return an empty list if the company information above is too thin.
-Do NOT put these points inside the email body."""
+"fit_points" (REQUIRED in the JSON above for this email): pair things about {company_name} with the candidate's resume.
+- company_fact: what {company_name} does or uses, from (B) above, starting with "Your", at most 8 words.
+- resume_fact: COPIED EXACTLY, word for word, from Core Verified Skills (one skill) or Evidence-Backed Achievements (one full line) in (A).
+Only pair things that genuinely relate. Use [] if nothing relates. Do NOT put these points inside the email body."""
     elif email_style == "standard":
         # Short general application: company name and category only, no company research.
         prompt = f"""Write a short, polite cold JOB APPLICATION email from a job seeker to {company_name}.
