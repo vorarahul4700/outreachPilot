@@ -272,6 +272,8 @@ def call_ai_with_fallback(
                             elif "429" in err_str or "rate limit" in err_str:
                                 client_rate_limited = True
                                 break
+                            elif rf and "json_validate_failed" in err_str:
+                                break  # this model can't produce the JSON; try the next model, not free text
                             continue
 
     if last_exc:
@@ -751,6 +753,8 @@ def build_fit_points(raw: Any, candidate_profile: dict[str, Any]) -> list[str]:
             continue
         if key in achievements:
             resume_text = achievements[key]
+            if len(resume_text) > 150:
+                continue  # a whole paragraph is too long for a bullet
         elif key in skills:
             resume_text = f"I work with {skills[key]}"
         else:
@@ -872,27 +876,12 @@ CRITICAL RULES:
      {candidate_name}
 7. LENGTH: Under 110 words. Clear, respectful, peer-to-peer engineering tone. No fluff ("I hope this finds you well").
 
-Deliverables (must return valid JSON matching this schema):
+Deliverables (must return valid JSON matching this schema; keep it short, no extra keys):
 {{
-  "subject_lines": {{
-    "specificity": "Application: {target_role} - {candidate_name} ({skills.split(',')[0] if skills else target_role})",
-    "curiosity": "Inquiring about {target_role} opportunities at {company_name} - {candidate_name}",
-    "benefit_led": "{target_role} candidate experienced in {skills.split(',')[0] if skills else target_role} - {candidate_name}"
-  }},
-  "subject_line": "The best recommended subject line out of the 3 above",
+  "subject_line": "Clear subject, e.g. Application: {target_role} - {candidate_name}",
   "primary_email": "Primary cold job outreach email under 110 words",
-  "email_body": "Same content as primary_email",
   "variant_a_linkedin": "LinkedIn connection note to one person who works at {company_name}, UNDER 280 CHARACTERS (LinkedIn's limit). Start with 'Hi,' (the sender adds the name). Say who {candidate_name} is ({target_role}), name one skill that matches {company_name}'s work, say they are interested in {target_role} roles there, and ask to connect. No subject, no resume mention, no 'team' greeting, end with just the first name.",
   "variant_b_referral": "Message to one employee at {company_name} asking for a referral, under 90 words. Start with 'Hi,'. Say {candidate_name} is applying for {target_role} roles at {company_name}, give one verified resume achievement, ask if they would be open to referring them or pointing them to the right person, and offer to share the resume. Polite, no pressure. Sign off with {candidate_name}.",{fit_schema}
-  "cover_letter": "Concise tailored candidate cover letter paragraph for application portals",
-  "personalization_notes": [
-    "Specific company tech or service aligned with candidate experience",
-    "Candidate resume achievement highlighted for this role"
-  ],
-  "what_to_change_if": {{
-    "if_not_hiring": "How candidate should respond if no immediate openings (e.g., ask to stay connected and keep resume on file for future expansion)",
-    "if_recruiter": "How to tailor if speaking directly to an internal recruiter vs CTO/Tech Lead"
-  }},
   "matched_skills": ["Skill1", "Skill2", "Skill3"]
 }}"""
 
