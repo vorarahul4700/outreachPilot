@@ -185,9 +185,9 @@
             <div class="custom-dropdown-menu align-right">
               <div class="custom-dropdown-list" role="listbox">
                 <div class="custom-dropdown-item is-selected" data-value=""><span class="truncate">All Subscription Tiers</span><span class="material-symbols-outlined check-icon">check</span></div>
-                <div class="custom-dropdown-item" data-value="free"><span class="truncate">Free</span><span class="material-symbols-outlined check-icon">check</span></div>
-                <div class="custom-dropdown-item" data-value="pro"><span class="truncate">Pro</span><span class="material-symbols-outlined check-icon">check</span></div>
-                <div class="custom-dropdown-item" data-value="premium_plus"><span class="truncate">Premium+</span><span class="material-symbols-outlined check-icon">check</span></div>
+                {% for code, name in plan_options or [] %}
+                <div class="custom-dropdown-item" data-value="{{ code }}"><span class="truncate">{{ name }}</span><span class="material-symbols-outlined check-icon">check</span></div>
+                {% endfor %}
               </div>
             </div>
           </div>

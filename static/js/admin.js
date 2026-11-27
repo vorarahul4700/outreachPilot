@@ -332,12 +332,13 @@ document.addEventListener("DOMContentLoaded", () => {
       const badgePitchesCount = document.getElementById("badge-pitches-count");
       if (badgePitchesCount) badgePitchesCount.textContent = `${data.pitches_sent_today || 0} today`;
 
-      const activeSubs = (data.subscribers_pro || 0) + (data.subscribers_premium_plus || 0);
+      const activeSubs = data.subscribers_paid || 0;
       const elActiveSubs = document.getElementById("kpi-active-subs");
       if (elActiveSubs) elActiveSubs.textContent = activeSubs.toLocaleString();
 
       const elSubBreakdown = document.getElementById("kpi-sub-breakdown");
-      if (elSubBreakdown) elSubBreakdown.textContent = `${data.subscribers_pro || 0} Pro / ${data.subscribers_premium_plus || 0} Prem+`;
+      // One entry per paid plan, named as in admin (e.g. "1 7-Day Pass / 2 Job Seeker Pro").
+      if (elSubBreakdown) elSubBreakdown.textContent = (data.subscribers_by_plan || []).map(p => `${p.count} ${p.name}`).join(" / ") || "No paid plans yet";
 
       const elFreeUsers = document.getElementById("kpi-free-users");
       if (elFreeUsers) elFreeUsers.textContent = (data.subscribers_free || 0).toLocaleString();
