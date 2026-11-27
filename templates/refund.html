@@ -1,0 +1,67 @@
+{% extends "layouts/legal.html" %}
+{% set legal_active = "refund" %}
+
+{% block title %}Cancellation and Refund Policy - {{ project_name }}{% endblock %}
+
+{% block legal_title_text %}Cancellation and Refund Policy{% endblock %}
+{% block legal_lead %}Plans are one-time payments. Nothing renews on its own, so there is nothing to cancel, and we refund you in full if a payment goes wrong.{% endblock %}
+{% block legal_updated %}Last Updated: November 27, 2026{% endblock %}
+{% block legal_status %}Payments handled by Razorpay{% endblock %}
+
+{% block legal_highlights %}
+<div class="legal-hl">
+  <div class="legal-hl-title"><span class="material-symbols-outlined" aria-hidden="true">block</span><span>No auto-renewal</span></div>
+  <p>A plan runs for the days you paid for, then you move back to the Free plan. You are never charged again unless you buy again.</p>
+</div>
+<div class="legal-hl">
+  <div class="legal-hl-title"><span class="material-symbols-outlined" aria-hidden="true">undo</span><span>Full refund if it goes wrong</span></div>
+  <p>Charged but your plan did not turn on, or charged twice? You get all of that money back.</p>
+</div>
+<div class="legal-hl">
+  <div class="legal-hl-title"><span class="material-symbols-outlined" aria-hidden="true">mail</span><span>One email</span></div>
+  <p>Write to founder@outreachpilot.in with your payment ID and we sort it out.</p>
+</div>
+{% endblock %}
+
+{% block legal_sections %}
+<article class="legal-section" id="plans">
+  <div class="legal-section-head">
+    <div class="left"><span class="legal-num">01</span><h2>How paid plans work</h2></div>
+  </div>
+  <p>{{ project_name }} sells digital plans that raise how many job applications you can send each day. Each plan is a single payment made through Razorpay:</p>
+  <ul>
+    <li>The 7-Day Pass lasts 7 days from the moment the payment is confirmed.</li>
+    <li>The monthly plan lasts 30 days from the moment the payment is confirmed.</li>
+    <li>If you buy the same plan again while it is still active, the new days are added after your current end date.</li>
+  </ul>
+  <p>When a plan ends, your account moves back to the Free plan automatically. Nothing is delivered by post or courier; the plan is available in your account right after payment.</p>
+</article>
+
+<article class="legal-section" id="cancellation">
+  <div class="legal-section-head">
+    <div class="left"><span class="legal-num">02</span><h2>Cancellation</h2></div>
+  </div>
+  <p>Plans do not renew and we never save your card or UPI details for future charges, so there is no subscription to cancel. If you do not want to continue, simply do not buy again when your plan ends.</p>
+</article>
+
+<article class="legal-section" id="refunds">
+  <div class="legal-section-head">
+    <div class="left"><span class="legal-num">03</span><h2>Refunds</h2></div>
+  </div>
+  <p>Once a plan is active in your account, the payment is not refundable, including for days you do not use.</p>
+  <p>You get a full refund in these cases:</p>
+  <ul>
+    <li>You were charged but the plan did not turn on in your account.</li>
+    <li>You were charged more than once for the same purchase.</li>
+  </ul>
+  <p>Approved refunds go back to the original payment method through Razorpay. The money usually reaches you within 5 to 7 working days after we start the refund; your bank may take longer to show it.</p>
+</article>
+
+<article class="legal-section" id="request">
+  <div class="legal-section-head">
+    <div class="left"><span class="legal-num">04</span><h2>How to ask for a refund</h2></div>
+  </div>
+  <p>Email <a href="mailto:founder@outreachpilot.in">founder@outreachpilot.in</a> within 7 days of the payment. Include the email address you sign in with and the Razorpay payment ID from your payment receipt. We check the payment and reply by email.</p>
+  <p>See the <a href="/contact">Contact page</a> for other ways to reach us, and our <a href="/terms">Terms of Service</a> for the full terms of use.</p>
+</article>
+{% endblock %}

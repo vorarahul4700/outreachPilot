@@ -453,7 +453,7 @@ async def maintenance_mode_middleware(request: Request, call_next):
         path = request.url.path
         # Allowed routes: health checks, landing page, directory, SEO, GEO, sitemaps, maintenance page, static assets, and icons
         is_allowed = (
-            path in ("/health", "/healthz", "/", "/home", "/landing", "/maintenance", "/privacy", "/terms", "/unsubscribe",
+            path in ("/health", "/healthz", "/", "/home", "/landing", "/maintenance", "/privacy", "/terms", "/refund-policy", "/contact", "/unsubscribe",
                      "/favicon.ico", "/apple-touch-icon.png", "/apple-touch-icon-precomposed.png",
                      "/robots.txt", "/llms.txt", "/llms-full.txt", "/sitemap.xml",
                      "/sitemap-core.xml", "/sitemap-cities.xml", "/sitemap-tech.xml", "/sitemap-directory.xml")
@@ -1134,6 +1134,18 @@ def privacy_page(request: Request):
         name="privacy.html",
         context={"project_name": config.PROJECT_NAME}
     )
+
+
+@app.api_route("/refund-policy", methods=["GET", "HEAD"], response_class=HTMLResponse)
+def refund_policy_page(request: Request):
+    """Cancellation and refund policy (Razorpay website requirement)."""
+    return templates.TemplateResponse(request=request, name="refund.html", context={"project_name": config.PROJECT_NAME})
+
+
+@app.api_route("/contact", methods=["GET", "HEAD"], response_class=HTMLResponse)
+def contact_page(request: Request):
+    """Contact and about page (Razorpay website requirement)."""
+    return templates.TemplateResponse(request=request, name="contact.html", context={"project_name": config.PROJECT_NAME})
 
 
 @app.api_route("/terms", methods=["GET", "HEAD"], response_class=HTMLResponse)

@@ -1,4 +1,4 @@
-{#- Shared layout for the privacy policy and terms of service.
+{#- Shared layout for the privacy policy, terms of service, refund policy and contact page.
     Pages fill: legal_title_text, legal_lead, legal_updated, legal_status,
     legal_highlights and legal_sections. Each section is an
     <article class="legal-section" id="..."> with an <h2>; the
@@ -15,6 +15,8 @@
     <div class="legal-switch segmented" role="navigation" aria-label="Legal pages">
       <a href="/terms"{% if legal_active == "terms" %} class="is-active" aria-current="page"{% endif %}>Terms</a>
       <a href="/privacy"{% if legal_active == "privacy" %} class="is-active" aria-current="page"{% endif %}>Privacy</a>
+      <a href="/refund-policy"{% if legal_active == "refund" %} class="is-active" aria-current="page"{% endif %}>Refunds</a>
+      <a href="/contact"{% if legal_active == "contact" %} class="is-active" aria-current="page"{% endif %}>Contact</a>
     </div>
     <span class="eyebrow reveal">Legal</span>
     <h1 class="h1">{% block legal_title_text %}{% endblock %}</h1>
