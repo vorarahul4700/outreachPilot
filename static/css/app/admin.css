@@ -153,6 +153,9 @@
   .a-table:not(.catvis-table) tbody td[data-role="field"]::before { content: attr(data-label); font-size: .76rem; color: var(--text-3); }
   .a-table:not(.catvis-table) tbody td[data-role="field"] > * { justify-self: start; max-width: 100%; }
   .a-table:not(.catvis-table) tbody td.truncate { white-space: normal; overflow: visible; }
+  /* Cards have room to wrap: show full emails and names instead of cutting them with an ellipsis. */
+  .a-table:not(.catvis-table) tbody td .truncate { white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: break-word; }
+  .a-table:not(.catvis-table) tbody td [style*="max-width"] { max-width: none !important; }
   .a-table:not(.catvis-table) tbody td[colspan] { grid-column: 1 / -1; display: block; text-align: center !important; }
   .a-table-wrap:not(.catvis-group) .a-pager { margin-top: 12px; border: 1px solid var(--line); border-radius: var(--r-lg); }
 }

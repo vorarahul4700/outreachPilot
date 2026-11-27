@@ -350,6 +350,12 @@
 .ac-contact .has { color: var(--ok-text); }
 .ac-contact .none { color: var(--warn-text); }
 .ac-contact .loc { color: var(--text-3); flex: none; max-width: 45%; }
+/* Phones: full email on its own line rather than cut with an ellipsis. */
+@media (max-width: 640px) {
+  .ac-contact { flex-wrap: wrap; row-gap: 6px; }
+  .ac-contact > span > span:last-child, .email-well b { white-space: normal; overflow-wrap: break-word; }
+  .ac-contact .loc { max-width: none; }
+}
 .ac-tags { display: flex; flex-wrap: wrap; gap: 6px; min-height: 26px; }
 .ac-tag { display: inline-flex; align-items: center; gap: 5px; height: 26px; padding: 0 10px; border-radius: var(--r-pill); background: var(--surface-2); border: 1px solid var(--line); font-family: var(--font-mono); font-size: .72rem; color: var(--text-2); }
 .ac-tag.muted { background: transparent; border-style: dashed; color: var(--text-3); font-style: italic; }

@@ -1431,7 +1431,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <div class="ac-contact">
               <span class="${emailTextClass}">
                 <span class="material-symbols-outlined">${emailIcon}</span>
-                <span>${hasEmail ? escapeHTML(primaryEmail) : 'Email not found'}</span>
+                <span>${hasEmail ? escapeHTML(primaryEmail).replace("@", "@<wbr>") : 'Email not found'}</span>
               </span>
               <span class="loc">
                 <span class="material-symbols-outlined">location_on</span>
@@ -3474,7 +3474,7 @@ document.addEventListener("DOMContentLoaded", () => {
             <div class="email-well">
               <div class="l">
                 <span class="material-symbols-outlined">alternate_email</span>
-                <div class="min-w-0"><small>Verified Direct Email</small><b>${escapeHTML(directEmail)}</b></div>
+                <div class="min-w-0"><small>Verified Direct Email</small><b>${escapeHTML(directEmail).replace("@", "@<wbr>")}</b></div>
               </div>
               <button type="button" class="btn-copy-email icon-btn sm bare" data-email="${escapeHTML(directEmail)}" title="Copy email address">
                 <span class="material-symbols-outlined">content_copy</span>
