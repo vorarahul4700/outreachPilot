@@ -351,14 +351,16 @@ def _send_queued_pitch(pitch_id: int) -> str:
             res = {"success": False, "error": "Account not available for sending (not connected or suspended)."}
         else:
             att = db.query(SendAttachment).filter(SendAttachment.user_id == user.id).first()
-            stored = os.path.join("uploads", "resumes", f"user_{user.id}_resume.pdf")
+            # The batch's own attachment first, else the saved resume (database, then old disk copy).
+            from resumes import resume_pdf
+            saved_bytes, saved_name = (None, None) if att else resume_pdf(db, user.id)
             try:
                 res = asyncio.run(send_via_google_oauth(
                     user=user, to_email=pitch.target_email, subject=pitch.subject_line, body=pitch.email_body,
                     db=db, company_id=pitch.company_id,
-                    resume_attachment_bytes=att.data if att else None,
-                    resume_attachment_name=att.filename if att else None,
-                    resume_attachment_path=None if att else (stored if os.path.exists(stored) else None),
+                    resume_attachment_bytes=att.data if att else saved_bytes,
+                    resume_attachment_name=att.filename if att else saved_name,
+                    resume_attachment_path=None,
                 ))
             except Exception as e:
                 res = {"success": False, "error": str(e)}

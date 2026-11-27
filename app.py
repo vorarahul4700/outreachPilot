@@ -97,6 +97,7 @@ from db import (
 )
 from enricher import is_recruitment_email
 from plan_features import EMAIL_STYLES, plan_features
+from resumes import resume_pdf, save_main_resume
 from outreach import (
     add_do_not_contact,
     read_optout_token,
@@ -3103,6 +3104,7 @@ async def upload_resume(
         user.resume_link = resume_link_clean
 
     parsed_profile = user.resume_summary or {}
+    uploaded_pdf = None  # PDF bytes, saved to user_resumes after analysis
 
     # If file was attached, process and store local copy
     if file and file.filename:
@@ -3137,15 +3139,7 @@ async def upload_resume(
             except Exception as e:
                 raise HTTPException(status_code=400, detail=f"Failed to parse PDF: {e!s}")
 
-            # Save local copy in uploads/resumes for direct OAuth attachment
-            import os
-            os.makedirs(os.path.join("uploads", "resumes"), exist_ok=True)
-            save_path = os.path.join("uploads", "resumes", f"user_{user.id}_resume.pdf")
-            try:
-                with open(save_path, "wb") as f_out:
-                    f_out.write(contents)
-            except Exception as save_err:
-                print(f"[Upload Warning] Could not save resume PDF: {save_err}")
+            uploaded_pdf = contents  # stored in user_resumes below (the server disk is wiped on deploy)
         else:
             raw_text = contents.decode("utf-8", errors="ignore")
 
@@ -3170,6 +3164,8 @@ async def upload_resume(
         parsed_profile["resume_link"] = user.resume_link
 
     user.resume_summary = parsed_profile
+    if file and file.filename:
+        save_main_resume(db, user.id, file.filename, uploaded_pdf, parsed_profile)
 
     # Invalidate and delete stale draft pitches so all future generated pitches reflect the newly uploaded resume
     try:
@@ -3641,14 +3637,7 @@ async def send_single_pitch_direct(
 
     # Fallback to saved resume if attachment requested but no temp file was passed in request
     if attach_resume and not resume_bytes:
-        user_resume_path = os.path.join("uploads", "resumes", f"user_{user.id}_resume.pdf")
-        if os.path.exists(user_resume_path):
-            try:
-                with open(user_resume_path, "rb") as rf:
-                    resume_bytes = rf.read()
-                    resume_filename = "Resume.pdf"
-            except Exception as read_err:
-                print(f"[Send Warning] Could not read user resume: {read_err}")
+        resume_bytes, resume_filename = resume_pdf(db, user.id)
 
     result = await send_via_google_oauth(
         user=user,
