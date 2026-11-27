@@ -355,7 +355,7 @@
 .style-chip { display: inline-flex; align-items: center; margin-top: 4px; padding: 2px 9px; border-radius: 6px; font-family: var(--font-mono); font-size: .68rem; font-weight: 600; background: var(--accent-soft); color: var(--accent-ink); border: 1px solid var(--accent-line); }
 .ac-match { display: flex; align-items: center; gap: 6px; font-size: .76rem; font-weight: 600; color: var(--ok-text); }
 .ac-match .material-symbols-outlined { font-size: 16px; }
-#btn-best-matches .lock { font-size: 15px; opacity: .7; }
+#btn-best-matches .lock, #btn-gen-all-pitches .lock, #btn-send-all-outreach .lock { font-size: 15px; opacity: .7; }
 .resumes-block { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); display: grid; gap: 10px; }
 .resume-list { display: grid; gap: 8px; list-style: none; margin: 0; padding: 0; }
 .resume-item { display: grid; gap: 6px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--r-lg); background: var(--surface-2); }
