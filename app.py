@@ -4229,7 +4229,7 @@ def update_user_plan(
         "success": True,
         "tier": target.subscription_tier,
         "daily_pitch_limit": target.daily_pitch_limit,
-        "message": f"Updated subscription to {tier.upper()} ({target.daily_pitch_limit} pitches/day)"
+        "message": f"Updated plan to {tier_obj.name if tier_obj else tier.upper()} ({target.daily_pitch_limit} applications/day)"
                    + (f", ends {target.subscription_end_date:%d %b %Y}." if target.subscription_end_date else ".")
     }
 

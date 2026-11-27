@@ -576,11 +576,8 @@
     <div class="a-form am-body">
       <div class="info-strip"><span>Target User:</span><b id="edit-plan-user-email">user@example.com</b></div>
       <label class="lbl">Select Subscription Tier:</label>
-      <div class="stack" style="--stack:8px">
-        <label class="radio-card"><input type="radio" name="plan-tier" value="free"><span>Free</span></label>
-        <label class="radio-card"><input type="radio" name="plan-tier" value="pro"><span>Pro</span></label>
-        <label class="radio-card"><input type="radio" name="plan-tier" value="premium_plus"><span>Premium+</span></label>
-      </div>
+      <div class="stack" style="--stack:8px" id="edit-plan-options"><span class="app-field-hint">Loading plans...</span></div>
+      <span class="app-field-hint">Paid plans run for their length (7 or 30 days) from today, then the user moves back to Free.</span>
       <input type="hidden" id="edit-plan-user-id">
       <div class="flex items-center justify-end gap-2" style="padding-top:12px;border-top:1px solid var(--line)">
         <button type="button" class="modal-close btn btn-ghost">Cancel</button>
