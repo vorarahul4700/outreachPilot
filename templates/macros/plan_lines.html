@@ -3,7 +3,7 @@
 {% if t.lines %}
 <ul{% if ul_class %} class="{{ ul_class }}" role="list"{% endif %}>
   {% for ln in t.lines %}
-  <li>{{ icon }}<span class="pl-text">{{ ln.text }}
+  <li class="pl-li">{{ icon }}<span class="pl-text">{{ ln.text }}
     {%- if ln.example and examples and examples[ln.example] %}
     <span class="ex-wrap">
       <button type="button" class="ex-btn" aria-expanded="false" aria-label="See an example: {{ ln.text }}"><span class="ex-i" aria-hidden="true">i</span><span>See example</span></button>
