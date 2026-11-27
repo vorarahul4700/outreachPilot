@@ -752,7 +752,7 @@
       <div class="spread"><span class="sub-label">Available outreach packs</span><span class="app-field-hint">Switch or upgrade at any time</span></div>
 
       {% set plan_count = (tiers or [])|length %}
-      <div class="sub-plans {% if plan_count >= 3 %}n3{% elif plan_count == 2 %}n2{% endif %}" id="sub-modal-plans-grid">
+      <div class="sub-plans {% if plan_count >= 4 %}n4{% elif plan_count == 3 %}n3{% elif plan_count == 2 %}n2{% endif %}" id="sub-modal-plans-grid">
         {% for t in (tiers or []) %}
         {% set featured = t.code == 'pro' %}
         {% set is_current = user_subscription_tier == t.code %}
@@ -762,7 +762,7 @@
           {% if t.badge %}<span class="badge-top">{{ t.badge }}</span>{% endif %}
           <div>
             <div class="nm"><b>{{ t.name }}</b>{% if t.subtitle %}<span>{{ t.subtitle }}</span>{% endif %}</div>
-            <div class="pr"><b>₹{{ "{:,}".format(t.price_inr) }}</b><span>/ month</span></div>
+            <div class="pr"><b>₹{{ "{:,}".format(t.price_inr) }}</b><span>/ {{ 'week' if (t.period_days or 30) == 7 else 'month' }}</span></div>
             <div class="qt">{{ "{:,}".format(t.daily_pitch_limit) }} applications / day</div>
             {% if t.features %}
             <ul>

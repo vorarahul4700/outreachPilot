@@ -1421,7 +1421,7 @@ document.addEventListener("DOMContentLoaded", () => {
               </div>
               <div class="flex items-baseline gap-1">
                 <span class="text-headline-lg font-headline-lg ${isMaster ? 'text-amber-500' : 'text-on-surface'} font-bold tabular-nums">${priceDisplay}</span>
-                <span class="text-xs text-on-surface-variant">${isMaster ? 'Superuser' : '/ month'}</span>
+                <span class="text-xs text-on-surface-variant">${isMaster ? 'Superuser' : (t.period_days === 7 ? '/ week' : '/ month')}</span>
               </div>
               <h3 class="text-sm font-semibold text-on-surface">${t.name}</h3>
               <div class="text-xs font-semibold ${isMaster ? 'text-amber-500' : 'text-emerald-500'}">${limitDisplay}</div>
@@ -1458,12 +1458,27 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("tier-form-subtitle").value = tier.subtitle || "";
     document.getElementById("tier-form-price").value = tier.price_inr;
     document.getElementById("tier-form-limit").value = tier.daily_pitch_limit;
+    setTierPeriod(tier.period_days);
     document.getElementById("tier-form-badge").value = tier.badge || "";
     document.getElementById("tier-form-features").value = (tier.features || []).join("\n");
     document.getElementById("tier-form-sync-users").checked = true;
 
     openModal("modal-tier-form");
   };
+
+  // Plan length picker (house dropdown): set value, label and the ticked item together.
+  function setTierPeriod(days) {
+    const box = document.getElementById("dropdown-tier-period");
+    if (!box) return;
+    const val = String(days || 30);
+    document.getElementById("tier-form-period").value = val;
+    box.querySelectorAll(".custom-dropdown-item").forEach(it => {
+      const on = it.dataset.value === val;
+      it.classList.toggle("is-selected", on);
+      if (on) box.querySelector(".custom-dropdown-label").textContent = it.textContent.trim().replace(/check$/, "").trim();
+    });
+  }
+  initStaticCustomDropdown("dropdown-tier-period");
 
   document.getElementById("btn-add-custom-tier")?.addEventListener("click", () => {
     document.getElementById("tier-modal-title").textContent = "Add Custom Tier Plan";
@@ -1472,8 +1487,9 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("tier-form-code").disabled = false;
     document.getElementById("tier-form-name").value = "";
     document.getElementById("tier-form-subtitle").value = "";
-    document.getElementById("tier-form-price").value = "499";
+    document.getElementById("tier-form-price").value = "199";
     document.getElementById("tier-form-limit").value = "50";
+    setTierPeriod(30);
     document.getElementById("tier-form-badge").value = "";
     document.getElementById("tier-form-features").value = "50 pitches / day\nVerified contact discovery\nAI pitch customization";
     openModal("modal-tier-form");
@@ -1498,6 +1514,7 @@ document.addEventListener("DOMContentLoaded", () => {
       subtitle: document.getElementById("tier-form-subtitle").value.trim(),
       price_inr: parseInt(document.getElementById("tier-form-price").value, 10) || 0,
       daily_pitch_limit: parseInt(document.getElementById("tier-form-limit").value, 10) || 10,
+      period_days: parseInt(document.getElementById("tier-form-period").value, 10) || 30,
       badge: document.getElementById("tier-form-badge").value.trim() || null,
       features: featuresLines,
       is_active: true,
