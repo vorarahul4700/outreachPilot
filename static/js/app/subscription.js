@@ -80,7 +80,7 @@ function updateUserSubscriptionUI(data) {
     const isCurrent = cardCode === tierCode || (isMaster && cardCode === "premium_plus");
     card.classList.toggle("ring-2", isCurrent);
     card.classList.toggle("ring-primary", isCurrent);
-    if (!btn) return;
+    if (!btn || btn.dataset.static) return;  // fixed notes (Free card) keep their text
     btn.textContent = isCurrent ? "Current Active Plan" : (btn.dataset.defaultLabel || btn.textContent);
     if (isCurrent) {
       btn.removeAttribute("href");

@@ -2809,7 +2809,8 @@ def auth_status(request: Request, db: Session = Depends(get_db)):
             "premium_plus": "Premium+",
             "master_admin": "Master Admin"
         }
-        tier_name = tier_name_map.get(tier_code, tier_code.replace("_", " ").title())
+        tier_row = db.query(SubscriptionTier.name).filter(SubscriptionTier.code == tier_code).scalar()
+        tier_name = tier_row or tier_name_map.get(tier_code, tier_code.replace("_", " ").title())
         daily_limit = getattr(user, "daily_pitch_limit", 10) or 10
         sent_today = getattr(user, "pitches_sent_today", 0) or 0
         remaining = max(0, daily_limit - sent_today)
@@ -2824,7 +2825,8 @@ def auth_status(request: Request, db: Session = Depends(get_db)):
         "premium_plus": "Premium+",
         "master_admin": "Master Admin"
     }
-    real_tier_name = "Master Admin" if is_master else real_tier_name_map.get(real_tier_code, real_tier_code.replace("_", " ").title())
+    real_tier_row = db.query(SubscriptionTier.name).filter(SubscriptionTier.code == real_tier_code).scalar() if is_logged_in else None
+    real_tier_name = "Master Admin" if is_master else (real_tier_row or real_tier_name_map.get(real_tier_code, real_tier_code.replace("_", " ").title()))
 
     return {
         "is_logged_in": is_logged_in,

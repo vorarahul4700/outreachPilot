@@ -772,7 +772,14 @@
             </ul>
             {% endif %}
           </div>
-          {% if billing_enabled and t.price_inr > 0 and not is_current and is_logged_in %}
+          {% if t.price_inr == 0 and not is_current %}
+          {#- Free needs no switch: signed-out visitors sign up; paid users drop back to Free when their plan ends. -#}
+          {% if not is_logged_in %}
+          <a href="/auth/google/login" class="btn-tier-action">Start free</a>
+          {% else %}
+          <span class="btn-tier-action opacity-60 pointer-events-none" data-static="1" aria-disabled="true">{% if user and user.subscription_end_date %}Back to Free on {{ user.subscription_end_date.strftime('%d %b %Y') }}{% else %}Included with every account{% endif %}</span>
+          {% endif %}
+          {% elif billing_enabled and t.price_inr > 0 and not is_current and is_logged_in %}
           <button type="button" data-buy-tier="{{ t.code }}" class="btn-tier-action">Buy {{ t.name }} for ₹{{ "{:,}".format(t.price_inr) }}</button>
           {% elif billing_enabled and t.price_inr > 0 and not is_logged_in %}
           <a href="/auth/google/login" class="btn-tier-action">Sign in to buy {{ t.name }}</a>
