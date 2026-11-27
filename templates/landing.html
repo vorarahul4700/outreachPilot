@@ -431,13 +431,8 @@
           <h3 class="plan-name">{{ t.name }}</h3>
           <div class="plan-price"><span class="amount">₹{{ "{:,}".format(t.price_inr) }}</span><span class="per">/ {{ 'week' if (t.period_days or 30) == 7 else 'month' }}</span></div>
           <div class="plan-quota"><span>Daily limit</span><b>{{ "{:,}".format(t.daily_pitch_limit) }} applications / day</b></div>
-          {% if t.features %}
-          <ul class="plan-features" role="list">
-            {% for f in t.features %}
-            <li>{{ ui.icon("check_circle") }}<span>{{ f }}</span></li>
-            {% endfor %}
-          </ul>
-          {% endif %}
+          {%- from "macros/plan_lines.html" import plan_lines %}
+          {{ plan_lines(t, plan_examples, ui.icon("check_circle"), "plan-features") }}
         </div>
         <div class="plan-cta">
           {% if is_current %}
@@ -536,5 +531,6 @@
 
 {% block scripts %}
 <script src="/static/js/pages/landing.js?v={{ asset_v }}"></script>
+<script src="/static/js/plan-examples.js?v={{ asset_v }}"></script>
 <script src="/static/js/site/landing-demo.js?v={{ asset_v }}" defer></script>
 {% endblock %}

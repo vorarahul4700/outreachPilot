@@ -97,7 +97,7 @@ from db import (
     init_db,
 )
 from enricher import is_recruitment_email
-from plan_features import EMAIL_STYLES, plan_features
+from plan_features import DEFAULT_PLAN_EXAMPLES, EMAIL_STYLES, EXAMPLE_KEYS, plan_card_lines, plan_features
 from resumes import all_resumes, pick_resume, resume_pdf, save_main_resume, usable_resumes
 from outreach import (
     add_do_not_contact,
@@ -1047,6 +1047,24 @@ def clear_public_tiers_cache() -> None:
     _PUBLIC_TIERS_CACHE.update(ts=0.0, data=None)
 
 
+def plan_examples(db: Session) -> dict:
+    """The "See example" samples: admin edits over the built-in defaults."""
+    out = dict(DEFAULT_PLAN_EXAMPLES)
+    try:
+        row = db.query(SystemSetting).filter(SystemSetting.key == "plan_examples").first()
+        saved = json.loads(row.value) if row and row.value else {}
+        out.update({k: str(v) for k, v in saved.items() if k in EXAMPLE_KEYS and str(v).strip()})
+    except Exception:
+        pass
+    return out
+
+
+def public_plan_cards(db: Session) -> list[dict]:
+    """Public plans with their card lines (trial line on Free while the trial is on)."""
+    trial = trial_settings(db)
+    return plan_card_lines(load_public_tiers(db), trial["hours"] if trial["enabled"] else None)
+
+
 # --- Subscription & Quota Resolution Helper ---
 def get_user_subscription_info(user: User | None, db: Session) -> dict:
     kill_switch_active = is_subscription_kill_switch_active(db)
@@ -1234,7 +1252,7 @@ def landing_page(request: Request, db: Session = Depends(get_db)):
     
     # Plans for the pricing section, exactly as set in the admin panel
     # (empty while the kill switch is on, which hides pricing).
-    public_tiers = [] if kill_switch else load_public_tiers(db)
+    public_tiers = [] if kill_switch else public_plan_cards(db)
 
     # Largest city and category hubs for the crawlable "Browse the directory" section.
     # Both lists come from cached aggregates; on any failure the section simply hides.
@@ -1255,6 +1273,7 @@ def landing_page(request: Request, db: Session = Depends(get_db)):
             "is_logged_in": is_logged_in,
             "sub_info": sub_info,
             "tiers": public_tiers,
+            "plan_examples": plan_examples(db),
             "google_client_id": config.GOOGLE_CLIENT_ID,
             "dev_mode": config.DEV_MODE,
             "subscription_kill_switch": kill_switch,
@@ -1305,7 +1324,8 @@ def workspace_page(request: Request, db: Session = Depends(get_db)):
             "domains": all_domains,
             "total_companies": total_valid,
             # Plan cards in the subscription window, as set in the admin panel
-            "tiers": [] if kill_switch else load_public_tiers(db),
+            "tiers": [] if kill_switch else public_plan_cards(db),
+            "plan_examples": plan_examples(db),
             "features": plan_features(db, user if is_logged_in else None, kill_switch=kill_switch),
             "trial": trial_status(db, user if is_logged_in else None, kill_switch),
             "billing_enabled": billing_enabled(),
@@ -3036,6 +3056,30 @@ def admin_set_trial(req: TrialSettingsRequest, admin=Depends(require_master_admi
             row.updated_at = datetime.utcnow()
     db.commit()
     return admin_get_trial(admin, db)
+
+
+@app.get("/api/admin/plan-examples")
+def admin_get_plan_examples(admin=Depends(require_master_admin), db: Session = Depends(get_db)):
+    return {"examples": plan_examples(db), "defaults": DEFAULT_PLAN_EXAMPLES}
+
+
+class PlanExamplesRequest(BaseModel):
+    examples: dict[str, str]
+
+
+@app.post("/api/admin/plan-examples")
+def admin_set_plan_examples(req: PlanExamplesRequest, admin=Depends(require_master_admin), db: Session = Depends(get_db)):
+    clean = {k: str(v).strip()[:2000] for k, v in req.examples.items() if k in EXAMPLE_KEYS}
+    # Saving a sample equal to the default (or empty) keeps following the default.
+    clean = {k: v for k, v in clean.items() if v and v != DEFAULT_PLAN_EXAMPLES[k]}
+    row = db.query(SystemSetting).filter(SystemSetting.key == "plan_examples").first()
+    if not row:
+        db.add(SystemSetting(key="plan_examples", value=json.dumps(clean), description="Plan card 'See example' samples"))
+    else:
+        row.value = json.dumps(clean)
+        row.updated_at = datetime.utcnow()
+    db.commit()
+    return {"examples": plan_examples(db), "defaults": DEFAULT_PLAN_EXAMPLES}
 
 
 @app.get("/api/tiers")

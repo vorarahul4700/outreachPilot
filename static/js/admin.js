@@ -1426,10 +1426,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Automatic lines from the plan settings first, then the admin's extra bullets.
         const autoLines = isMaster ? [] : [
-          { standard: "Standard application emails", tailored: "Company-tailored application emails", tailored_fit: "Tailored application emails + fit summary" }[t.email_style] || "Company-tailored application emails",
-          ...(t.has_best_matches ? ["Your best matches"] : []),
-          ...(t.has_linkedin ? ["LinkedIn and referral messages"] : []),
-          ...((t.resume_slots || 1) > 1 ? [`Up to ${t.resume_slots} resumes`] : []),
+          { standard: "Standard application", tailored: "Company-tailored application", tailored_fit: "Tailored application + fit summary" }[t.email_style] || "Company-tailored application",
+          ...(t.has_best_matches ? ["Best matches for your resume"] : []),
+          ...(t.has_linkedin ? ["LinkedIn message + referral request"] : []),
+          ...((t.resume_slots || 1) > 1 ? [`Up to ${t.resume_slots} resumes, picked for each company`] : ["1 resume"]),
           ...(t.has_bulk ? ["Apply in bulk"] : []),
         ];
         const featureItems = [...autoLines, ...(t.features || [])].map(f =>
@@ -1649,6 +1649,42 @@ document.addEventListener("DOMContentLoaded", () => {
       showToast(err.message, "error");
     }
   });
+
+  // --- Plan card "See example" samples ---
+  const EXAMPLE_LABELS = {
+    standard: "Standard application", tailored: "Company-tailored application", tailored_fit: "Tailored application + fit summary",
+    best_matches: "Best matches for your resume", linkedin: "LinkedIn message + referral request",
+    resumes: "Several resumes, picked for each company", bulk: "Apply in bulk",
+  };
+  async function loadPlanExamples() {
+    const box = document.getElementById("plan-examples-fields");
+    if (!box) return;
+    try {
+      const res = await fetch("/api/admin/plan-examples");
+      if (!res.ok) return;
+      const d = await res.json();
+      box.innerHTML = Object.keys(EXAMPLE_LABELS).map((k) => `
+        <label class="stack" style="--stack:4px"><span class="a-desc"><b>${EXAMPLE_LABELS[k]}</b></span>
+          <textarea rows="4" class="recessed-well" data-example-key="${k}" maxlength="2000"></textarea></label>`).join("");
+      box.querySelectorAll("[data-example-key]").forEach((ta) => { ta.value = d.examples[ta.dataset.exampleKey] || ""; });
+    } catch (_) {}
+  }
+  document.getElementById("btn-save-plan-examples")?.addEventListener("click", async () => {
+    const examples = {};
+    document.querySelectorAll("[data-example-key]").forEach((ta) => { examples[ta.dataset.exampleKey] = ta.value; });
+    try {
+      const res = await fetch("/api/admin/plan-examples", {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ examples })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Could not save the examples");
+      showToast("Plan examples saved", "success");
+      loadPlanExamples();
+    } catch (err) {
+      showToast(err.message, "error");
+    }
+  });
+  loadPlanExamples();
 
   // --- One-day Pro trial settings ---
   async function loadTrialSettings() {
