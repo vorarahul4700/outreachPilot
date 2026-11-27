@@ -1222,8 +1222,21 @@ document.addEventListener("DOMContentLoaded", () => {
     btnBestMatches?.setAttribute("aria-pressed", on ? "true" : "false");
   }
   function refreshBestMatchesLock() {
-    const locked = !(currentUser && currentUser.features && currentUser.features.best_matches);
-    btnBestMatches?.querySelector(".lock")?.classList.toggle("hidden", !locked);
+    const f = (currentUser && currentUser.features) || {};
+    btnBestMatches?.querySelector(".lock")?.classList.toggle("hidden", !!f.best_matches);
+    ["btn-gen-all-pitches", "btn-send-all-outreach"].forEach((id) => {
+      const b = document.getElementById(id);
+      if (!b) return;
+      let lock = b.querySelector(".lock");
+      if (!lock) {
+        lock = document.createElement("span");
+        lock.className = "material-symbols-outlined lock";
+        lock.setAttribute("aria-hidden", "true");
+        lock.textContent = "lock";
+        b.appendChild(lock);
+      }
+      lock.classList.toggle("hidden", !!f.bulk || !currentUser.is_logged_in);
+    });
   }
   btnBestMatches?.addEventListener("click", async () => {
     setBestMatches(!bestMatchesOn);
@@ -2416,6 +2429,11 @@ document.addEventListener("DOMContentLoaded", () => {
         showToast("No valid companies selected to prepare applications for.", "warning");
         return;
       }
+      if (eligible.length > 1 && !(currentUser.features && currentUser.features.bulk)) {
+        showToast("Applying to several companies at once isn't in your plan. Open a company to apply to it, or upgrade.", "warning");
+        openSubscriptionModal(false);
+        return;
+      }
 
       requireLogin(async () => {
         const oldText = btnGenAllPitches.innerHTML;
@@ -2499,6 +2517,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (eligible.length === 0) {
         showToast("No valid companies selected for outreach.", "warning");
+        return;
+      }
+      if (eligible.length > 1 && !(currentUser.features && currentUser.features.bulk)) {
+        showToast("Applying to several companies at once isn't in your plan. Open a company to apply to it, or upgrade.", "warning");
+        openSubscriptionModal(false);
         return;
       }
 

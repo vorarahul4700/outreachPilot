@@ -3357,6 +3357,16 @@ def draft_resume_fields(db: Session, user, feats: dict, resume_id: int | None) -
     }
 
 
+BULK_LOCKED_DETAIL = ("Applying to several companies at once isn't in your plan. "
+                      "Open a company to apply to it, or upgrade to apply in bulk.")
+
+
+def require_bulk(db: Session, user, count: int) -> None:
+    """More than one company per request is the "apply in bulk" plan feature (server-side gate)."""
+    if count > 1 and not plan_features(db, user, kill_switch=is_subscription_kill_switch_active(db)).get("bulk"):
+        raise HTTPException(status_code=403, detail=BULK_LOCKED_DETAIL)
+
+
 def draft_extra_fields(pitch: ColdPitch, feats: dict) -> dict:
     """Style label and the LinkedIn/referral messages for a draft. The messages are always saved,
     but only sent to users whose plan includes them (server-side gate)."""
@@ -3613,6 +3623,7 @@ async def generate_bulk_pitches(
 
     if not req.company_ids:
         return {"success": True, "generated_count": 0, "total": 0, "pitches": []}
+    require_bulk(db, user, len(set(req.company_ids)))
 
     cand_profile = resume_profile_or_400(req, user)
 
@@ -3930,6 +3941,7 @@ async def bulk_send_outreach(
         pitch_ids = body.get("pitch_ids", [])
 
     is_unrestricted = is_master or is_subscription_kill_switch_active(db)
+    require_bulk(db, user, len({str(x) for x in pitch_ids if str(x).isdigit()}))
 
     # Queue the batch; outreach.run_send_queue sends it in the background, so a closed tab
     # or a server restart no longer cuts a batch off halfway.
