@@ -1426,11 +1426,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
         // Automatic lines from the plan settings first, then the admin's extra bullets.
         const autoLines = isMaster ? [] : [
-          { standard: "Standard application", tailored: "Company-tailored application", tailored_fit: "Tailored application + fit summary" }[t.email_style] || "Company-tailored application",
-          ...(t.has_best_matches ? ["Best matches for your resume"] : []),
-          ...(t.has_linkedin ? ["LinkedIn message + referral request"] : []),
-          ...((t.resume_slots || 1) > 1 ? [`Up to ${t.resume_slots} resumes, picked for each company`] : ["1 resume"]),
-          ...(t.has_bulk ? ["Apply in bulk"] : []),
+          { standard: "Simple application email", tailored: "Email written for each company", tailored_fit: "Email written for each company, with why you fit" }[t.email_style] || "Email written for each company",
+          ...(t.has_best_matches ? ["Companies that match your resume, shown first"] : []),
+          ...(t.has_linkedin ? ["Ready-to-send LinkedIn and referral messages"] : []),
+          ...((t.resume_slots || 1) > 1 ? [`Up to ${t.resume_slots} resumes, the best one used for each company`] : ["1 resume"]),
+          ...(t.has_bulk ? ["Apply to many companies at once"] : []),
         ];
         const featureItems = [...autoLines, ...(t.features || [])].map(f =>
           `<li class="flex items-center gap-2"><span class="material-symbols-outlined text-[16px] ${isMaster ? 'text-amber-500' : 'text-emerald-500'}">check</span> <span>${f}</span></li>`
@@ -1650,11 +1650,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // --- Plan card "See example" samples ---
+  // --- Plan card sample emails ---
   const EXAMPLE_LABELS = {
-    standard: "Standard application", tailored: "Company-tailored application", tailored_fit: "Tailored application + fit summary",
-    best_matches: "Best matches for your resume", linkedin: "LinkedIn message + referral request",
-    resumes: "Several resumes, picked for each company", bulk: "Apply in bulk",
+    standard: "Simple application email", tailored: "Email written for each company", tailored_fit: "Email written for each company, with why you fit",
   };
   async function loadPlanExamples() {
     const box = document.getElementById("plan-examples-fields");

@@ -58,7 +58,13 @@ def plan_features(db: Session, user: User | None, kill_switch: bool = False) -> 
 
 # "See example" samples on the plan cards: one fictional company and candidate, always labelled
 # "Example" on the page, and editable by the admin (stored in system_settings "plan_examples").
-EXAMPLE_KEYS = ("standard", "tailored", "tailored_fit", "best_matches", "linkedin", "resumes", "bulk")
+EXAMPLE_KEYS = ("standard", "tailored", "tailored_fit")  # only the email line has a sample
+# Plain wording for the email line on plan cards.
+CARD_EMAIL_LINES = {
+    "standard": "Simple application email",
+    "tailored": "Email written for each company",
+    "tailored_fit": "Email written for each company, with why you fit",
+}
 DEFAULT_PLAN_EXAMPLES = {
     "standard": (
         "Subject: Application for a Full Stack Developer role\n\n"
@@ -84,28 +90,6 @@ DEFAULT_PLAN_EXAMPLES = {
         "- Your appointment reminders: Built SMS reminders that cut no-shows by 30%\n\n"
         "Regards,\nAarav"
     ),
-    "best_matches": (
-        "Brightleaf Studio\n"
-        "Matches React, Node.js (2 of your skills)\n\n"
-        "Companies that use the skills on your resume are shown first."
-    ),
-    "linkedin": (
-        "LinkedIn message:\n"
-        "Hi [Name], I'm Aarav, a Full Stack Developer. I just applied to Brightleaf Studio and like what "
-        "your team is building. Happy to connect.\n\n"
-        "Referral request:\n"
-        "Hi [Name], I've applied for a developer role at Brightleaf Studio. If you think I'm a good fit, "
-        "would you be open to referring me? Thank you."
-    ),
-    "resumes": (
-        "Aarav's resumes: Full Stack (main), QA, Backend\n\n"
-        "Brightleaf Studio uses Cypress and Jest, so its email is written from the QA resume "
-        "and that resume is attached."
-    ),
-    "bulk": (
-        "Select 20 companies and click Send Emails.\n"
-        "Each company gets its own email from Aarav's Gmail, sent in the background."
-    ),
 }
 
 
@@ -115,16 +99,16 @@ def plan_card_lines(tiers: list[dict], trial_hours: int | None = None) -> list[d
     trial_hours: show the Free plan's one-time trial line (None when the trial is off)."""
     def own(t: dict) -> list[dict]:
         slots = int(t.get("resume_slots") or 1)
-        lines = [{"text": EMAIL_STYLE_LABELS.get(t.get("email_style"), EMAIL_STYLE_LABELS["tailored"]),
+        lines = [{"text": CARD_EMAIL_LINES.get(t.get("email_style"), CARD_EMAIL_LINES["tailored"]),
                   "example": t.get("email_style") if t.get("email_style") in EMAIL_STYLES else "tailored"}]
         if t.get("has_best_matches"):
-            lines.append({"text": "Best matches for your resume", "example": "best_matches"})
+            lines.append({"text": "Companies that match your resume, shown first", "example": None})
         if t.get("has_linkedin"):
-            lines.append({"text": "LinkedIn message + referral request", "example": "linkedin"})
-        lines.append({"text": f"Up to {slots} resumes, picked for each company", "example": "resumes"} if slots > 1
+            lines.append({"text": "Ready-to-send LinkedIn and referral messages", "example": None})
+        lines.append({"text": f"Up to {slots} resumes, the best one used for each company", "example": None} if slots > 1
                      else {"text": "1 resume", "example": None})
         if t.get("has_bulk"):
-            lines.append({"text": "Apply in bulk", "example": "bulk"})
+            lines.append({"text": "Apply to many companies at once", "example": None})
         if trial_hours and int(t.get("price_inr") or 0) == 0:
             length = "One-day" if trial_hours == 24 else f"{trial_hours}-hour"
             lines.append({"text": f"{length} Pro trial, once per account", "example": None})
@@ -155,6 +139,6 @@ if __name__ == "__main__":
     ], trial_hours=24)
     free_lines = [ln["text"] for ln in cards[0]["lines"]]
     assert "Sends from your own Gmail" not in free_lines  # shared by every plan: dropped
-    assert free_lines == ["Standard application", "1 resume", "One-day Pro trial, once per account"], free_lines
-    assert [ln["example"] for ln in cards[1]["lines"]] == ["tailored_fit", "resumes", "bulk"]
+    assert free_lines == ["Simple application email", "1 resume", "One-day Pro trial, once per account"], free_lines
+    assert [ln["example"] for ln in cards[1]["lines"]] == ["tailored_fit", None, None]
     print("plan_features self-check passed")
