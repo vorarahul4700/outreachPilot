@@ -2735,7 +2735,9 @@ def get_companies(
                 names = sorted(set(names_by_company.get(c.id, [])))
                 if names:
                     shown = ", ".join(names[:3])
-                    match_labels[c.id] = f"Matches {shown} ({len(names)} of your skills)" if len(names) > 1 else f"Matches {shown} (1 of your skills)"
+                    extra = len(names) - 3
+                    match_labels[c.id] = (f"Matches {shown} + {extra} more of your skills" if extra > 0
+                                          else f"Matches {shown} ({len(names)} of your skill{'s' if len(names) > 1 else ''})")
                 elif c.category_id in cat_set:
                     match_labels[c.id] = f"Matches your field: {seo_engine._category_labels(c.category_id)[0]}"
 
@@ -3520,6 +3522,37 @@ def pitch_messages(company_id: int, request: Request, db: Session = Depends(get_
         raise HTTPException(status_code=404, detail="No application for this company yet.")
     company = db.query(Company.name).filter(Company.id == company_id).scalar()
     return {"company_name": company, **draft_extra_fields(pitch, plan_features(db, user, kill_switch=is_subscription_kill_switch_active(db)))}
+
+
+@app.post("/api/pitch/messages/{company_id}")
+def write_pitch_messages(company_id: int, request: Request, db: Session = Depends(get_db)):
+    """Write the LinkedIn note and referral request for an application that has none yet
+    (drafts made before this feature). The email itself, sent or not, is left unchanged."""
+    user = get_current_user(db, request)
+    if not user or not user.oauth_tokens:
+        raise HTTPException(status_code=401, detail="Sign in to see your messages.")
+    feats = plan_features(db, user, kill_switch=is_subscription_kill_switch_active(db))
+    if not feats.get("linkedin"):
+        raise HTTPException(status_code=403, detail="LinkedIn and referral messages aren't in your plan.")
+    enforce_rate_limit(f"pitch_messages_{user.id}", max_calls=20, window_seconds=60)
+    pitch = (db.query(ColdPitch).filter(ColdPitch.user_id == user.id, ColdPitch.company_id == company_id)
+             .order_by(ColdPitch.id.desc()).first())
+    company = db.query(Company).filter(Company.id == company_id).first()
+    if not pitch or not company:
+        raise HTTPException(status_code=404, detail="No application for this company yet.")
+    row = db.query(UserResume).filter(UserResume.id == pitch.resume_id, UserResume.user_id == user.id).first() if pitch.resume_id else None
+    cand = resume_profile_or_400(PitchGenRequest(company_id=company_id), user, row.summary if row and row.summary else None)
+    prof = company.profile
+    data = generate_personalized_pitch(
+        candidate_profile=cand, company_name=company.name, email_style="tailored",
+        company_profile={"summary": prof.summary_short if prof else "", "industry": (prof.industry if prof else "") or "",
+                         "tech_stack": (prof.tech_stack if prof else []) or [], "services": (prof.services if prof else []) or [],
+                         "tone": prof.tone if prof else "Professional"},
+    )
+    pitch.linkedin_message = (data.get("variant_a_linkedin") or "").strip() or None
+    pitch.referral_message = (data.get("variant_b_referral") or "").strip() or None
+    db.commit()
+    return {"company_name": company.name, **draft_extra_fields(pitch, feats)}
 
 
 @app.post("/api/pitch/generate")

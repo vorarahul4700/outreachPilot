@@ -2831,7 +2831,7 @@ document.addEventListener("DOMContentLoaded", () => {
       <li class="resume-item${r.locked ? " is-locked" : ""}" data-resume-id="${r.id}">
         <div class="top">
           <span class="name">${escapeHTML(r.label)}</span>
-          ${r.is_main ? `<span class="chip-ok">Main</span>` : ""}
+          ${r.is_main && r.label !== "Main" ? `<span class="chip-ok">Main</span>` : ""}
           ${r.locked ? `<span class="chip-warn"><span class="material-symbols-outlined">lock</span><span>Not in your plan</span></span>` : ""}
           <span class="acts">
             <button type="button" class="btn btn-ghost btn-xs" data-resume-rename>Rename</button>
@@ -3052,7 +3052,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       const text = (kind === "linkedin" ? data.variant_a_linkedin : data.variant_b_referral) || "";
       if (!text) {
-        panel.innerHTML = `<div class="msg-locked"><span>No ${copy.title.toLowerCase()} was written for this application. Click Regenerate to write one.</span></div>`;
+        panel.innerHTML = `<div class="msg-locked"><span>This application was written before LinkedIn and referral messages existed.</span><button type="button" class="btn btn-primary btn-sm" data-write-msgs="${data.company_id || ""}">Write them now</button></div>`;
         return;
       }
       panel.innerHTML = `<div class="msg-panel"><div class="field-row"><label>${copy.title}</label><p class="recipient-line">${copy.hint}</p><textarea readonly rows="7"></textarea></div><div class="msg-actions"><button type="button" class="btn btn-secondary btn-sm" data-copy-msg><span class="material-symbols-outlined">content_copy</span><span>Copy</span></button></div></div>`;
@@ -3087,6 +3087,25 @@ document.addEventListener("DOMContentLoaded", () => {
       catch (_) { showToast("Could not copy. Select the text and copy it yourself.", "warning"); }
       return;
     }
+    const writeBtn = e.target.closest("[data-write-msgs]");
+    if (writeBtn) {
+      const cid = writeBtn.dataset.writeMsgs || currentPitchCompanyId;
+      const root = writeBtn.closest(".app-modal");
+      if (!cid || !root) return;
+      writeBtn.disabled = true;
+      writeBtn.textContent = "Writing...";
+      try {
+        const res = await fetch(`/api/pitch/messages/${cid}`, { method: "POST" });
+        const data = await res.json();
+        if (!res.ok) { showToast(data.detail || "Could not write the messages.", "error"); writeBtn.disabled = false; writeBtn.textContent = "Write them now"; return; }
+        renderMessagePanels(root, Object.assign({ company_id: cid }, data));
+      } catch (err) {
+        showToast("Could not write the messages: " + err.message, "error");
+        writeBtn.disabled = false;
+        writeBtn.textContent = "Write them now";
+      }
+      return;
+    }
     if (e.target.closest("[data-open-plans]")) {
       document.getElementById("messages-modal")?.classList.add("hidden");
       openSubscriptionModal(false);
@@ -3105,7 +3124,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await res.json();
       if (!res.ok) { showToast(data.detail || "Could not load the messages.", "error"); return; }
       document.getElementById("messages-modal-title").textContent = `Messages for ${data.company_name || "this company"}`;
-      renderMessagePanels(box, data);
+      renderMessagePanels(box, Object.assign({ company_id: companyId }, data));
       selectMessageTab(box.querySelector(".am-card"), "data-msg-tab", "linkedin");
       box.classList.remove("hidden");
     } catch (err) {
