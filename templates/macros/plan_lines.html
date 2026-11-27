@@ -6,7 +6,7 @@
   <li class="pl-li">{{ icon }}<span class="pl-text">{{ ln.text }}
     {%- if ln.example and examples and examples[ln.example] %}
     <span class="ex-wrap">
-      <button type="button" class="ex-btn" aria-expanded="false" aria-label="See a sample email: {{ ln.text }}"><span class="ex-i" aria-hidden="true">i</span><span>See sample email</span></button>
+      <button type="button" class="ex-btn" aria-expanded="false" aria-label="See a sample email: {{ ln.text }}"><span>See sample email</span></button>
       <span class="ex-pop" role="tooltip"><span class="ex-tag">Example</span><span class="ex-body">{{ examples[ln.example] }}</span></span>
     </span>
     {%- endif %}</span></li>
