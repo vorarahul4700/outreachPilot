@@ -2166,6 +2166,20 @@ def _tech_id_cond(db: Session, terms: list[str]):
     return or_(*conds) if conds else (Company.id == -1)
 
 
+def resume_match_terms(resume_summary: dict | None) -> dict:
+    """Resume skills mapped to the directory's tech and category IDs (exact taxonomy matches only)."""
+    skills = [str(s).strip() for s in ((resume_summary or {}).get("top_skills") or []) if str(s).strip()]
+    tech_ids, tech_names, cat_ids = {}, {}, set()
+    for s in skills:
+        tid = taxonomy.tech_id_for(s)
+        if tid and tid not in tech_ids:
+            tech_ids[tid] = s
+        cat = taxonomy.category_for(s)
+        if cat:
+            cat_ids.add(cat["id"])
+    return {"tech_ids": tech_ids, "cat_ids": sorted(cat_ids), "has_skills": bool(skills)}
+
+
 def _domain_id_cond(domain: str):
     ids = taxonomy.industry_category_ids(domain)
     return None if ids is None else Company.category_id.in_(ids or [-1])
@@ -2521,7 +2535,33 @@ def get_companies(
         email_order = Company.has_email.desc()
         enriched_order = Company.is_enriched.desc()
 
-        if sort == "rating_desc":
+        # Best matches for your resume: plan feature, needs resume skills that map to the directory.
+        best_match = None
+        match_terms = None
+        if sort == "best_match":
+            feats = plan_features(db, user, kill_switch=is_subscription_kill_switch_active(db)) if user else {}
+            if not user:
+                best_match = "signed_out"
+            elif not feats.get("best_matches"):
+                best_match = "locked"
+            else:
+                match_terms = resume_match_terms(user.resume_summary)
+                best_match = "ok" if (match_terms["tech_ids"] or match_terms["cat_ids"]) else ("no_match" if match_terms["has_skills"] else "no_resume")
+                if best_match != "ok":
+                    match_terms = None
+
+        if match_terms:
+            tech_ids = list(match_terms["tech_ids"]) or [-1]
+            match_sub = (db.query(CompanyTech.company_id, func.count().label("n"))
+                         .filter(CompanyTech.tech_id.in_(tech_ids)).group_by(CompanyTech.company_id).subquery())
+            query = query.outerjoin(match_sub, match_sub.c.company_id == Company.id).order_by(
+                email_order,
+                func.coalesce(match_sub.c.n, 0).desc(),
+                Company.category_id.in_(match_terms["cat_ids"] or [-1]).desc(),
+                enriched_order,
+                Company.id.desc()
+            )
+        elif sort == "rating_desc":
             query = query.order_by(
                 email_order,
                 enriched_order,
@@ -2620,6 +2660,21 @@ def get_companies(
                     "tech_stack": prof[3] or []
                 }
 
+        match_labels = {}
+        if match_terms and company_ids:
+            names_by_company = defaultdict(list)
+            for cid, tid in (db.query(CompanyTech.company_id, CompanyTech.tech_id)
+                             .filter(CompanyTech.company_id.in_(company_ids), CompanyTech.tech_id.in_(list(match_terms["tech_ids"]) or [-1])).all()):
+                names_by_company[cid].append(match_terms["tech_ids"][tid])
+            cat_set = set(match_terms["cat_ids"])
+            for c in companies:
+                names = sorted(set(names_by_company.get(c.id, [])))
+                if names:
+                    shown = ", ".join(names[:3])
+                    match_labels[c.id] = f"Matches {shown} ({len(names)} of your skills)" if len(names) > 1 else f"Matches {shown} (1 of your skills)"
+                elif c.category_id in cat_set:
+                    match_labels[c.id] = f"Matches your field: {seo_engine._category_labels(c.category_id)[0]}"
+
         sent_logs = {}
         user_pitches = {}
         if user and company_ids:
@@ -2669,7 +2724,8 @@ def get_companies(
                 "profile": profile,
                 "pitch_id": user_pitches.get(c.id),
                 "already_contacted": bool(sent_time),
-                "contacted_at": ist_text(sent_time) or None
+                "contacted_at": ist_text(sent_time) or None,
+                "match_label": match_labels.get(c.id),
             })
 
         # Compute domain-aware scoped stats for frontend cards
@@ -2711,6 +2767,7 @@ def get_companies(
             "page_size": page_size,
             "invalid_count": invalid_count if is_admin else 0,
             "stats": scoped_stats,
+            "best_match": best_match,
             "is_master_admin": is_admin,
             "dev_mode": config.DEV_MODE
         }
