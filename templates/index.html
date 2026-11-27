@@ -871,13 +871,8 @@
             <div class="nm"><b>{{ t.name }}</b>{% if t.subtitle %}<span>{{ t.subtitle }}</span>{% endif %}</div>
             <div class="pr"><b>₹{{ "{:,}".format(t.price_inr) }}</b><span>/ {{ 'week' if (t.period_days or 30) == 7 else 'month' }}</span></div>
             <div class="qt">{{ "{:,}".format(t.daily_pitch_limit) }} applications / day</div>
-            {% if t.features %}
-            <ul>
-              {% for f in t.features %}
-              <li><span class="material-symbols-outlined" aria-hidden="true">check</span><span>{{ f }}</span></li>
-              {% endfor %}
-            </ul>
-            {% endif %}
+            {%- from "macros/plan_lines.html" import plan_lines %}
+            {{ plan_lines(t, plan_examples, '<span class="material-symbols-outlined" aria-hidden="true">check</span>'|safe) }}
           </div>
           {% if t.code == 'pro' and trial and trial.trial_offer %}
           <button type="button" class="btn-tier-action is-trial" data-start-trial>Try Pro free for {{ '1 day' if trial.trial_hours == 24 else (trial.trial_hours ~ ' hours') }}</button>
@@ -1023,4 +1018,5 @@
 <script src="/static/js/app/theme.js?v={{ asset_v }}"></script>
 <script src="/static/js/app/shortcuts.js?v={{ asset_v }}"></script>
 <script src="/static/js/app.js?v={{ asset_v }}"></script>
+<script src="/static/js/plan-examples.js?v={{ asset_v }}"></script>
 {% endblock %}
