@@ -545,14 +545,30 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  window.openEditPlanModal = function(userId, email, currentTier) {
+  // Plan picker lists the live plans (same names and colors as the users table badges).
+  window.openEditPlanModal = async function(userId, email, currentTier) {
     document.getElementById("edit-plan-user-id").value = userId;
     document.getElementById("edit-plan-user-email").textContent = email;
-    const radios = document.querySelectorAll("input[name='plan-tier']");
-    radios.forEach(r => {
-      r.checked = (r.value === currentTier);
-    });
+    const box = document.getElementById("edit-plan-options");
     openModal("modal-edit-plan");
+    try {
+      const res = await fetch("/api/admin/tiers");
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Could not load plans");
+      const safe = (v) => String(v ?? "").replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
+      const plans = (data.tiers || [])
+        .filter(t => t.code !== "master_admin" && (t.is_active || t.code === currentTier))
+        .sort((a, b) => (a.price_inr || 0) - (b.price_inr || 0));
+      box.innerHTML = plans.map(t => {
+        const cls = { free: "plan-free", week_pass: "plan-week", pro: "plan-pro" }[t.code] || "plan-top";
+        const price = t.price_inr ? `₹${t.price_inr} / ${t.period_days === 7 ? "week" : "month"}` : "Free";
+        return `<label class="radio-card"><input type="radio" name="plan-tier" value="${safe(t.code)}"${t.code === currentTier ? " checked" : ""}>
+          <span class="plan-badge ${cls}">${safe(t.name)}</span>
+          <span class="ml-auto text-[12px] font-normal text-on-surface-variant whitespace-nowrap">${price} · ${t.daily_pitch_limit}/day${t.is_active ? "" : " · hidden"}</span></label>`;
+      }).join("");
+    } catch (err) {
+      box.innerHTML = `<span class="app-field-hint">${err.message}</span>`;
+    }
   };
 
   document.getElementById("btn-confirm-save-plan")?.addEventListener("click", async () => {
