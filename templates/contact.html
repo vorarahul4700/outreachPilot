@@ -1,0 +1,42 @@
+{% extends "layouts/legal.html" %}
+{% set legal_active = "contact" %}
+
+{% block title %}Contact Us - {{ project_name }}{% endblock %}
+
+{% block legal_title_text %}Contact Us{% endblock %}
+{% block legal_lead %}Questions about your account, a payment or a refund? Email us and a real person replies.{% endblock %}
+{% block legal_updated %}Last Updated: November 27, 2026{% endblock %}
+{% block legal_status %}Based in Surat, India{% endblock %}
+
+{% block legal_highlights %}
+<div class="legal-hl">
+  <div class="legal-hl-title"><span class="material-symbols-outlined" aria-hidden="true">mail</span><span>Email</span></div>
+  <p><a href="mailto:founder@outreachpilot.in">founder@outreachpilot.in</a></p>
+</div>
+<div class="legal-hl">
+  <div class="legal-hl-title"><span class="material-symbols-outlined" aria-hidden="true">location_on</span><span>Location</span></div>
+  <p>Surat, Gujarat, India</p>
+</div>
+<div class="legal-hl">
+  <div class="legal-hl-title"><span class="material-symbols-outlined" aria-hidden="true">payments</span><span>Payments</span></div>
+  <p>For a payment problem, include your Razorpay payment ID so we can find it quickly.</p>
+</div>
+{% endblock %}
+
+{% block legal_sections %}
+<article class="legal-section" id="about">
+  <div class="legal-section-head">
+    <div class="left"><span class="legal-num">01</span><h2>About {{ project_name }}</h2></div>
+  </div>
+  <p>{{ project_name }} helps job seekers in India apply directly to companies. You browse a directory of real companies, add your resume, and send a job application written for each company from your own Gmail. It is built and run from Surat, Gujarat.</p>
+  <p>The Free plan lets you send 10 applications a day. Paid plans raise that limit; see <a href="/#pricing">pricing</a>.</p>
+</article>
+
+<article class="legal-section" id="reach-us">
+  <div class="legal-section-head">
+    <div class="left"><span class="legal-num">02</span><h2>How to reach us</h2></div>
+  </div>
+  <p>Email <a href="mailto:founder@outreachpilot.in">founder@outreachpilot.in</a> for anything about your account, plans, payments, refunds or your data. Please write from the email address you sign in with, so we can find your account.</p>
+  <p>Refund rules are on the <a href="/refund-policy">Cancellation and Refund Policy</a> page. How we handle your data is on the <a href="/privacy">Privacy Policy</a> page.</p>
+</article>
+{% endblock %}

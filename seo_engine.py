@@ -1557,6 +1557,8 @@ def generate_sitemap_core(base_url: str) -> str:
         {"loc": f"{base_url}/", "priority": "1.0", "changefreq": "daily"},
         {"loc": f"{base_url}/directory", "priority": "0.9", "changefreq": "daily"},
         {"loc": f"{base_url}/privacy", "priority": "0.3", "changefreq": "monthly"},
+        {"loc": f"{base_url}/refund-policy", "priority": "0.3", "changefreq": "monthly"},
+        {"loc": f"{base_url}/contact", "priority": "0.3", "changefreq": "monthly"},
         {"loc": f"{base_url}/terms", "priority": "0.3", "changefreq": "monthly"}
     ]
     urls_xml = "\n".join([
