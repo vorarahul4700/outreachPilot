@@ -1087,6 +1087,11 @@ def billing_create_order(payload: BillingOrderRequest, request: Request, db: Ses
     ).first()
     if not tier or (tier.price_inr or 0) <= 0 or tier.code == "master_admin":
         raise HTTPException(status_code=400, detail="This plan can't be bought.")
+    # A cheaper plan while a pricier one is still running would replace it and lose the paid days.
+    current = db.query(SubscriptionTier).filter(SubscriptionTier.code == user.subscription_tier).first()
+    if (current and current.code != tier.code and (current.price_inr or 0) >= tier.price_inr
+            and user.subscription_end_date and user.subscription_end_date > datetime.utcnow()):
+        raise HTTPException(status_code=400, detail=f"Your {current.name} plan already covers this until {user.subscription_end_date:%d %b %Y}.")
 
     amount = int(tier.price_inr) * 100  # paise, always from our own DB, never from the browser
     try:

@@ -752,6 +752,9 @@
       <div class="spread"><span class="sub-label">Available outreach packs</span><span class="app-field-hint">Switch or upgrade at any time</span></div>
 
       {% set plan_count = (tiers or [])|length %}
+      {#- Price of the plan the user is on: cheaper plans are already covered by it. -#}
+      {% set current_plan = (tiers or [])|selectattr('code', 'equalto', user_subscription_tier)|first %}
+      {% set current_price = current_plan.price_inr if current_plan else 0 %}
       <div class="sub-plans {% if plan_count >= 4 %}n4{% elif plan_count == 3 %}n3{% elif plan_count == 2 %}n2{% endif %}" id="sub-modal-plans-grid">
         {% for t in (tiers or []) %}
         {% set featured = t.code == 'pro' %}
@@ -779,6 +782,8 @@
           {% else %}
           <span class="btn-tier-action opacity-60 pointer-events-none" data-static="1" aria-disabled="true">{% if user and user.subscription_end_date %}Back to Free on {{ user.subscription_end_date.strftime('%d %b %Y') }}{% else %}Included with every account{% endif %}</span>
           {% endif %}
+          {% elif is_logged_in and not is_current and current_price > 0 and t.price_inr <= current_price %}
+          <span class="btn-tier-action opacity-60 pointer-events-none" data-static="1" aria-disabled="true">Included in your current plan</span>
           {% elif billing_enabled and t.price_inr > 0 and not is_current and is_logged_in %}
           <button type="button" data-buy-tier="{{ t.code }}" class="btn-tier-action">Buy {{ t.name }} for ₹{{ "{:,}".format(t.price_inr) }}</button>
           {% elif billing_enabled and t.price_inr > 0 and not is_logged_in %}
