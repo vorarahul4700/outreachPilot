@@ -266,6 +266,7 @@ class SubscriptionTier(Base):
     subtitle = Column(String(100), nullable=True)
     price_inr = Column(Integer, default=0)
     daily_pitch_limit = Column(Integer, default=10)
+    period_days = Column(Integer, default=30)  # plan length: 7 = weekly pass, 30 = monthly
     features = Column(JsonType, default=list)
     badge = Column(String(50), nullable=True)
     is_active = Column(Boolean, default=True)
@@ -372,6 +373,7 @@ def init_db():
                     ("cold_pitches", "next_attempt_at", "TIMESTAMP"),
                     ("cold_pitches", "last_error", "TEXT"),
                     ("cold_pitches", "quota_reserved", "BOOLEAN DEFAULT FALSE"),
+                    ("subscription_tiers", "period_days", "INTEGER DEFAULT 30"),
                 ]
                 statements = [
                     f"ALTER TABLE {tbl} ADD COLUMN IF NOT EXISTS {col} {ddl};"
@@ -444,7 +446,7 @@ def init_db():
                             code="pro",
                             name="Job Seeker Pro",
                             subtitle="Growth Tier",
-                            price_inr=499,
+                            price_inr=199,
                             daily_pitch_limit=25,
                             features=[
                                 "25 job applications / day",
@@ -459,7 +461,7 @@ def init_db():
                             code="premium_plus",
                             name="Premium+",
                             subtitle="Maximum Velocity",
-                            price_inr=999,
+                            price_inr=399,
                             daily_pitch_limit=50,
                             features=[
                                 "50 job applications / day",

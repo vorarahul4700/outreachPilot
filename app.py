@@ -675,11 +675,19 @@ class BulkCompanyActionRequest(BaseModel):
     reason: str = "Quarantined by Master Admin"
 
 
+def _plan_days(days: int | None) -> int:
+    """Plans are a 7-day pass or monthly (30 days)."""
+    if days not in (7, 30):
+        raise HTTPException(status_code=400, detail="Plan length must be 7 or 30 days.")
+    return days
+
+
 class UpdateTierRequest(BaseModel):
     name: str
     subtitle: str | None = None
     price_inr: int
     daily_pitch_limit: int
+    period_days: int = 30  # 7 = weekly pass, 30 = monthly
     features: list[str] | None = None
     badge: str | None = None
     is_active: bool = True
@@ -692,6 +700,7 @@ class CreateTierRequest(BaseModel):
     subtitle: str | None = None
     price_inr: int = 0
     daily_pitch_limit: int = 10
+    period_days: int = 30
     features: list[str] | None = None
     badge: str | None = None
 
@@ -761,6 +770,15 @@ def get_current_user(db: Session, request: Request | None = None) -> User | None
 
         # Daily pitch quota resets at midnight IST.
         if reset_daily_quota_if_due(user):
+            needs_commit = True
+
+        # A paid plan past its end date drops back to Free.
+        end = getattr(user, "subscription_end_date", None)
+        if end and end < datetime.utcnow() and not getattr(user, "is_admin", False):
+            free = db.query(SubscriptionTier.daily_pitch_limit).filter(SubscriptionTier.code == "free").scalar()
+            user.subscription_tier = "free"
+            user.daily_pitch_limit = free or 10
+            user.subscription_end_date = None
             needs_commit = True
 
         if needs_commit:
@@ -942,6 +960,7 @@ def load_public_tiers(db: Session) -> list[dict]:
             "subtitle": (t.subtitle or "").strip(),
             "price_inr": int(t.price_inr or 0),
             "daily_pitch_limit": int(t.daily_pitch_limit or 0),
+            "period_days": int(t.period_days or 30),
             "features": [f.strip() for f in (t.features or []) if f and str(f).strip()],
             "badge": (t.badge or "").strip(),
         }
@@ -2719,7 +2738,7 @@ def get_public_tiers(db: Session = Depends(get_db)):
                     "code": "pro",
                     "name": "Job Seeker Pro",
                     "subtitle": "Growth Tier",
-                    "price_inr": 499,
+                    "price_inr": 199,
                     "daily_pitch_limit": 25,
                     "features": ["25 job applications / day", "AI research of each company website", "Resume PDF attached automatically", "Each application written for that company"],
                     "badge": "Most Popular",
@@ -2729,7 +2748,7 @@ def get_public_tiers(db: Session = Depends(get_db)):
                     "code": "premium_plus",
                     "name": "Premium+",
                     "subtitle": "Maximum Velocity",
-                    "price_inr": 999,
+                    "price_inr": 399,
                     "daily_pitch_limit": 50,
                     "features": ["50 job applications / day", "Highest priority email queue", "Matches your skills to each company's tech stack", "Unlimited AI rewrites of each application"],
                     "badge": "Maximum Velocity",
@@ -2746,6 +2765,7 @@ def get_public_tiers(db: Session = Depends(get_db)):
                 "subtitle": t.subtitle or "",
                 "price_inr": t.price_inr,
                 "daily_pitch_limit": t.daily_pitch_limit,
+                "period_days": t.period_days or 30,
                 "features": t.features or [],
                 "badge": t.badge or "",
                 "is_popular": t.code == "pro"
@@ -4047,6 +4067,9 @@ def update_user_plan(
         raise HTTPException(status_code=400, detail="Invalid tier. Choose free, pro, premium_plus or an active custom tier.")
 
     target.subscription_tier = tier
+    # Paid plans run for the plan's length (7-day pass or 30 days), then drop to Free (see get_current_user).
+    paid = bool(tier_obj and (tier_obj.price_inr or 0) > 0)
+    target.subscription_end_date = datetime.utcnow() + timedelta(days=tier_obj.period_days or 30) if paid else None
     if payload.custom_limit:
         target.daily_pitch_limit = payload.custom_limit
     elif tier_obj:
@@ -4063,7 +4086,8 @@ def update_user_plan(
         "success": True,
         "tier": target.subscription_tier,
         "daily_pitch_limit": target.daily_pitch_limit,
-        "message": f"Updated subscription to {tier.upper()} ({target.daily_pitch_limit} pitches/day)."
+        "message": f"Updated subscription to {tier.upper()} ({target.daily_pitch_limit} pitches/day)"
+                   + (f", ends {target.subscription_end_date:%d %b %Y}." if target.subscription_end_date else ".")
     }
 
 
@@ -5166,6 +5190,7 @@ def list_tiers_admin(
                 "subtitle": t.subtitle or "",
                 "price_inr": t.price_inr,
                 "daily_pitch_limit": t.daily_pitch_limit,
+                "period_days": t.period_days or 30,
                 "features": t.features or [],
                 "badge": t.badge or "",
                 "is_active": t.is_active,
@@ -5193,6 +5218,7 @@ def create_tier_admin(
         subtitle=payload.subtitle.strip() if payload.subtitle else "",
         price_inr=payload.price_inr,
         daily_pitch_limit=payload.daily_pitch_limit,
+        period_days=_plan_days(payload.period_days),
         features=payload.features or [],
         badge=payload.badge.strip() if payload.badge else None,
         is_active=True
@@ -5219,6 +5245,7 @@ def update_tier_admin(
     tier.subtitle = payload.subtitle.strip() if payload.subtitle else ""
     tier.price_inr = payload.price_inr
     tier.daily_pitch_limit = payload.daily_pitch_limit
+    tier.period_days = _plan_days(payload.period_days)
     tier.features = payload.features or []
     tier.badge = payload.badge.strip() if payload.badge else None
     tier.is_active = payload.is_active

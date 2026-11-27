@@ -395,6 +395,7 @@ ol.pipeline { /* ol. beats the base ol[role="list"] reset, which zeroed this pad
 }
 @media (min-width: 1024px) { .plans-3 { grid-template-columns: repeat(3, 1fr); } }
 @media (min-width: 1200px) { .plans-4 { grid-template-columns: repeat(4, 1fr); } }
+@media (min-width: 1200px) { .plans-4 { grid-template-columns: repeat(4, 1fr); } }
 .plan {
   position: relative; display: flex; flex-direction: column; justify-content: space-between; gap: 22px;
   padding: 28px 24px 24px; border-radius: var(--r-xl);

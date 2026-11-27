@@ -429,7 +429,7 @@
         <div class="plan-top">
           {% if t.subtitle %}<div class="plan-sub">{{ t.subtitle }}</div>{% endif %}
           <h3 class="plan-name">{{ t.name }}</h3>
-          <div class="plan-price"><span class="amount">₹{{ "{:,}".format(t.price_inr) }}</span><span class="per">/ month</span></div>
+          <div class="plan-price"><span class="amount">₹{{ "{:,}".format(t.price_inr) }}</span><span class="per">/ {{ 'week' if (t.period_days or 30) == 7 else 'month' }}</span></div>
           <div class="plan-quota"><span>Daily limit</span><b>{{ "{:,}".format(t.daily_pitch_limit) }} applications / day</b></div>
           {% if t.features %}
           <ul class="plan-features" role="list">
