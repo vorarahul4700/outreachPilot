@@ -702,12 +702,12 @@
       <div><span class="lbl" id="tier-form-style-label">Application email</span>
         <div class="custom-dropdown" id="dropdown-tier-style">
           <input type="hidden" id="tier-form-style" value="tailored">
-          <button type="button" class="custom-dropdown-btn" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="tier-form-style-label"><span class="custom-dropdown-label">Company-tailored application</span><span class="material-symbols-outlined dropdown-chevron">expand_more</span></button>
+          <button type="button" class="custom-dropdown-btn" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="tier-form-style-label"><span class="custom-dropdown-label">Email written for each company</span><span class="material-symbols-outlined dropdown-chevron">expand_more</span></button>
           <div class="custom-dropdown-menu">
             <div class="custom-dropdown-list" role="listbox">
-              <div class="custom-dropdown-item" data-value="standard" role="option"><span class="truncate">Standard application</span><span class="material-symbols-outlined check-icon">check</span></div>
-              <div class="custom-dropdown-item is-selected" data-value="tailored" role="option"><span class="truncate">Company-tailored application</span><span class="material-symbols-outlined check-icon">check</span></div>
-              <div class="custom-dropdown-item" data-value="tailored_fit" role="option"><span class="truncate">Tailored application + fit summary</span><span class="material-symbols-outlined check-icon">check</span></div>
+              <div class="custom-dropdown-item" data-value="standard" role="option"><span class="truncate">Simple application email</span><span class="material-symbols-outlined check-icon">check</span></div>
+              <div class="custom-dropdown-item is-selected" data-value="tailored" role="option"><span class="truncate">Email written for each company</span><span class="material-symbols-outlined check-icon">check</span></div>
+              <div class="custom-dropdown-item" data-value="tailored_fit" role="option"><span class="truncate">Email written for each company, with why you fit</span><span class="material-symbols-outlined check-icon">check</span></div>
             </div>
           </div>
         </div>
@@ -716,9 +716,9 @@
         <div><label class="lbl" for="tier-form-resumes">Resumes allowed</label><input type="number" id="tier-form-resumes" min="1" max="5" value="1" class="recessed-well"></div>
         <div></div>
       </div>
-      <label class="check-card"><input type="checkbox" id="tier-form-matches"><span>Best matches for your resume</span></label>
-      <label class="check-card"><input type="checkbox" id="tier-form-linkedin"><span>LinkedIn message and referral request</span></label>
-      <label class="check-card"><input type="checkbox" id="tier-form-bulk"><span>Apply in bulk (prepare and send many at once)</span></label>
+      <label class="check-card"><input type="checkbox" id="tier-form-matches"><span>Companies that match your resume, shown first</span></label>
+      <label class="check-card"><input type="checkbox" id="tier-form-linkedin"><span>Ready-to-send LinkedIn and referral messages</span></label>
+      <label class="check-card"><input type="checkbox" id="tier-form-bulk"><span>Apply to many companies at once</span></label>
       <div><label class="lbl">Extra card bullets (one per line, shown after the automatic ones)</label><textarea id="tier-form-features" rows="4" placeholder="50 pitches / day&#10;Deep AI Website crawler analysis&#10;Auto-PDF Resume attachment&#10;Application generator engine" class="recessed-well"></textarea></div>
       <label class="check-card"><input type="checkbox" id="tier-form-active" checked><span>Show this plan to users (unticked: hidden from pricing and checkout; current subscribers keep it until it ends)</span></label>
       <label class="check-card"><input type="checkbox" id="tier-form-sync-users" checked><span>Sync all existing subscribers on this plan to the new daily pitch limit</span></label>
