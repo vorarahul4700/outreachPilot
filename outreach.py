@@ -353,7 +353,7 @@ def _send_queued_pitch(pitch_id: int) -> str:
             att = db.query(SendAttachment).filter(SendAttachment.user_id == user.id).first()
             # The batch's own attachment first, else the saved resume (database, then old disk copy).
             from resumes import resume_pdf
-            saved_bytes, saved_name = (None, None) if att else resume_pdf(db, user.id)
+            saved_bytes, saved_name = (None, None) if att else resume_pdf(db, user.id, pitch.resume_id)
             try:
                 res = asyncio.run(send_via_google_oauth(
                     user=user, to_email=pitch.target_email, subject=pitch.subject_line, body=pitch.email_body,

@@ -233,6 +233,18 @@
           <button id="btn-best-matches" type="button" class="btn btn-secondary btn-square" aria-pressed="false" title="Show companies that use your resume skills first">
             <span class="material-symbols-outlined">target</span><span>Best matches</span><span class="material-symbols-outlined lock hidden" aria-hidden="true">lock</span>
           </button>
+          <div id="best-match-for" class="hidden">
+          <div class="custom-dropdown" id="dropdown-best-match-for">
+            <input type="hidden" id="best-match-for-select" value="">
+            <button type="button" class="custom-dropdown-btn" aria-haspopup="listbox" aria-expanded="false" title="Match companies to this resume">
+              <span class="custom-dropdown-label">All resumes</span>
+              <span class="material-symbols-outlined dropdown-chevron">expand_more</span>
+            </button>
+            <div class="custom-dropdown-menu align-right">
+              <div class="custom-dropdown-list" role="listbox"></div>
+            </div>
+          </div>
+          </div>
           <button id="btn-reset-filters" type="button" class="btn btn-secondary btn-square" title="Reset all search &amp; filter selections">
             <span class="material-symbols-outlined">restart_alt</span><span>Reset</span>
           </button>
@@ -327,6 +339,22 @@
             <span class="material-symbols-outlined">auto_awesome</span><span>Read My Skills with AI</span>
           </button>
         </form>
+
+        <div id="resumes-block" class="sub-block resumes-block hidden">
+          <div class="spread">
+            <span class="sub-label">Your resumes</span>
+            <span id="resumes-count" class="muted-note tnum"></span>
+          </div>
+          <p class="muted-note">For each company we use the resume whose skills match it best. You can switch it in the draft window.</p>
+          <ul id="resume-list" class="resume-list"></ul>
+          <form id="resume-add-form" class="resume-add hidden">
+            <input type="text" id="resume-add-label" maxlength="60" placeholder="Role for this resume, e.g. QA Engineer" class="recessed-well" aria-label="Role for this resume">
+            <input type="file" id="resume-add-file" accept=".pdf,.txt,.md" class="hidden">
+            <button type="button" id="btn-resume-add-pick" class="btn btn-secondary"><span class="material-symbols-outlined">upload_file</span><span id="resume-add-file-name">Choose file</span></button>
+            <button type="submit" id="btn-resume-add" class="btn btn-primary"><span class="material-symbols-outlined">add</span><span>Add resume</span></button>
+          </form>
+          <div id="resume-add-locked" class="msg-locked hidden"><span><b>Use a different resume for each kind of role.</b> Upgrade to keep up to 3 resumes, picked for each company.</span><button type="button" class="btn btn-primary btn-sm" data-open-plans>See plans</button></div>
+        </div>
       </div>
 
       <div class="app-panel">
@@ -653,6 +681,18 @@
         <div class="min-w-0">
           <h3 id="modal-company-name">Job application email</h3>
           <span id="pitch-modal-style" class="style-chip hidden"></span>
+          <div id="pitch-modal-resume" class="resume-pick hidden"><span>Using:</span>
+          <div class="custom-dropdown" id="dropdown-pitch-resume">
+            <input type="hidden" id="pitch-resume-select" value="">
+            <button type="button" class="custom-dropdown-btn" aria-haspopup="listbox" aria-expanded="false" title="Write this email with another resume">
+              <span class="custom-dropdown-label">Main</span>
+              <span class="material-symbols-outlined dropdown-chevron">expand_more</span>
+            </button>
+            <div class="custom-dropdown-menu">
+              <div class="custom-dropdown-list" role="listbox"></div>
+            </div>
+          </div>
+          </div>
           <p class="recipient-line">Recipient: <span id="modal-target-email" class="inline-flex items-center gap-1"><span class="em">hr@company.com</span></span></p>
         </div>
         <div class="flex items-center gap-1.5">

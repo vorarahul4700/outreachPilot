@@ -64,6 +64,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     } else if (tabId === "resume") {
       loadCandidateProfile();
+      window.loadResumes && window.loadResumes();
     }
     activeTab = tabId;
     refreshIcons();
@@ -808,6 +809,24 @@ document.addEventListener("DOMContentLoaded", () => {
     onSelect: () => applyCompanyFiltersAndRender(true)
   });
 
+  let pitchResumeSyncing = false;
+  const ddPitchResume = initCustomDropdown({
+    containerId: "dropdown-pitch-resume",
+    inputId: "pitch-resume-select",
+    defaultLabel: "Main",
+    onSelect: (val) => {
+      if (pitchResumeSyncing || !val || !currentPitchCompanyId) return;
+      if (currentPitchData && currentPitchData.resume && String(currentPitchData.resume.id) === String(val)) return;
+      handleGeneratePitch(currentPitchCompanyId, true, null, parseInt(val, 10));
+    }
+  });
+  const ddBestMatchFor = initCustomDropdown({
+    containerId: "dropdown-best-match-for",
+    inputId: "best-match-for-select",
+    defaultLabel: "All resumes",
+    onSelect: () => { if (bestMatchesOn) fetchCompanies(false); }
+  });
+
   const ddFilterCity = initCustomDropdown({
     containerId: "dropdown-filter-city",
     inputId: "filter-city-select",
@@ -1206,8 +1225,18 @@ document.addEventListener("DOMContentLoaded", () => {
     const locked = !(currentUser && currentUser.features && currentUser.features.best_matches);
     btnBestMatches?.querySelector(".lock")?.classList.toggle("hidden", !locked);
   }
-  btnBestMatches?.addEventListener("click", () => {
+  btnBestMatches?.addEventListener("click", async () => {
     setBestMatches(!bestMatchesOn);
+    const forBox = document.getElementById("best-match-for");
+    forBox?.classList.add("hidden");
+    if (bestMatchesOn && currentUser.features && (currentUser.features.resume_slots || 1) > 1) {
+      const data = await loadResumes();
+      const usable = ((data && data.resumes) || []).filter((r) => !r.locked);
+      if (usable.length > 1 && ddBestMatchFor) {
+        ddBestMatchFor.setOptions([{ value: "all", label: "All resumes" }, ...usable.map((r) => ({ value: String(r.id), label: `For: ${r.label}` }))]);
+        forBox?.classList.remove("hidden");
+      }
+    }
     fetchCompanies(false);
   });
   refreshBestMatchesLock();
@@ -1232,6 +1261,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const selectedTech = (filterTechSelect?.value || "").trim();
       const selectedCity = (filterCitySelect?.value || "").trim();
       const selectedSort = bestMatchesOn ? "best_match" : (sortSelect?.value || "newest").trim();
+      const matchResume = (document.getElementById("best-match-for-select")?.value || "all").trim() || "all";
       const statusParam = activeMetricFilter || "all";
       const pageSize = (companiesPerPage !== undefined && companiesPerPage !== null) ? companiesPerPage : 24;
 
@@ -1243,7 +1273,8 @@ document.addEventListener("DOMContentLoaded", () => {
         city: selectedCity,
         domain: (activeDomainFilter && activeDomainFilter !== "all") ? activeDomainFilter : "",
         status: statusParam,
-        sort: selectedSort
+        sort: selectedSort,
+        match_resume: matchResume
       });
 
       const res = await fetch(`/api/companies?${params.toString()}`, { signal });
@@ -1254,6 +1285,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await res.json();
       if (bestMatchesOn && data.best_match && data.best_match !== "ok") {
         setBestMatches(false);
+        document.getElementById("best-match-for")?.classList.add("hidden");
         const why = {
           locked: "Best matches for your resume are in a paid plan.",
           no_resume: "Upload your resume first to see the companies that match it.",
@@ -2664,6 +2696,119 @@ document.addEventListener("DOMContentLoaded", () => {
   // ==========================================
   // STAGE 3: RESUME UPLOAD & PARSING
   // ==========================================
+  // ---- Multiple resumes (Candidate profile) ----
+  const resumesBlock = document.getElementById("resumes-block");
+  const resumeListEl = document.getElementById("resume-list");
+  const resumeAddForm = document.getElementById("resume-add-form");
+  const resumeAddFile = document.getElementById("resume-add-file");
+  const resumeAddLabel = document.getElementById("resume-add-label");
+  let resumeState = { slots: 1, resumes: [] };
+
+  function renderResumeList(data) {
+    resumeState = data || { slots: 1, resumes: [] };
+    const rows = resumeState.resumes || [];
+    if (!resumesBlock || !rows.length) { resumesBlock?.classList.add("hidden"); return; }
+    resumesBlock.classList.remove("hidden");
+    document.getElementById("resumes-count").textContent = `${Math.min(rows.length, resumeState.slots)} of ${resumeState.slots} used`;
+    resumeListEl.innerHTML = rows.map((r) => `
+      <li class="resume-item${r.locked ? " is-locked" : ""}" data-resume-id="${r.id}">
+        <div class="top">
+          <span class="name">${escapeHTML(r.label)}</span>
+          ${r.is_main ? `<span class="chip-ok">Main</span>` : ""}
+          ${r.locked ? `<span class="chip-warn"><span class="material-symbols-outlined">lock</span><span>Not in your plan</span></span>` : ""}
+          <span class="acts">
+            <button type="button" class="btn btn-ghost btn-xs" data-resume-rename>Rename</button>
+            ${r.is_main ? "" : `<button type="button" class="btn btn-ghost btn-xs" data-resume-remove>Remove</button>`}
+          </span>
+        </div>
+        ${r.filename ? `<span class="file">${escapeHTML(r.filename)}</span>` : ""}
+        ${r.skills.length ? `<div class="chip-wrap">${r.skills.map((k) => `<span class="ac-tag">${escapeHTML(k)}</span>`).join("")}</div>` : ""}
+      </li>`).join("");
+    const canAdd = rows.length < resumeState.slots;
+    resumeAddForm?.classList.toggle("hidden", !canAdd);
+    document.getElementById("resume-add-locked")?.classList.toggle("hidden", canAdd || resumeState.slots > 1);
+  }
+
+  async function loadResumes() {
+    try {
+      const res = await fetch("/api/resumes");
+      if (!res.ok) return null;
+      const data = await res.json();
+      renderResumeList(data);
+      return data;
+    } catch (_) { return null; }
+  }
+  window.loadResumes = loadResumes;
+
+  async function resumeRequest(url, opts, okMsg) {
+    const res = await fetch(url, opts);
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) { showToast(data.detail || "Something went wrong. Please try again.", "error"); return false; }
+    renderResumeList(data);
+    if (okMsg) showToast(okMsg, "success");
+    return true;
+  }
+
+  document.getElementById("btn-resume-add-pick")?.addEventListener("click", () => resumeAddFile?.click());
+  resumeAddFile?.addEventListener("change", () => {
+    document.getElementById("resume-add-file-name").textContent = resumeAddFile.files[0]?.name || "Choose file";
+  });
+  resumeAddForm?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const label = (resumeAddLabel.value || "").trim();
+    if (!label) { highlightFieldWarning(resumeAddLabel, "Add the role this resume is for, e.g. QA Engineer."); return; }
+    if (!resumeAddFile.files.length) { showToast("Choose the resume file first.", "warning"); return; }
+    const btn = document.getElementById("btn-resume-add");
+    const orig = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = `<span class="material-symbols-outlined">hourglass_top</span><span>Reading resume...</span>`;
+    const fd = new FormData();
+    fd.append("file", resumeAddFile.files[0]);
+    fd.append("label", label);
+    try {
+      if (await resumeRequest("/api/resumes", { method: "POST", body: fd }, `${label} resume added.`)) {
+        resumeAddForm.reset();
+        document.getElementById("resume-add-file-name").textContent = "Choose file";
+      }
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = orig;
+    }
+  });
+
+  resumeListEl?.addEventListener("click", async (e) => {
+    const item = e.target.closest("[data-resume-id]");
+    if (!item) return;
+    const id = item.dataset.resumeId;
+    const removeBtn = e.target.closest("[data-resume-remove]");
+    if (removeBtn) {
+      if (removeBtn.dataset.confirm !== "1") {
+        removeBtn.dataset.confirm = "1";
+        removeBtn.textContent = "Click again to remove";
+        setTimeout(() => { if (removeBtn.isConnected) { removeBtn.dataset.confirm = ""; removeBtn.textContent = "Remove"; } }, 4000);
+        return;
+      }
+      await resumeRequest(`/api/resumes/${id}`, { method: "DELETE" }, "Resume removed.");
+      return;
+    }
+    if (e.target.closest("[data-resume-rename]")) {
+      const nameEl = item.querySelector(".name");
+      if (!nameEl || nameEl.tagName === "INPUT") return;
+      const input = document.createElement("input");
+      input.type = "text"; input.maxLength = 60; input.value = nameEl.textContent; input.className = "recessed-well name";
+      input.setAttribute("aria-label", "Resume name");
+      nameEl.replaceWith(input);
+      input.focus(); input.select();
+      const save = async () => {
+        const label = input.value.trim();
+        if (!label || label === nameEl.textContent) { input.replaceWith(nameEl); return; }
+        if (!(await resumeRequest(`/api/resumes/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ label }) }))) input.replaceWith(nameEl);
+      };
+      input.addEventListener("keydown", (ev) => { if (ev.key === "Enter") { ev.preventDefault(); input.blur(); } if (ev.key === "Escape") { input.value = nameEl.textContent; input.blur(); } });
+      input.addEventListener("blur", save, { once: true });
+    }
+  });
+
   const resumeForm = document.getElementById("resume-form");
   const fileInput = document.getElementById("input-resume-file");
   const dropzone = document.getElementById("dropzone");
@@ -2715,6 +2860,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const data = await res.json();
         if (data.success && data.profile) {
           renderCandidateProfile(data.profile);
+          loadResumes();
           showToast("Candidate Profile updated successfully!", "success");
         } else {
           showToast(data.detail || data.message || "Failed to update profile.", "error");
@@ -3106,7 +3252,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  async function handleGeneratePitch(companyId, forceRegenerate = false, clickedBtn = null) {
+  async function handleGeneratePitch(companyId, forceRegenerate = false, clickedBtn = null, resumeId = null) {
     currentPitchCompanyId = companyId;
     const triggerBtn = clickedBtn || document.querySelector(`.btn-gen-pitch-row[data-id="${companyId}"]`);
     const origHtml = triggerBtn ? triggerBtn.innerHTML : "";
@@ -3125,7 +3271,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const res = await fetch("/api/pitch/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ company_id: companyId, force_regenerate: forceRegenerate })
+        body: JSON.stringify({ company_id: companyId, force_regenerate: forceRegenerate, resume_id: resumeId })
       });
       if (res.status === 401) {
         currentUser.is_logged_in = false;
@@ -3154,6 +3300,15 @@ document.addEventListener("DOMContentLoaded", () => {
           styleChip.classList.toggle("is-standard", data.email_style === "standard");
         }
         renderMessagePanels(modal, data);
+        const resumePick = document.getElementById("pitch-modal-resume");
+        const opts = data.resume_options || [];
+        resumePick?.classList.toggle("hidden", opts.length < 2);
+        if (opts.length > 1 && ddPitchResume) {
+          ddPitchResume.setOptions(opts.map((o) => ({ value: String(o.id), label: `${o.label} resume` })));
+          pitchResumeSyncing = true;
+          ddPitchResume.setValue(String(data.resume ? data.resume.id : opts[0].id));
+          pitchResumeSyncing = false;
+        }
         selectMessageTab(modal.querySelector(".am-card"), "data-pitch-tab", "email");
         document.getElementById("pitch-modal-foot")?.classList.remove("hidden");
         updatePitchWordCount();
