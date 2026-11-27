@@ -4135,6 +4135,7 @@ def list_admin_users(
         .group_by(OutreachLog.user_id)
         .all()
     ) if users else {}
+    tier_names = dict(db.query(SubscriptionTier.code, SubscriptionTier.name).all())
 
     return {
         "total_count": total_count,
@@ -4148,6 +4149,8 @@ def list_admin_users(
                 "name": u.name or "Pilot User",
                 "is_admin": bool(u.is_admin or config.is_master_admin(u.email)),
                 "subscription_tier": u.subscription_tier or "free",
+                "subscription_tier_name": tier_names.get(u.subscription_tier or "free") or (u.subscription_tier or "free").replace("_", " ").title(),
+                "subscription_end": u.subscription_end_date.strftime("%d %b %Y") if u.subscription_end_date else None,
                 "subscription_status": u.subscription_status or "active",
                 "daily_pitch_limit": 999999 if (u.is_admin or config.is_master_admin(u.email)) else (u.daily_pitch_limit or 10),
                 "pitches_sent_today": (u.pitches_sent_today or 0)
