@@ -624,12 +624,32 @@
 </div>
 
 <!-- ===================== Pitch preview and edit modal ===================== -->
+<div id="messages-modal" class="app-modal fixed inset-0 hidden">
+  <div class="am-card sm">
+    <div class="am-head">
+      <div class="am-title-row">
+        <div class="min-w-0"><h3 id="messages-modal-title">LinkedIn and referral messages</h3><p class="recipient-line">Copy a message and send it on LinkedIn to someone at the company.</p></div>
+        <button type="button" class="icon-btn sm bare" data-close-messages aria-label="Close"><span class="material-symbols-outlined">close</span></button>
+      </div>
+    </div>
+    <div class="am-body">
+      <div class="seg-tabs pitch-tabs" role="tablist" aria-label="Message type">
+        <button type="button" role="tab" class="cmodal-tab-btn active" aria-selected="true" data-msg-tab="linkedin"><span class="material-symbols-outlined">chat</span><span>LinkedIn</span></button>
+        <button type="button" role="tab" class="cmodal-tab-btn" aria-selected="false" data-msg-tab="referral"><span class="material-symbols-outlined">handshake</span><span>Referral</span></button>
+      </div>
+      <div id="messages-panel-linkedin" data-msg-panel="linkedin"></div>
+      <div id="messages-panel-referral" class="hidden" data-msg-panel="referral"></div>
+    </div>
+  </div>
+</div>
+
 <div id="pitch-modal" class="app-modal fixed inset-0 hidden">
   <div class="am-card">
     <div class="am-head">
       <div class="am-title-row">
         <div class="min-w-0">
           <h3 id="modal-company-name">Job application email</h3>
+          <span id="pitch-modal-style" class="style-chip hidden"></span>
           <p class="recipient-line">Recipient: <span id="modal-target-email" class="inline-flex items-center gap-1"><span class="em">hr@company.com</span></span></p>
         </div>
         <div class="flex items-center gap-1.5">
@@ -641,6 +661,12 @@
       </div>
     </div>
     <div class="am-body">
+      <div class="seg-tabs pitch-tabs" role="tablist" aria-label="Message type">
+        <button type="button" role="tab" class="cmodal-tab-btn active" aria-selected="true" data-pitch-tab="email"><span class="material-symbols-outlined">mail</span><span>Email</span></button>
+        <button type="button" role="tab" class="cmodal-tab-btn" aria-selected="false" data-pitch-tab="linkedin"><span class="material-symbols-outlined">chat</span><span>LinkedIn</span></button>
+        <button type="button" role="tab" class="cmodal-tab-btn" aria-selected="false" data-pitch-tab="referral"><span class="material-symbols-outlined">handshake</span><span>Referral</span></button>
+      </div>
+      <div id="pitch-tab-email" class="pitch-tab-panel">
       <div class="field-row">
         <label for="modal-subject">Subject Line</label>
         <input type="text" id="modal-subject" class="recessed-well" placeholder="Email Subject Line">
@@ -666,8 +692,11 @@
           </label>
         </div>
       </div>
+      </div>
+      <div id="pitch-tab-linkedin" class="pitch-tab-panel hidden" data-msg-panel="linkedin"></div>
+      <div id="pitch-tab-referral" class="pitch-tab-panel hidden" data-msg-panel="referral"></div>
     </div>
-    <div class="am-foot split">
+    <div class="am-foot split" id="pitch-modal-foot">
       <button id="btn-copy-pitch" type="button" class="btn btn-secondary">
         <span class="material-symbols-outlined">content_copy</span><span>Copy Message</span>
       </button>
