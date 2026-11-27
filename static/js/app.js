@@ -1254,6 +1254,97 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   refreshBestMatchesLock();
 
+  // ---- One-day Pro trial: offer, start, countdown chip, end popup ----
+  function trialLengthText(h) { return h === 24 ? "1 day" : `${h} hours`; }
+  function trialActiveNow() { return !!(currentUser.trial_ends_at && new Date(currentUser.trial_ends_at) > new Date()); }
+  function readPref(k) { try { return localStorage.getItem(k); } catch (_) { return null; } }
+  function writePref(k, v) { try { localStorage.setItem(k, v); } catch (_) {} }
+
+  function openTrialModal(mode) {
+    const box = document.getElementById("trial-modal");
+    if (!box) return;
+    const len = trialLengthText(currentUser.trial_hours || 24);
+    const cta = document.getElementById("trial-modal-cta");
+    if (mode === "ended") {
+      document.getElementById("trial-modal-title").textContent = "Your Pro trial has ended";
+      document.getElementById("trial-modal-text").textContent = "You're back on your plan. Your drafts, resumes and sent emails are all still here. Upgrade any time to keep these:";
+      cta.textContent = "See plans";
+      cta.removeAttribute("data-start-trial");
+      cta.setAttribute("data-open-plans", "");
+    } else {
+      document.getElementById("trial-modal-title").textContent = `Try Pro free for ${len}`;
+      document.getElementById("trial-modal-text").textContent = `Use everything in Pro for ${len}. Your daily limit stays at ${currentUser.daily_pitch_limit || 10}. Once per account, nothing to pay, and it ends on its own.`;
+      cta.textContent = "Start free trial";
+      cta.removeAttribute("data-open-plans");
+      cta.setAttribute("data-start-trial", "");
+    }
+    box.classList.remove("hidden");
+  }
+  window.openTrialModal = openTrialModal;
+
+  function refreshTrialUI() {
+    const offer = !!currentUser.trial_offer;
+    const banner = document.getElementById("trial-banner");
+    banner?.querySelectorAll("[data-trial-length]").forEach((el) => { el.textContent = trialLengthText(currentUser.trial_hours || 24); });
+    banner?.classList.toggle("hidden", !offer || readPref("op_trial_banner_dismissed") === "1");
+    const chip = document.getElementById("sidebar-trial-chip");
+    if (chip) {
+      if (trialActiveNow()) {
+        const hrs = Math.max(1, Math.ceil((new Date(currentUser.trial_ends_at) - new Date()) / 3600000));
+        chip.textContent = `Pro trial · ${hrs}h left`;
+        chip.classList.remove("hidden");
+      } else {
+        chip.classList.add("hidden");
+      }
+    }
+    // End-of-trial popup, once, within a week of it ending.
+    if (currentUser.trial_used && currentUser.trial_ends_at && !trialActiveNow()) {
+      const ended = new Date(currentUser.trial_ends_at);
+      const key = "op_trial_end_seen_" + ended.getTime();
+      if (Date.now() - ended.getTime() < 7 * 86400000 && readPref(key) !== "1") {
+        writePref(key, "1");
+        openTrialModal("ended");
+      }
+    }
+  }
+  window.refreshTrialUI = refreshTrialUI;
+
+  async function startTrial(btn) {
+    if (!currentUser.is_logged_in) { showLoginModal("Sign in with Google to start your Pro trial."); return; }
+    if (btn) btn.disabled = true;
+    try {
+      const res = await fetch("/api/trial/start", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) { showToast(data.detail || "Could not start the trial.", "error"); return; }
+      Object.assign(currentUser, { trial_ends_at: data.trial_ends_at, trial_used: true, trial_offer: false, features: data.features });
+      document.getElementById("trial-modal")?.classList.add("hidden");
+      document.getElementById("subscription-modal")?.classList.add("hidden");
+      document.querySelectorAll(".btn-tier-action.is-trial").forEach((b) => b.remove());
+      refreshTrialUI();
+      refreshBestMatchesLock();
+      showToast(`Your Pro trial is on for ${trialLengthText(currentUser.trial_hours || 24)}. Every Pro feature is unlocked.`, "success");
+    } catch (err) {
+      showToast("Could not start the trial: " + err.message, "error");
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  }
+
+  document.addEventListener("click", (e) => {
+    const start = e.target.closest("[data-start-trial]");
+    if (start) { startTrial(start); return; }
+    if (e.target.closest("[data-dismiss-trial]")) {
+      writePref("op_trial_banner_dismissed", "1");
+      document.getElementById("trial-banner")?.classList.add("hidden");
+      return;
+    }
+    if (e.target.closest("[data-close-trial]") || e.target.id === "trial-modal") {
+      document.getElementById("trial-modal")?.classList.add("hidden");
+    }
+  });
+  refreshTrialUI();
+  setInterval(() => { if (trialActiveNow() || currentUser.trial_used) refreshTrialUI(); }, 60000);
+
   async function fetchCompanies(preservePage = true) {
     try {
       if (companiesAbortController) {
@@ -2176,9 +2267,12 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const res = await fetch("/api/auth/status");
       const data = await res.json();
+      const wasActive = trialActiveNow();
       currentUser = data;
       isMasterAdmin = !!data.is_master_admin;
       refreshBestMatchesLock();
+      refreshTrialUI();
+      if (wasActive && !trialActiveNow()) location.reload();  // trial just ended: reload plan locks
       if (typeof data.dev_mode === "boolean") {
         isDevMode = data.dev_mode;
       }
@@ -2885,6 +2979,7 @@ document.addEventListener("DOMContentLoaded", () => {
           renderCandidateProfile(data.profile);
           loadResumes();
           showToast("Candidate Profile updated successfully!", "success");
+          if (currentUser.trial_offer) setTimeout(() => openTrialModal("offer"), 900);
         } else {
           showToast(data.detail || data.message || "Failed to update profile.", "error");
         }

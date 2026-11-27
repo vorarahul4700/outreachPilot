@@ -369,6 +369,14 @@
 .resume-add input[type=text] { flex: 1 1 200px; min-width: 0; }
 .resume-pick { display: flex; align-items: center; gap: 8px; margin-top: 6px; font-size: .8rem; color: var(--text-2); }
 .resume-pick .custom-dropdown-btn { min-height: 30px; }
+.trial-banner { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 12px 14px; margin-bottom: 14px; border-radius: var(--r-lg); background: var(--accent-soft); border: 1px solid var(--accent-line); color: var(--text); font-size: .88rem; }
+.trial-banner > .material-symbols-outlined { color: var(--accent-ink); }
+.trial-banner .t { flex: 1 1 260px; min-width: 0; }
+.trial-chip { display: inline-flex; margin-top: 8px; padding: 2px 8px; border-radius: 6px; font-size: .7rem; font-weight: 700; background: var(--accent-soft); color: var(--accent-ink); border: 1px solid var(--accent-line); }
+.trial-list { display: grid; gap: 8px; list-style: none; margin: 0; padding: 0; font-size: .9rem; }
+.trial-list li { display: flex; gap: 8px; align-items: flex-start; }
+.trial-list .material-symbols-outlined { font-size: 18px; color: var(--ok-text); }
+.btn-tier-action.is-trial { margin-bottom: 8px; }
 .style-chip.is-standard { background: var(--surface-3); color: var(--text-2); border-color: var(--line); }
 .pitch-tabs { margin-bottom: 12px; }
 .pitch-tabs .cmodal-tab-btn .material-symbols-outlined { font-size: 17px; }

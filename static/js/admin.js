@@ -427,7 +427,8 @@ document.addEventListener("DOMContentLoaded", () => {
         // One color per plan so plans stand out at a glance; name and limit come from the DB.
         const planClass = { free: "plan-free", week_pass: "plan-week", pro: "plan-pro" }[tierName] || "plan-top";
         const tierBadge = `<span class="plan-badge ${planClass}">${u.subscription_tier_name}${isAdmin ? "" : ` (${u.daily_pitch_limit})`}</span>`
-          + (u.subscription_end && !isAdmin ? `<span class="block text-[11px] text-on-surface-variant mt-1">until ${u.subscription_end}</span>` : "");
+          + (u.subscription_end && !isAdmin ? `<span class="block text-[11px] text-on-surface-variant mt-1">until ${u.subscription_end}</span>` : "")
+          + (u.trial ? `<span class="block text-[11px] mt-1 ${u.trial === "active" ? "text-primary font-semibold" : "text-on-surface-variant"}">${u.trial === "active" ? "Pro trial now" : "Pro trial used"}</span>` : "");
 
         const roleBadge = isAdmin
           ? `<span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-amber-500/20 text-amber-500 border border-amber-500/40">★ Master Admin</span>`
@@ -1648,6 +1649,41 @@ document.addEventListener("DOMContentLoaded", () => {
       showToast(err.message, "error");
     }
   });
+
+  // --- One-day Pro trial settings ---
+  async function loadTrialSettings() {
+    try {
+      const res = await fetch("/api/admin/system/trial");
+      if (!res.ok) return;
+      const d = await res.json();
+      const t = document.getElementById("toggle-pro-trial");
+      if (t) t.checked = !!d.enabled;
+      const h = document.getElementById("trial-admin-hours");
+      if (h) h.value = d.hours;
+      const s = document.getElementById("trial-admin-stats");
+      if (s) s.textContent = `${d.enabled ? "On" : "Off"} · ${d.active} active · ${d.used} used`;
+    } catch (_) {}
+  }
+  async function saveTrialSettings() {
+    const enabled = !!document.getElementById("toggle-pro-trial")?.checked;
+    const hours = parseInt(document.getElementById("trial-admin-hours")?.value || "24", 10);
+    try {
+      const res = await fetch("/api/admin/system/trial", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ enabled, hours })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Could not save the trial settings");
+      showToast(`Pro trial ${data.enabled ? "on" : "off"}, ${data.hours} hours`, "success");
+    } catch (err) {
+      showToast(err.message, "error");
+    }
+    loadTrialSettings();
+  }
+  document.getElementById("toggle-pro-trial")?.addEventListener("change", saveTrialSettings);
+  document.getElementById("btn-trial-admin-save")?.addEventListener("click", saveTrialSettings);
+  loadTrialSettings();
 
   document.getElementById("btn-overview-toggle-kill-switch")?.addEventListener("click", () => {
     switchTab("subscriptions");
