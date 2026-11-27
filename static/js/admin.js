@@ -1423,7 +1423,15 @@ document.addEventListener("DOMContentLoaded", () => {
         const priceDisplay = isMaster ? "∞" : `₹${t.price_inr}`;
         const limitDisplay = isMaster ? "Infinite pitches / day" : `${t.daily_pitch_limit} pitches / day`;
 
-        const featureItems = (t.features || []).map(f =>
+        // Automatic lines from the plan settings first, then the admin's extra bullets.
+        const autoLines = isMaster ? [] : [
+          { standard: "Standard application emails", tailored: "Company-tailored application emails", tailored_fit: "Tailored application emails + fit summary" }[t.email_style] || "Company-tailored application emails",
+          ...(t.has_best_matches ? ["Your best matches"] : []),
+          ...(t.has_linkedin ? ["LinkedIn and referral messages"] : []),
+          ...((t.resume_slots || 1) > 1 ? [`Up to ${t.resume_slots} resumes`] : []),
+          ...(t.has_bulk ? ["Apply in bulk"] : []),
+        ];
+        const featureItems = [...autoLines, ...(t.features || [])].map(f =>
           `<li class="flex items-center gap-2"><span class="material-symbols-outlined text-[16px] ${isMaster ? 'text-amber-500' : 'text-emerald-500'}">check</span> <span>${f}</span></li>`
         ).join("");
 
@@ -1482,7 +1490,9 @@ document.addEventListener("DOMContentLoaded", () => {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: t.name, subtitle: t.subtitle, price_inr: t.price_inr, daily_pitch_limit: t.daily_pitch_limit,
-          period_days: t.period_days || 30, features: t.features || [], badge: t.badge || null, is_active: !hiding, sync_users: false }),
+          period_days: t.period_days || 30, email_style: t.email_style, resume_slots: t.resume_slots || 1,
+          has_best_matches: t.has_best_matches, has_linkedin: t.has_linkedin, has_bulk: t.has_bulk,
+          features: t.features || [], badge: t.badge || null, is_active: !hiding, sync_users: false }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || "Could not update the plan");
@@ -1506,6 +1516,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("tier-form-price").value = tier.price_inr;
     document.getElementById("tier-form-limit").value = tier.daily_pitch_limit;
     setTierPeriod(tier.period_days);
+    setTierFeatures(tier);
     document.getElementById("tier-form-active").checked = tier.is_active !== false;
     document.getElementById("tier-form-badge").value = tier.badge || "";
     document.getElementById("tier-form-features").value = (tier.features || []).join("\n");
@@ -1528,6 +1539,27 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   initStaticCustomDropdown("dropdown-tier-period");
 
+  // Email style picker (house dropdown), same pattern as plan length.
+  function setTierStyle(style) {
+    const box = document.getElementById("dropdown-tier-style");
+    if (!box) return;
+    const val = ["standard", "tailored", "tailored_fit"].includes(style) ? style : "tailored";
+    document.getElementById("tier-form-style").value = val;
+    box.querySelectorAll(".custom-dropdown-item").forEach(it => {
+      const on = it.dataset.value === val;
+      it.classList.toggle("is-selected", on);
+      if (on) box.querySelector(".custom-dropdown-label").textContent = it.querySelector(".truncate").textContent.trim();
+    });
+  }
+  initStaticCustomDropdown("dropdown-tier-style");
+  function setTierFeatures(t) {
+    setTierStyle(t.email_style);
+    document.getElementById("tier-form-resumes").value = t.resume_slots || 1;
+    document.getElementById("tier-form-matches").checked = !!t.has_best_matches;
+    document.getElementById("tier-form-linkedin").checked = !!t.has_linkedin;
+    document.getElementById("tier-form-bulk").checked = !!t.has_bulk;
+  }
+
   document.getElementById("btn-add-custom-tier")?.addEventListener("click", () => {
     document.getElementById("tier-modal-title").textContent = "Add Custom Tier Plan";
     document.getElementById("tier-form-id").value = "";
@@ -1538,6 +1570,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("tier-form-price").value = "199";
     document.getElementById("tier-form-limit").value = "50";
     setTierPeriod(30);
+    setTierFeatures({ email_style: "tailored", resume_slots: 1 });
     document.getElementById("tier-form-active").checked = true;
     document.getElementById("tier-form-badge").value = "";
     document.getElementById("tier-form-features").value = "50 pitches / day\nVerified contact discovery\nAI pitch customization";
@@ -1564,6 +1597,11 @@ document.addEventListener("DOMContentLoaded", () => {
       price_inr: parseInt(document.getElementById("tier-form-price").value, 10) || 0,
       daily_pitch_limit: parseInt(document.getElementById("tier-form-limit").value, 10) || 10,
       period_days: parseInt(document.getElementById("tier-form-period").value, 10) || 30,
+      email_style: document.getElementById("tier-form-style").value,
+      resume_slots: parseInt(document.getElementById("tier-form-resumes").value, 10) || 1,
+      has_best_matches: document.getElementById("tier-form-matches").checked,
+      has_linkedin: document.getElementById("tier-form-linkedin").checked,
+      has_bulk: document.getElementById("tier-form-bulk").checked,
       badge: document.getElementById("tier-form-badge").value.trim() || null,
       features: featuresLines,
       is_active: document.getElementById("tier-form-active")?.checked ?? true,

@@ -96,6 +96,7 @@ from db import (
     init_db,
 )
 from enricher import is_recruitment_email
+from plan_features import EMAIL_STYLES, plan_features
 from outreach import (
     add_do_not_contact,
     read_optout_token,
@@ -678,6 +679,16 @@ class BulkCompanyActionRequest(BaseModel):
     reason: str = "Quarantined by Master Admin"
 
 
+def _plan_feature_values(payload) -> dict:
+    """Validated plan feature settings from the admin form."""
+    if payload.email_style not in EMAIL_STYLES:
+        raise HTTPException(status_code=400, detail="Email style must be standard, tailored or tailored_fit.")
+    if not 1 <= payload.resume_slots <= 5:
+        raise HTTPException(status_code=400, detail="Resumes must be between 1 and 5.")
+    return {"email_style": payload.email_style, "has_best_matches": payload.has_best_matches,
+            "has_linkedin": payload.has_linkedin, "resume_slots": payload.resume_slots, "has_bulk": payload.has_bulk}
+
+
 def _plan_days(days: int | None) -> int:
     """Plans are a 7-day pass or monthly (30 days)."""
     if days not in (7, 30):
@@ -691,6 +702,11 @@ class UpdateTierRequest(BaseModel):
     price_inr: int
     daily_pitch_limit: int
     period_days: int = 30  # 7 = weekly pass, 30 = monthly
+    email_style: str = "tailored"  # standard | tailored | tailored_fit
+    has_best_matches: bool = False
+    has_linkedin: bool = False
+    resume_slots: int = 1
+    has_bulk: bool = False
     features: list[str] | None = None
     badge: str | None = None
     is_active: bool = True
@@ -704,6 +720,11 @@ class CreateTierRequest(BaseModel):
     price_inr: int = 0
     daily_pitch_limit: int = 10
     period_days: int = 30
+    email_style: str = "tailored"  # standard | tailored | tailored_fit
+    has_best_matches: bool = False
+    has_linkedin: bool = False
+    resume_slots: int = 1
+    has_bulk: bool = False
     features: list[str] | None = None
     badge: str | None = None
 
@@ -968,6 +989,11 @@ def load_public_tiers(db: Session) -> list[dict]:
             "price_inr": int(t.price_inr or 0),
             "daily_pitch_limit": int(t.daily_pitch_limit or 0),
             "period_days": int(t.period_days or 30),
+            "email_style": t.email_style or "tailored",
+            "has_best_matches": bool(t.has_best_matches),
+            "has_linkedin": bool(t.has_linkedin),
+            "resume_slots": t.resume_slots or 1,
+            "has_bulk": bool(t.has_bulk),
             "features": [f.strip() for f in (t.features or []) if f and str(f).strip()],
             "badge": (t.badge or "").strip(),
         }
@@ -1240,6 +1266,7 @@ def workspace_page(request: Request, db: Session = Depends(get_db)):
             "total_companies": total_valid,
             # Plan cards in the subscription window, as set in the admin panel
             "tiers": [] if kill_switch else load_public_tiers(db),
+            "features": plan_features(db, user if is_logged_in else None, kill_switch=kill_switch),
             "billing_enabled": billing_enabled(),
         }
     )
@@ -2857,6 +2884,10 @@ def auth_status(request: Request, db: Session = Depends(get_db)):
         "pitches_remaining": remaining,
         "quota_resets_at": next_quota_reset_utc().replace(tzinfo=timezone.utc).isoformat(),
         "is_banned": bool(getattr(user, "is_banned", False)) if is_logged_in else False,
+        # What this user can use right now (plan, trial or admin), for showing or locking features
+        "features": plan_features(db, user if is_logged_in else None, kill_switch=kill_switch),
+        "trial_ends_at": user.trial_ends_at.replace(tzinfo=timezone.utc).isoformat() if is_logged_in and getattr(user, "trial_ends_at", None) else None,
+        "trial_used": bool(is_logged_in and getattr(user, "trial_started_at", None)),
         "dev_mode": config.DEV_MODE
     }
 
@@ -5360,6 +5391,11 @@ def list_tiers_admin(
                 "price_inr": t.price_inr,
                 "daily_pitch_limit": t.daily_pitch_limit,
                 "period_days": t.period_days or 30,
+                "email_style": t.email_style or "tailored",
+                "has_best_matches": bool(t.has_best_matches),
+                "has_linkedin": bool(t.has_linkedin),
+                "resume_slots": t.resume_slots or 1,
+                "has_bulk": bool(t.has_bulk),
                 "features": t.features or [],
                 "badge": t.badge or "",
                 "is_active": t.is_active,
@@ -5388,6 +5424,7 @@ def create_tier_admin(
         price_inr=payload.price_inr,
         daily_pitch_limit=payload.daily_pitch_limit,
         period_days=_plan_days(payload.period_days),
+        **_plan_feature_values(payload),
         features=payload.features or [],
         badge=payload.badge.strip() if payload.badge else None,
         is_active=True
@@ -5417,6 +5454,8 @@ def update_tier_admin(
     tier.price_inr = payload.price_inr
     tier.daily_pitch_limit = payload.daily_pitch_limit
     tier.period_days = _plan_days(payload.period_days)
+    for k, v in _plan_feature_values(payload).items():
+        setattr(tier, k, v)
     tier.features = payload.features or []
     tier.badge = payload.badge.strip() if payload.badge else None
     tier.is_active = payload.is_active
