@@ -389,6 +389,25 @@
         </label>
       </div>
 
+      <div id="card-pro-trial" class="a-card a-row">
+        <div class="l">
+          <span class="a-ic"><span class="material-symbols-outlined">workspace_premium</span></span>
+          <div class="stack" style="--stack:6px">
+            <div class="flex items-center gap-2 flex-wrap"><span class="a-title">One-day Pro trial</span><span id="trial-admin-stats" class="kpi-chip"></span></div>
+            <p class="a-desc">Free users can try every Pro feature once per account. Their daily limit stays the same. Offered after resume analysis, on Companies, and on the Pro plan card.</p>
+            <div class="flex items-center gap-2 flex-wrap">
+              <label for="trial-admin-hours" class="a-desc">Length (hours)</label>
+              <input type="number" id="trial-admin-hours" min="1" max="168" value="24" class="recessed-well" style="width:90px">
+              <button type="button" id="btn-trial-admin-save" class="btn btn-secondary btn-sm">Save length</button>
+            </div>
+          </div>
+        </div>
+        <label for="toggle-pro-trial" class="ks-switch" title="Offer the Pro trial">
+          <input type="checkbox" id="toggle-pro-trial" class="sr-only">
+          <span class="ks-track"></span>
+        </label>
+      </div>
+
       <div id="tiers-grid-container"><div class="p-8 text-center text-on-surface-variant col-span-full">Loading tier configurations...</div></div>
 
       <div class="a-card a-row">

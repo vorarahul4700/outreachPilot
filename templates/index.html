@@ -95,6 +95,7 @@
           <span class="quota-num"><strong id="sidebar-quota-remaining">{{ user_remaining if user_remaining is defined else 10 }}</strong> / <span id="sidebar-quota-total">{{ user_daily_limit if user_daily_limit is defined else 10 }}</span> left</span>
         </div>
         <div class="meter-sm"><div id="sidebar-quota-progress" style="width: 100%;"></div></div>
+        <span id="sidebar-trial-chip" class="trial-chip hidden"></span>
         <div class="quota-link"><span>Manage plan and daily quota</span><span class="material-symbols-outlined" aria-hidden="true">chevron_right</span></div>
       </div>
       {% endif %}
@@ -196,6 +197,13 @@
       <button type="button" class="domain-filter-pill" data-domain="manufacturing"><span class="material-symbols-outlined">precision_manufacturing</span><span>Manufacturing</span><span class="n tnum" id="domain-count-manufacturing">({% for d in domains if d.code == 'manufacturing' %}{{ d.count }}{% else %}0{% endfor %})</span></button>
       <button type="button" class="domain-filter-pill" data-domain="realestate"><span class="material-symbols-outlined">apartment</span><span>Real Estate</span><span class="n tnum" id="domain-count-realestate">({% for d in domains if d.code == 'realestate' %}{{ d.count }}{% else %}0{% endfor %})</span></button>
       <button type="button" class="domain-filter-pill" data-domain="hr"><span class="material-symbols-outlined">groups</span><span>HR &amp; Staffing</span><span class="n tnum" id="domain-count-hr">({% for d in domains if d.code == 'hr' %}{{ d.count }}{% else %}0{% endfor %})</span></button>
+    </div>
+
+    <div id="trial-banner" class="trial-banner hidden" role="note">
+      <span class="material-symbols-outlined" aria-hidden="true">workspace_premium</span>
+      <span class="t"><b>Try Pro free for <span data-trial-length>1 day</span>.</b> Best matches, LinkedIn and referral messages, up to 3 resumes and bulk apply. Your daily limit stays the same. Once per account, nothing to pay.</span>
+      <button type="button" class="btn btn-primary btn-sm" data-start-trial>Start free trial</button>
+      <button type="button" class="icon-btn sm bare" data-dismiss-trial aria-label="Dismiss"><span class="material-symbols-outlined">close</span></button>
     </div>
 
     <section class="app-toolbar" aria-label="Search and filters">
@@ -655,6 +663,30 @@
 </div>
 
 <!-- ===================== Pitch preview and edit modal ===================== -->
+<div id="trial-modal" class="app-modal fixed inset-0 hidden">
+  <div class="am-card sm">
+    <div class="am-head">
+      <div class="am-title-row">
+        <div class="min-w-0"><h3 id="trial-modal-title">Try Pro free for 1 day</h3></div>
+        <button type="button" class="icon-btn sm bare" data-close-trial aria-label="Close"><span class="material-symbols-outlined">close</span></button>
+      </div>
+    </div>
+    <div class="am-body stack" style="--stack:12px">
+      <p id="trial-modal-text" class="muted-note"></p>
+      <ul class="trial-list">
+        <li><span class="material-symbols-outlined">check</span><span>Emails tailored to each company, with a "Why I fit" section</span></li>
+        <li><span class="material-symbols-outlined">check</span><span>Best matches for your resume</span></li>
+        <li><span class="material-symbols-outlined">check</span><span>LinkedIn message and referral request for every application</span></li>
+        <li><span class="material-symbols-outlined">check</span><span>Up to 3 resumes, picked for each company, and bulk apply</span></li>
+      </ul>
+    </div>
+    <div class="am-foot split">
+      <button type="button" class="btn btn-secondary" data-close-trial>Not now</button>
+      <button type="button" id="trial-modal-cta" class="btn btn-primary" data-start-trial>Start free trial</button>
+    </div>
+  </div>
+</div>
+
 <div id="messages-modal" class="app-modal fixed inset-0 hidden">
   <div class="am-card sm">
     <div class="am-head">
@@ -847,6 +879,9 @@
             </ul>
             {% endif %}
           </div>
+          {% if t.code == 'pro' and trial and trial.trial_offer %}
+          <button type="button" class="btn-tier-action is-trial" data-start-trial>Try Pro free for {{ '1 day' if trial.trial_hours == 24 else (trial.trial_hours ~ ' hours') }}</button>
+          {% endif %}
           {% if t.price_inr == 0 and not is_current %}
           {#- Free needs no switch: signed-out visitors sign up; paid users drop back to Free when their plan ends. -#}
           {% if not is_logged_in %}
@@ -958,6 +993,11 @@
     "daily_pitch_limit": {{ user_daily_limit if user_daily_limit is defined else 10 }},
     "pitches_sent_today": {{ user_sent_today if user_sent_today is defined else 0 }},
     "pitches_remaining": {{ user_remaining if user_remaining is defined else 10 }},
+    "features": {{ (features or {})|tojson }},
+    "trial_ends_at": {{ (trial.trial_ends_at if trial else None)|tojson }},
+    "trial_used": {{ 'true' if trial and trial.trial_used else 'false' }},
+    "trial_offer": {{ 'true' if trial and trial.trial_offer else 'false' }},
+    "trial_hours": {{ (trial.trial_hours if trial else 24)|tojson }},
     "dev_mode": {{ 'true' if dev_mode else 'false' }}
   }
 </script>

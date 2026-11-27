@@ -876,6 +876,43 @@ def apple_touch_icon():
     )
 
 
+# --- One-day Pro trial (once per account; the daily limit stays the user's own) ---
+TRIAL_DEFAULT_HOURS = 24
+
+
+def _setting(db: Session, key: str) -> str | None:
+    row = db.query(SystemSetting).filter(SystemSetting.key == key).first()
+    return row.value if row else None
+
+
+def trial_settings(db: Session) -> dict:
+    enabled = (_setting(db, "pro_trial_enabled") or "true").strip().lower() in ("true", "1", "yes")
+    try:
+        hours = int(_setting(db, "pro_trial_hours") or TRIAL_DEFAULT_HOURS)
+    except ValueError:
+        hours = TRIAL_DEFAULT_HOURS
+    return {"enabled": enabled, "hours": min(168, max(1, hours))}
+
+
+def trial_offer(db: Session, user, kill_switch: bool = False) -> bool:
+    """Can this user start the trial now: switched on, never used, on the free plan, not an admin."""
+    if not user or kill_switch or getattr(user, "trial_started_at", None):
+        return False
+    if getattr(user, "is_admin", False) or config.is_master_admin(user.email):
+        return False
+    return (user.subscription_tier or "free") == "free" and trial_settings(db)["enabled"]
+
+
+def trial_status(db: Session, user, kill_switch: bool = False) -> dict:
+    ends = getattr(user, "trial_ends_at", None) if user else None
+    return {
+        "trial_ends_at": ends.replace(tzinfo=timezone.utc).isoformat() if ends else None,
+        "trial_used": bool(user and getattr(user, "trial_started_at", None)),
+        "trial_offer": trial_offer(db, user, kill_switch),
+        "trial_hours": trial_settings(db)["hours"],
+    }
+
+
 # --- Master Kill Switch & Subscription Helpers ---
 def is_subscription_kill_switch_active(db: Session = None) -> bool:
     """
@@ -1270,6 +1307,7 @@ def workspace_page(request: Request, db: Session = Depends(get_db)):
             # Plan cards in the subscription window, as set in the admin panel
             "tiers": [] if kill_switch else load_public_tiers(db),
             "features": plan_features(db, user if is_logged_in else None, kill_switch=kill_switch),
+            "trial": trial_status(db, user if is_logged_in else None, kill_switch),
             "billing_enabled": billing_enabled(),
         }
     )
@@ -2950,10 +2988,54 @@ def auth_status(request: Request, db: Session = Depends(get_db)):
         "is_banned": bool(getattr(user, "is_banned", False)) if is_logged_in else False,
         # What this user can use right now (plan, trial or admin), for showing or locking features
         "features": plan_features(db, user if is_logged_in else None, kill_switch=kill_switch),
-        "trial_ends_at": user.trial_ends_at.replace(tzinfo=timezone.utc).isoformat() if is_logged_in and getattr(user, "trial_ends_at", None) else None,
-        "trial_used": bool(is_logged_in and getattr(user, "trial_started_at", None)),
+        **trial_status(db, user if is_logged_in else None, kill_switch),
         "dev_mode": config.DEV_MODE
     }
+
+
+@app.post("/api/trial/start")
+def start_pro_trial(request: Request, db: Session = Depends(get_db)):
+    """Start the one-day Pro trial. Once per account; Pro features, the user's own daily limit."""
+    user = get_current_user(db, request)
+    if not user or not user.oauth_tokens:
+        raise HTTPException(status_code=401, detail="Sign in to start your Pro trial.")
+    if user.trial_started_at:
+        raise HTTPException(status_code=400, detail="You've already used your Pro trial on this account.")
+    if not trial_offer(db, user, is_subscription_kill_switch_active(db)):
+        raise HTTPException(status_code=400, detail="The Pro trial isn't available for your account right now.")
+    now = datetime.utcnow()
+    user.trial_started_at = now
+    user.trial_ends_at = now + timedelta(hours=trial_settings(db)["hours"])
+    db.commit()
+    return {"success": True, **trial_status(db, user),
+            "features": plan_features(db, user, kill_switch=False)}
+
+
+@app.get("/api/admin/system/trial")
+def admin_get_trial(admin=Depends(require_master_admin), db: Session = Depends(get_db)):
+    used = db.query(func.count(User.id)).filter(User.trial_started_at.isnot(None)).scalar() or 0
+    active = db.query(func.count(User.id)).filter(User.trial_ends_at > datetime.utcnow()).scalar() or 0
+    return {**trial_settings(db), "used": used, "active": active}
+
+
+class TrialSettingsRequest(BaseModel):
+    enabled: bool
+    hours: int = TRIAL_DEFAULT_HOURS
+
+
+@app.post("/api/admin/system/trial")
+def admin_set_trial(req: TrialSettingsRequest, admin=Depends(require_master_admin), db: Session = Depends(get_db)):
+    if not 1 <= req.hours <= 168:
+        raise HTTPException(status_code=400, detail="Trial length must be between 1 and 168 hours.")
+    for key, val in (("pro_trial_enabled", "true" if req.enabled else "false"), ("pro_trial_hours", str(req.hours))):
+        row = db.query(SystemSetting).filter(SystemSetting.key == key).first()
+        if not row:
+            db.add(SystemSetting(key=key, value=val, description="One-day Pro trial setting"))
+        else:
+            row.value = val
+            row.updated_at = datetime.utcnow()
+    db.commit()
+    return admin_get_trial(admin, db)
 
 
 @app.get("/api/tiers")
@@ -4432,6 +4514,7 @@ def list_admin_users(
                 "subscription_tier": u.subscription_tier or "free",
                 "subscription_tier_name": tier_names.get(u.subscription_tier or "free") or (u.subscription_tier or "free").replace("_", " ").title(),
                 "subscription_end": u.subscription_end_date.strftime("%d %b %Y") if u.subscription_end_date else None,
+                "trial": ("active" if u.trial_ends_at and u.trial_ends_at > datetime.utcnow() else "used") if u.trial_started_at else None,
                 "subscription_status": u.subscription_status or "active",
                 "daily_pitch_limit": 999999 if (u.is_admin or config.is_master_admin(u.email)) else (u.daily_pitch_limit or 10),
                 "pitches_sent_today": (u.pitches_sent_today or 0)
