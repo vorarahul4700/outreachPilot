@@ -1428,12 +1428,12 @@ document.addEventListener("DOMContentLoaded", () => {
         ).join("");
 
         return `
-          <div class="bg-surface-container-low border ${borderClass} rounded-xl p-6 flex flex-col justify-between relative">
+          <div class="bg-surface-container-low border ${borderClass} rounded-xl p-6 flex flex-col justify-between relative${!t.is_active && !isMaster ? " opacity-70" : ""}">
             ${badgeHtml}
             <div class="flex flex-col gap-3">
               <div class="flex flex-wrap items-center justify-between gap-2">
                 <span class="text-xs font-semibold ${isMaster ? 'text-amber-500' : isPro ? 'text-primary' : 'text-on-surface-variant'}">${t.subtitle || t.code.toUpperCase()}</span>
-                <span class="text-[11px] px-2 py-0.5 rounded-full bg-surface-container font-mono text-on-surface-variant whitespace-nowrap">${t.subscriber_count} active</span>
+                <span class="flex items-center gap-1.5">${!t.is_active && !isMaster ? '<span class="plan-badge plan-free">Hidden from users</span>' : ""}<span class="text-[11px] px-2 py-0.5 rounded-full bg-surface-container font-mono text-on-surface-variant whitespace-nowrap">${t.subscriber_count} active</span></span>
               </div>
               <div class="flex items-baseline gap-1">
                 <span class="text-headline-lg font-headline-lg ${isMaster ? 'text-amber-500' : 'text-on-surface'} font-bold tabular-nums">${priceDisplay}</span>
@@ -1447,10 +1447,16 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>
             <div class="mt-6 pt-4 border-t border-outline-variant/20 flex flex-wrap items-center justify-between gap-2">
               <span class="text-xs text-on-surface-variant min-w-0 break-all">Code: <code>${t.code}</code></span>
-              <button onclick="openEditTierModal(${t.id})" class="px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high border border-outline-variant/40 text-xs font-semibold text-on-surface transition cursor-pointer flex items-center gap-1 shrink-0 whitespace-nowrap">
-                <span class="material-symbols-outlined text-[14px]">edit</span>
-                <span>Edit Plan</span>
-              </button>
+              <div class="flex items-center gap-1.5">
+                ${isMaster || t.code === "free" ? "" : `<button onclick="toggleTierVisibility(${t.id})" class="px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high border border-outline-variant/40 text-xs font-semibold text-on-surface transition cursor-pointer flex items-center gap-1 shrink-0 whitespace-nowrap" title="${t.is_active ? "Hide from pricing and checkout" : "Show on pricing and checkout"}">
+                  <span class="material-symbols-outlined text-[14px]">${t.is_active ? "visibility_off" : "visibility"}</span>
+                  <span>${t.is_active ? "Hide" : "Show"}</span>
+                </button>`}
+                <button onclick="openEditTierModal(${t.id})" class="px-3 py-1.5 rounded-lg bg-surface-container hover:bg-surface-container-high border border-outline-variant/40 text-xs font-semibold text-on-surface transition cursor-pointer flex items-center gap-1 shrink-0 whitespace-nowrap">
+                  <span class="material-symbols-outlined text-[14px]">edit</span>
+                  <span>Edit Plan</span>
+                </button>
+              </div>
             </div>
           </div>
         `;
@@ -1461,6 +1467,31 @@ document.addEventListener("DOMContentLoaded", () => {
       tiersGridContainer.innerHTML = `<div class="p-8 text-center text-rose-500 col-span-full">Failed to load tier configurations: ${err.message}</div>`;
     }
   }
+
+  // Hide/show a plan: hidden plans leave pricing and checkout; current subscribers keep theirs until it ends.
+  window.toggleTierVisibility = async function(tierId) {
+    const t = loadedTiers.find(x => x.id === tierId);
+    if (!t) return;
+    const hiding = t.is_active;
+    const note = hiding
+      ? `Hide "${t.name}"? It disappears from pricing and checkout.` + (t.subscriber_count ? ` The ${t.subscriber_count} user(s) on it keep it until their plan ends, then move to Free.` : "")
+      : `Show "${t.name}" again on pricing and checkout?`;
+    if (!confirm(note)) return;
+    try {
+      const res = await fetch(`/api/admin/tiers/${t.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: t.name, subtitle: t.subtitle, price_inr: t.price_inr, daily_pitch_limit: t.daily_pitch_limit,
+          period_days: t.period_days || 30, features: t.features || [], badge: t.badge || null, is_active: !hiding, sync_users: false }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Could not update the plan");
+      showToast(hiding ? `"${t.name}" is hidden.` : `"${t.name}" is visible again.`);
+      loadTiers();
+    } catch (err) {
+      showToast(err.message, "error");
+    }
+  };
 
   window.openEditTierModal = function(tierId) {
     const tier = loadedTiers.find(t => t.id === tierId);
@@ -1475,6 +1506,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("tier-form-price").value = tier.price_inr;
     document.getElementById("tier-form-limit").value = tier.daily_pitch_limit;
     setTierPeriod(tier.period_days);
+    document.getElementById("tier-form-active").checked = tier.is_active !== false;
     document.getElementById("tier-form-badge").value = tier.badge || "";
     document.getElementById("tier-form-features").value = (tier.features || []).join("\n");
     document.getElementById("tier-form-sync-users").checked = true;
@@ -1506,6 +1538,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("tier-form-price").value = "199";
     document.getElementById("tier-form-limit").value = "50";
     setTierPeriod(30);
+    document.getElementById("tier-form-active").checked = true;
     document.getElementById("tier-form-badge").value = "";
     document.getElementById("tier-form-features").value = "50 pitches / day\nVerified contact discovery\nAI pitch customization";
     openModal("modal-tier-form");
@@ -1533,7 +1566,7 @@ document.addEventListener("DOMContentLoaded", () => {
       period_days: parseInt(document.getElementById("tier-form-period").value, 10) || 30,
       badge: document.getElementById("tier-form-badge").value.trim() || null,
       features: featuresLines,
-      is_active: true,
+      is_active: document.getElementById("tier-form-active")?.checked ?? true,
       sync_users: document.getElementById("tier-form-sync-users")?.checked ?? true
     };
 

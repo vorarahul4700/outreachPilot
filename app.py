@@ -5410,6 +5410,8 @@ def update_tier_admin(
     if not tier:
         raise HTTPException(status_code=404, detail="Subscription tier not found")
 
+    if tier.code == "free" and not payload.is_active:
+        raise HTTPException(status_code=400, detail="The Free plan can't be hidden: every account falls back to it.")
     tier.name = payload.name.strip()
     tier.subtitle = payload.subtitle.strip() if payload.subtitle else ""
     tier.price_inr = payload.price_inr
