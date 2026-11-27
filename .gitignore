@@ -138,3 +138,8 @@ ollama_*
 
 brag-output/
 brand/
+
+# Local Ollama copies (never commit)
+ai_agent_ollama.py
+enricher_ollama.py
+config_ollama.py
