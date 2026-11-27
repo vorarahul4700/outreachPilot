@@ -211,6 +211,21 @@ class SendAttachment(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
+class Payment(Base):
+    """A Razorpay order for a plan. status: created -> paid (activated once)."""
+    __tablename__ = "payments"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), index=True, nullable=False)
+    tier_code = Column(String(50), nullable=False)
+    amount_paise = Column(Integer, nullable=False)
+    order_id = Column(String(64), unique=True, index=True, nullable=False)
+    payment_id = Column(String(64), nullable=True)
+    status = Column(String(20), default="created", index=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    paid_at = Column(DateTime, nullable=True)
+
+
 class DoNotContact(Base):
     """Addresses that opted out. No user can send to them again (outreach.send_via_google_oauth)."""
     __tablename__ = "do_not_contact"

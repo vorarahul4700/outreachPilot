@@ -772,7 +772,11 @@
             </ul>
             {% endif %}
           </div>
+          {% if billing_enabled and t.price_inr > 0 and not is_current and is_logged_in %}
+          <button type="button" data-buy-tier="{{ t.code }}" class="btn-tier-action">Buy {{ t.name }} for ₹{{ "{:,}".format(t.price_inr) }}</button>
+          {% else %}
           <a {% if not is_current %}href="{{ change_href }}"{% else %}aria-disabled="true"{% endif %} data-href="{{ change_href }}" data-default-label="{{ verb }} {{ t.name }}" data-tier-code="{{ t.code }}" class="btn-tier-action{% if is_current %} pointer-events-none{% endif %}">{% if is_current %}Current Active Plan{% else %}{{ verb }} {{ t.name }}{% endif %}</a>
+          {% endif %}
         </div>
         {% endfor %}
       </div>

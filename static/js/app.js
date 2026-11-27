@@ -2249,6 +2249,61 @@ document.addEventListener("DOMContentLoaded", () => {
     btnSidebarDemoLogin.addEventListener("click", () => performDemoLogin({ as_admin: false, email: "demo_user@outreachpilot.ai" }));
   }
 
+  // --- Plans: pay with Razorpay (one-time payment, no auto-renewal) ---
+  // The amount and order come from our server; the browser result is re-checked there.
+  function loadRazorpay() {
+    if (window.Razorpay) return Promise.resolve();
+    return new Promise((ok, fail) => {
+      const s = document.createElement("script");
+      s.src = "https://checkout.razorpay.com/v1/checkout.js";
+      s.onload = ok;
+      s.onerror = () => fail(new Error("Could not load the payment window. Check your connection."));
+      document.head.appendChild(s);
+    });
+  }
+  document.addEventListener("click", async (e) => {
+    const btn = e.target.closest("[data-buy-tier]");
+    if (!btn) return;
+    const label = btn.textContent;
+    const reset = () => { btn.disabled = false; btn.textContent = label; };
+    btn.disabled = true;
+    btn.textContent = "Opening payment...";
+    try {
+      await loadRazorpay();
+      const res = await fetch("/api/billing/order", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ tier_code: btn.dataset.buyTier }) });
+      const order = await res.json();
+      if (!res.ok) throw new Error(order.detail || "Could not start the payment.");
+      const rzp = new window.Razorpay({
+        key: order.key_id,
+        order_id: order.order_id,
+        amount: order.amount,
+        currency: order.currency,
+        name: "OutreachPilot",
+        description: `${order.plan_name} (${order.period})`,
+        prefill: order.prefill,
+        theme: { color: "#607037" },
+        handler: async (r) => {
+          btn.textContent = "Confirming payment...";
+          const v = await fetch("/api/billing/verify", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(r) });
+          const data = await v.json();
+          if (!v.ok) {
+            showToast((data.detail || "Payment could not be confirmed.") + " If money was taken, email founder@outreachpilot.in.", "error");
+            reset();
+            return;
+          }
+          showToast(`${data.message}${data.ends ? ` It runs until ${data.ends}.` : ""}`);
+          setTimeout(() => location.reload(), 1500);
+        },
+        modal: { ondismiss: reset },
+      });
+      rzp.on("payment.failed", (r) => showToast(r.error?.description || "Payment failed. Please try again.", "error"));
+      rzp.open();
+    } catch (err) {
+      showToast(err.message, "error");
+      reset();
+    }
+  });
+
   // --- Account menu (round initials button at the top of the sidebar) ---
   // One menu, opened from the sidebar button (desktop) or the top-bar button (phones).
   const profileMenu = document.getElementById("app-profile-menu");
