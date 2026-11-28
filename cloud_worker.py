@@ -501,8 +501,8 @@ def run_queue_consumer(
     print("=======================================================\n")
 
     processed_count = 0
-    # Stop claiming new jobs before the 150-min Actions timeout kills a job mid-run and strands it as RUNNING
-    deadline = time.time() + 110 * 60
+    # Stop claiming new jobs before the 360-min Actions timeout kills a job mid-run and strands it as RUNNING
+    deadline = time.time() + 300 * 60
 
     while processed_count < batch_size:
         if time.time() > deadline:
