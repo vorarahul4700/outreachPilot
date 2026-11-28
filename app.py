@@ -5409,7 +5409,7 @@ def admin_scout_queue(payload: ScoutQueueRequest, db: Session = Depends(get_db),
                     "https://api.github.com/repos/vorarahul4700/outreachPilot/actions/workflows/cloud_scout.yml/dispatches",
                     headers={"Authorization": f"Bearer {token}", "Accept": "application/vnd.github.v3+json",
                              "User-Agent": "OutreachPilot-MasterAdmin"},
-                    json={"ref": "main", "inputs": {"mode": "queue", "domain": domain, "city": "", "batch_size": "50"}},
+                    json={"ref": "main", "inputs": {"batch_size": "50"}},
                     timeout=15,
                 )
                 started = resp.status_code in (200, 201, 204)

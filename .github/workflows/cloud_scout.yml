@@ -3,40 +3,16 @@ name: Cloud Scout & Autonomous Neon DB Queue Worker
 on:
   workflow_dispatch:
     inputs:
-      mode:
-        description: "Execution Mode: 'queue' (consumes Neon DB scout_jobs) or 'single' (specific keyword/city)"
-        required: false
-        default: "queue"
-        type: choice
-        options:
-          - queue
-          - single
-      domain:
-        description: "Domain keyword filter for queue (e.g. pharma, it, sales, marketing, or leave blank for any queued)"
-        required: false
-        default: ""
-      city:
-        description: "City filter for queue, or target city for single mode"
-        required: false
-        default: ""
       batch_size:
-        description: "Max jobs to process per runner in queue mode"
+        description: "Max jobs per runner"
         required: false
         default: "30"
-      keyword:
-        description: "Search Keyword (Only for 'single' mode)"
-        required: false
-        default: ""
-      job_id:
-        description: "Specific ScoutJob ID (Only for 'single' mode - leave 0 to auto-create)"
-        required: false
-        default: "0"
       workers:
-        description: "Runners to start, 1-20 (queue mode). Scheduled runs use repo variable SCOUT_WORKERS, else 10"
+        description: "Runners (1-20)"
         required: false
         default: "10"
       parallel_jobs:
-        description: "Jobs each runner crawls at the same time, 1-4, each in its own Chrome (queue mode). Scheduled runs use SCOUT_PARALLEL_JOBS, else 1"
+        description: "Parallel jobs per runner (1-4)"
         required: false
         default: "1"
 
@@ -59,7 +35,6 @@ jobs:
       - name: Work out runner and parallel job counts
         id: plan
         env:
-          MODE: ${{ github.event.inputs.mode || 'queue' }}
           WORKERS: ${{ github.event.inputs.workers || vars.SCOUT_WORKERS || '10' }}
           PARALLEL: ${{ github.event.inputs.parallel_jobs || vars.SCOUT_PARALLEL_JOBS || '1' }}
         run: |
@@ -68,11 +43,9 @@ jobs:
           P=$(printf '%s' "$PARALLEL" | tr -cd '0-9'); P=${P:-1}; P=$((10#$P))
           [ "$W" -lt 1 ] && W=1; [ "$W" -gt 20 ] && W=20
           [ "$P" -lt 1 ] && P=1; [ "$P" -gt 4 ] && P=4
-          # Single mode runs one job once.
-          if [ "$MODE" = "single" ]; then W=1; P=1; fi
           echo "matrix=[$(seq -s, 1 "$W")]" >> "$GITHUB_OUTPUT"
           echo "parallel=$P" >> "$GITHUB_OUTPUT"
-          echo "Mode $MODE: $W runner(s) x $P parallel job(s) each."
+          echo "$W runner(s) x $P parallel job(s) each."
 
   cloud_scout_job:
     name: Cloud-Runner-${{ matrix.worker_id }}
@@ -138,12 +111,7 @@ jobs:
           for J in $(seq 1 "$PARALLEL"); do
             # Starting Chromes 20s apart avoids racing on the shared driver download.
             if [ "$J" -gt 1 ]; then sleep 20; fi
-            xvfb-run -n $((90 + J)) -s "-screen 0 1920x1080x24" python cloud_worker.py \
-              --mode "${{ github.event.inputs.mode || 'queue' }}" \
-              --domain "${{ github.event.inputs.domain }}" \
-              --city "${{ github.event.inputs.city }}" \
-              --keyword "${{ github.event.inputs.keyword }}" \
-              --job-id "${{ github.event.inputs.job_id || '0' }}" \
+            xvfb-run -n $((90 + J)) -s "-screen 0 1920x1080x24" python cloud_worker.py --mode queue \
               --batch-size "${{ github.event.inputs.batch_size || '30' }}" \
               --runner-id "${WORKER_ID}.${J}" &
             PIDS="$PIDS $!"
