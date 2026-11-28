@@ -734,41 +734,64 @@ Candidate Resume:
     return parsed
 
 
-def build_fit_points(raw: Any, candidate_profile: dict[str, Any]) -> list[str]:
-    """Keep only fit pairs whose resume side is really in the resume, and write the bullet ourselves,
-    so the AI can't invent or embellish a claim. Achievements are quoted; skills become "I work with X"."""
-    def norm(t: Any) -> str:
-        return re.sub(r"[^a-z0-9%+#.]+", " ", str(t).lower()).strip(" .")
+SKILL_LINE = re.compile(r"^(i (work|build|develop) (with|in|using)|i use|skilled in|experienced (with|in)|hands-on with)\b")
+GENERIC_COMPANY_FACT = re.compile(r"\b(tech stack|core services|your (company|business|team|work|services|stack))\b", re.I)
 
-    # Both lists: the prompt shows strong_points first, key_achievements otherwise.
-    achievements = {norm(a): str(a).strip().rstrip(".") for a in (list(candidate_profile.get("strong_points") or []) + list(candidate_profile.get("key_achievements") or [])) if str(a).strip()}
-    skills = {norm(k): str(k).strip() for k in (candidate_profile.get("top_skills") or []) if str(k).strip()}
-    points, used = [], set()
+
+def _numbers(text: str) -> set[str]:
+    return {n.replace(",", "").rstrip(".") for n in re.findall(r"\d[\d,.]*%?", text)}
+
+
+def build_fit_points(raw: Any, candidate_profile: dict[str, Any], company_profile: dict[str, Any] | None = None) -> list[str]:
+    """Keep only fit points the resume backs up, so a bullet can be tailored to the company but never
+    invent: every number and every technology on the resume side must appear in the resume analysis.
+    The company side must name something specific. Different resume facts per bullet, at most 3."""
+    facts = [str(x).lower() for x in list(candidate_profile.get("key_achievements") or [])
+             + list(candidate_profile.get("strong_points") or []) if str(x).strip()]
+    skill_names = [str(x).strip() for x in (candidate_profile.get("top_skills") or []) if str(x).strip()]
+    skills_text = " ".join(skill_names).lower()
+    company_profile = company_profile or {}
+    company_tech = [str(t) for t in (company_profile.get("tech_stack") or []) if str(t).strip()]
+    company_text = " ".join(company_tech + [str(x) for x in (company_profile.get("services") or [])]
+                            + [str(company_profile.get(k) or "") for k in ("summary", "industry")]).lower()
+    points, seen = [], set()
     for item in raw if isinstance(raw, list) else []:
         if not isinstance(item, dict):
             continue
         company = re.sub(r"\[.*?\]", "", str(item.get("company_fact") or "")).strip(" .-:")
-        key = norm(item.get("resume_fact") or "")
-        if not company or not key or key in used or len(company.split()) > 12:
+        resume = re.sub(r"\[.*?\]", "", str(item.get("resume_fact") or "")).strip(" .-:")
+        if not company or not resume or len(company.split()) > 12 or len(resume.split()) > 22:
             continue
-        if key in achievements:
-            resume_text = achievements[key]
-            if len(resume_text) > 150:
-                continue  # a whole paragraph is too long for a bullet
-        elif key in skills:
-            resume_text = f"I work with {skills[key]}"
-        else:
-            # A list of skills ("Python, FastAPI, PostgreSQL") counts if every item is a real resume skill;
-            # name the ones the company side mentions, else the first two.
-            parts = [norm(x) for x in re.split(r",|/|and", str(item.get("resume_fact") or "")) if norm(x)]
-            if not parts or any(x not in skills for x in parts):
-                continue  # not word for word from the resume: drop it
-            named = [skills[x] for x in parts if skills[x].lower() in company.lower()] or [skills[x] for x in parts[:2]]
-            resume_text = "I work with " + " and ".join(named[:2])
-        used.add(key)
-        points.append(f"{company[0].upper() + company[1:]}: {resume_text[0].upper() + resume_text[1:]}")
+        if GENERIC_COMPANY_FACT.search(company):
+            continue
+        if company_text and any(re.search(rx, company.lower()) and not re.search(rx, company_text) for rx in TECH_CATALOG.values()):
+            continue  # names a technology this company doesn't use
+        low = resume.lower()
+        # Tools named: known technologies plus the candidate's own skills (FastAPI, Magento, ...).
+        techs = [rx for rx in TECH_CATALOG.values() if re.search(rx, low)]
+        techs += [r"(?<![a-z0-9])" + re.escape(k.lower()) + r"(?![a-z0-9])" for k in skill_names
+                  if re.search(r"(?<![a-z0-9])" + re.escape(k.lower()) + r"(?![a-z0-9])", low)]
+        nums = _numbers(resume)
+        # Backed by ONE resume fact: all its tools and numbers appear together in a single achievement
+        # or strong point (so a skill can't be grafted onto a project that didn't use it) ...
+        backed = any(nums <= _numbers(f) and all(re.search(rx, f) for rx in techs) for f in facts)
+        # ... or it is a plain skill line ("I work with X"): no numbers, no project, only resume skills named.
+        skill_line = (not nums and techs and SKILL_LINE.match(low) is not None
+                      and all(re.search(rx, skills_text) for rx in techs))
+        if not (backed or skill_line):
+            continue
+        key = " ".join(sorted(set(re.findall(r"[a-z0-9]{4,}", low))))
+        if key in seen:
+            continue
+        seen.add(key)
+        points.append(f"{company[0].upper() + company[1:]}: {resume[0].upper() + resume[1:]}")
         if len(points) == 3:
             break
+    if not points:
+        # Nothing the AI wrote held up: fall back to the skills this company really uses.
+        skills = [str(k).strip() for k in (candidate_profile.get("top_skills") or []) if str(k).strip()]
+        shared = [t for t in company_tech if t.lower() in {k.lower() for k in skills}]
+        points = [f"Your {t} work: I work with {t}" for t in shared[:2]]
     return points
 
 
@@ -826,7 +849,7 @@ def generate_personalized_pitch(
     else:
         pain_points_str = ""
 
-    fit_schema = ('\n  "fit_points": [{"company_fact": "Your ...", "resume_fact": "exact skill or achievement from (A)"}],'
+    fit_schema = ('\n  "fit_points": [{"company_fact": "Your ...", "resume_fact": "..."}],'
                   if email_style == "tailored_fit" else "")
     greeting = f"Hi {contact_name}," if contact_name and contact_name.strip() else f"Hi {company_name} team,"
     resume_instruction = f"Explicitly mention that the candidate's resume/portfolio is available at ({resume_link}) or attached." if resume_link else "Mention that the candidate's resume is attached for review."
@@ -886,12 +909,21 @@ Deliverables (must return valid JSON matching this schema; keep it short, no ext
 }}"""
 
     if email_style == "tailored_fit":
+        facts = [str(x).strip() for x in list(candidate_profile.get("key_achievements") or []) + list(candidate_profile.get("strong_points") or []) if str(x).strip()]
+        fact_lines = "\n".join(f"- {x}" for x in facts[:8]) or "- (none)"
         prompt += f"""
 
-"fit_points" (REQUIRED in the JSON above for this email): pair things about {company_name} with the candidate's resume.
-- company_fact: what {company_name} does or uses, from (B) above, starting with "Your", at most 8 words.
-- resume_fact: COPIED EXACTLY, word for word, from Core Verified Skills (one skill) or Evidence-Backed Achievements (one full line) in (A).
-Only pair things that genuinely relate. Use [] if nothing relates. Do NOT put these points inside the email body."""
+"fit_points" (REQUIRED in the JSON above for this email): up to 3 reasons the candidate fits {company_name}.
+Resume facts (the ONLY source for resume_fact):
+{fact_lines}
+Core skills: {", ".join(candidate_profile.get("top_skills", [])[:10])}
+Each fit point: {{"company_fact": "...", "resume_fact": "..."}}
+- company_fact: something SPECIFIC to {company_name} from (B) above (a product, service, technology they use, or the kind of work they do), starting with "Your", at most 8 words. Never generic like "Your tech stack" or "Your company".
+- resume_fact: at most 18 words, written for THIS company: the part of ONE resume fact above that matches the company_fact, in plain words. Keep its real numbers and tools; never add a number, tool, employer or result that is not in the resume facts or core skills.
+- One resume fact per point: never combine tools or results from two different facts, and never add a skill to a project that didn't use it. A point may instead be a plain skill line, e.g. "I work with PostgreSQL".
+- The company_fact and the resume_fact must be about the same technology or the same kind of work (e.g. their data pipelines with a scraping or database project). Never pair unrelated things, like mobile apps with web scraping.
+- Use a DIFFERENT resume fact in each point. Fewer good points beat three weak ones. Use [] if nothing relates.
+Do NOT put these points inside the email body."""
     elif email_style == "standard":
         # Short general application: company name and category only, no company research.
         prompt = f"""Write a short, polite cold JOB APPLICATION email from a job seeker to {company_name}.
@@ -1020,7 +1052,7 @@ Return pure JSON: {{"subject_line": "Application: {target_role} - {candidate_nam
             return make_pitch_fallback()
 
         if email_style == "tailored_fit":
-            parsed["fit_points"] = build_fit_points(parsed.get("fit_points"), candidate_profile)
+            parsed["fit_points"] = build_fit_points(parsed.get("fit_points"), candidate_profile, company_profile)
             body = add_fit_section(body, company_name, parsed["fit_points"])
 
         parsed["subject_line"] = subj
