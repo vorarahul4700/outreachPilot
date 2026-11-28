@@ -51,7 +51,7 @@ jobs:
     name: Cloud-Runner-${{ matrix.worker_id }}
     needs: plan
     runs-on: ubuntu-latest
-    timeout-minutes: 150
+    timeout-minutes: 360
 
     strategy:
       fail-fast: false
