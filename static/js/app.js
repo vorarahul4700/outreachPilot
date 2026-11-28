@@ -64,6 +64,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     } else if (tabId === "resume") {
       loadCandidateProfile();
+      window.loadResumes && window.loadResumes();
     }
     activeTab = tabId;
     refreshIcons();
@@ -808,6 +809,24 @@ document.addEventListener("DOMContentLoaded", () => {
     onSelect: () => applyCompanyFiltersAndRender(true)
   });
 
+  let pitchResumeSyncing = false;
+  const ddPitchResume = initCustomDropdown({
+    containerId: "dropdown-pitch-resume",
+    inputId: "pitch-resume-select",
+    defaultLabel: "Main",
+    onSelect: (val) => {
+      if (pitchResumeSyncing || !val || !currentPitchCompanyId) return;
+      if (currentPitchData && currentPitchData.resume && String(currentPitchData.resume.id) === String(val)) return;
+      handleGeneratePitch(currentPitchCompanyId, true, null, parseInt(val, 10));
+    }
+  });
+  const ddBestMatchFor = initCustomDropdown({
+    containerId: "dropdown-best-match-for",
+    inputId: "best-match-for-select",
+    defaultLabel: "All resumes",
+    onSelect: () => { if (bestMatchesOn) fetchCompanies(false); }
+  });
+
   const ddFilterCity = initCustomDropdown({
     containerId: "dropdown-filter-city",
     inputId: "filter-city-select",
@@ -1193,6 +1212,139 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let companiesAbortController = null;
 
+  // Best matches for your resume (server sort; plan feature)
+  let bestMatchesOn = false;
+  const btnBestMatches = document.getElementById("btn-best-matches");
+  function setBestMatches(on) {
+    bestMatchesOn = on;
+    btnBestMatches?.classList.toggle("btn-primary", on);
+    btnBestMatches?.classList.toggle("btn-secondary", !on);
+    btnBestMatches?.setAttribute("aria-pressed", on ? "true" : "false");
+  }
+  function refreshBestMatchesLock() {
+    const f = (currentUser && currentUser.features) || {};
+    btnBestMatches?.querySelector(".lock")?.classList.toggle("hidden", !!f.best_matches);
+    ["btn-gen-all-pitches", "btn-send-all-outreach"].forEach((id) => {
+      const b = document.getElementById(id);
+      if (!b) return;
+      let lock = b.querySelector(".lock");
+      if (!lock) {
+        lock = document.createElement("span");
+        lock.className = "material-symbols-outlined lock";
+        lock.setAttribute("aria-hidden", "true");
+        lock.textContent = "lock";
+        b.appendChild(lock);
+      }
+      lock.classList.toggle("hidden", !!f.bulk || !currentUser.is_logged_in);
+    });
+  }
+  btnBestMatches?.addEventListener("click", async () => {
+    setBestMatches(!bestMatchesOn);
+    const forBox = document.getElementById("best-match-for");
+    forBox?.classList.add("hidden");
+    if (bestMatchesOn && currentUser.features && (currentUser.features.resume_slots || 1) > 1) {
+      const data = await loadResumes();
+      const usable = ((data && data.resumes) || []).filter((r) => !r.locked);
+      if (usable.length > 1 && ddBestMatchFor) {
+        ddBestMatchFor.setOptions([{ value: "all", label: "All resumes" }, ...usable.map((r) => ({ value: String(r.id), label: `For: ${r.label}` }))]);
+        forBox?.classList.remove("hidden");
+      }
+    }
+    fetchCompanies(false);
+  });
+  refreshBestMatchesLock();
+
+  // ---- One-day Pro trial: offer, start, countdown chip, end popup ----
+  function trialLengthText(h) { return h === 24 ? "1 day" : `${h} hours`; }
+  function trialActiveNow() { return !!(currentUser.trial_ends_at && new Date(currentUser.trial_ends_at) > new Date()); }
+  function readPref(k) { try { return localStorage.getItem(k); } catch (_) { return null; } }
+  function writePref(k, v) { try { localStorage.setItem(k, v); } catch (_) {} }
+
+  function openTrialModal(mode) {
+    const box = document.getElementById("trial-modal");
+    if (!box) return;
+    const len = trialLengthText(currentUser.trial_hours || 24);
+    const cta = document.getElementById("trial-modal-cta");
+    if (mode === "ended") {
+      document.getElementById("trial-modal-title").textContent = "Your Pro trial has ended";
+      document.getElementById("trial-modal-text").textContent = "You're back on your plan. Your drafts, resumes and sent emails are all still here. Upgrade any time to keep these:";
+      cta.textContent = "See plans";
+      cta.removeAttribute("data-start-trial");
+      cta.setAttribute("data-open-plans", "");
+    } else {
+      document.getElementById("trial-modal-title").textContent = `Try Pro free for ${len}`;
+      document.getElementById("trial-modal-text").textContent = `Use everything in Pro for ${len}. Your daily limit stays at ${currentUser.daily_pitch_limit || 10}. Once per account, nothing to pay, and it ends on its own.`;
+      cta.textContent = "Start free trial";
+      cta.removeAttribute("data-open-plans");
+      cta.setAttribute("data-start-trial", "");
+    }
+    box.classList.remove("hidden");
+  }
+  window.openTrialModal = openTrialModal;
+
+  function refreshTrialUI() {
+    const offer = !!currentUser.trial_offer;
+    const banner = document.getElementById("trial-banner");
+    banner?.querySelectorAll("[data-trial-length]").forEach((el) => { el.textContent = trialLengthText(currentUser.trial_hours || 24); });
+    banner?.classList.toggle("hidden", !offer || readPref("op_trial_banner_dismissed") === "1");
+    const chip = document.getElementById("sidebar-trial-chip");
+    if (chip) {
+      if (trialActiveNow()) {
+        const hrs = Math.max(1, Math.ceil((new Date(currentUser.trial_ends_at) - new Date()) / 3600000));
+        chip.textContent = `Pro trial · ${hrs}h left`;
+        chip.classList.remove("hidden");
+      } else {
+        chip.classList.add("hidden");
+      }
+    }
+    // End-of-trial popup, once, within a week of it ending.
+    if (currentUser.trial_used && currentUser.trial_ends_at && !trialActiveNow()) {
+      const ended = new Date(currentUser.trial_ends_at);
+      const key = "op_trial_end_seen_" + ended.getTime();
+      if (Date.now() - ended.getTime() < 7 * 86400000 && readPref(key) !== "1") {
+        writePref(key, "1");
+        openTrialModal("ended");
+      }
+    }
+  }
+  window.refreshTrialUI = refreshTrialUI;
+
+  async function startTrial(btn) {
+    if (!currentUser.is_logged_in) { showLoginModal("Sign in with Google to start your Pro trial."); return; }
+    if (btn) btn.disabled = true;
+    try {
+      const res = await fetch("/api/trial/start", { method: "POST" });
+      const data = await res.json();
+      if (!res.ok) { showToast(data.detail || "Could not start the trial.", "error"); return; }
+      Object.assign(currentUser, { trial_ends_at: data.trial_ends_at, trial_used: true, trial_offer: false, features: data.features });
+      document.getElementById("trial-modal")?.classList.add("hidden");
+      document.getElementById("subscription-modal")?.classList.add("hidden");
+      document.querySelectorAll(".btn-tier-action.is-trial").forEach((b) => b.remove());
+      refreshTrialUI();
+      refreshBestMatchesLock();
+      showToast(`Your Pro trial is on for ${trialLengthText(currentUser.trial_hours || 24)}. Every Pro feature is unlocked.`, "success");
+    } catch (err) {
+      showToast("Could not start the trial: " + err.message, "error");
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  }
+
+  document.addEventListener("click", (e) => {
+    const start = e.target.closest("[data-start-trial]");
+    if (start) { startTrial(start); return; }
+    if (e.target.closest("[data-dismiss-trial]")) {
+      writePref("op_trial_banner_dismissed", "1");
+      document.getElementById("trial-banner")?.classList.add("hidden");
+      return;
+    }
+    if (e.target.closest("[data-close-trial]") || e.target.id === "trial-modal") {
+      document.getElementById("trial-modal")?.classList.add("hidden");
+    }
+  });
+  refreshTrialUI();
+  setInterval(() => { if (trialActiveNow() || currentUser.trial_used) refreshTrialUI(); }, 60000);
+
   async function fetchCompanies(preservePage = true) {
     try {
       if (companiesAbortController) {
@@ -1212,7 +1364,8 @@ document.addEventListener("DOMContentLoaded", () => {
       const q = (filterInput?.value || "").trim();
       const selectedTech = (filterTechSelect?.value || "").trim();
       const selectedCity = (filterCitySelect?.value || "").trim();
-      const selectedSort = (sortSelect?.value || "newest").trim();
+      const selectedSort = bestMatchesOn ? "best_match" : (sortSelect?.value || "newest").trim();
+      const matchResume = (document.getElementById("best-match-for-select")?.value || "all").trim() || "all";
       const statusParam = activeMetricFilter || "all";
       const pageSize = (companiesPerPage !== undefined && companiesPerPage !== null) ? companiesPerPage : 24;
 
@@ -1224,7 +1377,8 @@ document.addEventListener("DOMContentLoaded", () => {
         city: selectedCity,
         domain: (activeDomainFilter && activeDomainFilter !== "all") ? activeDomainFilter : "",
         status: statusParam,
-        sort: selectedSort
+        sort: selectedSort,
+        match_resume: matchResume
       });
 
       const res = await fetch(`/api/companies?${params.toString()}`, { signal });
@@ -1233,6 +1387,18 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
       const data = await res.json();
+      if (bestMatchesOn && data.best_match && data.best_match !== "ok") {
+        setBestMatches(false);
+        document.getElementById("best-match-for")?.classList.add("hidden");
+        const why = {
+          locked: "Best matches for your resume are in a paid plan.",
+          no_resume: "Upload your resume first to see the companies that match it.",
+          no_match: "None of your resume skills match the tech we track yet. Showing all companies.",
+          signed_out: "Sign in to see companies that match your resume.",
+        }[data.best_match];
+        if (why) showToast(why, data.best_match === "no_match" ? "info" : "warning");
+        if (data.best_match === "locked") openSubscriptionModal(false);
+      }
       companies = data.companies || [];
       totalServerCount = data.total_count || 0;
       totalServerPages = data.total_pages || 1;
@@ -1439,6 +1605,7 @@ document.addEventListener("DOMContentLoaded", () => {
               </span>
             </div>
 
+            ${c.match_label ? `<div class="ac-match"><span class="material-symbols-outlined">target</span><span>${escapeHTML(c.match_label)}</span></div>` : ""}
             <div class="ac-tags">${techPillsHtml}</div>
 
             <div class="ac-actions">
@@ -2100,8 +2267,12 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const res = await fetch("/api/auth/status");
       const data = await res.json();
+      const wasActive = trialActiveNow();
       currentUser = data;
       isMasterAdmin = !!data.is_master_admin;
+      refreshBestMatchesLock();
+      refreshTrialUI();
+      if (wasActive && !trialActiveNow()) location.reload();  // trial just ended: reload plan locks
       if (typeof data.dev_mode === "boolean") {
         isDevMode = data.dev_mode;
       }
@@ -2352,6 +2523,11 @@ document.addEventListener("DOMContentLoaded", () => {
         showToast("No valid companies selected to prepare applications for.", "warning");
         return;
       }
+      if (eligible.length > 1 && !(currentUser.features && currentUser.features.bulk)) {
+        showToast("Applying to several companies at once isn't in your plan. Open a company to apply to it, or upgrade.", "warning");
+        openSubscriptionModal(false);
+        return;
+      }
 
       requireLogin(async () => {
         const oldText = btnGenAllPitches.innerHTML;
@@ -2435,6 +2611,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
       if (eligible.length === 0) {
         showToast("No valid companies selected for outreach.", "warning");
+        return;
+      }
+      if (eligible.length > 1 && !(currentUser.features && currentUser.features.bulk)) {
+        showToast("Applying to several companies at once isn't in your plan. Open a company to apply to it, or upgrade.", "warning");
+        openSubscriptionModal(false);
         return;
       }
 
@@ -2605,6 +2786,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (skipped) extras.push(`${skipped} had no email`);
                 if (overLimit) extras.push(`${overLimit} over today's limit`);
                 showToast(`Sent ${sent} applications via Gmail${resumeSuffix}.${extras.length ? " " + extras.join(", ") + "." : ""}`, failed ? "warning" : "success");
+                if (sent && currentUser.features && currentUser.features.linkedin) {
+                  setTimeout(() => showToast(`LinkedIn and referral messages are ready for ${sent} ${sent === 1 ? "company" : "companies"}. Open them from the LinkedIn button on each sent company in Outreach Hub.`, "info"), 1800);
+                }
                 btnSendAllOutreach.innerHTML = `<span class="material-symbols-outlined text-[16px] text-emerald-400">check</span><span>${sent} Sent</span>`;
               }
 
@@ -2629,6 +2813,119 @@ document.addEventListener("DOMContentLoaded", () => {
   // ==========================================
   // STAGE 3: RESUME UPLOAD & PARSING
   // ==========================================
+  // ---- Multiple resumes (Candidate profile) ----
+  const resumesBlock = document.getElementById("resumes-block");
+  const resumeListEl = document.getElementById("resume-list");
+  const resumeAddForm = document.getElementById("resume-add-form");
+  const resumeAddFile = document.getElementById("resume-add-file");
+  const resumeAddLabel = document.getElementById("resume-add-label");
+  let resumeState = { slots: 1, resumes: [] };
+
+  function renderResumeList(data) {
+    resumeState = data || { slots: 1, resumes: [] };
+    const rows = resumeState.resumes || [];
+    if (!resumesBlock || !rows.length) { resumesBlock?.classList.add("hidden"); return; }
+    resumesBlock.classList.remove("hidden");
+    document.getElementById("resumes-count").textContent = `${Math.min(rows.length, resumeState.slots)} of ${resumeState.slots} used`;
+    resumeListEl.innerHTML = rows.map((r) => `
+      <li class="resume-item${r.locked ? " is-locked" : ""}" data-resume-id="${r.id}">
+        <div class="top">
+          <span class="name">${escapeHTML(r.label)}</span>
+          ${r.is_main && r.label !== "Main" ? `<span class="chip-ok">Main</span>` : ""}
+          ${r.locked ? `<span class="chip-warn"><span class="material-symbols-outlined">lock</span><span>Not in your plan</span></span>` : ""}
+          <span class="acts">
+            <button type="button" class="btn btn-ghost btn-xs" data-resume-rename>Rename</button>
+            ${r.is_main ? "" : `<button type="button" class="btn btn-ghost btn-xs" data-resume-remove>Remove</button>`}
+          </span>
+        </div>
+        ${r.filename ? `<span class="file">${escapeHTML(r.filename)}</span>` : ""}
+        ${r.skills.length ? `<div class="chip-wrap">${r.skills.map((k) => `<span class="ac-tag">${escapeHTML(k)}</span>`).join("")}</div>` : ""}
+      </li>`).join("");
+    const canAdd = rows.length < resumeState.slots;
+    resumeAddForm?.classList.toggle("hidden", !canAdd);
+    document.getElementById("resume-add-locked")?.classList.toggle("hidden", canAdd || resumeState.slots > 1);
+  }
+
+  async function loadResumes() {
+    try {
+      const res = await fetch("/api/resumes");
+      if (!res.ok) return null;
+      const data = await res.json();
+      renderResumeList(data);
+      return data;
+    } catch (_) { return null; }
+  }
+  window.loadResumes = loadResumes;
+
+  async function resumeRequest(url, opts, okMsg) {
+    const res = await fetch(url, opts);
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) { showToast(data.detail || "Something went wrong. Please try again.", "error"); return false; }
+    renderResumeList(data);
+    if (okMsg) showToast(okMsg, "success");
+    return true;
+  }
+
+  document.getElementById("btn-resume-add-pick")?.addEventListener("click", () => resumeAddFile?.click());
+  resumeAddFile?.addEventListener("change", () => {
+    document.getElementById("resume-add-file-name").textContent = resumeAddFile.files[0]?.name || "Choose file";
+  });
+  resumeAddForm?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const label = (resumeAddLabel.value || "").trim();
+    if (!label) { highlightFieldWarning(resumeAddLabel, "Add the role this resume is for, e.g. QA Engineer."); return; }
+    if (!resumeAddFile.files.length) { showToast("Choose the resume file first.", "warning"); return; }
+    const btn = document.getElementById("btn-resume-add");
+    const orig = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = `<span class="material-symbols-outlined">hourglass_top</span><span>Reading resume...</span>`;
+    const fd = new FormData();
+    fd.append("file", resumeAddFile.files[0]);
+    fd.append("label", label);
+    try {
+      if (await resumeRequest("/api/resumes", { method: "POST", body: fd }, `${label} resume added.`)) {
+        resumeAddForm.reset();
+        document.getElementById("resume-add-file-name").textContent = "Choose file";
+      }
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = orig;
+    }
+  });
+
+  resumeListEl?.addEventListener("click", async (e) => {
+    const item = e.target.closest("[data-resume-id]");
+    if (!item) return;
+    const id = item.dataset.resumeId;
+    const removeBtn = e.target.closest("[data-resume-remove]");
+    if (removeBtn) {
+      if (removeBtn.dataset.confirm !== "1") {
+        removeBtn.dataset.confirm = "1";
+        removeBtn.textContent = "Click again to remove";
+        setTimeout(() => { if (removeBtn.isConnected) { removeBtn.dataset.confirm = ""; removeBtn.textContent = "Remove"; } }, 4000);
+        return;
+      }
+      await resumeRequest(`/api/resumes/${id}`, { method: "DELETE" }, "Resume removed.");
+      return;
+    }
+    if (e.target.closest("[data-resume-rename]")) {
+      const nameEl = item.querySelector(".name");
+      if (!nameEl || nameEl.tagName === "INPUT") return;
+      const input = document.createElement("input");
+      input.type = "text"; input.maxLength = 60; input.value = nameEl.textContent; input.className = "recessed-well name";
+      input.setAttribute("aria-label", "Resume name");
+      nameEl.replaceWith(input);
+      input.focus(); input.select();
+      const save = async () => {
+        const label = input.value.trim();
+        if (!label || label === nameEl.textContent) { input.replaceWith(nameEl); return; }
+        if (!(await resumeRequest(`/api/resumes/${id}`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ label }) }))) input.replaceWith(nameEl);
+      };
+      input.addEventListener("keydown", (ev) => { if (ev.key === "Enter") { ev.preventDefault(); input.blur(); } if (ev.key === "Escape") { input.value = nameEl.textContent; input.blur(); } });
+      input.addEventListener("blur", save, { once: true });
+    }
+  });
+
   const resumeForm = document.getElementById("resume-form");
   const fileInput = document.getElementById("input-resume-file");
   const dropzone = document.getElementById("dropzone");
@@ -2680,7 +2977,9 @@ document.addEventListener("DOMContentLoaded", () => {
         const data = await res.json();
         if (data.success && data.profile) {
           renderCandidateProfile(data.profile);
+          loadResumes();
           showToast("Candidate Profile updated successfully!", "success");
+          if (currentUser.trial_offer) setTimeout(() => openTrialModal("offer"), 900);
         } else {
           showToast(data.detail || data.message || "Failed to update profile.", "error");
         }
@@ -2731,6 +3030,108 @@ document.addEventListener("DOMContentLoaded", () => {
   const btnCopyPitch = document.getElementById("btn-copy-pitch");
   let currentPitchId = null;
   let currentPitchTargetEmail = null;
+
+  // ---- LinkedIn message + referral request (draft window tabs and the Outreach Hub popup) ----
+  const EMAIL_STYLE_LABELS = {
+    standard: "Simple application email",
+    tailored: "Email written for this company",
+    tailored_fit: "Email written for this company, with why you fit",
+  };
+  const MSG_COPY = {
+    linkedin: { title: "LinkedIn message", hint: "Send this as a LinkedIn connection note to someone at the company." },
+    referral: { title: "Referral request", hint: "Send this to someone you know at the company to ask for a referral." },
+  };
+
+  function renderMessagePanels(root, data) {
+    root.querySelectorAll("[data-msg-panel]").forEach((panel) => {
+      const kind = panel.dataset.msgPanel;
+      const copy = MSG_COPY[kind];
+      if (data.linkedin_locked) {
+        panel.innerHTML = `<div class="msg-locked"><span><b>${copy.title}s are not in your plan.</b> Upgrade to get a ready ${copy.title.toLowerCase()} with every application.</span><button type="button" class="btn btn-primary btn-sm" data-open-plans>See plans</button></div>`;
+        return;
+      }
+      const text = (kind === "linkedin" ? data.variant_a_linkedin : data.variant_b_referral) || "";
+      if (!text) {
+        panel.innerHTML = `<div class="msg-locked"><span>This application was written before LinkedIn and referral messages existed.</span><button type="button" class="btn btn-primary btn-sm" data-write-msgs="${data.company_id || ""}">Write them now</button></div>`;
+        return;
+      }
+      panel.innerHTML = `<div class="msg-panel"><div class="field-row"><label>${copy.title}</label><p class="recipient-line">${copy.hint}</p><textarea readonly rows="7"></textarea></div><div class="msg-actions"><button type="button" class="btn btn-secondary btn-sm" data-copy-msg><span class="material-symbols-outlined">content_copy</span><span>Copy</span></button></div></div>`;
+      panel.querySelector("textarea").value = text;
+    });
+  }
+
+  function selectMessageTab(root, attr, name) {
+    root.querySelectorAll(`[${attr}]`).forEach((b) => {
+      const on = b.getAttribute(attr) === name;
+      b.classList.toggle("active", on);
+      b.setAttribute("aria-selected", on ? "true" : "false");
+    });
+    root.querySelectorAll(".am-body > [id]").forEach((p) => {
+      if (p.matches("[data-msg-panel], .pitch-tab-panel")) p.classList.toggle("hidden", !p.id.endsWith("-" + name));
+    });
+  }
+
+  document.addEventListener("click", async (e) => {
+    const tab = e.target.closest("[data-pitch-tab], [data-msg-tab]");
+    if (tab) {
+      const attr = tab.hasAttribute("data-pitch-tab") ? "data-pitch-tab" : "data-msg-tab";
+      const name = tab.getAttribute(attr);
+      selectMessageTab(tab.closest(".am-card"), attr, name);
+      if (attr === "data-pitch-tab") document.getElementById("pitch-modal-foot")?.classList.toggle("hidden", name !== "email");
+      return;
+    }
+    const copyBtn = e.target.closest("[data-copy-msg]");
+    if (copyBtn) {
+      const text = copyBtn.closest(".msg-panel")?.querySelector("textarea")?.value || "";
+      try { await navigator.clipboard.writeText(text); showToast("Copied.", "success"); }
+      catch (_) { showToast("Could not copy. Select the text and copy it yourself.", "warning"); }
+      return;
+    }
+    const writeBtn = e.target.closest("[data-write-msgs]");
+    if (writeBtn) {
+      const cid = writeBtn.dataset.writeMsgs || currentPitchCompanyId;
+      const root = writeBtn.closest(".app-modal");
+      if (!cid || !root) return;
+      writeBtn.disabled = true;
+      writeBtn.textContent = "Writing...";
+      try {
+        const res = await fetch(`/api/pitch/messages/${cid}`, { method: "POST" });
+        const data = await res.json();
+        if (!res.ok) { showToast(data.detail || "Could not write the messages.", "error"); writeBtn.disabled = false; writeBtn.textContent = "Write them now"; return; }
+        renderMessagePanels(root, Object.assign({ company_id: cid }, data));
+      } catch (err) {
+        showToast("Could not write the messages: " + err.message, "error");
+        writeBtn.disabled = false;
+        writeBtn.textContent = "Write them now";
+      }
+      return;
+    }
+    if (e.target.closest("[data-open-plans]")) {
+      document.getElementById("messages-modal")?.classList.add("hidden");
+      openSubscriptionModal(false);
+      return;
+    }
+    if (e.target.closest("[data-close-messages]") || e.target.id === "messages-modal") {
+      document.getElementById("messages-modal")?.classList.add("hidden");
+    }
+  });
+
+  async function openMessagesModal(companyId) {
+    const box = document.getElementById("messages-modal");
+    if (!box) return;
+    try {
+      const res = await fetch(`/api/pitch/messages/${companyId}`);
+      const data = await res.json();
+      if (!res.ok) { showToast(data.detail || "Could not load the messages.", "error"); return; }
+      document.getElementById("messages-modal-title").textContent = `Messages for ${data.company_name || "this company"}`;
+      renderMessagePanels(box, Object.assign({ company_id: companyId }, data));
+      selectMessageTab(box.querySelector(".am-card"), "data-msg-tab", "linkedin");
+      box.classList.remove("hidden");
+    } catch (err) {
+      showToast("Could not load the messages: " + err.message, "error");
+    }
+  }
+  window.openMessagesModal = openMessagesModal;
 
   // Temporary session resume attachment state (cleared upon tab/session close)
   let sessionResumeFile = null;
@@ -2988,7 +3389,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  async function handleGeneratePitch(companyId, forceRegenerate = false, clickedBtn = null) {
+  async function handleGeneratePitch(companyId, forceRegenerate = false, clickedBtn = null, resumeId = null) {
     currentPitchCompanyId = companyId;
     const triggerBtn = clickedBtn || document.querySelector(`.btn-gen-pitch-row[data-id="${companyId}"]`);
     const origHtml = triggerBtn ? triggerBtn.innerHTML : "";
@@ -3007,7 +3408,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const res = await fetch("/api/pitch/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ company_id: companyId, force_regenerate: forceRegenerate })
+        body: JSON.stringify({ company_id: companyId, force_regenerate: forceRegenerate, resume_id: resumeId })
       });
       if (res.status === 401) {
         currentUser.is_logged_in = false;
@@ -3029,6 +3430,24 @@ document.addEventListener("DOMContentLoaded", () => {
 
         modalSubject.value = data.subject_line || "";
         modalBody.value = data.email_body || data.primary_email || "";
+        const styleChip = document.getElementById("pitch-modal-style");
+        if (styleChip) {
+          styleChip.textContent = EMAIL_STYLE_LABELS[data.email_style] || "";
+          styleChip.classList.toggle("hidden", !EMAIL_STYLE_LABELS[data.email_style]);
+          styleChip.classList.toggle("is-standard", data.email_style === "standard");
+        }
+        renderMessagePanels(modal, data);
+        const resumePick = document.getElementById("pitch-modal-resume");
+        const opts = data.resume_options || [];
+        resumePick?.classList.toggle("hidden", opts.length < 2);
+        if (opts.length > 1 && ddPitchResume) {
+          ddPitchResume.setOptions(opts.map((o) => ({ value: String(o.id), label: `${o.label} resume` })));
+          pitchResumeSyncing = true;
+          ddPitchResume.setValue(String(data.resume ? data.resume.id : opts[0].id));
+          pitchResumeSyncing = false;
+        }
+        selectMessageTab(modal.querySelector(".am-card"), "data-pitch-tab", "email");
+        document.getElementById("pitch-modal-foot")?.classList.remove("hidden");
         updatePitchWordCount();
         updateResumeAttachmentUI();
         modal.classList.remove("hidden");
@@ -3563,6 +3982,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 <span class="material-symbols-outlined">history</span>
                 <span>Sent Log</span>
               </button>
+              <button type="button" onclick="window.openMessagesModal(${c.id})" class="btn btn-secondary btn-sm" title="LinkedIn message and referral request">
+                <span class="material-symbols-outlined">chat</span>
+                <span>LinkedIn</span>
+              </button>
             ` : `
               <button type="button" class="btn-gen-pitch-row btn btn-primary btn-sm" data-id="${c.id}">
                 <span class="material-symbols-outlined">send</span>
@@ -3606,6 +4029,10 @@ document.addEventListener("DOMContentLoaded", () => {
               <button type="button" onclick="window.viewSentEmailForCompany(${c.id})" class="btn btn-secondary btn-sm">
                 <span class="material-symbols-outlined">history</span>
                 <span>Sent</span>
+              </button>
+              <button type="button" onclick="window.openMessagesModal(${c.id})" class="btn btn-secondary btn-sm" title="LinkedIn message and referral request">
+                <span class="material-symbols-outlined">chat</span>
+                <span>LinkedIn</span>
               </button>
             ` : `
               <button type="button" class="btn-gen-pitch-row btn btn-primary btn-sm" data-id="${c.id}">

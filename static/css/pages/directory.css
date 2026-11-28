@@ -292,3 +292,6 @@ a.co-name:hover, .co-name a:hover { color: var(--accent-text); }
 
 /* Review pass 4: industry tag on directory hub company cards (was inline; text-2 keeps AA in dark) */
 .co-tag { padding: 2px 7px; border-radius: 6px; background: var(--surface-3); color: var(--text-2); font-family: var(--font-mono); font-size: .66rem; text-transform: uppercase; }
+
+/* Industry pills with no companies (template sets hidden). */
+#domain-filter-pills .domain-pill[hidden] { display: none; }

@@ -351,6 +351,49 @@
 .ac-contact .has { color: var(--ok-text); }
 .ac-contact .none { color: var(--warn-text); }
 .ac-contact .loc { color: var(--text-3); flex: none; max-width: 45%; }
+/* Draft window: email style label, message tabs, LinkedIn/referral panels */
+.style-chip { display: inline-flex; align-items: center; margin-top: 4px; padding: 2px 9px; border-radius: 6px; font-family: var(--font-mono); font-size: .68rem; font-weight: 600; background: var(--accent-soft); color: var(--accent-ink); border: 1px solid var(--accent-line); }
+.ac-match { display: flex; align-items: center; gap: 6px; font-size: .76rem; font-weight: 600; color: var(--ok-text); }
+.ac-match .material-symbols-outlined { font-size: 16px; }
+#btn-best-matches .lock, #btn-gen-all-pitches .lock, #btn-send-all-outreach .lock { font-size: 15px; opacity: .7; }
+.resumes-block { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); display: grid; gap: 10px; }
+.resume-list { display: grid; gap: 8px; list-style: none; margin: 0; padding: 0; }
+.resume-item { display: grid; gap: 6px; padding: 10px 12px; border: 1px solid var(--line); border-radius: var(--r-lg); background: var(--surface-2); }
+.resume-item.is-locked { opacity: .6; }
+.resume-item .top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.resume-item .name { font-weight: 700; color: var(--text); }
+.resume-item .file { color: var(--text-3); font-size: .78rem; overflow-wrap: anywhere; }
+.resume-item .acts { margin-left: auto; display: flex; gap: 6px; }
+.resume-item input { max-width: 220px; }
+.resume-add { display: flex; gap: 8px; flex-wrap: wrap; }
+.resume-add input[type=text] { flex: 1 1 200px; min-width: 0; }
+.resume-pick { display: flex; align-items: center; gap: 8px; margin-top: 6px; font-size: .8rem; color: var(--text-2); }
+.resume-pick .custom-dropdown-btn { min-height: 30px; }
+.trial-banner { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 12px 14px; margin-bottom: 14px; border-radius: var(--r-lg); background: var(--accent-soft); border: 1px solid var(--accent-line); color: var(--text); font-size: .88rem; }
+.trial-banner > .material-symbols-outlined { color: var(--accent-ink); }
+.trial-banner .t { flex: 1 1 260px; min-width: 0; }
+.trial-chip { display: inline-flex; margin-top: 8px; padding: 2px 8px; border-radius: 6px; font-size: .7rem; font-weight: 700; background: var(--accent-soft); color: var(--accent-ink); border: 1px solid var(--accent-line); }
+.trial-list { display: grid; gap: 8px; list-style: none; margin: 0; padding: 0; font-size: .9rem; }
+.trial-list li { display: flex; gap: 8px; align-items: flex-start; }
+.trial-list .material-symbols-outlined { font-size: 18px; color: var(--ok-text); }
+.btn-tier-action.is-trial { margin-bottom: 8px; }
+/* Plan cards: See example popovers (app plans popup + landing pricing) */
+.pl-li { position: relative; }
+.ex-wrap { display: inline-block; margin-left: 6px; vertical-align: baseline; }
+.ex-btn { display: inline-flex; align-items: center; gap: 4px; padding: 0; border: 0; background: none; color: var(--accent-ink, var(--accent-text)); font: inherit; font-size: .72rem; font-weight: 600; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+.ex-pop { display: none; position: absolute; z-index: 30; top: calc(100% + 6px); left: 0; right: 0; padding: 10px 12px; border-radius: 10px; background: var(--surface, #fff); color: var(--text, #111); border: 1px solid var(--line-2, var(--line, #ccc)); box-shadow: 0 10px 28px rgba(0,0,0,.18); font-size: .76rem; font-weight: 400; line-height: 1.45; text-align: left; white-space: pre-wrap; }
+.ex-tag { display: inline-block; margin-bottom: 6px; padding: 1px 7px; border-radius: 5px; font-size: .64rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; background: var(--surface-3, rgba(0,0,0,.06)); color: var(--text-2, #555); }
+.ex-body { display: block; }
+.ex-wrap.is-open .ex-pop { display: block; }
+@media (hover: hover) { .ex-wrap:hover .ex-pop, .ex-wrap:focus-within .ex-pop { display: block; } }
+.style-chip.is-standard { background: var(--surface-3); color: var(--text-2); border-color: var(--line); }
+.pitch-tabs { margin-bottom: 12px; }
+.pitch-tabs .cmodal-tab-btn .material-symbols-outlined { font-size: 17px; }
+.pitch-tabs .cmodal-tab-btn .lock { font-size: 14px; opacity: .7; }
+.msg-panel textarea { width: 100%; min-height: 150px; }
+.msg-panel .msg-actions { display: flex; justify-content: flex-end; margin-top: 10px; }
+.msg-locked { display: grid; gap: 10px; justify-items: start; padding: 18px; border-radius: var(--r-lg); background: var(--surface-2); border: 1px dashed var(--line-2); color: var(--text-2); font-size: .9rem; }
+.msg-locked b { color: var(--text); }
 /* Phones: full email on its own line rather than cut with an ellipsis. */
 @media (max-width: 640px) {
   .ac-contact { flex-wrap: wrap; row-gap: 6px; }
@@ -714,3 +757,6 @@ textarea.recessed-well { min-height: 220px; resize: vertical; line-height: 1.7; 
 
 /* Lucide placeholders hold their size before lucide.js (deferred) swaps in the SVG, so nothing shifts. */
 :where(i[data-lucide]) { display: inline-block; width: 1em; height: 1em; flex-shrink: 0; vertical-align: -0.125em; }
+
+/* Industry pills with no companies (template sets hidden). */
+.domain-filter-pill[hidden] { display: none; }

@@ -389,6 +389,37 @@
         </label>
       </div>
 
+      <div id="card-pro-trial" class="a-card a-row">
+        <div class="l">
+          <span class="a-ic"><span class="material-symbols-outlined">workspace_premium</span></span>
+          <div class="stack" style="--stack:6px">
+            <div class="flex items-center gap-2 flex-wrap"><span class="a-title">One-day Pro trial</span><span id="trial-admin-stats" class="kpi-chip"></span></div>
+            <p class="a-desc">Free users can try every Pro feature once per account. Their daily limit stays the same. Offered after resume analysis, on Companies, and on the Pro plan card.</p>
+            <div class="flex items-center gap-2 flex-wrap">
+              <label for="trial-admin-hours" class="a-desc">Length (hours)</label>
+              <input type="number" id="trial-admin-hours" min="1" max="168" value="24" class="recessed-well" style="width:90px">
+              <button type="button" id="btn-trial-admin-save" class="btn btn-secondary btn-sm">Save length</button>
+            </div>
+          </div>
+        </div>
+        <label for="toggle-pro-trial" class="ks-switch" title="Offer the Pro trial">
+          <input type="checkbox" id="toggle-pro-trial" class="sr-only">
+          <span class="ks-track"></span>
+        </label>
+      </div>
+
+      <div id="card-plan-examples" class="a-card">
+        <div class="l" style="margin-bottom:10px">
+          <span class="a-ic"><span class="material-symbols-outlined">lightbulb</span></span>
+          <div>
+            <h4 class="a-title">Plan card sample emails</h4>
+            <p class="a-desc">The "See sample email" popups next to the email line on plan cards, shared by every plan. Keep them fictional (they are labelled Example). Clear a box to go back to the default.</p>
+          </div>
+        </div>
+        <div id="plan-examples-fields" class="stack" style="--stack:10px"></div>
+        <div style="margin-top:10px"><button type="button" id="btn-save-plan-examples" class="btn btn-primary btn-sm">Save examples</button></div>
+      </div>
+
       <div id="tiers-grid-container"><div class="p-8 text-center text-on-surface-variant col-span-full">Loading tier configurations...</div></div>
 
       <div class="a-card a-row">
@@ -654,7 +685,7 @@
       </div>
       <div class="two">
         <div><label class="lbl">Price in INR (₹) *</label><input type="number" id="tier-form-price" min="0" required placeholder="199" class="recessed-well"></div>
-        <div><label class="lbl">Daily Pitch Limit *</label><input type="number" id="tier-form-limit" min="1" max="10000" required placeholder="50" class="recessed-well"></div>
+        <div><label class="lbl">Applications per day *</label><input type="number" id="tier-form-limit" min="1" max="10000" required placeholder="50" class="recessed-well"></div>
       </div>
       <div><span class="lbl" id="tier-form-period-label">Plan length</span>
         <div class="custom-dropdown" id="dropdown-tier-period">
@@ -668,7 +699,27 @@
           </div>
         </div>
       </div>
-      <div><label class="lbl">Plan Features (one bullet per line)</label><textarea id="tier-form-features" rows="4" placeholder="50 pitches / day&#10;Deep AI Website crawler analysis&#10;Auto-PDF Resume attachment&#10;Application generator engine" class="recessed-well"></textarea></div>
+      <div><span class="lbl" id="tier-form-style-label">Application email</span>
+        <div class="custom-dropdown" id="dropdown-tier-style">
+          <input type="hidden" id="tier-form-style" value="tailored">
+          <button type="button" class="custom-dropdown-btn" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="tier-form-style-label"><span class="custom-dropdown-label">Email written for each company</span><span class="material-symbols-outlined dropdown-chevron">expand_more</span></button>
+          <div class="custom-dropdown-menu">
+            <div class="custom-dropdown-list" role="listbox">
+              <div class="custom-dropdown-item" data-value="standard" role="option"><span class="truncate">Simple application email</span><span class="material-symbols-outlined check-icon">check</span></div>
+              <div class="custom-dropdown-item is-selected" data-value="tailored" role="option"><span class="truncate">Email written for each company</span><span class="material-symbols-outlined check-icon">check</span></div>
+              <div class="custom-dropdown-item" data-value="tailored_fit" role="option"><span class="truncate">Email written for each company, with why you fit</span><span class="material-symbols-outlined check-icon">check</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="two">
+        <div><label class="lbl" for="tier-form-resumes">Resumes allowed</label><input type="number" id="tier-form-resumes" min="1" max="5" value="1" class="recessed-well"></div>
+        <div></div>
+      </div>
+      <label class="check-card"><input type="checkbox" id="tier-form-matches"><span>Companies that match your resume, shown first</span></label>
+      <label class="check-card"><input type="checkbox" id="tier-form-linkedin"><span>Ready-to-send LinkedIn and referral messages</span></label>
+      <label class="check-card"><input type="checkbox" id="tier-form-bulk"><span>Apply to many companies at once</span></label>
+      <div><label class="lbl">Extra card bullets (one per line, shown after the automatic ones)</label><textarea id="tier-form-features" rows="4" placeholder="50 pitches / day&#10;Deep AI Website crawler analysis&#10;Auto-PDF Resume attachment&#10;Application generator engine" class="recessed-well"></textarea></div>
       <label class="check-card"><input type="checkbox" id="tier-form-active" checked><span>Show this plan to users (unticked: hidden from pricing and checkout; current subscribers keep it until it ends)</span></label>
       <label class="check-card"><input type="checkbox" id="tier-form-sync-users" checked><span>Sync all existing subscribers on this plan to the new daily pitch limit</span></label>
       <div class="flex items-center justify-end gap-2" style="padding-top:12px;border-top:1px solid var(--line)">

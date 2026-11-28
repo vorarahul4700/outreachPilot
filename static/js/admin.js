@@ -427,7 +427,8 @@ document.addEventListener("DOMContentLoaded", () => {
         // One color per plan so plans stand out at a glance; name and limit come from the DB.
         const planClass = { free: "plan-free", week_pass: "plan-week", pro: "plan-pro" }[tierName] || "plan-top";
         const tierBadge = `<span class="plan-badge ${planClass}">${u.subscription_tier_name}${isAdmin ? "" : ` (${u.daily_pitch_limit})`}</span>`
-          + (u.subscription_end && !isAdmin ? `<span class="block text-[11px] text-on-surface-variant mt-1">until ${u.subscription_end}</span>` : "");
+          + (u.subscription_end && !isAdmin ? `<span class="block text-[11px] text-on-surface-variant mt-1">until ${u.subscription_end}</span>` : "")
+          + (u.trial ? `<span class="block text-[11px] mt-1 ${u.trial === "active" ? "text-primary font-semibold" : "text-on-surface-variant"}">${u.trial === "active" ? "Pro trial now" : "Pro trial used"}</span>` : "");
 
         const roleBadge = isAdmin
           ? `<span class="inline-flex items-center whitespace-nowrap px-2 py-0.5 rounded text-[11px] font-mono font-bold bg-amber-500/20 text-amber-500 border border-amber-500/40">★ Master Admin</span>`
@@ -1423,7 +1424,15 @@ document.addEventListener("DOMContentLoaded", () => {
         const priceDisplay = isMaster ? "∞" : `₹${t.price_inr}`;
         const limitDisplay = isMaster ? "Infinite pitches / day" : `${t.daily_pitch_limit} pitches / day`;
 
-        const featureItems = (t.features || []).map(f =>
+        // Automatic lines from the plan settings first, then the admin's extra bullets.
+        const autoLines = isMaster ? [] : [
+          { standard: "Simple application email", tailored: "Email written for each company", tailored_fit: "Email written for each company, with why you fit" }[t.email_style] || "Email written for each company",
+          ...(t.has_best_matches ? ["Companies that match your resume, shown first"] : []),
+          ...(t.has_linkedin ? ["Ready-to-send LinkedIn and referral messages"] : []),
+          ...((t.resume_slots || 1) > 1 ? [`Up to ${t.resume_slots} resumes, the best one used for each company`] : ["1 resume"]),
+          ...(t.has_bulk ? ["Apply to many companies at once"] : []),
+        ];
+        const featureItems = [...autoLines, ...(t.features || [])].map(f =>
           `<li class="flex items-center gap-2"><span class="material-symbols-outlined text-[16px] ${isMaster ? 'text-amber-500' : 'text-emerald-500'}">check</span> <span>${f}</span></li>`
         ).join("");
 
@@ -1482,7 +1491,9 @@ document.addEventListener("DOMContentLoaded", () => {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name: t.name, subtitle: t.subtitle, price_inr: t.price_inr, daily_pitch_limit: t.daily_pitch_limit,
-          period_days: t.period_days || 30, features: t.features || [], badge: t.badge || null, is_active: !hiding, sync_users: false }),
+          period_days: t.period_days || 30, email_style: t.email_style, resume_slots: t.resume_slots || 1,
+          has_best_matches: t.has_best_matches, has_linkedin: t.has_linkedin, has_bulk: t.has_bulk,
+          features: t.features || [], badge: t.badge || null, is_active: !hiding, sync_users: false }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail || "Could not update the plan");
@@ -1506,6 +1517,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("tier-form-price").value = tier.price_inr;
     document.getElementById("tier-form-limit").value = tier.daily_pitch_limit;
     setTierPeriod(tier.period_days);
+    setTierFeatures(tier);
     document.getElementById("tier-form-active").checked = tier.is_active !== false;
     document.getElementById("tier-form-badge").value = tier.badge || "";
     document.getElementById("tier-form-features").value = (tier.features || []).join("\n");
@@ -1528,6 +1540,27 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   initStaticCustomDropdown("dropdown-tier-period");
 
+  // Email style picker (house dropdown), same pattern as plan length.
+  function setTierStyle(style) {
+    const box = document.getElementById("dropdown-tier-style");
+    if (!box) return;
+    const val = ["standard", "tailored", "tailored_fit"].includes(style) ? style : "tailored";
+    document.getElementById("tier-form-style").value = val;
+    box.querySelectorAll(".custom-dropdown-item").forEach(it => {
+      const on = it.dataset.value === val;
+      it.classList.toggle("is-selected", on);
+      if (on) box.querySelector(".custom-dropdown-label").textContent = it.querySelector(".truncate").textContent.trim();
+    });
+  }
+  initStaticCustomDropdown("dropdown-tier-style");
+  function setTierFeatures(t) {
+    setTierStyle(t.email_style);
+    document.getElementById("tier-form-resumes").value = t.resume_slots || 1;
+    document.getElementById("tier-form-matches").checked = !!t.has_best_matches;
+    document.getElementById("tier-form-linkedin").checked = !!t.has_linkedin;
+    document.getElementById("tier-form-bulk").checked = !!t.has_bulk;
+  }
+
   document.getElementById("btn-add-custom-tier")?.addEventListener("click", () => {
     document.getElementById("tier-modal-title").textContent = "Add Custom Tier Plan";
     document.getElementById("tier-form-id").value = "";
@@ -1538,6 +1571,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("tier-form-price").value = "199";
     document.getElementById("tier-form-limit").value = "50";
     setTierPeriod(30);
+    setTierFeatures({ email_style: "tailored", resume_slots: 1 });
     document.getElementById("tier-form-active").checked = true;
     document.getElementById("tier-form-badge").value = "";
     document.getElementById("tier-form-features").value = "50 pitches / day\nVerified contact discovery\nAI pitch customization";
@@ -1564,6 +1598,11 @@ document.addEventListener("DOMContentLoaded", () => {
       price_inr: parseInt(document.getElementById("tier-form-price").value, 10) || 0,
       daily_pitch_limit: parseInt(document.getElementById("tier-form-limit").value, 10) || 10,
       period_days: parseInt(document.getElementById("tier-form-period").value, 10) || 30,
+      email_style: document.getElementById("tier-form-style").value,
+      resume_slots: parseInt(document.getElementById("tier-form-resumes").value, 10) || 1,
+      has_best_matches: document.getElementById("tier-form-matches").checked,
+      has_linkedin: document.getElementById("tier-form-linkedin").checked,
+      has_bulk: document.getElementById("tier-form-bulk").checked,
       badge: document.getElementById("tier-form-badge").value.trim() || null,
       features: featuresLines,
       is_active: document.getElementById("tier-form-active")?.checked ?? true,
@@ -1610,6 +1649,75 @@ document.addEventListener("DOMContentLoaded", () => {
       showToast(err.message, "error");
     }
   });
+
+  // --- Plan card sample emails ---
+  const EXAMPLE_LABELS = {
+    standard: "Simple application email", tailored: "Email written for each company", tailored_fit: "Email written for each company, with why you fit",
+  };
+  async function loadPlanExamples() {
+    const box = document.getElementById("plan-examples-fields");
+    if (!box) return;
+    try {
+      const res = await fetch("/api/admin/plan-examples");
+      if (!res.ok) return;
+      const d = await res.json();
+      box.innerHTML = Object.keys(EXAMPLE_LABELS).map((k) => `
+        <label class="stack" style="--stack:4px"><span class="a-desc"><b>${EXAMPLE_LABELS[k]}</b></span>
+          <textarea rows="4" class="recessed-well" data-example-key="${k}" maxlength="2000"></textarea></label>`).join("");
+      box.querySelectorAll("[data-example-key]").forEach((ta) => { ta.value = d.examples[ta.dataset.exampleKey] || ""; });
+    } catch (_) {}
+  }
+  document.getElementById("btn-save-plan-examples")?.addEventListener("click", async () => {
+    const examples = {};
+    document.querySelectorAll("[data-example-key]").forEach((ta) => { examples[ta.dataset.exampleKey] = ta.value; });
+    try {
+      const res = await fetch("/api/admin/plan-examples", {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ examples })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Could not save the examples");
+      showToast("Plan examples saved", "success");
+      loadPlanExamples();
+    } catch (err) {
+      showToast(err.message, "error");
+    }
+  });
+  loadPlanExamples();
+
+  // --- One-day Pro trial settings ---
+  async function loadTrialSettings() {
+    try {
+      const res = await fetch("/api/admin/system/trial");
+      if (!res.ok) return;
+      const d = await res.json();
+      const t = document.getElementById("toggle-pro-trial");
+      if (t) t.checked = !!d.enabled;
+      const h = document.getElementById("trial-admin-hours");
+      if (h) h.value = d.hours;
+      const s = document.getElementById("trial-admin-stats");
+      if (s) s.textContent = `${d.enabled ? "On" : "Off"} · ${d.active} active · ${d.used} used`;
+    } catch (_) {}
+  }
+  async function saveTrialSettings() {
+    const enabled = !!document.getElementById("toggle-pro-trial")?.checked;
+    const hours = parseInt(document.getElementById("trial-admin-hours")?.value || "24", 10);
+    try {
+      const res = await fetch("/api/admin/system/trial", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ enabled, hours })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.detail || "Could not save the trial settings");
+      showToast(`Pro trial ${data.enabled ? "on" : "off"}, ${data.hours} hours`, "success");
+    } catch (err) {
+      showToast(err.message, "error");
+    }
+    loadTrialSettings();
+  }
+  document.getElementById("toggle-pro-trial")?.addEventListener("change", saveTrialSettings);
+  document.getElementById("btn-trial-admin-save")?.addEventListener("click", saveTrialSettings);
+  loadTrialSettings();
 
   document.getElementById("btn-overview-toggle-kill-switch")?.addEventListener("click", () => {
     switchTab("subscriptions");

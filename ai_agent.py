@@ -75,6 +75,101 @@ def mark_gemini_cooldown(key: str, cooldown_seconds: int = 120):
     _EXHAUSTED_GEMINI_KEYS[key] = time.time() + cooldown_seconds
 
 
+def call_gemini_single_key(
+    key: str,
+    messages: list[dict],
+    temperature: float = 0.2,
+    max_tokens: int = 2200,
+    response_format: dict = None,
+    model: str = "gemini-3.5-flash"
+) -> AIResponse:
+    """
+    Executes a prompt against Google Gemini using the direct Google AI Studio REST protocol.
+    Supports official AQ. authentication keys, JSON output enforcement, and fallback model cascade.
+    """
+    clean_model = model.replace("models/", "")
+    models_to_try = [clean_model]
+    for alt in ["gemini-3.5-flash", "gemini-3.5-flash-lite", "gemini-3.8-flash"]:
+        if alt not in models_to_try:
+            models_to_try.append(alt)
+
+    contents = []
+    system_text = None
+    for m in messages:
+        role = m.get("role", "user")
+        c_text = m.get("content", "")
+        if role == "system":
+            system_text = c_text
+        else:
+            c_role = "user" if role == "user" else "model"
+            contents.append({"role": c_role, "parts": [{"text": c_text}]})
+
+    if not contents and system_text:
+        contents.append({"role": "user", "parts": [{"text": system_text}]})
+        system_text = None
+
+    gen_config = {"temperature": temperature}
+    if max_tokens:
+        gen_config["maxOutputTokens"] = max_tokens
+    if response_format and response_format.get("type") == "json_object":
+        gen_config["responseMimeType"] = "application/json"
+
+    # Long answers (resume reports, research) take longer than the 25 s short calls get.
+    request_timeout = 25.0 if not max_tokens or max_tokens <= 1000 else 75.0
+
+    last_gem_err = None
+    for target_m in models_to_try:
+        model_config = dict(gen_config)
+        if target_m == "gemini-3.5-flash":
+            # This model thinks before it answers, and the thinking counts against
+            # maxOutputTokens. Uncapped, it spent 1,889 of 3,200 tokens thinking on a resume
+            # and the JSON came back cut off (finishReason MAX_TOKENS). Capping thinking keeps
+            # the answer whole and roughly halves the time (measured 2026-11-16). Short
+            # requests get no thinking so a small budget cannot be used up by it.
+            model_config["thinkingConfig"] = {"thinkingBudget": 512 if (max_tokens or 0) >= 2000 else 0}
+        native_payload = {
+            "contents": contents,
+            "generationConfig": model_config
+        }
+        if system_text:
+            native_payload["systemInstruction"] = {"parts": [{"text": system_text}]}
+        native_url = f"https://generativelanguage.googleapis.com/v1beta/models/{target_m}:generateContent?key={key}"
+        try:
+            if httpx:
+                with httpx.Client(timeout=request_timeout) as h_client:
+                    r = h_client.post(native_url, json=native_payload)
+            else:
+                r = requests.post(native_url, json=native_payload, timeout=request_timeout)
+
+            if r.status_code == 200:
+                data = r.json()
+                candidate = (data.get("candidates") or [{}])[0]
+                parts = candidate.get("content", {}).get("parts", [])
+                text_content = "".join(p.get("text", "") for p in parts)
+                finish = candidate.get("finishReason")
+                # A 200 can still carry a cut-off or empty answer. Treat it as a failure so
+                # the next model (or key, or provider) gets a turn instead of the caller
+                # failing to parse half a JSON object.
+                if not text_content.strip() or finish == "MAX_TOKENS":
+                    last_gem_err = f"Gemini model {target_m} returned an incomplete answer (finishReason {finish}, {len(text_content)} chars)"
+                    continue
+                return AIResponse(text_content)
+            elif r.status_code == 429:
+                raise RuntimeError(f"Gemini 429 Rate Limit ({key[:8]}...): {r.text}")
+            elif r.status_code in (404, 503):
+                last_gem_err = f"Gemini model {target_m} returned {r.status_code}: {r.text[:100]}"
+                continue
+            else:
+                last_gem_err = f"Gemini error {r.status_code}: {r.text[:150]}"
+        except Exception as e:
+            if "429" in str(e).lower() or "quota" in str(e).lower() or "rate limit" in str(e).lower():
+                raise
+            last_gem_err = str(e)
+            continue
+
+    raise RuntimeError(f"All Gemini models failed on key {key[:8]}... Last error: {last_gem_err}")
+
+
 def call_ai_with_fallback(
     messages: list[dict],
     temperature: float = 0.3,
@@ -91,9 +186,11 @@ def call_ai_with_fallback(
     has_groq = bool(_GROQ_CLIENT_POOL)
 
     if not has_gemini and not has_groq:
-        raise RuntimeError("No active AI provider available (checked Gemini and Groq).")
+        raise RuntimeError("No active AI provider API keys available (checked Gemini and Groq).")
 
     # Routing strategy:
+    # Large context / enrichment tasks (>1000 tokens) -> Gemini primary (1M TPM)
+    # Fast pitch / short tasks -> Groq primary (<500ms response time)
     if prefer_provider == "gemini":
         providers = ["gemini", "groq"]
     elif prefer_provider == "groq":
@@ -175,6 +272,8 @@ def call_ai_with_fallback(
                             elif "429" in err_str or "rate limit" in err_str:
                                 client_rate_limited = True
                                 break
+                            elif rf and "json_validate_failed" in err_str:
+                                break  # this model can't produce the JSON; try the next model, not free text
                             continue
 
     if last_exc:
@@ -203,6 +302,38 @@ def clean_json_response(raw_text: str) -> dict[str, Any]:
             except Exception:
                 pass
         return {}
+
+
+def sanitize_human_text(text: str) -> str:
+    """
+    Cleans text to strictly adhere to natural human writing:
+    - Em dashes and en dashes -> simple hyphen (-)
+    - Curly quotes -> straight quotes (" ')
+    - Unicode ellipsis -> ...
+    - Structural emojis removed
+    - Non-breaking spaces and zero-width characters removed
+    """
+    if not text or not isinstance(text, str):
+        return text or ""
+    
+    cleaned = text
+    cleaned = cleaned.replace("\u2014", " - ").replace("\u2013", "-")
+    cleaned = cleaned.replace("\u201c", '"').replace("\u201d", '"')
+    cleaned = cleaned.replace("\u2018", "'").replace("\u2019", "'")
+    cleaned = cleaned.replace("\u2026", "...")
+    cleaned = cleaned.replace("\u00a0", " ").replace("\u200b", "").replace("\u200c", "").replace("\u200d", "")
+    cleaned = cleaned.replace("\u202f", " ").replace("\u2009", " ").replace("\ufeff", "")
+    cleaned = cleaned.replace("\u2011", "-").replace("\u2010", "-")
+    # Strip emojis and special bullets/crosses using escaped codepoints
+    cleaned = re.sub(
+        r"[\U0001f680\u2728\U0001f4a1\U0001f525\U0001f3af\U0001f4cc\U0001f511\u26a1\U0001f6e0\U0001f4c8\U0001f9e0\U0001f31f\U0001f4bc\U0001f50d\u2705\u274c\u26a0\u2713\u2714\u2717\u2022\u00b7\u25b8\u25b6\u25ba]",
+        "",
+        cleaned
+    )
+    cleaned = re.sub(r" +", " ", cleaned)
+    cleaned = re.sub(r" - - ", " - ", cleaned)
+    return cleaned.strip()
+
 
 def extract_high_signal_text(text: str, max_chars: int = 5000) -> str:
     """
@@ -503,7 +634,7 @@ def parse_resume_text(resume_text: str, target_role: str = "") -> dict[str, Any]
 CRITICAL ANTI-HALLUCINATION RULES:
 1. ZERO INVENTED STATS OR PROJECTS: You MUST NEVER invent or hallucinate metrics (e.g. do not invent "sub-80ms p95 latency", "42% query execution speedup", or "10,000+ records weekly"). Only cite numbers, percentages, and metrics that LITERALLY appear in the resume text!
 2. ZERO INVENTED DOMAINS: If the candidate never worked in ETL Pipelines, Web Scraping, or Distributed Systems, DO NOT mention or tag them. Base all projects and accomplishments 100% on what is written.
-3. EXTRACT EXACT CANDIDATE NAME: Extract the candidate's actual full name from the top header of the resume. Never label them "Candidate" if their real name is present.
+3. EXTRACT EXACT CANDIDATE NAME: Extract the candidate's actual full name from the top of the resume (e.g. Dhanrajsinh Parmar). Never label them "Candidate" if their name is present.
 
 Step 1: Identify the resume archetype.
 Classify it as: Fresher/Entry-level, Early-career (1-3 yrs), Mid-level (4-7 yrs), Senior (8+ yrs), Career-switcher, Freelancer/Consultant, Creative/Portfolio-based, or Non-technical/Business. Note the domain based strictly on their actual work.
@@ -603,43 +734,106 @@ Candidate Resume:
     return parsed
 
 
+SKILL_LINE = re.compile(r"^(i (work|build|develop) (with|in|using)|i use|skilled in|experienced (with|in)|hands-on with)\b")
+GENERIC_COMPANY_FACT = re.compile(r"\b(tech stack|core services|your (company|business|team|work|services|stack))\b", re.I)
+
+
+def _numbers(text: str) -> set[str]:
+    return {n.replace(",", "").rstrip(".") for n in re.findall(r"\d[\d,.]*%?", text)}
+
+
+def build_fit_points(raw: Any, candidate_profile: dict[str, Any], company_profile: dict[str, Any] | None = None) -> list[str]:
+    """Keep only fit points the resume backs up, so a bullet can be tailored to the company but never
+    invent: every number and every technology on the resume side must appear in the resume analysis.
+    The company side must name something specific. Different resume facts per bullet, at most 3."""
+    facts = [str(x).lower() for x in list(candidate_profile.get("key_achievements") or [])
+             + list(candidate_profile.get("strong_points") or []) if str(x).strip()]
+    skill_names = [str(x).strip() for x in (candidate_profile.get("top_skills") or []) if str(x).strip()]
+    skills_text = " ".join(skill_names).lower()
+    company_profile = company_profile or {}
+    company_tech = [str(t) for t in (company_profile.get("tech_stack") or []) if str(t).strip()]
+    company_text = " ".join(company_tech + [str(x) for x in (company_profile.get("services") or [])]
+                            + [str(company_profile.get(k) or "") for k in ("summary", "industry")]).lower()
+    points, seen = [], set()
+    for item in raw if isinstance(raw, list) else []:
+        if not isinstance(item, dict):
+            continue
+        company = re.sub(r"\[.*?\]", "", str(item.get("company_fact") or "")).strip(" .-:")
+        resume = re.sub(r"\[.*?\]", "", str(item.get("resume_fact") or "")).strip(" .-:")
+        if not company or not resume or len(company.split()) > 12 or len(resume.split()) > 22:
+            continue
+        if GENERIC_COMPANY_FACT.search(company):
+            continue
+        if company_text and any(re.search(rx, company.lower()) and not re.search(rx, company_text) for rx in TECH_CATALOG.values()):
+            continue  # names a technology this company doesn't use
+        low = resume.lower()
+        # Tools named: known technologies plus the candidate's own skills (FastAPI, Magento, ...).
+        techs = [rx for rx in TECH_CATALOG.values() if re.search(rx, low)]
+        techs += [r"(?<![a-z0-9])" + re.escape(k.lower()) + r"(?![a-z0-9])" for k in skill_names
+                  if re.search(r"(?<![a-z0-9])" + re.escape(k.lower()) + r"(?![a-z0-9])", low)]
+        nums = _numbers(resume)
+        # Backed by ONE resume fact: all its tools and numbers appear together in a single achievement
+        # or strong point (so a skill can't be grafted onto a project that didn't use it) ...
+        backed = any(nums <= _numbers(f) and all(re.search(rx, f) for rx in techs) for f in facts)
+        # ... or it is a plain skill line ("I work with X"): no numbers, no project, only resume skills named.
+        skill_line = (not nums and techs and SKILL_LINE.match(low) is not None
+                      and all(re.search(rx, skills_text) for rx in techs))
+        if not (backed or skill_line):
+            continue
+        key = " ".join(sorted(set(re.findall(r"[a-z0-9]{4,}", low))))
+        if key in seen:
+            continue
+        seen.add(key)
+        points.append(f"{company[0].upper() + company[1:]}: {resume[0].upper() + resume[1:]}")
+        if len(points) == 3:
+            break
+    if not points:
+        # Nothing the AI wrote held up: fall back to the skills this company really uses.
+        skills = [str(k).strip() for k in (candidate_profile.get("top_skills") or []) if str(k).strip()]
+        shared = [t for t in company_tech if t.lower() in {k.lower() for k in skills}]
+        points = [f"Your {t} work: I work with {t}" for t in shared[:2]]
+    return points
+
+
+def add_fit_section(body: str, company_name: str, points: list[str]) -> str:
+    """Put a "Why I fit <company>" list above the sign-off (or at the end if there is none)."""
+    if not points:
+        return body
+    section = f"Why I fit {company_name}:\n" + "\n".join(f"- {p}" for p in points)
+    m = re.search(r"\n\s*(Best regards|Warm regards|Kind regards|Regards|Thanks|Thank you)\b", body, flags=re.IGNORECASE)
+    if m:
+        return body[:m.start()].rstrip() + "\n\n" + section + "\n\n" + body[m.start():].lstrip("\n")
+    return body.rstrip() + "\n\n" + section
+
+
 def generate_personalized_pitch(
     candidate_profile: dict[str, Any],
     company_name: str,
     company_profile: dict[str, Any],
-    contact_name: str = ""
+    contact_name: str = "",
+    email_style: str = "tailored",
 ) -> dict[str, Any]:
     """
+    email_style (from the user's plan): "standard" = short, general application using only the
+    company's name and category; "tailored" = written around the company's research;
+    "tailored_fit" = tailored plus a "Why I fit <company>" section (same AI call).
+
     Synthesizes candidate's structured technical assessment (Input A) with company profile
     and intelligence (Input B) acting as a Senior Career Coach and Outbound Sales Copywriter.
     Produces 3 subject line angles (curiosity, specificity, benefit-led), primary cold email (< 120 words),
     LinkedIn DM variant (< 80 words), warm referral variant (< 140 words), personalization notes,
     and 'what to change if...' guidance.
     """
-    candidate_name = (candidate_profile.get("full_name") or "").strip()
-    if not candidate_name or candidate_name.lower() in ("candidate", "pilot user"):
-        candidate_name = "Candidate"
+    candidate_name = (candidate_profile.get("full_name") or "Candidate").strip()
     target_role = (candidate_profile.get("target_role") or "Software Engineer").strip()
     archetype = (candidate_profile.get("archetype") or "").strip()
-    exp_years = (candidate_profile.get("experience_years") or "").strip()
-    skills = ", ".join(candidate_profile.get("top_skills", [])[:6])
+    skills = ", ".join(candidate_profile.get("top_skills", [])[:5])
 
     raw_strong = candidate_profile.get("strong_points") or candidate_profile.get("key_achievements") or []
-    if not raw_strong and candidate_profile.get("elevator_pitch"):
-        raw_strong = [candidate_profile.get("elevator_pitch")]
-
-    # Also incorporate project highlights if available
-    project_bullets = candidate_profile.get("project_highlights") or []
-    all_proofs = list(raw_strong)
-    for pb in project_bullets:
-        if isinstance(pb, dict):
-            p_desc = f"{pb.get('name', 'Project')}: {pb.get('description', '')} Built with {', '.join(pb.get('tech', []))}. Outcome: {pb.get('outcome', '')}".strip()
-            all_proofs.append(p_desc)
-        elif isinstance(pb, str) and pb not in all_proofs:
-            all_proofs.append(pb)
-
-    strong_points_str = ("\n".join([f"- {sp}" for sp in all_proofs[:6]]) if all_proofs
-                         else "- (None listed in the resume. Do not invent any; write about the listed skills instead.)")
+    if raw_strong:
+        strong_points_str = "\n".join([f"- {sp}" for sp in raw_strong[:3]])
+    else:
+        strong_points_str = ""
 
     best_fit = ", ".join(candidate_profile.get("best_fit_roles", [])[:3]) or target_role
     resume_link = (candidate_profile.get("resume_link") or "").strip()
@@ -649,94 +843,168 @@ def generate_personalized_pitch(
     company_services = ", ".join(company_profile.get("services", [])[:4])
     company_industry = company_profile.get("industry") or ""
     culture_signals = company_profile.get("culture_signals") or company_profile.get("tone") or ""
+    likely_pain_points = company_profile.get("likely_pain_points") or []
+    if isinstance(likely_pain_points, list) and likely_pain_points:
+        pain_points_str = "; ".join(likely_pain_points[:2])
+    else:
+        pain_points_str = ""
 
+    fit_schema = ('\n  "fit_points": [{"company_fact": "Your ...", "resume_fact": "..."}],'
+                  if email_style == "tailored_fit" else "")
     greeting = f"Hi {contact_name}," if contact_name and contact_name.strip() else f"Hi {company_name} team,"
-    resume_instruction = f"Mention that the resume is attached and portfolio/code is available at {resume_link}." if resume_link else "Mention that the resume is attached for review."
+    resume_instruction = f"Explicitly mention that the candidate's resume/portfolio is available at ({resume_link}) or attached." if resume_link else "Mention that the candidate's resume is attached for review."
 
-    prompt = f"""Act as a senior technical talent advisor and candidate career strategist. You are writing a high-signal, compelling, and substantive COLD JOB APPLICATION email on behalf of {candidate_name} to engineering leadership or the hiring team at {company_name}.
+    prompt = f"""Act as a senior technical talent advisor and candidate career strategist. You are writing a high-signal, direct COLD JOB APPLICATION / INQUIRY email on behalf of a technical candidate reaching out to engineering leadership, founders, or the hiring team at {company_name}.
 
 CONTEXT:
-This is a technical candidate reaching out directly regarding open or upcoming {target_role} positions at {company_name}.
+This is a JOB SEEKER reaching out for open or upcoming {target_role} employment opportunities.
 This is NOT a B2B sales pitch, NOT an agency offering services, and NOT product marketing.
 
-(A) Candidate Profile & Proven Experience:
-- Full Name: {candidate_name}
-- Target Role: {target_role}
-- Experience Level: {exp_years or 'Proven engineering experience'}
-- Core Technical Skills: {skills}
-- Concrete Verified Achievements from Resume:
+(A) Structured Resume Analysis of Candidate:
+- Candidate Full Name: {candidate_name}
+- Target Job Role: {target_role}
+- Professional Archetype: {archetype}
+- Core Verified Skills: {skills}
+- Evidence-Backed Achievements from Resume:
 {strong_points_str}
+- Best-Fit Roles: {best_fit}
 - Resume Reference: {resume_instruction}
 
 (B) Company Intelligence:
 - Company Name: {company_name}
 - Industry: {company_industry}
-- What They Build: {company_summary}
+- What They Build / Do: {company_summary}
+- Core Services: {company_services}
 - Tech Stack: {company_tech}
+- Culture / Engineering Signals: {culture_signals}
 
 YOUR OBJECTIVE:
-Write a high-signal, comprehensive, and professional cold job application email (200 - 300 words).
-CRUCIAL REQUIREMENT: Recruiters review applications thoroughly and cannot assess a candidate's real capabilities from just 1-2 brief sentences. The email MUST provide substantive, concrete details of the candidate's actual accomplishments, technical architecture decisions, and verified achievements from their resume so the recruiter immediately understands their depth of expertise.
+Write a concise, professional cold job outreach email that connects the candidate's verified technical skills and measurable resume achievements to the company's tech stack and engineering work, inquiring about open or upcoming {target_role} positions.
 
 CRITICAL RULES:
-1. PURPOSE IS JOB OPPORTUNITY: Clearly state the candidate is inquiring about open or upcoming {target_role} engineering opportunities at {company_name}.
-2. ZERO SALES/AGENCY CLICHÉS: Never use "hop on a quick call", "scale your business", "support your roadmap", or consulting pitches.
-3. SUBSTANTIAL RESUME EVIDENCE (MUST INCLUDE 3-4 DETAILED ACHIEVEMENTS):
-   Use ONLY the achievements listed in (A). Never invent achievements, metrics, employers, clients or projects. If (A) lists none, skip this part and describe the listed skills instead.
-   Present 3 to 4 distinct, concrete, evidence-backed achievements directly from the candidate's resume (e.g. database query optimization, backend APIs, microservice architecture, automated workflows, testing pipelines, or specific frameworks like {skills}).
-   Format these key accomplishments clearly (using readable bullet points or structured narrative) with specific technologies, architectural details, and measurable outcomes so the recruiter gets a full picture of their engineering strengths.
-4. COMPANY RELEVANCE: Explicitly connect the candidate's technical skills ({skills}) to what {company_name} works on ({company_tech or company_summary}).
-5. CALL TO ACTION: Mention the attached resume (and portfolio link if available). Ask a professional, low-friction hiring question (e.g. whether they are currently hiring or open to considering their profile for upcoming {target_role} needs).
+1. PURPOSE IS JOB OPPORTUNITY: Clearly state the candidate is reaching out regarding open or upcoming {target_role} roles / engineering opportunities at {company_name}.
+2. ZERO SALES/AGENCY CLICHÉS:
+   - NEVER ask "Worth a 15-min chat this week?" or "jump on a quick call".
+   - NEVER say "support your upcoming roadmap" or "scale your business".
+   - NEVER pitch consulting, contract services, or vendor solutions.
+3. GROUNDED IN RESUME: Feature 1 concrete, verified achievement or project directly from the candidate's resume. Cite actual technologies ({skills}). Never invent numbers or fake metrics.
+4. COMPANY RELEVANCE: In 1 sentence, show genuine alignment between the candidate's technical experience and what {company_name} works with ({company_tech or company_services}).
+5. CALL TO ACTION (JOB INQUIRY):
+   - Mention the attached resume (or portfolio link {resume_link if resume_link else ''}).
+   - Ask a professional, low-pressure hiring question: e.g., "Are you currently hiring for {target_role} roles, or open to considering my profile for upcoming engineering needs?"
 6. GREETING & SIGN-OFF:
-   - Greet strictly with "{greeting}"
-   - Sign off strictly with:
+   - Greet strictly with "{greeting}" (never use placeholders like [Hiring Manager]).
+   - Sign off cleanly with:
      Best regards,
      {candidate_name}
-7. SUBJECT LINE: A direct, professional subject line (e.g. "Inquiring about {target_role} opportunities at {company_name} - {candidate_name}").
+7. LENGTH: Under 110 words. Clear, respectful, peer-to-peer engineering tone. No fluff ("I hope this finds you well").
 
-Deliverables (must return valid JSON matching this schema):
+Deliverables (must return valid JSON matching this schema; keep it short, no extra keys):
 {{
-  "subject_line": "Inquiring about {target_role} opportunities at {company_name} - {candidate_name}",
-  "email_body": "Full, substantive application email between 200 and 300 words.",
+  "subject_line": "Clear subject, e.g. Application: {target_role} - {candidate_name}",
+  "primary_email": "Primary cold job outreach email under 110 words",
+  "variant_a_linkedin": "LinkedIn connection note to one person who works at {company_name}, UNDER 280 CHARACTERS (LinkedIn's limit). Start with 'Hi,' (the sender adds the name). Say who {candidate_name} is ({target_role}), name one skill that matches {company_name}'s work, say they are interested in {target_role} roles there, and ask to connect. No subject, no resume mention, no 'team' greeting, end with just the first name.",
+  "variant_b_referral": "Message to one employee at {company_name} asking for a referral, under 90 words. Start with 'Hi,'. Say {candidate_name} is applying for {target_role} roles at {company_name}, give one verified resume achievement, ask if they would be open to referring them or pointing them to the right person, and offer to share the resume. Polite, no pressure. Sign off with {candidate_name}.",{fit_schema}
   "matched_skills": ["Skill1", "Skill2", "Skill3"]
 }}"""
 
+    if email_style == "tailored_fit":
+        facts = [str(x).strip() for x in list(candidate_profile.get("key_achievements") or []) + list(candidate_profile.get("strong_points") or []) if str(x).strip()]
+        fact_lines = "\n".join(f"- {x}" for x in facts[:8]) or "- (none)"
+        prompt += f"""
+
+"fit_points" (REQUIRED in the JSON above for this email): up to 3 reasons the candidate fits {company_name}.
+Resume facts (the ONLY source for resume_fact):
+{fact_lines}
+Core skills: {", ".join(candidate_profile.get("top_skills", [])[:10])}
+Each fit point: {{"company_fact": "...", "resume_fact": "..."}}
+- company_fact: something SPECIFIC to {company_name} from (B) above (a product, service, technology they use, or the kind of work they do), starting with "Your", at most 8 words. Never generic like "Your tech stack" or "Your company".
+- resume_fact: at most 18 words, written for THIS company: the part of ONE resume fact above that matches the company_fact, in plain words. Keep its real numbers and tools; never add a number, tool, employer or result that is not in the resume facts or core skills.
+- One resume fact per point: never combine tools or results from two different facts, and never add a skill to a project that didn't use it. A point may instead be a plain skill line, e.g. "I work with PostgreSQL".
+- The company_fact and the resume_fact must be about the same technology or the same kind of work (e.g. their data pipelines with a scraping or database project). Never pair unrelated things, like mobile apps with web scraping.
+- Use a DIFFERENT resume fact in each point. Fewer good points beat three weak ones. Use [] if nothing relates.
+Do NOT put these points inside the email body."""
+    elif email_style == "standard":
+        # Short general application: company name and category only, no company research.
+        prompt = f"""Write a short, polite cold JOB APPLICATION email from a job seeker to {company_name}.
+
+Candidate: {candidate_name}, {target_role}. Skills: {skills}.
+One resume achievement to mention if present: {(raw_strong[0] if raw_strong else '')}
+Company: {company_name} ({company_industry or 'their industry'}).
+
+Rules:
+- Greet strictly with "{greeting}". Never use bracket placeholders.
+- Say who the candidate is, their role and 2-3 top skills, and ask whether {company_name} has open or upcoming {target_role} roles.
+- {resume_instruction}
+- Do not describe the company's products, services or tech; this is a general application.
+- Never invent numbers or projects. Under 80 words. No sales language, no "quick call".
+- Sign off with:
+  Best regards,
+  {candidate_name}
+
+Return pure JSON: {{"subject_line": "Application: {target_role} - {candidate_name}", "primary_email": "...", "email_body": "same as primary_email", "matched_skills": ["..."]}}"""
+
     def make_pitch_fallback():
-        # Template used only when every AI provider fails: it states nothing that is not in the resume.
         raw_proofs = candidate_profile.get("key_achievements") or candidate_profile.get("strong_points") or []
+        # Template used only when every AI provider fails: it states nothing that is not in the resume.
+        proof = (raw_proofs[0] or "").strip().rstrip(".") if raw_proofs else ""
+        skills_txt = f" specializing in {skills}" if skills else ""
+        resume_ref = f" (Portfolio / Resume: {resume_link})" if resume_link else " (Resume attached)"
+        comp_tech_focus = company_tech.split(',')[0].strip() if company_tech else (company_services.split(',')[0].strip() if company_services else "")
 
-        proof_bullets = []
-        for p in raw_proofs[:4]:
-            p_clean = p.strip().lstrip("-*•").strip()
-            if p_clean:
-                proof_bullets.append(f"• {p_clean}")
-
-        achievements_block = "\n".join(proof_bullets)
-        resume_ref = f" (Portfolio / Code: {resume_link})" if resume_link else ""
-        comp_tech_focus = company_tech.split(',')[0].strip() if company_tech else (company_services.split(',')[0].strip() if company_services else "modern software engineering")
-
-        skills_line = f"My core skills are {skills}. " if skills else ""
-        focus_line = f"I noticed {company_name} works with {comp_tech_focus}. " if (company_tech or company_services) else ""
-        highlights = (f"Some highlights from my resume:\n\n{achievements_block}\n\n" if achievements_block else "")
-        body = (
+        primary = (
             f"{greeting}\n\n"
-            f"I am writing to inquire about open or upcoming {target_role} opportunities at {company_name}. "
-            f"{focus_line}{skills_line}\n\n"
-            f"{highlights}"
-            f"My resume is attached for your review{resume_ref}.\n\n"
-            f"Are you currently hiring for {target_role} positions, or open to considering my profile for upcoming engineering needs?\n\n"
+            f"I am writing to inquire about open or upcoming {target_role} opportunities at {company_name}.\n\n"
+            f"As a {target_role}{skills_txt}" + (f", my recent work includes {proof}. " if proof else ". ") +
+            (f"Given {company_name}'s focus on {comp_tech_focus}, I" if comp_tech_focus else "I") +
+            " would love to contribute my experience to your engineering team.\n\n" +
+            f"I have shared my resume for your consideration{resume_ref}. Are you currently hiring for {target_role} roles, or open to a brief conversation if there might be a potential fit?\n\n"
             f"Best regards,\n"
             f"{candidate_name}"
         )
 
+        linkedin = (
+            f"Hi {contact_name or company_name + ' team'},\n\n"
+            f"I am reaching out to explore potential {target_role} opportunities at {company_name}. "
+            + (f"I specialize in {skills}. " if skills else "") + (f"Recently: {proof}. " if proof else "") +
+            (f"Given your work with {comp_tech_focus}, " if comp_tech_focus else "") +
+            f"I'd love to connect and share my resume{resume_ref} if you have any open engineering roles.\n\n"
+            f"Best regards,\n{candidate_name}"
+        )
+
+        referral = (
+            f"{greeting}\n\n"
+            f"I have been following {company_name}'s work in {company_industry or 'technology'} and wanted to reach out regarding potential {target_role} openings.\n\n"
+            f"In my background as a {target_role}" + (f", I focus on {skills}" if skills else "") +
+            (f", where I {proof}. " if proof else ". ") +
+            (f"I really admire the work your team is doing around {comp_tech_focus} and would" if comp_tech_focus else "I would") +
+            " welcome the chance to explore how my skills could add value to your projects.\n\n" +
+            f"I have attached my resume for your review{resume_ref}. Would you be open to considering my profile if an engineering opportunity arises?\n\n"
+            f"Warm regards,\n"
+            f"{candidate_name}"
+        )
+
         return {
-            "subject_line": f"Inquiring about {target_role} opportunities at {company_name} - {candidate_name}",
-            "email_body": body,
-            "primary_email": body,
-            "variant_a_linkedin": "",
-            "variant_b_referral": "",
-            "cover_letter": body,
-            "matched_skills": candidate_profile.get("top_skills", [])[:4] or [target_role]
+            "subject_lines": {
+                "specificity": f"Application: {target_role} - {candidate_name}",
+                "curiosity": f"{target_role} inquiry for {company_name} - {candidate_name}",
+                "benefit_led": f"{target_role} ({skills.split(',')[0] if skills else target_role}) - {candidate_name}"
+            },
+            "subject_line": f"{target_role} Inquiry - {candidate_name}",
+            "primary_email": primary,
+            "email_body": primary,
+            "variant_a_linkedin": linkedin,
+            "variant_b_referral": referral,
+            "cover_letter": referral,
+            "personalization_notes": [
+                f"Referenced {company_name}'s engineering focus on {comp_tech_focus}",
+                f"Highlighted candidate's verified resume achievement for {target_role} role"
+            ],
+            "what_to_change_if": {
+                "if_not_hiring": "Ask if you can stay in touch on LinkedIn or if they can keep your resume on file for future openings.",
+                "if_recruiter": "Mention your immediate availability, work authorization, and preferred start date."
+            },
+            "matched_skills": candidate_profile.get("top_skills", [])[:3] or [target_role]
         }
 
     if not client:
@@ -783,12 +1051,45 @@ Deliverables (must return valid JSON matching this schema):
         if not subj or not body:
             return make_pitch_fallback()
 
+        if email_style == "tailored_fit":
+            parsed["fit_points"] = build_fit_points(parsed.get("fit_points"), candidate_profile, company_profile)
+            body = add_fit_section(body, company_name, parsed["fit_points"])
+
         parsed["subject_line"] = subj
         parsed["primary_email"] = body
         parsed["email_body"] = body
 
+        if not parsed.get("subject_lines") or not isinstance(parsed.get("subject_lines"), dict):
+            parsed["subject_lines"] = {
+                "specificity": subj,
+                "curiosity": f"{target_role} inquiry - {candidate_name}",
+                "benefit_led": f"Scalable {target_role} for {company_name}"
+            }
+
+        if not parsed.get("variant_a_linkedin"):
+            parsed["variant_a_linkedin"] = make_pitch_fallback()["variant_a_linkedin"]
+        else:
+            parsed["variant_a_linkedin"] = re.sub(r"\[.*?\]", "", parsed["variant_a_linkedin"]).strip()
+
+        if not parsed.get("variant_b_referral"):
+            parsed["variant_b_referral"] = make_pitch_fallback()["variant_b_referral"]
+        else:
+            parsed["variant_b_referral"] = re.sub(r"\[.*?\]", "", parsed["variant_b_referral"]).strip()
+
+        if not parsed.get("cover_letter"):
+            parsed["cover_letter"] = parsed["variant_b_referral"]
+
+        if not parsed.get("personalization_notes"):
+            parsed["personalization_notes"] = [
+                f"Referenced company services and tech stack ({company_tech[:50]})",
+                f"Aligned candidate differentiator with company engineering goals"
+            ]
+
+        if not parsed.get("what_to_change_if"):
+            parsed["what_to_change_if"] = make_pitch_fallback()["what_to_change_if"]
+
         if not parsed.get("matched_skills"):
-            parsed["matched_skills"] = candidate_profile.get("top_skills", [])[:4] or [target_role]
+            parsed["matched_skills"] = candidate_profile.get("top_skills", [])[:3]
 
         return parsed
     except Exception as e:

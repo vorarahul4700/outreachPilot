@@ -91,11 +91,14 @@ from db import (
     SystemSetting,
     Tech,
     User,
+    UserResume,
     engine,
     get_db,
     init_db,
 )
 from enricher import is_recruitment_email
+from plan_features import DEFAULT_PLAN_EXAMPLES, EMAIL_STYLES, EXAMPLE_KEYS, plan_card_lines, plan_features
+from resumes import all_resumes, ensure_main_resume, pick_resume, resume_pdf, save_main_resume, usable_resumes
 from outreach import (
     add_do_not_contact,
     read_optout_token,
@@ -304,10 +307,10 @@ def draft_allowance(db: Session, user) -> tuple[int, int]:
     return max(0, sends_left - open_drafts), sends_left
 
 
-def resume_profile_or_400(req, user) -> dict:
+def resume_profile_or_400(req, user, summary: dict | None = None) -> dict:
     """The parsed resume drafts are written from. Without one we refuse rather than invent skills
-    or achievements (no fake data)."""
-    profile = dict(req.candidate_profile or user.resume_summary or {})
+    or achievements (no fake data). `summary` is a chosen resume's analysis (multiple resumes)."""
+    profile = dict(req.candidate_profile or summary or user.resume_summary or {})
     if not (profile.get("top_skills") or profile.get("key_achievements") or profile.get("strong_points")
             or profile.get("elevator_pitch")):
         raise HTTPException(
@@ -610,6 +613,7 @@ class PitchGenRequest(BaseModel):
     target_role: str | None = ""
     candidate_profile: dict[str, Any] | None = None
     force_regenerate: bool = False
+    resume_id: int | None = None  # write with this resume instead of the auto-picked one
 
 
 class BulkPitchRequest(BaseModel):
@@ -678,6 +682,16 @@ class BulkCompanyActionRequest(BaseModel):
     reason: str = "Quarantined by Master Admin"
 
 
+def _plan_feature_values(payload) -> dict:
+    """Validated plan feature settings from the admin form."""
+    if payload.email_style not in EMAIL_STYLES:
+        raise HTTPException(status_code=400, detail="Email style must be standard, tailored or tailored_fit.")
+    if not 1 <= payload.resume_slots <= 5:
+        raise HTTPException(status_code=400, detail="Resumes must be between 1 and 5.")
+    return {"email_style": payload.email_style, "has_best_matches": payload.has_best_matches,
+            "has_linkedin": payload.has_linkedin, "resume_slots": payload.resume_slots, "has_bulk": payload.has_bulk}
+
+
 def _plan_days(days: int | None) -> int:
     """Plans are a 7-day pass or monthly (30 days)."""
     if days not in (7, 30):
@@ -691,6 +705,11 @@ class UpdateTierRequest(BaseModel):
     price_inr: int
     daily_pitch_limit: int
     period_days: int = 30  # 7 = weekly pass, 30 = monthly
+    email_style: str = "tailored"  # standard | tailored | tailored_fit
+    has_best_matches: bool = False
+    has_linkedin: bool = False
+    resume_slots: int = 1
+    has_bulk: bool = False
     features: list[str] | None = None
     badge: str | None = None
     is_active: bool = True
@@ -704,6 +723,11 @@ class CreateTierRequest(BaseModel):
     price_inr: int = 0
     daily_pitch_limit: int = 10
     period_days: int = 30
+    email_style: str = "tailored"  # standard | tailored | tailored_fit
+    has_best_matches: bool = False
+    has_linkedin: bool = False
+    resume_slots: int = 1
+    has_bulk: bool = False
     features: list[str] | None = None
     badge: str | None = None
 
@@ -852,6 +876,43 @@ def apple_touch_icon():
     )
 
 
+# --- One-day Pro trial (once per account; the daily limit stays the user's own) ---
+TRIAL_DEFAULT_HOURS = 24
+
+
+def _setting(db: Session, key: str) -> str | None:
+    row = db.query(SystemSetting).filter(SystemSetting.key == key).first()
+    return row.value if row else None
+
+
+def trial_settings(db: Session) -> dict:
+    enabled = (_setting(db, "pro_trial_enabled") or "true").strip().lower() in ("true", "1", "yes")
+    try:
+        hours = int(_setting(db, "pro_trial_hours") or TRIAL_DEFAULT_HOURS)
+    except ValueError:
+        hours = TRIAL_DEFAULT_HOURS
+    return {"enabled": enabled, "hours": min(168, max(1, hours))}
+
+
+def trial_offer(db: Session, user, kill_switch: bool = False) -> bool:
+    """Can this user start the trial now: switched on, never used, on the free plan, not an admin."""
+    if not user or kill_switch or getattr(user, "trial_started_at", None):
+        return False
+    if getattr(user, "is_admin", False) or config.is_master_admin(user.email):
+        return False
+    return (user.subscription_tier or "free") == "free" and trial_settings(db)["enabled"]
+
+
+def trial_status(db: Session, user, kill_switch: bool = False) -> dict:
+    ends = getattr(user, "trial_ends_at", None) if user else None
+    return {
+        "trial_ends_at": ends.replace(tzinfo=timezone.utc).isoformat() if ends else None,
+        "trial_used": bool(user and getattr(user, "trial_started_at", None)),
+        "trial_offer": trial_offer(db, user, kill_switch),
+        "trial_hours": trial_settings(db)["hours"],
+    }
+
+
 # --- Master Kill Switch & Subscription Helpers ---
 def is_subscription_kill_switch_active(db: Session = None) -> bool:
     """
@@ -968,6 +1029,11 @@ def load_public_tiers(db: Session) -> list[dict]:
             "price_inr": int(t.price_inr or 0),
             "daily_pitch_limit": int(t.daily_pitch_limit or 0),
             "period_days": int(t.period_days or 30),
+            "email_style": t.email_style or "tailored",
+            "has_best_matches": bool(t.has_best_matches),
+            "has_linkedin": bool(t.has_linkedin),
+            "resume_slots": t.resume_slots or 1,
+            "has_bulk": bool(t.has_bulk),
             "features": [f.strip() for f in (t.features or []) if f and str(f).strip()],
             "badge": (t.badge or "").strip(),
         }
@@ -979,6 +1045,24 @@ def load_public_tiers(db: Session) -> list[dict]:
 
 def clear_public_tiers_cache() -> None:
     _PUBLIC_TIERS_CACHE.update(ts=0.0, data=None)
+
+
+def plan_examples(db: Session) -> dict:
+    """The "See example" samples: admin edits over the built-in defaults."""
+    out = dict(DEFAULT_PLAN_EXAMPLES)
+    try:
+        row = db.query(SystemSetting).filter(SystemSetting.key == "plan_examples").first()
+        saved = json.loads(row.value) if row and row.value else {}
+        out.update({k: str(v) for k, v in saved.items() if k in EXAMPLE_KEYS and str(v).strip()})
+    except Exception:
+        pass
+    return out
+
+
+def public_plan_cards(db: Session) -> list[dict]:
+    """Public plans with their card lines (trial line on Free while the trial is on)."""
+    trial = trial_settings(db)
+    return plan_card_lines(load_public_tiers(db), trial["hours"] if trial["enabled"] else None)
 
 
 # --- Subscription & Quota Resolution Helper ---
@@ -1168,7 +1252,7 @@ def landing_page(request: Request, db: Session = Depends(get_db)):
     
     # Plans for the pricing section, exactly as set in the admin panel
     # (empty while the kill switch is on, which hides pricing).
-    public_tiers = [] if kill_switch else load_public_tiers(db)
+    public_tiers = [] if kill_switch else public_plan_cards(db)
 
     # Largest city and category hubs for the crawlable "Browse the directory" section.
     # Both lists come from cached aggregates; on any failure the section simply hides.
@@ -1189,6 +1273,7 @@ def landing_page(request: Request, db: Session = Depends(get_db)):
             "is_logged_in": is_logged_in,
             "sub_info": sub_info,
             "tiers": public_tiers,
+            "plan_examples": plan_examples(db),
             "google_client_id": config.GOOGLE_CLIENT_ID,
             "dev_mode": config.DEV_MODE,
             "subscription_kill_switch": kill_switch,
@@ -1239,7 +1324,10 @@ def workspace_page(request: Request, db: Session = Depends(get_db)):
             "domains": all_domains,
             "total_companies": total_valid,
             # Plan cards in the subscription window, as set in the admin panel
-            "tiers": [] if kill_switch else load_public_tiers(db),
+            "tiers": [] if kill_switch else public_plan_cards(db),
+            "plan_examples": plan_examples(db),
+            "features": plan_features(db, user if is_logged_in else None, kill_switch=kill_switch),
+            "trial": trial_status(db, user if is_logged_in else None, kill_switch),
             "billing_enabled": billing_enabled(),
         }
     )
@@ -2138,6 +2226,20 @@ def _tech_id_cond(db: Session, terms: list[str]):
     return or_(*conds) if conds else (Company.id == -1)
 
 
+def resume_match_terms(resume_summary: dict | None) -> dict:
+    """Resume skills mapped to the directory's tech and category IDs (exact taxonomy matches only)."""
+    skills = [str(s).strip() for s in ((resume_summary or {}).get("top_skills") or []) if str(s).strip()]
+    tech_ids, cat_ids = {}, set()
+    for s in skills:
+        tid = taxonomy.tech_id_for(s)
+        if tid and tid not in tech_ids:
+            tech_ids[tid] = s
+        cat = taxonomy.category_for(s)
+        if cat:
+            cat_ids.add(cat["id"])
+    return {"tech_ids": tech_ids, "cat_ids": sorted(cat_ids), "has_skills": bool(skills)}
+
+
 def _domain_id_cond(domain: str):
     ids = taxonomy.industry_category_ids(domain)
     return None if ids is None else Company.category_id.in_(ids or [-1])
@@ -2400,6 +2502,7 @@ def get_companies(
     domain: str = "",
     status: str = "all",
     sort: str = "newest",
+    match_resume: str = "all",
     db: Session = Depends(get_db)
 ):
     """
@@ -2493,7 +2596,36 @@ def get_companies(
         email_order = Company.has_email.desc()
         enriched_order = Company.is_enriched.desc()
 
-        if sort == "rating_desc":
+        # Best matches for your resume: plan feature, needs resume skills that map to the directory.
+        best_match = None
+        match_terms = None
+        if sort == "best_match":
+            feats = plan_features(db, user, kill_switch=is_subscription_kill_switch_active(db)) if user else {}
+            if not user:
+                best_match = "signed_out"
+            elif not feats.get("best_matches"):
+                best_match = "locked"
+            else:
+                rows = usable_resumes(db, user.id, feats.get("resume_slots", 1))
+                picked = [r for r in rows if str(r.id) == match_resume] or rows
+                skills = [k for r in picked for k in ((r.summary or {}).get("top_skills") or [])] if picked else None
+                match_terms = resume_match_terms({"top_skills": skills} if skills is not None else user.resume_summary)
+                best_match = "ok" if (match_terms["tech_ids"] or match_terms["cat_ids"]) else ("no_match" if match_terms["has_skills"] else "no_resume")
+                if best_match != "ok":
+                    match_terms = None
+
+        if match_terms:
+            tech_ids = list(match_terms["tech_ids"]) or [-1]
+            match_sub = (db.query(CompanyTech.company_id, func.count().label("n"))
+                         .filter(CompanyTech.tech_id.in_(tech_ids)).group_by(CompanyTech.company_id).subquery())
+            query = query.outerjoin(match_sub, match_sub.c.company_id == Company.id).order_by(
+                email_order,
+                func.coalesce(match_sub.c.n, 0).desc(),
+                Company.category_id.in_(match_terms["cat_ids"] or [-1]).desc(),
+                enriched_order,
+                Company.id.desc()
+            )
+        elif sort == "rating_desc":
             query = query.order_by(
                 email_order,
                 enriched_order,
@@ -2592,6 +2724,23 @@ def get_companies(
                     "tech_stack": prof[3] or []
                 }
 
+        match_labels = {}
+        if match_terms and company_ids:
+            names_by_company = defaultdict(list)
+            for cid, tid in (db.query(CompanyTech.company_id, CompanyTech.tech_id)
+                             .filter(CompanyTech.company_id.in_(company_ids), CompanyTech.tech_id.in_(list(match_terms["tech_ids"]) or [-1])).all()):
+                names_by_company[cid].append(match_terms["tech_ids"][tid])
+            cat_set = set(match_terms["cat_ids"])
+            for c in companies:
+                names = sorted(set(names_by_company.get(c.id, [])))
+                if names:
+                    shown = ", ".join(names[:3])
+                    extra = len(names) - 3
+                    match_labels[c.id] = (f"Matches {shown} + {extra} more of your skills" if extra > 0
+                                          else f"Matches {shown} ({len(names)} of your skill{'s' if len(names) > 1 else ''})")
+                elif c.category_id in cat_set:
+                    match_labels[c.id] = f"Matches your field: {seo_engine._category_labels(c.category_id)[0]}"
+
         sent_logs = {}
         user_pitches = {}
         if user and company_ids:
@@ -2641,7 +2790,8 @@ def get_companies(
                 "profile": profile,
                 "pitch_id": user_pitches.get(c.id),
                 "already_contacted": bool(sent_time),
-                "contacted_at": ist_text(sent_time) or None
+                "contacted_at": ist_text(sent_time) or None,
+                "match_label": match_labels.get(c.id),
             })
 
         # Compute domain-aware scoped stats for frontend cards
@@ -2683,6 +2833,7 @@ def get_companies(
             "page_size": page_size,
             "invalid_count": invalid_count if is_admin else 0,
             "stats": scoped_stats,
+            "best_match": best_match,
             "is_master_admin": is_admin,
             "dev_mode": config.DEV_MODE
         }
@@ -2857,8 +3008,80 @@ def auth_status(request: Request, db: Session = Depends(get_db)):
         "pitches_remaining": remaining,
         "quota_resets_at": next_quota_reset_utc().replace(tzinfo=timezone.utc).isoformat(),
         "is_banned": bool(getattr(user, "is_banned", False)) if is_logged_in else False,
+        # What this user can use right now (plan, trial or admin), for showing or locking features
+        "features": plan_features(db, user if is_logged_in else None, kill_switch=kill_switch),
+        **trial_status(db, user if is_logged_in else None, kill_switch),
         "dev_mode": config.DEV_MODE
     }
+
+
+@app.post("/api/trial/start")
+def start_pro_trial(request: Request, db: Session = Depends(get_db)):
+    """Start the one-day Pro trial. Once per account; Pro features, the user's own daily limit."""
+    user = get_current_user(db, request)
+    if not user or not user.oauth_tokens:
+        raise HTTPException(status_code=401, detail="Sign in to start your Pro trial.")
+    if user.trial_started_at:
+        raise HTTPException(status_code=400, detail="You've already used your Pro trial on this account.")
+    if not trial_offer(db, user, is_subscription_kill_switch_active(db)):
+        raise HTTPException(status_code=400, detail="The Pro trial isn't available for your account right now.")
+    now = datetime.utcnow()
+    user.trial_started_at = now
+    user.trial_ends_at = now + timedelta(hours=trial_settings(db)["hours"])
+    db.commit()
+    return {"success": True, **trial_status(db, user),
+            "features": plan_features(db, user, kill_switch=False)}
+
+
+@app.get("/api/admin/system/trial")
+def admin_get_trial(admin=Depends(require_master_admin), db: Session = Depends(get_db)):
+    used = db.query(func.count(User.id)).filter(User.trial_started_at.isnot(None)).scalar() or 0
+    active = db.query(func.count(User.id)).filter(User.trial_ends_at > datetime.utcnow()).scalar() or 0
+    return {**trial_settings(db), "used": used, "active": active}
+
+
+class TrialSettingsRequest(BaseModel):
+    enabled: bool
+    hours: int = TRIAL_DEFAULT_HOURS
+
+
+@app.post("/api/admin/system/trial")
+def admin_set_trial(req: TrialSettingsRequest, admin=Depends(require_master_admin), db: Session = Depends(get_db)):
+    if not 1 <= req.hours <= 168:
+        raise HTTPException(status_code=400, detail="Trial length must be between 1 and 168 hours.")
+    for key, val in (("pro_trial_enabled", "true" if req.enabled else "false"), ("pro_trial_hours", str(req.hours))):
+        row = db.query(SystemSetting).filter(SystemSetting.key == key).first()
+        if not row:
+            db.add(SystemSetting(key=key, value=val, description="One-day Pro trial setting"))
+        else:
+            row.value = val
+            row.updated_at = datetime.utcnow()
+    db.commit()
+    return admin_get_trial(admin, db)
+
+
+@app.get("/api/admin/plan-examples")
+def admin_get_plan_examples(admin=Depends(require_master_admin), db: Session = Depends(get_db)):
+    return {"examples": plan_examples(db), "defaults": DEFAULT_PLAN_EXAMPLES}
+
+
+class PlanExamplesRequest(BaseModel):
+    examples: dict[str, str]
+
+
+@app.post("/api/admin/plan-examples")
+def admin_set_plan_examples(req: PlanExamplesRequest, admin=Depends(require_master_admin), db: Session = Depends(get_db)):
+    clean = {k: str(v).strip()[:2000] for k, v in req.examples.items() if k in EXAMPLE_KEYS}
+    # Saving a sample equal to the default (or empty) keeps following the default.
+    clean = {k: v for k, v in clean.items() if v and v != DEFAULT_PLAN_EXAMPLES[k]}
+    row = db.query(SystemSetting).filter(SystemSetting.key == "plan_examples").first()
+    if not row:
+        db.add(SystemSetting(key="plan_examples", value=json.dumps(clean), description="Plan card 'See example' samples"))
+    else:
+        row.value = json.dumps(clean)
+        row.updated_at = datetime.utcnow()
+    db.commit()
+    return {"examples": plan_examples(db), "defaults": DEFAULT_PLAN_EXAMPLES}
 
 
 @app.get("/api/tiers")
@@ -3028,6 +3251,126 @@ def get_candidate_profile(request: Request, db: Session = Depends(get_db)):
     }
 
 
+async def read_resume_upload(file: UploadFile) -> tuple[str, bytes | None]:
+    """Validate an uploaded resume and return (text, PDF bytes or None for text files)."""
+    contents = await file.read()
+    if len(contents) > MAX_RESUME_SIZE:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail="File too large. Maximum resume size is 5MB."
+        )
+    filename_lower = (file.filename or "").lower()
+    if not any(filename_lower.endswith(ext) for ext in (".pdf", ".txt", ".md")):
+        raise HTTPException(
+            status_code=400,
+            detail="Unsupported file format. Please upload a PDF, TXT, or MD resume."
+        )
+    if not filename_lower.endswith(".pdf"):
+        return contents.decode("utf-8", errors="ignore"), None
+    raw_text = ""
+    try:
+        reader = PdfReader(io.BytesIO(contents))
+        if len(reader.pages) > MAX_PDF_PAGES:
+            raise HTTPException(
+                status_code=400,
+                detail=f"PDF exceeds maximum page limit of {MAX_PDF_PAGES} pages."
+            )
+        for page in reader.pages:
+            raw_text += (page.extract_text() or "") + "\n"
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to parse PDF: {e!s}")
+    return raw_text, contents  # stored in user_resumes (the server disk is wiped on deploy)
+
+
+def resume_list_payload(db: Session, user) -> dict:
+    slots = plan_features(db, user, kill_switch=is_subscription_kill_switch_active(db)).get("resume_slots", 1)
+    ensure_main_resume(db, user)
+    db.commit()
+    rows = all_resumes(db, user.id)
+    return {
+        "slots": slots,
+        "resumes": [{
+            "id": r.id, "label": r.label or "Main", "filename": r.filename or "", "is_main": bool(r.is_main),
+            "skills": [str(k) for k in ((r.summary or {}).get("top_skills") or [])[:6]],
+            "locked": i >= max(1, slots),
+        } for i, r in enumerate(rows)],
+    }
+
+
+def _resume_user(db: Session, request: Request):
+    user = get_current_user(db, request)
+    if not user or not user.oauth_tokens:
+        raise HTTPException(status_code=401, detail="Sign in to manage your resumes.")
+    return user
+
+
+@app.get("/api/resumes")
+def list_resumes(request: Request, db: Session = Depends(get_db)):
+    return resume_list_payload(db, _resume_user(db, request))
+
+
+@app.post("/api/resumes")
+async def add_resume(file: UploadFile = File(...), label: str = Form(""), request: Request = None, db: Session = Depends(get_db)):
+    """An extra resume for another kind of role (plans with more than one resume slot)."""
+    user = _resume_user(db, request)
+    enforce_rate_limit(f"resume_upload_{user.id}", max_calls=15, window_seconds=60)
+    label_clean = " ".join((label or "").split())[:60]
+    if not label_clean:
+        raise HTTPException(status_code=400, detail="Add the role this resume is for, e.g. QA Engineer.")
+    ensure_main_resume(db, user)
+    rows = all_resumes(db, user.id)
+    if not rows:
+        raise HTTPException(status_code=400, detail="Add your main resume first.")
+    slots = plan_features(db, user, kill_switch=is_subscription_kill_switch_active(db)).get("resume_slots", 1)
+    if len(rows) >= slots:
+        raise HTTPException(status_code=403, detail=(
+            f"Your plan allows {slots} resume{'s' if slots != 1 else ''}. Upgrade or remove one to add another."))
+    raw_text, pdf = await read_resume_upload(file)
+    try:
+        summary = parse_resume_text(resume_text=raw_text, target_role=label_clean)
+    except Exception as e:
+        print(f"[Resume Analysis Error] {e}")
+        raise HTTPException(status_code=500, detail=f"Failed to analyze resume with AI: {e!s}. Please try again.")
+    if user.resume_link:
+        summary["resume_link"] = user.resume_link
+    db.add(UserResume(user_id=user.id, label=label_clean, filename=file.filename or "Resume.pdf", pdf=pdf, summary=summary, is_main=False))
+    db.commit()
+    return resume_list_payload(db, user)
+
+
+class ResumeLabelRequest(BaseModel):
+    label: str
+
+
+@app.patch("/api/resumes/{resume_id}")
+def rename_resume(resume_id: int, req: ResumeLabelRequest, request: Request, db: Session = Depends(get_db)):
+    user = _resume_user(db, request)
+    row = db.query(UserResume).filter(UserResume.id == resume_id, UserResume.user_id == user.id).first()
+    if not row:
+        raise HTTPException(status_code=404, detail="Resume not found.")
+    label_clean = " ".join((req.label or "").split())[:60]
+    if not label_clean:
+        raise HTTPException(status_code=400, detail="The name can't be empty.")
+    row.label = label_clean
+    db.commit()
+    return resume_list_payload(db, user)
+
+
+@app.delete("/api/resumes/{resume_id}")
+def delete_resume(resume_id: int, request: Request, db: Session = Depends(get_db)):
+    user = _resume_user(db, request)
+    row = db.query(UserResume).filter(UserResume.id == resume_id, UserResume.user_id == user.id).first()
+    if not row:
+        raise HTTPException(status_code=404, detail="Resume not found.")
+    if row.is_main:
+        raise HTTPException(status_code=400, detail="Your main resume can't be removed. Upload a new one to replace it.")
+    db.delete(row)  # drafts that used it fall back to the main resume
+    db.commit()
+    return resume_list_payload(db, user)
+
+
 @app.post("/api/resume/upload")
 async def upload_resume(
     file: UploadFile = File(None),
@@ -3072,51 +3415,11 @@ async def upload_resume(
         user.resume_link = resume_link_clean
 
     parsed_profile = user.resume_summary or {}
+    uploaded_pdf = None  # PDF bytes, saved to user_resumes after analysis
 
     # If file was attached, process and store local copy
     if file and file.filename:
-        contents = await file.read()
-        if len(contents) > MAX_RESUME_SIZE:
-            raise HTTPException(
-                status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-                detail="File too large. Maximum resume size is 5MB."
-            )
-
-        filename_lower = (file.filename or "").lower()
-        allowed_exts = (".pdf", ".txt", ".md")
-        if not any(filename_lower.endswith(ext) for ext in allowed_exts):
-            raise HTTPException(
-                status_code=400,
-                detail="Unsupported file format. Please upload a PDF, TXT, or MD resume."
-            )
-
-        raw_text = ""
-        if filename_lower.endswith(".pdf"):
-            try:
-                reader = PdfReader(io.BytesIO(contents))
-                if len(reader.pages) > MAX_PDF_PAGES:
-                    raise HTTPException(
-                        status_code=400,
-                        detail=f"PDF exceeds maximum page limit of {MAX_PDF_PAGES} pages."
-                    )
-                for page in reader.pages:
-                    raw_text += (page.extract_text() or "") + "\n"
-            except HTTPException:
-                raise
-            except Exception as e:
-                raise HTTPException(status_code=400, detail=f"Failed to parse PDF: {e!s}")
-
-            # Save local copy in uploads/resumes for direct OAuth attachment
-            import os
-            os.makedirs(os.path.join("uploads", "resumes"), exist_ok=True)
-            save_path = os.path.join("uploads", "resumes", f"user_{user.id}_resume.pdf")
-            try:
-                with open(save_path, "wb") as f_out:
-                    f_out.write(contents)
-            except Exception as save_err:
-                print(f"[Upload Warning] Could not save resume PDF: {save_err}")
-        else:
-            raw_text = contents.decode("utf-8", errors="ignore")
+        raw_text, uploaded_pdf = await read_resume_upload(file)
 
         try:
             parsed_profile = parse_resume_text(resume_text=raw_text, target_role=target_role)
@@ -3139,6 +3442,8 @@ async def upload_resume(
         parsed_profile["resume_link"] = user.resume_link
 
     user.resume_summary = parsed_profile
+    if file and file.filename:
+        save_main_resume(db, user.id, file.filename, uploaded_pdf, parsed_profile)
 
     # Invalidate and delete stale draft pitches so all future generated pitches reflect the newly uploaded resume
     try:
@@ -3162,6 +3467,94 @@ async def upload_resume(
 
 
 # --- Stage 4: Personalized 1-to-1 Pitch Generator ---
+def choose_draft_resume(db: Session, user, feats: dict, company_profile: dict, resume_id: int | None = None):
+    """(resume row or None, usable rows). An explicit resume_id must be one the plan allows."""
+    rows = usable_resumes(db, user.id, feats.get("resume_slots", 1))
+    if resume_id:
+        row = next((r for r in rows if r.id == resume_id), None)
+        if not row:
+            raise HTTPException(status_code=400, detail="That resume isn't available on your plan.")
+        return row, rows
+    return pick_resume(rows, company_profile), rows
+
+
+def draft_resume_fields(db: Session, user, feats: dict, resume_id: int | None) -> dict:
+    """Which resume a draft used, and the others the user can switch to (only with 2+ usable)."""
+    rows = usable_resumes(db, user.id, feats.get("resume_slots", 1))
+    used = next((r for r in rows if r.id == resume_id), None) or (rows[0] if rows else None)
+    return {
+        "resume": {"id": used.id, "label": used.label or "Main"} if used else None,
+        "resume_options": [{"id": r.id, "label": r.label or "Main"} for r in rows] if len(rows) > 1 else [],
+    }
+
+
+BULK_LOCKED_DETAIL = ("Applying to several companies at once isn't in your plan. "
+                      "Open a company to apply to it, or upgrade to apply in bulk.")
+
+
+def require_bulk(db: Session, user, count: int) -> None:
+    """More than one company per request is the "apply in bulk" plan feature (server-side gate)."""
+    if count > 1 and not plan_features(db, user, kill_switch=is_subscription_kill_switch_active(db)).get("bulk"):
+        raise HTTPException(status_code=403, detail=BULK_LOCKED_DETAIL)
+
+
+def draft_extra_fields(pitch: ColdPitch, feats: dict) -> dict:
+    """Style label and the LinkedIn/referral messages for a draft. The messages are always saved,
+    but only sent to users whose plan includes them (server-side gate)."""
+    allowed = bool(feats.get("linkedin"))
+    return {
+        "email_style": pitch.email_style or "tailored",
+        "linkedin_locked": not allowed,
+        "variant_a_linkedin": (pitch.linkedin_message or "") if allowed else "",
+        "variant_b_referral": (pitch.referral_message or "") if allowed else "",
+    }
+
+
+@app.get("/api/pitch/messages/{company_id}")
+def pitch_messages(company_id: int, request: Request, db: Session = Depends(get_db)):
+    """LinkedIn message and referral note saved with this user's draft or sent email for a company."""
+    user = get_current_user(db, request)
+    if not user or not user.oauth_tokens:
+        raise HTTPException(status_code=401, detail="Sign in to see your messages.")
+    pitch = (db.query(ColdPitch).filter(ColdPitch.user_id == user.id, ColdPitch.company_id == company_id)
+             .order_by(ColdPitch.id.desc()).first())
+    if not pitch:
+        raise HTTPException(status_code=404, detail="No application for this company yet.")
+    company = db.query(Company.name).filter(Company.id == company_id).scalar()
+    return {"company_name": company, **draft_extra_fields(pitch, plan_features(db, user, kill_switch=is_subscription_kill_switch_active(db)))}
+
+
+@app.post("/api/pitch/messages/{company_id}")
+def write_pitch_messages(company_id: int, request: Request, db: Session = Depends(get_db)):
+    """Write the LinkedIn note and referral request for an application that has none yet
+    (drafts made before this feature). The email itself, sent or not, is left unchanged."""
+    user = get_current_user(db, request)
+    if not user or not user.oauth_tokens:
+        raise HTTPException(status_code=401, detail="Sign in to see your messages.")
+    feats = plan_features(db, user, kill_switch=is_subscription_kill_switch_active(db))
+    if not feats.get("linkedin"):
+        raise HTTPException(status_code=403, detail="LinkedIn and referral messages aren't in your plan.")
+    enforce_rate_limit(f"pitch_messages_{user.id}", max_calls=20, window_seconds=60)
+    pitch = (db.query(ColdPitch).filter(ColdPitch.user_id == user.id, ColdPitch.company_id == company_id)
+             .order_by(ColdPitch.id.desc()).first())
+    company = db.query(Company).filter(Company.id == company_id).first()
+    if not pitch or not company:
+        raise HTTPException(status_code=404, detail="No application for this company yet.")
+    row = db.query(UserResume).filter(UserResume.id == pitch.resume_id, UserResume.user_id == user.id).first() if pitch.resume_id else None
+    cand = resume_profile_or_400(PitchGenRequest(company_id=company_id), user, row.summary if row and row.summary else None)
+    prof = company.profile
+    data = generate_personalized_pitch(
+        candidate_profile=cand, company_name=company.name, email_style="tailored",
+        company_profile={"summary": prof.summary_short if prof else "", "industry": (prof.industry if prof else "") or "",
+                         "tech_stack": (prof.tech_stack if prof else []) or [], "services": (prof.services if prof else []) or [],
+                         "tone": prof.tone if prof else "Professional"},
+    )
+    pitch.linkedin_message = (data.get("variant_a_linkedin") or "").strip() or None
+    pitch.referral_message = (data.get("variant_b_referral") or "").strip() or None
+    db.commit()
+    return {"company_name": company.name, **draft_extra_fields(pitch, feats)}
+
+
 @app.post("/api/pitch/generate")
 async def generate_single_pitch(
     req: PitchGenRequest,
@@ -3193,8 +3586,15 @@ async def generate_single_pitch(
         "detailed_analysis": company.profile.detailed_analysis if company.profile else "",
         "industry": (company.profile.industry if company.profile else "") or "",
         "tech_stack": company.profile.tech_stack if company.profile else [],
+        "services": (company.profile.services if company.profile else []) or [],
         "tone": company.profile.tone if company.profile else "Professional"
     }
+    feats = plan_features(db, user, kill_switch=is_subscription_kill_switch_active(db))
+    chosen_resume, _ = choose_draft_resume(db, user, feats, comp_profile_data, req.resume_id)
+    if chosen_resume and not chosen_resume.is_main and chosen_resume.summary:
+        cand_profile = resume_profile_or_400(req, user, chosen_resume.summary)
+    if req.resume_id:
+        req.force_regenerate = True  # switching resume always rewrites
 
     target_email = None
     if company.emails:
@@ -3250,13 +3650,16 @@ async def generate_single_pitch(
                 "primary_email": existing_pitch.email_body,
                 "cover_letter": existing_pitch.cover_letter or "",
                 "matched_skills": existing_pitch.matched_skills if isinstance(existing_pitch.matched_skills, list) else [],
+                **draft_extra_fields(existing_pitch, feats),
+                **draft_resume_fields(db, user, feats, existing_pitch.resume_id),
                 "mailto_url": mailto_url
             }
 
     pitch_data = generate_personalized_pitch(
         candidate_profile=cand_profile,
         company_name=company.name,
-        company_profile=comp_profile_data
+        company_profile=comp_profile_data,
+        email_style=feats["email_style"],
     )
 
     subj = (pitch_data.get("subject_line") or "").strip()
@@ -3267,14 +3670,8 @@ async def generate_single_pitch(
 
     if not body:
         skills_str = ", ".join(cand_profile.get("top_skills", [])[:6]) or "Python, JavaScript, PostgreSQL, FastAPI, React"
+        # Only the resume's own achievements; never invented ones.
         raw_proofs = cand_profile.get("key_achievements") or cand_profile.get("strong_points") or []
-        if not raw_proofs:
-            raw_proofs = [
-                f"Architected scalable backend microservices and high-throughput REST API endpoints utilizing {skills_str}",
-                "Rewrote and optimized complex database queries and indexing strategies, significantly decreasing runtime and memory overhead",
-                "Built automated data pipelines, continuous integration (CI/CD) workflows, and automated regression testing suites",
-                "Engineered responsive user interfaces with modular component architectures and real-time state synchronization"
-            ]
 
         proof_bullets = []
         for p in raw_proofs[:4]:
@@ -3290,9 +3687,8 @@ async def generate_single_pitch(
             f"Hi {company.name} team,\n\n"
             f"I am writing to inquire about open or upcoming {t_role} opportunities at {company.name}. "
             f"Given your focus on {comp_tech_focus}, my technical experience across {skills_str} aligns directly with your engineering requirements.\n\n"
-            f"As a {t_role}, here are key highlights and verified technical achievements from my recent experience:\n\n"
-            f"{achievements_block}\n\n"
-            f"My core stack encompasses {skills_str}, enabling me to contribute immediately across your architecture and product feature roadmap. "
+            + (f"As a {t_role}, here are highlights from my recent experience:\n\n{achievements_block}\n\n" if achievements_block else "")
+            + f"My core stack encompasses {skills_str}, enabling me to contribute immediately across your architecture and product feature roadmap. "
             f"My detailed resume is attached for your review{resume_ref}.\n\n"
             f"Are you currently hiring for {t_role} positions, or open to considering my profile for upcoming engineering needs?\n\n"
             f"Best regards,\n"
@@ -3305,12 +3701,20 @@ async def generate_single_pitch(
         "email_body": body
     }
 
+    draft_extras = {
+        "resume_id": chosen_resume.id if chosen_resume else None,
+        "email_style": feats["email_style"],
+        "linkedin_message": (pitch_data.get("variant_a_linkedin") or "").strip() or None,
+        "referral_message": (pitch_data.get("variant_b_referral") or "").strip() or None,
+    }
     if existing_pitch:
         existing_pitch.subject_line = subj
         existing_pitch.email_body = body
         existing_pitch.cover_letter = pitch_data.get("cover_letter", "")
         existing_pitch.matched_skills = matched_meta
         existing_pitch.target_email = target_email
+        for k, v in draft_extras.items():
+            setattr(existing_pitch, k, v)
         db.commit()
         pitch_obj = existing_pitch
     else:
@@ -3322,7 +3726,8 @@ async def generate_single_pitch(
             email_body=body,
             cover_letter=pitch_data.get("cover_letter", ""),
             matched_skills=matched_meta,
-            status="DRAFT"
+            status="DRAFT",
+            **draft_extras,
         )
         db.add(pitch_obj)
         db.commit()
@@ -3343,8 +3748,8 @@ async def generate_single_pitch(
         "subject_lines": pitch_data.get("subject_lines", {}),
         "email_body": pitch_obj.email_body,
         "primary_email": pitch_data.get("primary_email", pitch_obj.email_body),
-        "variant_a_linkedin": pitch_data.get("variant_a_linkedin", ""),
-        "variant_b_referral": pitch_data.get("variant_b_referral", ""),
+        **draft_extra_fields(pitch_obj, feats),
+        **draft_resume_fields(db, user, feats, pitch_obj.resume_id),
         "cover_letter": pitch_obj.cover_letter,
         "personalization_notes": pitch_data.get("personalization_notes", []),
         "what_to_change_if": pitch_data.get("what_to_change_if", {}),
@@ -3380,6 +3785,7 @@ async def generate_bulk_pitches(
 
     if not req.company_ids:
         return {"success": True, "generated_count": 0, "total": 0, "pitches": []}
+    require_bulk(db, user, len(set(req.company_ids)))
 
     cand_profile = resume_profile_or_400(req, user)
 
@@ -3414,6 +3820,9 @@ async def generate_bulk_pitches(
         raise daily_limit_reached_error(user)
     companies = kept
 
+    feats = plan_features(db, user, kill_switch=is_subscription_kill_switch_active(db))
+    usable = usable_resumes(db, user.id, feats.get("resume_slots", 1))
+
     # Extract plain dicts in main thread for complete thread safety
     tasks = []
     for comp in companies:
@@ -3435,6 +3844,7 @@ async def generate_bulk_pitches(
             "detailed_analysis": comp.profile.detailed_analysis if comp.profile else "",
             "industry": (comp.profile.industry if comp.profile else "") or "",
             "tech_stack": comp.profile.tech_stack if comp.profile else [],
+            "services": (comp.profile.services if comp.profile else []) or [],
             "tone": comp.profile.tone if comp.profile else "Professional"
         }
         # Speed: an existing draft written for this candidate is kept as is (no AI call),
@@ -3449,21 +3859,25 @@ async def generate_bulk_pitches(
                 "subject_line": old.subject_line, "email_body": old.email_body,
                 "cover_letter": old.cover_letter or "", "matched_skills": old.matched_skills or {},
             }
+        chosen = pick_resume(usable, comp_profile_data)
         tasks.append({
             "company_id": comp.id,
             "company_name": comp.name,
             "target_email": target_email,
             "profile": comp_profile_data,
             "reuse": reuse,
+            "resume_id": chosen.id if chosen else None,
+            "candidate": resume_profile_or_400(req, user, chosen.summary) if (chosen and not chosen.is_main and chosen.summary) else cand_profile,
         })
 
     def process_task(task):
         if task.get("reuse"):
             return task["reuse"]
         pitch_data = generate_personalized_pitch(
-            candidate_profile=cand_profile,
+            candidate_profile=task["candidate"],
             company_name=task["company_name"],
-            company_profile=task["profile"]
+            company_profile=task["profile"],
+            email_style=feats["email_style"],
         )
 
         subj = (pitch_data.get("subject_line") or "").strip()
@@ -3482,7 +3896,13 @@ async def generate_bulk_pitches(
             "subject_line": subj,
             "email_body": body,
             "cover_letter": pitch_data.get("cover_letter", ""),
-            "matched_skills": matched_meta
+            "matched_skills": matched_meta,
+            "extras": {
+                "resume_id": task["resume_id"],
+                "email_style": feats["email_style"],
+                "linkedin_message": (pitch_data.get("variant_a_linkedin") or "").strip() or None,
+                "referral_message": (pitch_data.get("variant_b_referral") or "").strip() or None,
+            },
         }
 
     # Parallelize generation across threadpool workers (up to 10 concurrent threads)
@@ -3501,6 +3921,8 @@ async def generate_bulk_pitches(
             pitch_obj.cover_letter = res["cover_letter"]
             pitch_obj.matched_skills = res["matched_skills"]
             pitch_obj.target_email = res["target_email"]
+            for k, v in (res.get("extras") or {}).items():
+                setattr(pitch_obj, k, v)
         else:
             pitch_obj = ColdPitch(
                 company_id=cid,
@@ -3510,7 +3932,8 @@ async def generate_bulk_pitches(
                 email_body=res["email_body"],
                 cover_letter=res["cover_letter"],
                 matched_skills=res["matched_skills"],
-                status="DRAFT"
+                status="DRAFT",
+                **(res.get("extras") or {}),
             )
             db.add(pitch_obj)
         db.flush()
@@ -3610,14 +4033,7 @@ async def send_single_pitch_direct(
 
     # Fallback to saved resume if attachment requested but no temp file was passed in request
     if attach_resume and not resume_bytes:
-        user_resume_path = os.path.join("uploads", "resumes", f"user_{user.id}_resume.pdf")
-        if os.path.exists(user_resume_path):
-            try:
-                with open(user_resume_path, "rb") as rf:
-                    resume_bytes = rf.read()
-                    resume_filename = "Resume.pdf"
-            except Exception as read_err:
-                print(f"[Send Warning] Could not read user resume: {read_err}")
+        resume_bytes, resume_filename = resume_pdf(db, user.id, pitch.resume_id)
 
     result = await send_via_google_oauth(
         user=user,
@@ -3687,6 +4103,7 @@ async def bulk_send_outreach(
         pitch_ids = body.get("pitch_ids", [])
 
     is_unrestricted = is_master or is_subscription_kill_switch_active(db)
+    require_bulk(db, user, len({str(x) for x in pitch_ids if str(x).isdigit()}))
 
     # Queue the batch; outreach.run_send_queue sends it in the background, so a closed tab
     # or a server restart no longer cuts a batch off halfway.
@@ -4177,6 +4594,7 @@ def list_admin_users(
                 "subscription_tier": u.subscription_tier or "free",
                 "subscription_tier_name": tier_names.get(u.subscription_tier or "free") or (u.subscription_tier or "free").replace("_", " ").title(),
                 "subscription_end": u.subscription_end_date.strftime("%d %b %Y") if u.subscription_end_date else None,
+                "trial": ("active" if u.trial_ends_at and u.trial_ends_at > datetime.utcnow() else "used") if u.trial_started_at else None,
                 "subscription_status": u.subscription_status or "active",
                 "daily_pitch_limit": 999999 if (u.is_admin or config.is_master_admin(u.email)) else (u.daily_pitch_limit or 10),
                 "pitches_sent_today": (u.pitches_sent_today or 0)
@@ -5360,6 +5778,11 @@ def list_tiers_admin(
                 "price_inr": t.price_inr,
                 "daily_pitch_limit": t.daily_pitch_limit,
                 "period_days": t.period_days or 30,
+                "email_style": t.email_style or "tailored",
+                "has_best_matches": bool(t.has_best_matches),
+                "has_linkedin": bool(t.has_linkedin),
+                "resume_slots": t.resume_slots or 1,
+                "has_bulk": bool(t.has_bulk),
                 "features": t.features or [],
                 "badge": t.badge or "",
                 "is_active": t.is_active,
@@ -5388,6 +5811,7 @@ def create_tier_admin(
         price_inr=payload.price_inr,
         daily_pitch_limit=payload.daily_pitch_limit,
         period_days=_plan_days(payload.period_days),
+        **_plan_feature_values(payload),
         features=payload.features or [],
         badge=payload.badge.strip() if payload.badge else None,
         is_active=True
@@ -5417,6 +5841,8 @@ def update_tier_admin(
     tier.price_inr = payload.price_inr
     tier.daily_pitch_limit = payload.daily_pitch_limit
     tier.period_days = _plan_days(payload.period_days)
+    for k, v in _plan_feature_values(payload).items():
+        setattr(tier, k, v)
     tier.features = payload.features or []
     tier.badge = payload.badge.strip() if payload.badge else None
     tier.is_active = payload.is_active

@@ -95,6 +95,7 @@
           <span class="quota-num"><strong id="sidebar-quota-remaining">{{ user_remaining if user_remaining is defined else 10 }}</strong> / <span id="sidebar-quota-total">{{ user_daily_limit if user_daily_limit is defined else 10 }}</span> left</span>
         </div>
         <div class="meter-sm"><div id="sidebar-quota-progress" style="width: 100%;"></div></div>
+        <span id="sidebar-trial-chip" class="trial-chip hidden"></span>
         <div class="quota-link"><span>Manage plan and daily quota</span><span class="material-symbols-outlined" aria-hidden="true">chevron_right</span></div>
       </div>
       {% endif %}
@@ -186,16 +187,25 @@
       </div>
     </div>
 
+    {# Industries with no companies get no pill. #}
+    {% set live_domains = domains|selectattr('count')|map(attribute='code')|list if domains else [] %}
     <div class="pill-row" id="companies-domain-filter-pills" role="group" aria-label="Filter companies by industry domain">
       <button type="button" class="domain-filter-pill active" data-domain="all"><span class="material-symbols-outlined">apps</span><span>All Domains</span><span class="n tnum" id="domain-count-all">{% if domains %}({{ domains|sum(attribute='count') }}){% endif %}</span></button>
-      <button type="button" class="domain-filter-pill" data-domain="it"><span class="material-symbols-outlined">computer</span><span>IT &amp; Software</span><span class="n tnum" id="domain-count-it">({% for d in domains if d.code == 'it' %}{{ d.count }}{% else %}0{% endfor %})</span></button>
-      <button type="button" class="domain-filter-pill" data-domain="sales"><span class="material-symbols-outlined">support_agent</span><span>Sales &amp; BPO</span><span class="n tnum" id="domain-count-sales">({% for d in domains if d.code == 'sales' %}{{ d.count }}{% else %}0{% endfor %})</span></button>
-      <button type="button" class="domain-filter-pill" data-domain="marketing"><span class="material-symbols-outlined">campaign</span><span>Marketing &amp; PR</span><span class="n tnum" id="domain-count-marketing">({% for d in domains if d.code == 'marketing' %}{{ d.count }}{% else %}0{% endfor %})</span></button>
-      <button type="button" class="domain-filter-pill" data-domain="pharma"><span class="material-symbols-outlined">medication</span><span>Pharma &amp; Healthcare</span><span class="n tnum" id="domain-count-pharma">({% for d in domains if d.code == 'pharma' %}{{ d.count }}{% else %}0{% endfor %})</span></button>
-      <button type="button" class="domain-filter-pill" data-domain="finance"><span class="material-symbols-outlined">account_balance</span><span>Finance &amp; Legal</span><span class="n tnum" id="domain-count-finance">({% for d in domains if d.code == 'finance' %}{{ d.count }}{% else %}0{% endfor %})</span></button>
-      <button type="button" class="domain-filter-pill" data-domain="manufacturing"><span class="material-symbols-outlined">precision_manufacturing</span><span>Manufacturing</span><span class="n tnum" id="domain-count-manufacturing">({% for d in domains if d.code == 'manufacturing' %}{{ d.count }}{% else %}0{% endfor %})</span></button>
-      <button type="button" class="domain-filter-pill" data-domain="realestate"><span class="material-symbols-outlined">apartment</span><span>Real Estate</span><span class="n tnum" id="domain-count-realestate">({% for d in domains if d.code == 'realestate' %}{{ d.count }}{% else %}0{% endfor %})</span></button>
-      <button type="button" class="domain-filter-pill" data-domain="hr"><span class="material-symbols-outlined">groups</span><span>HR &amp; Staffing</span><span class="n tnum" id="domain-count-hr">({% for d in domains if d.code == 'hr' %}{{ d.count }}{% else %}0{% endfor %})</span></button>
+      <button type="button" class="domain-filter-pill" data-domain="it"{% if domains and 'it' not in live_domains %} hidden{% endif %}><span class="material-symbols-outlined">computer</span><span>IT &amp; Software</span><span class="n tnum" id="domain-count-it">({% for d in domains if d.code == 'it' %}{{ d.count }}{% else %}0{% endfor %})</span></button>
+      <button type="button" class="domain-filter-pill" data-domain="sales"{% if domains and 'sales' not in live_domains %} hidden{% endif %}><span class="material-symbols-outlined">support_agent</span><span>Sales &amp; BPO</span><span class="n tnum" id="domain-count-sales">({% for d in domains if d.code == 'sales' %}{{ d.count }}{% else %}0{% endfor %})</span></button>
+      <button type="button" class="domain-filter-pill" data-domain="marketing"{% if domains and 'marketing' not in live_domains %} hidden{% endif %}><span class="material-symbols-outlined">campaign</span><span>Marketing &amp; PR</span><span class="n tnum" id="domain-count-marketing">({% for d in domains if d.code == 'marketing' %}{{ d.count }}{% else %}0{% endfor %})</span></button>
+      <button type="button" class="domain-filter-pill" data-domain="pharma"{% if domains and 'pharma' not in live_domains %} hidden{% endif %}><span class="material-symbols-outlined">medication</span><span>Pharma &amp; Healthcare</span><span class="n tnum" id="domain-count-pharma">({% for d in domains if d.code == 'pharma' %}{{ d.count }}{% else %}0{% endfor %})</span></button>
+      <button type="button" class="domain-filter-pill" data-domain="finance"{% if domains and 'finance' not in live_domains %} hidden{% endif %}><span class="material-symbols-outlined">account_balance</span><span>Finance &amp; Legal</span><span class="n tnum" id="domain-count-finance">({% for d in domains if d.code == 'finance' %}{{ d.count }}{% else %}0{% endfor %})</span></button>
+      <button type="button" class="domain-filter-pill" data-domain="manufacturing"{% if domains and 'manufacturing' not in live_domains %} hidden{% endif %}><span class="material-symbols-outlined">precision_manufacturing</span><span>Manufacturing</span><span class="n tnum" id="domain-count-manufacturing">({% for d in domains if d.code == 'manufacturing' %}{{ d.count }}{% else %}0{% endfor %})</span></button>
+      <button type="button" class="domain-filter-pill" data-domain="realestate"{% if domains and 'realestate' not in live_domains %} hidden{% endif %}><span class="material-symbols-outlined">apartment</span><span>Real Estate</span><span class="n tnum" id="domain-count-realestate">({% for d in domains if d.code == 'realestate' %}{{ d.count }}{% else %}0{% endfor %})</span></button>
+      <button type="button" class="domain-filter-pill" data-domain="hr"{% if domains and 'hr' not in live_domains %} hidden{% endif %}><span class="material-symbols-outlined">groups</span><span>HR &amp; Staffing</span><span class="n tnum" id="domain-count-hr">({% for d in domains if d.code == 'hr' %}{{ d.count }}{% else %}0{% endfor %})</span></button>
+    </div>
+
+    <div id="trial-banner" class="trial-banner hidden" role="note">
+      <span class="material-symbols-outlined" aria-hidden="true">workspace_premium</span>
+      <span class="t"><b>Try Pro free for <span data-trial-length>1 day</span>.</b> Best matches, LinkedIn and referral messages, up to 3 resumes and bulk apply. Your daily limit stays the same. Once per account, nothing to pay.</span>
+      <button type="button" class="btn btn-primary btn-sm" data-start-trial>Start free trial</button>
+      <button type="button" class="icon-btn sm bare" data-dismiss-trial aria-label="Dismiss"><span class="material-symbols-outlined">close</span></button>
     </div>
 
     <section class="app-toolbar" aria-label="Search and filters">
@@ -230,6 +240,21 @@
           </div>
         </div>
         <div class="toolbar-btns">
+          <button id="btn-best-matches" type="button" class="btn btn-secondary btn-square" aria-pressed="false" title="Show companies that use your resume skills first">
+            <span class="material-symbols-outlined">target</span><span>Best matches</span><span class="material-symbols-outlined lock hidden" aria-hidden="true">lock</span>
+          </button>
+          <div id="best-match-for" class="hidden">
+          <div class="custom-dropdown" id="dropdown-best-match-for">
+            <input type="hidden" id="best-match-for-select" value="">
+            <button type="button" class="custom-dropdown-btn" aria-haspopup="listbox" aria-expanded="false" title="Match companies to this resume">
+              <span class="custom-dropdown-label">All resumes</span>
+              <span class="material-symbols-outlined dropdown-chevron">expand_more</span>
+            </button>
+            <div class="custom-dropdown-menu align-right">
+              <div class="custom-dropdown-list" role="listbox"></div>
+            </div>
+          </div>
+          </div>
           <button id="btn-reset-filters" type="button" class="btn btn-secondary btn-square" title="Reset all search &amp; filter selections">
             <span class="material-symbols-outlined">restart_alt</span><span>Reset</span>
           </button>
@@ -324,6 +349,22 @@
             <span class="material-symbols-outlined">auto_awesome</span><span>Read My Skills with AI</span>
           </button>
         </form>
+
+        <div id="resumes-block" class="sub-block resumes-block hidden">
+          <div class="spread">
+            <span class="sub-label">Your resumes</span>
+            <span id="resumes-count" class="muted-note tnum"></span>
+          </div>
+          <p class="muted-note">For each company we use the resume whose skills match it best. You can switch it in the draft window.</p>
+          <ul id="resume-list" class="resume-list"></ul>
+          <form id="resume-add-form" class="resume-add hidden">
+            <input type="text" id="resume-add-label" maxlength="60" placeholder="Role for this resume, e.g. QA Engineer" class="recessed-well" aria-label="Role for this resume">
+            <input type="file" id="resume-add-file" accept=".pdf,.txt,.md" class="hidden">
+            <button type="button" id="btn-resume-add-pick" class="btn btn-secondary"><span class="material-symbols-outlined">upload_file</span><span id="resume-add-file-name">Choose file</span></button>
+            <button type="submit" id="btn-resume-add" class="btn btn-primary"><span class="material-symbols-outlined">add</span><span>Add resume</span></button>
+          </form>
+          <div id="resume-add-locked" class="msg-locked hidden"><span><b>Use a different resume for each kind of role.</b> Upgrade to keep up to 3 resumes, picked for each company.</span><button type="button" class="btn btn-primary btn-sm" data-open-plans>See plans</button></div>
+        </div>
       </div>
 
       <div class="app-panel">
@@ -624,12 +665,68 @@
 </div>
 
 <!-- ===================== Pitch preview and edit modal ===================== -->
+<div id="trial-modal" class="app-modal fixed inset-0 hidden">
+  <div class="am-card sm">
+    <div class="am-head">
+      <div class="am-title-row">
+        <div class="min-w-0"><h3 id="trial-modal-title">Try Pro free for 1 day</h3></div>
+        <button type="button" class="icon-btn sm bare" data-close-trial aria-label="Close"><span class="material-symbols-outlined">close</span></button>
+      </div>
+    </div>
+    <div class="am-body stack" style="--stack:12px">
+      <p id="trial-modal-text" class="muted-note"></p>
+      <ul class="trial-list">
+        <li><span class="material-symbols-outlined">check</span><span>Emails tailored to each company, with a "Why I fit" section</span></li>
+        <li><span class="material-symbols-outlined">check</span><span>Best matches for your resume</span></li>
+        <li><span class="material-symbols-outlined">check</span><span>LinkedIn message and referral request for every application</span></li>
+        <li><span class="material-symbols-outlined">check</span><span>Up to 3 resumes, picked for each company, and bulk apply</span></li>
+      </ul>
+    </div>
+    <div class="am-foot split">
+      <button type="button" class="btn btn-secondary" data-close-trial>Not now</button>
+      <button type="button" id="trial-modal-cta" class="btn btn-primary" data-start-trial>Start free trial</button>
+    </div>
+  </div>
+</div>
+
+<div id="messages-modal" class="app-modal fixed inset-0 hidden">
+  <div class="am-card sm">
+    <div class="am-head">
+      <div class="am-title-row">
+        <div class="min-w-0"><h3 id="messages-modal-title">LinkedIn and referral messages</h3><p class="recipient-line">Copy a message and send it on LinkedIn to someone at the company.</p></div>
+        <button type="button" class="icon-btn sm bare" data-close-messages aria-label="Close"><span class="material-symbols-outlined">close</span></button>
+      </div>
+    </div>
+    <div class="am-body">
+      <div class="seg-tabs pitch-tabs" role="tablist" aria-label="Message type">
+        <button type="button" role="tab" class="cmodal-tab-btn active" aria-selected="true" data-msg-tab="linkedin"><span class="material-symbols-outlined">chat</span><span>LinkedIn</span></button>
+        <button type="button" role="tab" class="cmodal-tab-btn" aria-selected="false" data-msg-tab="referral"><span class="material-symbols-outlined">handshake</span><span>Referral</span></button>
+      </div>
+      <div id="messages-panel-linkedin" data-msg-panel="linkedin"></div>
+      <div id="messages-panel-referral" class="hidden" data-msg-panel="referral"></div>
+    </div>
+  </div>
+</div>
+
 <div id="pitch-modal" class="app-modal fixed inset-0 hidden">
   <div class="am-card">
     <div class="am-head">
       <div class="am-title-row">
         <div class="min-w-0">
           <h3 id="modal-company-name">Job application email</h3>
+          <span id="pitch-modal-style" class="style-chip hidden"></span>
+          <div id="pitch-modal-resume" class="resume-pick hidden"><span>Using:</span>
+          <div class="custom-dropdown" id="dropdown-pitch-resume">
+            <input type="hidden" id="pitch-resume-select" value="">
+            <button type="button" class="custom-dropdown-btn" aria-haspopup="listbox" aria-expanded="false" title="Write this email with another resume">
+              <span class="custom-dropdown-label">Main</span>
+              <span class="material-symbols-outlined dropdown-chevron">expand_more</span>
+            </button>
+            <div class="custom-dropdown-menu">
+              <div class="custom-dropdown-list" role="listbox"></div>
+            </div>
+          </div>
+          </div>
           <p class="recipient-line">Recipient: <span id="modal-target-email" class="inline-flex items-center gap-1"><span class="em">hr@company.com</span></span></p>
         </div>
         <div class="flex items-center gap-1.5">
@@ -641,6 +738,12 @@
       </div>
     </div>
     <div class="am-body">
+      <div class="seg-tabs pitch-tabs" role="tablist" aria-label="Message type">
+        <button type="button" role="tab" class="cmodal-tab-btn active" aria-selected="true" data-pitch-tab="email"><span class="material-symbols-outlined">mail</span><span>Email</span></button>
+        <button type="button" role="tab" class="cmodal-tab-btn" aria-selected="false" data-pitch-tab="linkedin"><span class="material-symbols-outlined">chat</span><span>LinkedIn</span></button>
+        <button type="button" role="tab" class="cmodal-tab-btn" aria-selected="false" data-pitch-tab="referral"><span class="material-symbols-outlined">handshake</span><span>Referral</span></button>
+      </div>
+      <div id="pitch-tab-email" class="pitch-tab-panel">
       <div class="field-row">
         <label for="modal-subject">Subject Line</label>
         <input type="text" id="modal-subject" class="recessed-well" placeholder="Email Subject Line">
@@ -666,8 +769,11 @@
           </label>
         </div>
       </div>
+      </div>
+      <div id="pitch-tab-linkedin" class="pitch-tab-panel hidden" data-msg-panel="linkedin"></div>
+      <div id="pitch-tab-referral" class="pitch-tab-panel hidden" data-msg-panel="referral"></div>
     </div>
-    <div class="am-foot split">
+    <div class="am-foot split" id="pitch-modal-foot">
       <button id="btn-copy-pitch" type="button" class="btn btn-secondary">
         <span class="material-symbols-outlined">content_copy</span><span>Copy Message</span>
       </button>
@@ -767,14 +873,12 @@
             <div class="nm"><b>{{ t.name }}</b>{% if t.subtitle %}<span>{{ t.subtitle }}</span>{% endif %}</div>
             <div class="pr"><b>₹{{ "{:,}".format(t.price_inr) }}</b><span>/ {{ 'week' if (t.period_days or 30) == 7 else 'month' }}</span></div>
             <div class="qt">{{ "{:,}".format(t.daily_pitch_limit) }} applications / day</div>
-            {% if t.features %}
-            <ul>
-              {% for f in t.features %}
-              <li><span class="material-symbols-outlined" aria-hidden="true">check</span><span>{{ f }}</span></li>
-              {% endfor %}
-            </ul>
-            {% endif %}
+            {%- from "macros/plan_lines.html" import plan_lines %}
+            {{ plan_lines(t, plan_examples, '<span class="material-symbols-outlined" aria-hidden="true">check</span>'|safe) }}
           </div>
+          {% if t.code == 'pro' and trial and trial.trial_offer %}
+          <button type="button" class="btn-tier-action is-trial" data-start-trial>Try Pro free for {{ '1 day' if trial.trial_hours == 24 else (trial.trial_hours ~ ' hours') }}</button>
+          {% endif %}
           {% if t.price_inr == 0 and not is_current %}
           {#- Free needs no switch: signed-out visitors sign up; paid users drop back to Free when their plan ends. -#}
           {% if not is_logged_in %}
@@ -886,6 +990,11 @@
     "daily_pitch_limit": {{ user_daily_limit if user_daily_limit is defined else 10 }},
     "pitches_sent_today": {{ user_sent_today if user_sent_today is defined else 0 }},
     "pitches_remaining": {{ user_remaining if user_remaining is defined else 10 }},
+    "features": {{ (features or {})|tojson }},
+    "trial_ends_at": {{ (trial.trial_ends_at if trial else None)|tojson }},
+    "trial_used": {{ 'true' if trial and trial.trial_used else 'false' }},
+    "trial_offer": {{ 'true' if trial and trial.trial_offer else 'false' }},
+    "trial_hours": {{ (trial.trial_hours if trial else 24)|tojson }},
     "dev_mode": {{ 'true' if dev_mode else 'false' }}
   }
 </script>
@@ -911,4 +1020,5 @@
 <script src="/static/js/app/theme.js?v={{ asset_v }}"></script>
 <script src="/static/js/app/shortcuts.js?v={{ asset_v }}"></script>
 <script src="/static/js/app.js?v={{ asset_v }}"></script>
+<script src="/static/js/plan-examples.js?v={{ asset_v }}"></script>
 {% endblock %}

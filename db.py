@@ -51,6 +51,9 @@ class User(Base):
     subscription_tier = Column(String(50), default="free", index=True)  # 'free', 'pro', 'premium_plus'
     subscription_status = Column(String(50), default="active")          # 'active', 'past_due', 'canceled'
     subscription_end_date = Column(DateTime, nullable=True)
+    # One-day Pro trial: set once when started; never cleared, so it can't be repeated.
+    trial_started_at = Column(DateTime, nullable=True)
+    trial_ends_at = Column(DateTime, nullable=True)
 
     # --- Pitch Quotas (Free: 10, Pro: 25, Premium+: 50, Admin: 999999) ---
     daily_pitch_limit = Column(Integer, default=10)
@@ -195,6 +198,10 @@ class ColdPitch(Base):
     next_attempt_at = Column(DateTime, nullable=True)
     last_error = Column(Text, nullable=True)
     quota_reserved = Column(Boolean, default=False)  # one daily send was reserved; refund it if this never goes out
+    email_style = Column(String(20), nullable=True)  # standard | tailored | tailored_fit (plan at draft time)
+    linkedin_message = Column(Text, nullable=True)
+    referral_message = Column(Text, nullable=True)
+    resume_id = Column(Integer, nullable=True)  # user_resumes.id used for this draft
 
     company = relationship("Company", back_populates="pitches")
     user = relationship("User", back_populates="cold_pitches")
@@ -208,6 +215,21 @@ class SendAttachment(Base):
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), primary_key=True)
     filename = Column(String(255), nullable=False)
     data = Column(LargeBinary, nullable=False)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+
+class UserResume(Base):
+    """A user's resume: the PDF itself (kept in the DB so a deploy can't lose it) and its analysis."""
+    __tablename__ = "user_resumes"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False)
+    label = Column(String(60), default="Main")  # e.g. Backend, QA, Full Stack
+    filename = Column(String(255), nullable=True)
+    pdf = Column(LargeBinary, nullable=True)  # None for text/markdown uploads
+    summary = Column(JsonType, nullable=True)  # parsed profile, same shape as users.resume_summary
+    is_main = Column(Boolean, default=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
 
@@ -282,6 +304,12 @@ class SubscriptionTier(Base):
     price_inr = Column(Integer, default=0)
     daily_pitch_limit = Column(Integer, default=10)
     period_days = Column(Integer, default=30)  # plan length: 7 = weekly pass, 30 = monthly
+    # Plan features (see plan_features.py)
+    email_style = Column(String(20), default="tailored")  # standard | tailored | tailored_fit
+    has_best_matches = Column(Boolean, default=False)
+    has_linkedin = Column(Boolean, default=False)  # LinkedIn message + referral request
+    resume_slots = Column(Integer, default=1)
+    has_bulk = Column(Boolean, default=False)  # bulk prepare and bulk send
     features = Column(JsonType, default=list)
     badge = Column(String(50), nullable=True)
     is_active = Column(Boolean, default=True)
@@ -389,6 +417,17 @@ def init_db():
                     ("cold_pitches", "last_error", "TEXT"),
                     ("cold_pitches", "quota_reserved", "BOOLEAN DEFAULT FALSE"),
                     ("subscription_tiers", "period_days", "INTEGER DEFAULT 30"),
+                    ("subscription_tiers", "email_style", "VARCHAR(20) DEFAULT 'tailored'"),
+                    ("subscription_tiers", "has_best_matches", "BOOLEAN DEFAULT FALSE"),
+                    ("subscription_tiers", "has_linkedin", "BOOLEAN DEFAULT FALSE"),
+                    ("subscription_tiers", "resume_slots", "INTEGER DEFAULT 1"),
+                    ("subscription_tiers", "has_bulk", "BOOLEAN DEFAULT FALSE"),
+                    ("users", "trial_started_at", "TIMESTAMP"),
+                    ("cold_pitches", "email_style", "VARCHAR(20)"),
+                    ("cold_pitches", "linkedin_message", "TEXT"),
+                    ("cold_pitches", "referral_message", "TEXT"),
+                    ("cold_pitches", "resume_id", "INTEGER"),
+                    ("users", "trial_ends_at", "TIMESTAMP"),
                 ]
                 statements = [
                     f"ALTER TABLE {tbl} ADD COLUMN IF NOT EXISTS {col} {ddl};"
