@@ -757,3 +757,6 @@ textarea.recessed-well { min-height: 220px; resize: vertical; line-height: 1.7; 
 
 /* Lucide placeholders hold their size before lucide.js (deferred) swaps in the SVG, so nothing shifts. */
 :where(i[data-lucide]) { display: inline-block; width: 1em; height: 1em; flex-shrink: 0; vertical-align: -0.125em; }
+
+/* Industry pills with no companies (template sets hidden). */
+.domain-filter-pill[hidden] { display: none; }
